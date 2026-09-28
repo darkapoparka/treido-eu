@@ -1,0 +1,249 @@
+/* Current Android Explore. Frozen iOS variants remain isolated. */
+.shop-page.android-explore {
+  padding-top: 16px;
+  background: #fcfcfc;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.android-explore > h1 {
+  position: sticky;
+  top: 16px;
+  z-index: 15;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  letter-spacing: -0.8px;
+}
+.android-explore:not([data-category]) .editorial-hero {
+  height: 218px;
+  box-shadow: 0 4px 7px #0003;
+  border-radius: 28px;
+}
+.android-explore:not([data-category]) .editorial-hero > img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+.android-explore:not([data-category]) > div:has(> .editorial-hero) {
+  margin-top: 26px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 0;
+  scroll-snap-type: x mandatory;
+}
+.android-explore:not([data-category]) .editorial-hero > div {
+  left: 16px;
+  right: 32px;
+  bottom: 16px;
+}
+.android-explore:not([data-category]) .editorial-hero strong {
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
+}
+.android-explore:not([data-category]) .editorial-hero p {
+  font-size: 12px;
+  line-height: 16px;
+  margin-top: 0;
+}
+.android-explore:not([data-category]) .editorial-hero svg {
+  right: -24px;
+  bottom: 0;
+  width: 32px;
+  height: 32px;
+  padding: 8px;
+  background: transparent;
+}
+.android-explore .editorial-guest-badge {
+  position: absolute;
+  top: 20px;
+  left: 16px;
+  padding: 1px 9px;
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 500;
+  color: white;
+  background: #0005;
+  border-radius: 999px;
+}
+.android-explore:not([data-category]) > h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: -0.2px;
+}
+.android-explore:not([data-category]) .explore-categories {
+  margin: 0;
+  gap: 8px;
+}
+.android-explore:not([data-category]) .explore-categories > a {
+  height: 132px;
+  padding: 8px;
+}
+.android-explore:not([data-category]) .explore-categories h3 {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  margin: 0 4px 10px;
+}
+.android-explore:not([data-category]) .explore-categories > a > div,
+.android-explore:not([data-category]) .explore-categories img {
+  height: 86px;
+}
+.android-explore .explore-more-categories {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 40px;
+  padding: 0;
+  margin: 16px 0;
+  background: #fff;
+  border: 1px solid #e2e2e2;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+}
+.android-explore .explore-minis {
+  margin-top: 16px;
+}
+
+.android-explore > h1::before {
+  content: "";
+  position: absolute;
+  inset: -16px -16px -12px;
+  z-index: -1;
+  background: linear-gradient(#fcfcfc 70%, #fcfcfc00);
+  pointer-events: none;
+}
+
+/* Native lower rails: source-sized cards and current Android body typography. */
+.android-explore:not([data-category]) .explore-minis,
+.android-explore:not([data-category]) .explore-shelf {
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.android-explore:not([data-category]) .explore-minis > a:not(:first-child) {
+  min-height: 52px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.android-explore:not([data-category])
+  .explore-minis
+  > a:not(:first-child)
+  strong {
+  font-weight: 500;
+  line-height: 18px;
+}
+.android-explore:not([data-category])
+  .explore-minis
+  > a:not(:first-child)
+  small {
+  font-size: 14px;
+  line-height: 18px;
+  color: #454545;
+}
+.android-explore:not([data-category]) .explore-minis > a:last-child {
+  margin-bottom: 0;
+}
+.android-explore:not([data-category]) .explore-minis + .explore-shelf {
+  margin-top: 24px;
+}
+.android-explore[data-native-shelves] .explore-shelf {
+  margin-top: 24px;
+}
+.android-explore[data-native-shelves] .explore-shelf h2 {
+  margin-bottom: 12px;
+  color: #111;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 22px;
+}
+.android-explore[data-native-shelves] .explore-shelf h2 > span {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+}
+.android-explore[data-native-shelves] .explore-shelf .product-rail {
+  gap: 8px;
+  scroll-snap-type: x mandatory;
+}
+.android-explore[data-native-shelves] .explore-shelf .product-card {
+  flex: 0 0 calc((100vw - 48px) / 2);
+  width: calc((100vw - 48px) / 2);
+  scroll-snap-align: start;
+}
+.android-explore[data-native-shelves] .explore-shelf .product-media {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border: 1px solid #dedfe2;
+  border-radius: 20px;
+}
+.android-explore[data-native-shelves] .explore-shelf .product-media > a,
+.android-explore[data-native-shelves] .explore-shelf .product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
+  mix-blend-mode: normal;
+}
+.android-explore[data-native-shelves] .explore-shelf .product-copy {
+  margin: 8px 4px 0;
+  padding: 0;
+  opacity: 1;
+  font:
+    400 12px/16px ShopAndroidRoboto,
+    Roboto,
+    Arial,
+    sans-serif;
+}
+.android-explore[data-native-shelves] .explore-shelf .product-copy strong {
+  font-weight: 500;
+}
+.android-explore[data-native-shelves]
+  .explore-shelf
+  .product-copy
+  > span:last-child {
+  margin-top: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.android-explore[data-native-shelves] .explore-shelf .save-button {
+  right: 12px;
+  bottom: 12px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border: 0;
+  background: #0004;
+  backdrop-filter: none;
+}
+.android-explore[data-native-shelves] .explore-shelf .save-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.android-explore[data-native-shelves] .explore-shelf .product-media img {
+  filter: brightness(0.96);
+}
+.android-explore[data-native-shelves] .explore-shelf h2 {
+  line-height: 20.667px;
+}
+
+.android-live .product-card .price-badge[data-reference-markdown="true"] {
+  top: 12px;
+  left: 12px;
+  padding: 2px 5px;
+  color: #fff;
+  background: #000;
+  border-radius: 99px;
+  font:
+    500 10px/12px ShopAndroidRoboto,
+    Roboto,
+    Arial,
+    sans-serif;
+}

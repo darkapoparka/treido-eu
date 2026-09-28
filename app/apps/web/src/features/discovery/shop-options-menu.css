@@ -1,0 +1,92 @@
+.campaign-menu-store {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.campaign-menu-store > img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+.campaign-menu-store > span {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+}
+.campaign-menu-store strong {
+  font-size: 14px;
+}
+.campaign-menu-store b {
+  font-size: 12px;
+  font-weight: 500;
+}
+.campaign-menu-menu {
+  min-height: 295px;
+  bottom: 35px;
+}
+.campaign-menu-store > .icon-button {
+  width: 24px;
+  height: 24px;
+  align-self: flex-start;
+  background: #f0f2f2;
+  color: #767a7b;
+}
+.campaign-menu-store > .icon-button svg,
+.campaign-menu .sheet-header .icon-button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.8;
+}
+.campaign-menu .sheet-header .icon-button {
+  width: 24px;
+  height: 24px;
+  background: #f0f2f2;
+  color: #767a7b;
+}
+.campaign-menu-rows > a,
+.campaign-menu-rows > button {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  text-align: left;
+}
+.campaign-menu-rows svg {
+  width: 22px;
+  height: 22px;
+}
+.campaign-menu-reason {
+  bottom: 35px;
+  min-height: 324px;
+  padding-top: 24px;
+}
+.campaign-menu-reason .sheet-header {
+  margin-bottom: 0;
+}
+.campaign-menu-reason .sheet-header h2 {
+  font-size: 19.5px;
+  opacity: 0.999;
+}
+.campaign-menu-reason > p {
+  color: #888;
+  font-size: 14px;
+  opacity: 0.999;
+}
+.campaign-menu-reason .campaign-reasons {
+  margin-top: 20px;
+}
+.campaign-reasons button {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  font-size: 16px;
+  letter-spacing: -0.14px;
+  text-align: left;
+  opacity: 0.999;
+}
+.campaign-reasons button:nth-child(n + 3) {
+  padding-left: 1px;
+}

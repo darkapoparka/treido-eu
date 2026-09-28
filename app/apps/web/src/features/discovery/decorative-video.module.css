@@ -1,0 +1,11 @@
+.clip {
+  position: absolute;
+  display: block;
+  height: auto;
+  max-width: none;
+  visibility: hidden;
+  pointer-events: none;
+}
+.clip[data-video-ready="true"] {
+  visibility: visible;
+}

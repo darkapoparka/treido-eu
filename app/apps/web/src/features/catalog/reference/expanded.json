@@ -1,0 +1,640 @@
+[
+  {
+    "ratingCount": "22.5K",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 3000
+    },
+    "id": "whip-mousse",
+    "images": ["/api/reference-media/whip-mousse"],
+    "category": "Beauty",
+    "storeId": "lange-hair",
+    "title": "Whip Volumizing Mousse",
+    "promotion": "Save $20",
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "whip-mousse-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "607",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 3200
+    },
+    "id": "hanacure-cleanser",
+    "images": ["/api/reference-media/hanacure-cleanser"],
+    "category": "Beauty",
+    "storeId": "hanacure",
+    "title": "Microphol® Cleanser",
+    "promotion": "$50 off order",
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "hanacure-cleanser-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": null,
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 1500
+    },
+    "id": "bubble-sunrise",
+    "images": ["/api/reference-media/bubble-sunrise"],
+    "category": "Beauty",
+    "storeId": "bubble-skincare",
+    "title": "Sun Rise SPF 30",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "bubble-sunrise-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "1",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 2500
+    },
+    "id": "bare-liquid",
+    "images": ["/api/reference-media/bare-liquid"],
+    "category": "Beauty",
+    "storeId": "bare-minerals",
+    "title": "GEN NUDE® Liquid Mineral…",
+    "promotion": "Save $20",
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "bare-liquid-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "730",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 3999
+    },
+    "id": "carbon-crew",
+    "images": ["/api/reference-media/carbon-crew"],
+    "category": "Menswear",
+    "storeId": "true-classic",
+    "title": "Carbon Active Crew Neck T…",
+    "promotion": "Save $30",
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "carbon-crew-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "166",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 34220
+    },
+    "id": "jordan-legend",
+    "images": ["/api/reference-media/jordan-legend"],
+    "category": "Menswear",
+    "storeId": "kicks-crew",
+    "title": "Air Jordan 11 'Legend Blue' 2…",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "jordan-legend-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "5.8K",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 25000
+    },
+    "id": "buffy-breeze",
+    "images": ["/api/reference-media/buffy-breeze"],
+    "category": "Home",
+    "storeId": "buffy",
+    "title": "Breeze Comforter",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "buffy-breeze-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "864",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 27900
+    },
+    "id": "citizenry-linen",
+    "images": ["/api/reference-media/citizenry-linen"],
+    "category": "Home",
+    "storeId": "",
+    "title": "Stonewashed Linen Sheet S…",
+    "promotion": "20% off",
+    "compareAt": {
+      "currency": "USD",
+      "amount": 34900
+    },
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "citizenry-linen-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "39",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 1500
+    },
+    "id": "skin-anua",
+    "images": ["/api/reference-media/skin-anua"],
+    "category": "Cleanser",
+    "storeId": "",
+    "title": "8 Hyaluronic Acid Hyd…",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "skin-anua-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "106",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 3500
+    },
+    "id": "skin-mimi",
+    "images": ["/api/reference-media/skin-mimi"],
+    "category": "Cleanser",
+    "storeId": "",
+    "title": "Gentle Hydration Clea…",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "skin-mimi-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "1",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 1899
+    },
+    "id": "gift-logic",
+    "images": ["/api/reference-media/gift-logic"],
+    "category": "Gifts",
+    "storeId": "",
+    "title": "Puzzle Baron’s Logic Puzzl…",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "gift-logic-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "2",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 2495
+    },
+    "id": "gift-buds",
+    "images": ["/api/reference-media/gift-buds"],
+    "category": "Gifts",
+    "storeId": "",
+    "title": "Skullcandy Smokin’ Buds T…",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "gift-buds-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": "1",
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 2400
+    },
+    "id": "gift-nirvana",
+    "images": ["/api/reference-media/gift-nirvana"],
+    "category": "Gifts",
+    "storeId": "",
+    "title": "Nirvana",
+    "promotion": null,
+    "compareAt": {
+      "currency": "USD",
+      "amount": 3400
+    },
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "gift-nirvana-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": null,
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 11280
+    },
+    "id": "look-sculpt",
+    "images": ["/api/reference-media/look-sculpt"],
+    "category": "Outfit",
+    "storeId": "",
+    "title": "Linen Print Sculpt…",
+    "promotion": null,
+    "compareAt": {
+      "currency": "USD",
+      "amount": 18800
+    },
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "look-sculpt-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": null,
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 33200
+    },
+    "id": "look-aven",
+    "images": ["/api/reference-media/look-aven"],
+    "category": "Outfit",
+    "storeId": "",
+    "title": "Aven Linen Blazer…",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "look-aven-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": null,
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 1100
+    },
+    "id": "look-black-crew",
+    "images": ["/api/reference-media/look-black-crew"],
+    "category": "Outfit",
+    "storeId": "",
+    "title": "Women’s Black C…",
+    "promotion": null,
+    "compareAt": {
+      "currency": "USD",
+      "amount": 2300
+    },
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "look-black-crew-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "ratingCount": null,
+    "saleUnit": "piece",
+    "price": {
+      "currency": "USD",
+      "amount": 3700
+    },
+    "id": "look-white-crew",
+    "images": ["/api/reference-media/look-white-crew"],
+    "category": "Outfit",
+    "storeId": "",
+    "title": "Crew Neck T-Shirt",
+    "promotion": null,
+    "compareAt": null,
+    "description": "",
+    "variants": [
+      {
+        "availableQuantity": 12,
+        "id": "look-white-crew-default",
+        "label": "One size"
+      }
+    ]
+  },
+  {
+    "id": "skin-loretta",
+    "title": "Gentle Hydrating Cleanser",
+    "storeId": "",
+    "category": "Cleanser",
+    "images": ["/api/reference-media/skin-loretta"],
+    "price": {
+      "currency": "USD",
+      "amount": 4000
+    },
+    "rating": 4.5,
+    "ratingCount": "152",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "skin-loretta-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "skin-harry",
+    "title": "Hydrating Facial Cleanser",
+    "storeId": "",
+    "category": "Cleanser",
+    "images": ["/api/reference-media/skin-harry"],
+    "price": {
+      "currency": "USD",
+      "amount": 1000
+    },
+    "rating": 4.5,
+    "ratingCount": "216",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "skin-harry-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "idea-rice-wash",
+    "title": "Rice Water Protein Restoring Face & Body Wash Bar",
+    "storeId": "kitsch",
+    "category": "Cleanse",
+    "images": ["/api/reference-media/idea-rice-wash"],
+    "price": {
+      "currency": "USD",
+      "amount": 1400
+    },
+    "ratingCount": "",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "idea-rice-wash-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "idea-rosemary-bar",
+    "title": "Rosemary & Biotin Volumizing Solid Shampoo Bar",
+    "storeId": "kitsch",
+    "category": "Cleanse",
+    "images": ["/api/reference-media/idea-rosemary-bar"],
+    "price": {
+      "currency": "USD",
+      "amount": 1600
+    },
+    "ratingCount": "",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "idea-rosemary-bar-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "idea-rosemary-bundle",
+    "title": "Rosemary & Biotin Volumizing Shampoo & Conditioner",
+    "storeId": "kitsch",
+    "category": "Cleanse",
+    "images": ["/api/reference-media/idea-rosemary-bundle"],
+    "price": {
+      "currency": "USD",
+      "amount": 2800
+    },
+    "ratingCount": "",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "idea-rosemary-bundle-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "idea-purple-bundle",
+    "title": "Purple Toning Shampoo & Conditioner",
+    "storeId": "kitsch",
+    "category": "Cleanse",
+    "images": ["/api/reference-media/idea-purple-bundle"],
+    "price": {
+      "currency": "USD",
+      "amount": 2800
+    },
+    "ratingCount": "",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "idea-purple-bundle-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "idea-rosemary-liquid",
+    "title": "Rosemary & Biotin Volumizing Shampoo & Conditioner",
+    "storeId": "kitsch",
+    "category": "Cleanse",
+    "images": ["/api/reference-media/idea-rosemary-liquid"],
+    "price": {
+      "currency": "USD",
+      "amount": 2800
+    },
+    "ratingCount": "",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "idea-rosemary-liquid-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "beauty-fenty",
+    "title": "Eaze Drop Lightweight Blurring Skin Tint",
+    "storeId": "fenty-beauty",
+    "category": "Makeup",
+    "images": ["/api/reference-media/beauty-fenty-partial"],
+    "price": {
+      "currency": "USD",
+      "amount": 3900
+    },
+    "rating": 4.5,
+    "ratingCount": "96",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "beauty-fenty-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "beauty-juvia",
+    "title": "Blushed Blonzing Stick",
+    "storeId": "juvias-place",
+    "category": "Makeup",
+    "images": ["/api/reference-media/beauty-juvia-partial"],
+    "price": {
+      "currency": "USD",
+      "amount": 2000
+    },
+    "rating": 5,
+    "ratingCount": "1",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "beauty-juvia-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "city-duaa-denim",
+    "title": "Men’s Duaa Neptune Denim…",
+    "price": {
+      "currency": "USD",
+      "amount": 9000
+    },
+    "images": ["/api/reference-media/assistant-city-denim"],
+    "storeId": "city-jeans",
+    "category": "Jeans",
+    "ratingCount": "",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "city-duaa-denim-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  },
+  {
+    "id": "assistant-blue-skinny",
+    "title": "BLUE SKI…",
+    "price": {
+      "currency": "USD",
+      "amount": 2499
+    },
+    "images": ["/api/reference-media/assistant-blue-partial"],
+    "storeId": "jeans-warehouse",
+    "category": "Jeans",
+    "ratingCount": "",
+    "description": "",
+    "saleUnit": "piece",
+    "variants": [
+      {
+        "id": "assistant-blue-skinny-default",
+        "label": "One size",
+        "availableQuantity": 12
+      }
+    ]
+  }
+]

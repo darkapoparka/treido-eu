@@ -1,0 +1,323 @@
+.following-page {
+  padding-top: 11px;
+  background: #fdfdfd;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.following-page > .floating-dock[data-fade="true"]::before {
+  background: transparent;
+  backdrop-filter: blur(20px);
+  mask-image: linear-gradient(transparent 15%, #000);
+}
+.following-heading h1,
+.following-manage,
+.following-empty :is(h2, p, .primary),
+.following-post-identity :is(strong, small),
+.following-page .product-copy :is(strong, span),
+.following-management-row > a > span,
+.following-management-row > button {
+  opacity: 0.999;
+}
+.following-heading {
+  min-height: 32px;
+  margin-bottom: 16px;
+}
+.following-heading h1 {
+  margin: 0;
+  padding-left: 1px;
+  font-size: 28px;
+  line-height: 33px;
+  letter-spacing: -1px;
+  font-weight: 650;
+}
+.following-manage {
+  position: fixed;
+  z-index: 31;
+  top: 8px;
+  right: max(16px, calc((100vw - 728px) / 2));
+  min-width: 86px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #f4f4f4;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 4px 24px #00000006;
+  color: #080808;
+  font-size: 14px;
+  font-weight: 500;
+}
+.following-logo {
+  display: block;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #000;
+}
+.following-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: contain;
+}
+.following-logo.has-offer {
+  outline: 1px solid #5433f5;
+  outline-offset: 2px;
+}
+.following-brand-rail {
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  margin: 14px 0 36px;
+  overflow: visible;
+}
+.following-brand-rail .following-logo {
+  width: 64px;
+  height: 64px;
+  flex-basis: 64px;
+}
+.following-post + .following-post {
+  margin-top: 40px;
+}
+.following-post-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #090909;
+  text-align: left;
+}
+.following-post-identity > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.following-post-identity strong {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 600;
+}
+.following-post-identity small {
+  color: #747474;
+  font-size: 14px;
+  line-height: 18px;
+}
+.following-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 8px;
+  row-gap: 16px;
+  margin-top: 16px;
+}
+.following-post-single .following-product-grid {
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 8px;
+}
+.following-page .product-card {
+  width: 100%;
+  min-width: 0;
+}
+.following-page .product-media {
+  border-radius: 20px;
+  background: #b7b3a7;
+  border: 0;
+  box-shadow:
+    inset 0 0 0 1px #dddcd5,
+    0 4px 14px #00000004;
+}
+.following-page .product-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.following-page [data-following-product="following-cashmere"] .product-media {
+  background: #c8bca4;
+}
+.following-page [data-following-product="following-mandarin"] .product-media {
+  background: #b29e7f;
+}
+.following-page [data-following-product="following-lemon"] .product-media,
+.following-page [data-following-product="following-santa-fe"] .product-media {
+  background: #ddd1b7;
+}
+.following-page [data-following-product="following-lemon"] img,
+.following-page [data-following-product="following-santa-fe"] img {
+  height: auto;
+}
+.following-page [data-following-post="kitsch"] .product-media {
+  background: #e1e1e1;
+  box-shadow:
+    inset 0 0 0 1px #d5d7d8,
+    0 4px 14px #00000004;
+}
+.following-page .product-copy {
+  gap: 2px;
+  padding: 8px 4px 0;
+  color: #080808;
+  font-size: 12px;
+  line-height: 16px;
+}
+.following-page .product-copy strong {
+  font-weight: 500;
+}
+.following-page .price-badge {
+  top: 12px;
+  left: 12px;
+  height: 17px;
+  padding: 0 6px;
+  border-radius: 12px;
+  background: #5433f5;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 17px;
+}
+.following-page .save-button {
+  right: 12px;
+  bottom: 12px;
+  width: 32px;
+  height: 32px;
+  background: #999994bf;
+}
+.following-page .save-button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.6px;
+}
+.following-page .save-button[aria-pressed="true"] {
+  background: #5433f5;
+}
+.following-partial-photo {
+  position: relative;
+  margin-top: 12px;
+  aspect-ratio: 1;
+}
+.following-page .following-partial-photo img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: auto;
+}
+.following-partial-photo > button:not(.save-button),
+.following-recommendation-photo > button:not(.save-button) {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.following-empty {
+  margin: 14px 4px 20px;
+  padding: 14px 12px 12px;
+  border: 1px solid #eeeeef;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 4px 16px #00000006;
+  text-align: center;
+}
+.following-empty h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 30px;
+  font-weight: 700;
+  letter-spacing: -1.05px;
+}
+.following-empty p {
+  margin: 13px 0 15px;
+  color: #777;
+  font-size: 16px;
+  line-height: 22px;
+}
+.following-empty .primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  min-height: 44px;
+  width: 100%;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 28px;
+  background: #5433f5;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+.following-recommendation-photo {
+  margin-top: 16px;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.following-management {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+.following-management-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+.following-management-row > a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+.following-management-row img {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 50%;
+}
+.following-management-row > button {
+  flex: none;
+  min-width: 86px;
+  height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 20px;
+  background: #5433f5;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+.following-management-row > button[aria-pressed="true"] {
+  background: #f3f4f4;
+  color: #737373;
+}
+.following-list-empty {
+  color: #747474;
+  font-size: 14px;
+}
+
+/* Source-aligned subpixel text placement for the empty Following capture. */
+.following-heading h1,
+.following-empty :is(h2, p, .primary) {
+  translate: 0 0.25px;
+}
+
+@media (max-width: 350px) {
+  .following-empty h2 {
+    font-size: 23px;
+    line-height: 28px;
+  }
+  .following-post-identity strong,
+  .following-post-identity small {
+    overflow-wrap: anywhere;
+  }
+  .following-brand-rail {
+    flex-wrap: wrap;
+  }
+}

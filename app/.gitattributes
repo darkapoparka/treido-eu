@@ -1,0 +1,18 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+
+# Preserve vendored upstream and archived evidence bytes exactly across platforms.
+.agents/skills/openai-docs/** -text
+.agents/skills/gh-fix-ci/** -text
+.agents/skills/security-threat-model/** -text
+.agents/skills/security-best-practices/** -text
+docs/history/pre-astra-2026-09-12/*.txt -text whitespace=cr-at-eol
+
+# Preserve these five upstream reference files byte-for-byte, including original whitespace.
+# The offline upstream hash guard checks them; authored files retain normal whitespace checks.
+.agents/skills/security-best-practices/references/javascript-express-web-server-security.md -whitespace
+.agents/skills/security-best-practices/references/javascript-general-web-frontend-security.md -whitespace
+.agents/skills/security-best-practices/references/javascript-typescript-react-web-frontend-security.md -whitespace
+.agents/skills/security-best-practices/references/python-django-web-server-security.md -whitespace
+.agents/skills/security-threat-model/references/prompt-template.md -whitespace

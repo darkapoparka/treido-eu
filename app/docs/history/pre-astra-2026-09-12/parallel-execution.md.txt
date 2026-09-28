@@ -1,0 +1,113 @@
+# RETIRED: parallel writer mode
+
+Owner update 2026-09-11: the multi-session writer experiment is retired. Do not use lane locks or run parallel writers. Follow `single-session-execution.md`. The material below is kept only as historical coordination evidence.
+
+# Parallel Shop parity execution
+
+This file defines how 2–3 ChatGPT/Codex sessions may work on the same `J:\treido-bg` checkout without branches or worktrees. The objective is faster Shop 1:1 completion without corrupting shared `main`.
+
+## Non-negotiable topology
+
+- One checkout only: `J:\treido-bg`.
+- One branch only: `main`.
+- Remote: `https://github.com/darkapoparka/treido-bg.git`.
+- Never create feature branches or worktrees.
+- Never use `M:\treido-bg`, `treidotyj`, or another Treido repository.
+- Never run `git reset --hard`, `git clean`, blanket checkout/restore, or `git stash` over another session's work.
+- Never use `git add -A`, `git add .`, or `git commit -a` during parallel work.
+- Workers commit only explicitly owned paths. The Integrator is the only session that pushes `main`.
+
+## Three fixed lanes
+
+**Lane A — Account / identity / support** owns flows `1, 69–78, 80–94`.
+Queue: `69–78` → `80–84` → `85–89 + 93` → `90–92` → `1 + 94`.
+Primary owners: `apps/web/src/features/account/**`, account/profile/login/onboarding/support routes, and lane-specific account tests.
+
+**Lane B — Commerce / orders** owns flows `21–31, 60–68, 79`.
+Queue: `21–31` → `60–68 + 79`.
+Primary owners: `apps/web/src/features/commerce/**`, cart/checkout/order routes, order UI owners, and lane-specific commerce/order tests.
+
+**Lane C — Discovery / shared integration** owns all remaining flows: `2–20, 32–59, 95–97` and all shared-file integration.
+Queue: `2–6 + 42` → `7–13` → `14–20 + 32 + 37–41 + 96–97` → `33–36 + 38–39` → `43–51` → `52–59` → `95`.
+## Shared-file rule
+
+Lane C / Integrator exclusively owns these collision-prone files during parallel execution:
+
+- `shop-parity-checklist.md`, `tasks.md`, `design.md`, `AGENTS.md`, `verification.md`
+- `apps/web/src/app/globals.css` and root/app layout or configuration files
+- `apps/web/src/features/discovery/components.tsx`
+- `apps/web/src/features/discovery/icons.tsx`
+- `apps/web/src/features/discovery/state.tsx`
+- shared catalog/reference fixtures or media registries used by multiple lanes
+- lockfile/package manifests
+
+Lane A/B must not edit those shared files. If a shared change is required, record the exact requested edit and reason in the lane evidence log. Lane C applies it after checking both lanes. Existing Account edits to `layout.tsx` and `discovery/icons.tsx` that were already dirty when this protocol was created are grandfathered into the current 69–78 batch only; after that commit these paths return to Lane C.
+
+## Local session locks
+
+Each active writer creates one ignored marker before editing:
+
+- Lane A: `.local/parity/lane-a.lock`
+- Lane B: `.local/parity/lane-b.lock`
+- Lane C: `.local/parity/lane-c.lock`
+
+The marker contains session name, flow range and start time. Remove it when the lane stops editing. A worker must not start if its own lane marker already exists unless it verifies the old session is dead. Never delete another live lane's marker.
+
+The Integrator checks all markers before full build/regression. Full build, broad Playwright, dependency installation, lockfile edits, and production-server replacement happen only when Lane A/B are not actively writing.
+## Worker loop
+
+For each coherent flow family, every writer follows the same loop:
+
+1. Verify `pwd`, branch `main`, remote, `git status --short`, current HEAD, and the lane lock.
+2. Read only the relevant source rows/frames and current component owners. Open every ordered frame for the target flow before claiming review.
+3. Run/keep the dev preview on `127.0.0.1:6412` with `SHOP_REFERENCE_PREVIEW=1`; do not start competing Next servers unless the Integrator explicitly assigns a different port.
+4. Inspect the implementation at 393×793 with Remote Desktop/agent-browser and compare against source. Native status bar, native keyboard/file picker and Mobbin footer are excluded platform chrome.
+5. Fix the canonical component/state owner. No screenshot UI, invented source facts, duplicated frontend or arbitrary redesign.
+6. Exercise the complete interaction: entry, transition, Back, nested sheet dismissal, focus return, scroll retention, keyboard boundary, error/empty/loading state as relevant.
+7. Check 320px and 430px containment when the flow owns responsive browser UI.
+8. Add focused automated coverage. Prefer new lane/range-owned specs such as `tests/reference/parity-account-69-78.spec.ts`, `parity-commerce-21-31.spec.ts`, or `parity-discovery-2-6.spec.ts`; do not edit a mixed/shared historical spec during parallel work unless Lane C owns the edit. During parallel writing, run only targeted tests/lint that do not replace `.next` or mutate shared configuration.
+9. Record exact evidence in the lane log. State what passed, what remains, source frame IDs, screenshots, test names and any shared-file request.
+10. Commit only owned files using explicit pathspecs. Never include another lane's dirty files. Remove the lane lock after the commit or when stopping work.
+
+A flow is not accepted because a route renders, a screenshot looks close, or a related flow passed. `shop-parity-checklist.md` is the acceptance authority.
+
+## Commit discipline on shared main
+
+Because all sessions share one working tree, another lane's commit may move `HEAD` while you are editing. That is expected. Do not rebase/reset/stash to "fix" it. Re-read `git status` and `git log -3`, ensure your owned diff still exists, then commit only your paths.
+
+Before committing, use `git diff --name-only` and `git diff -- <owned paths>`. Stage explicit files only. If an unexpected file appears in your staged set, unstage that file without discarding its working copy and investigate ownership.
+## Integrator loop
+
+Lane C is also the integration authority. It does not overwrite Lane A/B work to make checks green.
+
+After a worker family commit:
+
+1. Read the lane evidence log and inspect that commit's diff.
+2. Apply any justified shared-file request at the shared owner rather than adding lane-local overrides.
+3. Reproduce the key browser journey and source comparison independently.
+4. Run the relevant focused tests; when A/B locks are absent, run the required batch gates and broader reference regression.
+5. Update `shop-parity-checklist.md` checkboxes only for proof actually observed. Update its acceptance total from the checked `Accept` cells.
+6. Keep a flow `OPEN`/`ACTIVE` if any required proof is missing. A documented exception may satisfy a box only when the exception is precise and accepted.
+7. Commit integration/checklist/docs coherently on `main`.
+8. `git fetch origin`; inspect divergence. Never force-push. Push only when local `main` is coherent and checks required for the pushed batch have passed.
+
+Only Lane C pushes. Lane A/B must never push while parallel mode is active.
+
+## Lane evidence logs
+
+Each lane owns exactly one append-only evidence file:
+
+- Lane A: `docs/parity/lane-a-account.md`
+- Lane B: `docs/parity/lane-b-commerce.md`
+- Lane C: `docs/parity/lane-c-discovery.md`
+
+Append one dated block per family. Do not rewrite another lane's history. Each block includes: flows; source frames opened; implementation files changed; browser states checked; 393/320/430 result; automated checks; remaining differences; shared-file requests; commit SHA.
+
+## Stop conditions
+
+Stop and report rather than improvising when the remote/repo identity is wrong, another session is editing the same lane, an unexpected destructive Git state appears, source evidence is missing/corrupt, or a required shared-file change would overwrite live work. A failure in one flow does not authorize switching repositories, rebranding, or claiming the family complete.
+## Two-session mode
+
+If only two sessions are available, always keep Lane C running as Integrator/shared owner and run **one** worker lane (A or B) beside it. Finish that worker's current family, then switch the second session to the other worker lane. Do not combine A+B into one writer while C is absent; that removes the shared-file/checklist/push owner and makes the single-main protocol unsafe.
+
+Three-session mode (A+B+C) is the fastest supported configuration.

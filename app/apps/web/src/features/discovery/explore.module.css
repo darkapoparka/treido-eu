@@ -1,0 +1,547 @@
+.page {
+  padding-top: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+}
+@font-face {
+  font-family: "ShopBeautyGeist";
+  src: url("/fonts/shop-chemical-geist.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+.page[data-category="Beauty"] {
+  font-family: "ShopBeautyGeist", Arial, Helvetica, sans-serif;
+}
+.page > h1 {
+  font-size: 28px;
+  line-height: 34px;
+  margin: 0;
+  letter-spacing: -0.9px;
+}
+.page > h2 {
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+.page :global(.editorial-hero) {
+  height: 200px;
+  margin: 14px 8px 34px 0;
+  border-radius: 28px;
+}
+.openingRail {
+  display: flex;
+  gap: 8px;
+  width: calc(100% + 16px);
+  margin: 14px -16px 34px 0;
+}
+.page .openingRail :global(.editorial-hero) {
+  flex: 0 0 calc(100% - 24px);
+  margin: 0;
+}
+.heroContinuation {
+  flex: 0 0 15px;
+  height: 200px;
+  overflow: hidden;
+}
+.heroContinuation img {
+  display: block;
+  width: 15px;
+  height: 200px;
+}
+.beautyOpening {
+  display: contents;
+}
+.photoContinuation {
+  flex: 0 0 16px;
+  height: 172px;
+  overflow: hidden;
+  border-left: 1px solid #dedede;
+}
+.photoContinuation img {
+  display: block;
+  width: 15px;
+  height: 170px;
+  margin-top: 1px;
+}
+.page :global(.editorial-hero) > img {
+  display: block;
+  border-radius: inherit;
+}
+.page:not([data-category]) :global(.editorial-hero) {
+  box-shadow: 0 6px 40px #0000001a;
+}
+.page :global(.editorial-hero) > div {
+  left: 20px;
+  bottom: 20px;
+  right: 48px;
+}
+.page :global(.editorial-hero) strong {
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.page :global(.editorial-hero) p {
+  font-size: 12px;
+  line-height: 16px;
+}
+.page :global(.editorial-hero) svg {
+  right: -28px;
+  bottom: 0;
+  width: 32px;
+  height: 32px;
+}
+.page:not([data-category]) :global(.editorial-hero) svg {
+  right: -31px;
+  bottom: -2px;
+  width: 36px;
+  height: 36px;
+  padding: 9px;
+  background: rgb(255 255 255 / 16%);
+}
+.page:not([data-category]) :global(.editorial-hero svg path) {
+  transform: translateY(-2px);
+}
+.page :global(.explore-categories) {
+  gap: 8px;
+  margin: 12px 0 80px;
+}
+.page :global(.explore-categories) > a {
+  min-width: 0;
+  height: 123px;
+  border-radius: 20px;
+  padding: 8px;
+}
+.page :global(.explore-categories) h3 {
+  font-size: 14px;
+  line-height: 20px;
+  margin: 0 4px 10px;
+}
+.page:not([data-category]) :global(.explore-categories) h3 {
+  font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  font-weight: 600;
+}
+.page :global(.explore-categories) > a > div,
+.page :global(.explore-categories) img {
+  height: 77px;
+}
+.page :global(.explore-categories) img {
+  border-radius: 16px;
+}
+.page :global(.explore-minis) > p {
+  font-size: 14px;
+  line-height: 18px;
+  margin: 0 0 16px;
+}
+.miniHeading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.page :global(.explore-minis) > .miniHeading {
+  margin-bottom: 0;
+}
+.miniHeading > h2 {
+  font-size: 18px;
+  line-height: 22px;
+  letter-spacing: -0.3px;
+}
+.miniHeading > svg {
+  width: 20px;
+  height: 20px;
+  padding: 4px;
+  border-radius: 50%;
+  background: #f3f4f5;
+  margin-left: 0;
+}
+.page :global(.explore-minis) .miniRow {
+  display: flex;
+  gap: 12px;
+  min-height: 44px;
+  margin: 0 0 12px;
+}
+.miniRow > img {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+.miniRow > span {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+.miniRow strong {
+  display: block;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.miniRow small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #767676;
+}
+.page :global(.explore-shelf) {
+  margin-top: 32px;
+}
+.page :global(.explore-minis) + :global(.explore-shelf) {
+  margin-top: 40px;
+}
+.page:not([data-category]) :global(.explore-minis),
+.page:not([data-category]) :global(.explore-shelf) {
+  font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+}
+.page :global(.explore-shelf) h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 18px;
+  line-height: 22px;
+  margin: 0 0 10px;
+  letter-spacing: -0.3px;
+}
+.page:not([data-category]) :global(.explore-shelf) h2 {
+  color: #444;
+}
+.shelfChevron {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f3f4f5;
+  font-size: 22px;
+  line-height: 20px;
+}
+.page :global(.explore-shelf .product-rail) {
+  gap: 8px;
+  width: calc(100% + 16px);
+  margin-right: -16px;
+  padding-right: 16px;
+}
+.page :global(.explore-shelf .product-card) {
+  width: 173px;
+  flex: 0 0 173px;
+}
+.page :global(.explore-shelf .product-media) {
+  height: 172px;
+  border-radius: 20px;
+}
+.page :global(.explore-shelf .product-copy) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.page :global(.explore-shelf .product-copy) strong {
+  font-size: 12px;
+  line-height: 16px;
+}
+.page:not([data-category]) :global(.explore-shelf .product-copy) {
+  gap: 0;
+  padding-bottom: 6px;
+  opacity: 0.999;
+}
+.page:not([data-category])
+  :global(.explore-shelf .product-copy > span:last-child) {
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.page :global(.explore-shelf .save-button) {
+  background: rgb(128 128 128 / 60%);
+  backdrop-filter: blur(12px);
+}
+.page :global(.explore-shelf .rating) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.page :global(.explore-shelf .rating) > span {
+  font-size: 14px;
+}
+.page :global(.explore-shelf .price-badge) {
+  font-size: 10px;
+  line-height: 14px;
+}
+.page
+  :global(
+    .explore-shelf .product-card[data-product-id="citizenry-linen"] .price-badge
+  ) {
+  background: #111;
+}
+
+/* Source flow 51: keep Beauty's own category, brand and deal-card geometry. */
+/* The source pills are white; reserve scrollable padding for their shadow while
+   keeping the pill and following hero at their recorded y positions. */
+.page[data-category="Beauty"] :global(.category-rail) {
+  margin: -6px -16px 7px -16px;
+  padding: 20px 0 30px 16px;
+  gap: 8px;
+}
+.page[data-category="Beauty"] :global(.category-rail) > a {
+  height: 40px;
+  min-width: 0;
+  overflow: hidden;
+  justify-content: flex-start;
+  padding: 4px;
+  gap: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px #0000000f;
+  font-size: 14px;
+}
+/* The frozen Beauty rail exposes a narrow edge of the fourth photo at 393px. */
+.page[data-category="Beauty"] :global(.category-rail) > a:nth-child(1) {
+  flex: 0 0 116px;
+}
+.page[data-category="Beauty"] :global(.category-rail) > a:nth-child(2) {
+  flex: 0 0 110px;
+}
+.page[data-category="Beauty"] :global(.category-rail) > a:nth-child(3) {
+  flex: 0 0 107px;
+}
+.page[data-category="Beauty"] :global(.beauty-category-icon) {
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+.page[data-category="Beauty"] .beautyOpening > :global(.editorial-hero) {
+  width: 100%;
+  height: 203px;
+  margin: 0 0 36px;
+}
+.page[data-category="Beauty"] > :global(.beauty-editorial) {
+  width: 100%;
+  height: 203px;
+  margin: 28px 0 36px;
+}
+.page[data-category="Beauty"] > :global(.beauty-editorial-rail) {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: calc(100% + 16px);
+  margin: 35px -16px 39px 0;
+}
+.page :global(.beauty-product-fragment),
+.page :global(.beauty-deal-fragment) {
+  flex: 0 0 16px;
+  width: 16px;
+  margin-left: 1px;
+  padding: 0;
+  overflow: hidden;
+}
+.page :global(.beauty-product-fragment) > span {
+  display: block;
+  position: relative;
+  width: 172px;
+  height: 172px;
+  border: 1px solid #dedede;
+  border-radius: 20px;
+  background: #f8e8ea;
+  overflow: hidden;
+}
+.page :global(.beauty-product-fragment) img {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 15px;
+  height: 64px;
+}
+.page :global(.beauty-deals) > :global(.beauty-deal-fragment) {
+  flex-basis: 16px;
+  padding: 0;
+  border-radius: 0;
+  background: #101a16;
+}
+.page :global(.beauty-deal-fragment) img {
+  display: block;
+  width: 15px;
+  height: 110px;
+  object-fit: fill;
+}
+.page[data-category="Beauty"]
+  > :global(.beauty-editorial-rail)
+  > :global(.beauty-editorial) {
+  flex: 0 0 calc(100% - 24px);
+  width: calc(100% - 24px);
+  height: 197px;
+  margin: 0;
+}
+.page[data-category="Beauty"]
+  > :global(.beauty-editorial-rail)
+  :global(.editorial-hero svg) {
+  background: #ae7456bf;
+}
+.page[data-category="Beauty"]
+  > :global(.beauty-editorial-rail)
+  > :global(.beauty-editorial-continuation) {
+  flex: 0 0 64px;
+  border-radius: 28px;
+  background: linear-gradient(
+    180deg,
+    #f2f2f2 0%,
+    #e1e1e1 32%,
+    #c8c8c8 62%,
+    #adadad 88%,
+    #eeeeee 100%
+  );
+}
+.page[data-category="Beauty"] :global(.editorial-hero) {
+  background: linear-gradient(#99978d, #99978d 70%, #99978dc0);
+  box-shadow: 0 16px 26px #0000000d;
+}
+.page[data-category="Beauty"] :global(.beauty-category-grid img) {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.page[data-category="Beauty"] :global(.beauty-category-grid strong) {
+  font-weight: 500;
+}
+.page[data-category="Beauty"] :global(.beauty-section) h2 {
+  line-height: 22px;
+  margin-bottom: 12px;
+  font-weight: 550;
+}
+.page[data-category="Beauty"] :global(.beauty-scent-section) h2 {
+  margin-bottom: 10px;
+}
+.page[data-category="Beauty"] :global(.beauty-scent-section) {
+  margin-top: 38px;
+}
+.page[data-category="Beauty"] :global(.beauty-favorites-section) {
+  margin-top: 36px;
+}
+.page[data-category="Beauty"] :global(.beauty-bestsellers-section) {
+  margin-top: 36px;
+}
+.page[data-category="Beauty"] :global(.explore-shelf) h2 {
+  font-weight: 550;
+}
+.page[data-category="Beauty"] :global(.beauty-section > a > h2) {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.page[data-category="Beauty"] :global(.beauty-heading-chevron) {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f3f4f5;
+  font-size: 22px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.page[data-category="Beauty"] :global(.product-card) {
+  flex: 0 0 172px;
+  width: 172px;
+}
+.page[data-category="Beauty"] :global(.product-card .product-media) {
+  height: 172px;
+  border: 1px solid #dedede;
+}
+.page[data-category="Beauty"] :global(.product-copy),
+.page[data-category="Beauty"] :global(.product-copy strong),
+.page[data-category="Beauty"] :global(.rating) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.page[data-category="Beauty"] :global(.product-copy strong) {
+  font-weight: 600;
+}
+.page[data-category="Beauty"] :global(.product-rail) {
+  gap: 8px;
+}
+.page[data-category="Beauty"] :global(.beauty-bestsellers),
+.page[data-category="Beauty"] :global(.beauty-deals) {
+  width: calc(100% + 16px);
+  margin-right: -16px;
+}
+.page :global(.beauty-brand) {
+  position: relative;
+  isolation: isolate;
+  height: 288px;
+  padding: 0 8px 8px;
+}
+.page :global(.beauty-brand-mark) {
+  display: block;
+  height: 68px;
+  min-height: 0;
+  margin: 0 -8px;
+}
+.page :global(.beauty-brand-mark) > img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 120px;
+  object-fit: fill;
+  z-index: -1;
+}
+.page :global(.beauty-brand) h3 {
+  position: relative;
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.page :global(.beauty-brand) p {
+  position: relative;
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.page :global(.beauty-brand-product) {
+  height: 160px;
+}
+.page :global(.beauty-brand-product) > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.page :global(.beauty-section .deal-badge) {
+  background: #5431ed;
+  color: #fff;
+  border-radius: 14px;
+  padding: 2px 6px;
+  font-size: 10px;
+  line-height: 12px;
+  white-space: nowrap;
+}
+.page :global(.beauty-deals) > a {
+  flex: 0 0 172px;
+  height: 192px;
+  border-radius: 20px;
+  padding-bottom: 12px;
+}
+.page :global(.beauty-deals) .deal-badge {
+  margin: 8px 0 6px;
+}
+.page :global(.beauty-deals) h3,
+.page :global(.beauty-deals) p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.page :global(.beauty-deals) > a[data-brand="Nécessaire"],
+.page :global(.beauty-brand)[data-brand="Nécessaire"] {
+  color: #111;
+}
+@media (max-width: 360px) {
+  .page :global(.beauty-brand) {
+    height: auto;
+  }
+  .page :global(.beauty-brand-product) {
+    height: auto;
+    aspect-ratio: 1;
+  }
+}

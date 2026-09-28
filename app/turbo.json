@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalDependencies": [".node-version", "eslint.config.mjs"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["NEXT_PUBLIC_*"],
+      "passThroughEnv": ["NEXT_TELEMETRY_DISABLED"]
+    },
+    "lint": { "dependsOn": ["^lint"], "outputs": [] },
+    "typecheck": { "dependsOn": ["^typecheck"], "outputs": [] },
+    "dev": { "cache": false, "persistent": true }
+  }
+}

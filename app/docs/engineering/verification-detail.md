@@ -1,0 +1,91 @@
+# Detailed acceptance and release requirements
+
+> Detailed engineering requirements retained from the pre-Astra specification. Root architecture.md, verification.md and tasks.md own current routing, phases and evidence. Proposed structures and test targets are not claims of implementation.
+
+Verify the product against [product.md](../../product.md) and its appearance/flows against [design.md](../../design.md). [tasks.md](../../tasks.md) defines the numbered batches and their closing checks. This file defines the evidence standard, not a requirement to run everything after every edit.
+
+## 1. Testing cadence
+
+**Implement a coherent batch, then verify it.** A component, file, CSS change or internal checklist item is not automatically a test checkpoint. Use normal compiler/editor feedback and targeted tests when debugging. Write focused regression tests with risky behavior, but do not repeatedly run the full suite while constructing the same flow.
+
+At the end of a numbered task, run the applicable checks listed in that task, fix failures and rerun the affected checks. Include consumers when a shared contract/component changed. A cross-cutting change may justify a wider regression; explain the scope rather than defaulting to every release test. Task 12 runs the comprehensive product verification; Tasks 13-14 cover release rehearsal and authorized deployment.
+
+The exception is operational safety: verify the destination, permissions and environment BEFORE a database write or external action. Batch testing cannot make a mistaken production write safe afterward. Money, inventory, authorization and provider retry behavior must pass focused checks before their implementing batch is Done, not wait until Task 12.
+
+## 2. Evidence and scope
+
+Record in tasks.md: what was built, what remains, actual commands/results, commit or worktree, environment/dataset and relevant browser/device. Link concise sanitized captures/traces when they support a claim. Do not paste full logs or produce a new report for each component.
+
+Distinguish unit mocks, real PostgreSQL, sandbox providers, JavaScript exports, installed native builds, physical devices, hosted previews and production. Missing evidence is Not run/Blocked for that specific claim. A skipped suite, HTTP 200, signed-out redirect, screenshot capture or Expo Go preview is not proof of a broader feature.
+
+Use reproducible synthetic fixtures with isolated state. Do not depend on earlier tests' orders or retry flakes until green. Private assets, auth state and personal records never enter public evidence. No auto-approved visual baselines or weakened assertions just to pass CI.
+
+## 3. Batch checkpoints
+
+| Batch | Closing checks |
+| --- | --- |
+| Task 1 | Clean frozen install; basic lint/format/typecheck/import tests; production web build/smoke; Expo doctor/dependency/export. No provider/device-release suite. |
+| Task 2 | Source/flow coverage, meaningful product decisions and correct worked examples. No application suite for documentation alone. |
+| Task 3 | Discovery screen-set comparison and a connected navigation journey; scoped UI/type checks. Fixture evidence is labeled. |
+| Task 4 | Real schema/identity/catalog and tenant/quantity/constraint tests; web/native API connectivity and declared development-build evidence. |
+| Task 5 | Full real-database/sandbox purchase and approved recovery journey; stock/payment/idempotency/permission failures. Initial populated performance baseline. |
+| Task 6 | Full frozen reference screen/flow review plus affected account/transaction regression. Source approval recorded separately from service completion. |
+| Task 7 | Branded/food-adapted screen set, localization/accessibility and affected purchase/navigation regression. Brand approval recorded. |
+| Tasks 8-11 | The completed feature batch's domain/provider/UI/device checks and relevant regression, not every unrelated release suite. |
+| Task 12 | Consolidated all-feature functional, security, visual, accessibility, localization, performance and web/native regression. |
+| Task 13 | Isolated deployment/schema, backup/restore, provider reconciliation and rollback rehearsals. |
+| Task 14 | Exact authorized live artifact/configuration and hosted results; native submission and store acceptance distinguished. |
+
+Implement scripts as the feature/test infrastructure needs them. Do not create fake green commands for unimplemented suites. Use supported existing tools, not a custom verification framework built for its own sake. Minimal CI may run normal checks on pushes; it need not run after each file save.
+
+## 4. Commerce and failure coverage
+
+Task 5's complete journey: merchant drafts and publishes a product/variant/fulfillment offer; a buyer discovers it on web/native; guest selection survives sign-in; a reviewed server quote leads to one order/payment operation; verified sandbox outcomes reconcile; the authorized merchant fulfills it; both clients see matching purchased facts, timeline and inventory. Include approved weighted and multi-seller cases before full checkout acceptance. Later batches extend the same foundation, not disconnected demos.
+
+| Boundary | Required relevant cases before the owning batch closes |
+| --- | --- |
+| Inventory | Competing buyers/last stock, expired lots, adjustments racing reservations, repeated consume/release, expiry versus payment success; no overselling or double restoration. |
+| Cart/quote | Changed price/publication/variant/address/fulfillment, malformed/repeated quantity input, guest merge conflicts, removed products/currency mismatch; explicit requote or rejection. |
+| Idempotency | Same key/input concurrently, different input with same key, client timeout, provider success before local crash; reconcile without duplicate charges/orders. |
+| Payments/recovery | Invalid signatures, duplicate/late/out-of-order callbacks, provider timeout/rate limit, capture/cancel/refund races and supported item/seller/fee allocation. |
+| Permissions/identity | Cross-user/business IDs, revoked membership/stale context, provisioning/webhook races, expired sessions, seller attempting admin, unauthorized export/file/message entry points. |
+| Communication/jobs | Double send, reconnect/replay/order/read cursor, removed/blocked recipient, unauthorized attachment/subscription, abandoned/expired work lease and terminal failures. |
+| Environment | Wrong/missing credentials, ambiguous DB target, fixture mode or sandbox origin in release, unsigned job triggers; fail closed. |
+
+Providers use sandbox accounts or delivery sinks. Tests are not authorization to contact real customers, refund live payments or stress production.
+
+## 5. Visual and accessibility review
+
+Source matching and regression are separate. First compare with the actual selected Shop source at its recorded logical viewport/density and named browser/Android adaptations. Then approve our own deterministic regression baselines. Matching our own output alone proves consistency, not reference fidelity.
+
+Review related screens/flows as a batch. Task 3 reviews discovery; Task 6 reviews the whole declared reference; Task 7 reviews the Treido adaptation. Smaller checks while refining are useful, not a mandatory full test pass after each edit. Mask only justified volatile/system pixels, not differences under review.
+
+Cover relevant web widths 320/360/390/430, landscape, and tablet/desktop examples 768/1024/1440. Task 12 covers the full required matrix; each earlier UI batch checks representative widths and affected shared consumers. Verify important paths on actual iOS Safari/Android Chrome; emulated WebKit is not a physical-device result. Native needs installed iOS/Android builds, safe areas, keyboard/back, text scaling, deep links and interrupted/background/network states.
+
+Check semantics, labels, keyboard/focus containment and return, contrast, reduced motion, long BG/EN content and 200% web text sizing. Task 12 includes screen-reader core journeys and the recorded applicable accessibility target. Similarity to an inaccessible source is not a reason to ship an inaccessible control.
+
+The owner/design reviewer approves source fidelity at Task 6 and branding at Task 7. Missing source/platform evidence is recorded; no unbounded entire-app 1:1 claim. Fixture-only states can be visually reviewed but their real services remain unfinished until their owning tasks pass.
+
+## 6. Performance
+
+Separate development cold compilation, deployed cold/warm loads and in-app navigation. Use production builds and realistic synthetic data with stated CPU/network/device/cache/region/provider conditions. Do not blame the framework or monorepo without traces.
+
+Browser targets: LCP <= 2.5s, INP <= 200ms, CLS <= 0.1 at the 75th percentile when sufficient field data exists, segmented by mobile/desktop and meaningful routes. Before traffic, use repeatable lab/interaction evidence; a Lighthouse run is not field INP proof. These are targets, not observed results.
+
+Task 4 establishes needed instrumentation; Task 5 records populated discovery/checkout/orders and merchant queue baselines plus provisional API/native budgets; Task 12 profiles and verifies the complete product. Empty scaffold timings are not populated-product acceptance. Inspect transferred JS/media, blocking work, auth/provider calls, query count/duration, cache behavior, TTFB and usable navigation. A skeleton is feedback, not proof of speed. Native startup/interaction is measured on native builds, not by browser metrics.
+
+## 7. Acceptance states
+
+Task 1 proves the scaffold, not the backend. Task 5 proves the transaction, not every feature. Task 6 approves the reference, not fixture-only services. Task 7 approves the Treido adaptation. Task 12 proves the declared product scope; Task 13 prepares a release; Task 14 requires explicit live authorization. These are outcomes within the numbered queue, not another set of gate tasks.
+
+Full product completion includes every declared feature. An explicitly authorized restricted pilot can name deferred scope, but cannot mark it Done or claim full acceptance. A failed/missing check is fixed or reported accurately; confidence is not evidence.
+
+## 8. Release and recovery
+
+Task 13 prepares an environment-specific runbook with exact approved target identities, least-privilege roles, deployment regions, provider modes, private storage, signed callbacks/work triggers, limits, alerts and recovery. Prove schema installation and forward migration, backup/restore and application rollback on isolated data. Never run migrations/seeds during application build.
+
+Rehearse interrupted provider operations, including success before local finalization and delayed callbacks. Restoring a database can erase later valid payments/orders; recovery must reconcile, not blindly restore. Installed mobile clients may outlive a web release: test compatibility with supported contracts.
+
+Release artifacts must exclude reference-only data/routes, restricted assets, sandbox public keys/origins and private cache leaks. Do not blindly promote a preview build. Task 14 requires explicit approval of the exact web/native artifacts, targets and live actions. Native submission is not store approval. Importing existing real data or taking over an old domain is separately scoped and authorized.
+
+Implementation references: [Playwright baselines](https://playwright.dev/docs/test-snapshots), [Next.js testing](https://nextjs.org/docs/app/guides/testing/vitest), [Core Web Vitals](https://web.dev/articles/vitals), [Expo development builds](https://docs.expo.dev/develop/development-builds/introduction/), [Prisma transactions](https://www.prisma.io/docs/orm/prisma-client/queries/transactions). Current installed-version guidance informs the checks; actual Treido results establish acceptance.

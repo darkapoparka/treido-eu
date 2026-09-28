@@ -1,0 +1,841 @@
+{
+  "purpose": "Local opt-in reference preview only. Images are ignored and not redistributed in Git.",
+  "assets": [
+    {
+      "id": "cleo",
+      "localFile": "reference-assets/shop/products/cleo.jpeg",
+      "sourcePage": "https://vehla.com/products/cleo-black-smoke",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0082/8339/0014/files/VEHLA12290.jpg?v=1774562636",
+      "width": 3014,
+      "height": 3768,
+      "sha256": "fced68eef16a8dc8fa66889abc56f70ef8d8f3a04220c0047667bda74c2f42cc",
+      "verification": "Visually matched against frozen Shop reference; owner approval remains separate."
+    },
+    {
+      "id": "round-sunglasses",
+      "localFile": "reference-assets/shop/products/round-sunglasses.jpeg",
+      "sourcePage": "https://forkeyewear.com/products/hush",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0752/4158/6908/files/22-000055-f.jpg?v=1761473367",
+      "width": 2048,
+      "height": 2048,
+      "sha256": "d6c203aae6cbd96e5ff9bf2bfda6616f8eb69641a7e2a17911257ee2a51eb0ff",
+      "verification": "Visually matched against frozen Shop reference; owner approval remains separate."
+    },
+    {
+      "id": "u-see-me",
+      "localFile": "reference-assets/shop/products/u-see-me.jpeg",
+      "sourcePage": "https://shopakira.com/products/u-see-me-glasses",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0850/1329/9515/files/HF-25083CLEAR1_1c9eda39-d565-4935-b1ff-66893c68f08a.jpg?v=1783950181",
+      "width": 1000,
+      "height": 1500,
+      "sha256": "a9d7820ab7f07dc52d57c0de4556b00e892f6056f597c4693351edc07be43f7e",
+      "verification": "Visually matched against frozen Shop reference; owner approval remains separate."
+    },
+    {
+      "id": "rice-conditioner",
+      "localFile": "reference-assets/shop/products/rice-conditioner.jpeg",
+      "sourcePage": "https://www.mykitsch.com/collections/conditioner/products/rice-water-protein-conditioner-bar-strengthening",
+      "sourceUrl": "https://www.mykitsch.com/cdn/shop/files/6752-RiceWaterProteinConditionerBar-BottleFreeBeauty-Strengthening-hero-1280x1280px_2.jpg?v=1780526423&width=1400",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "f03c1807e494ca6602bc0d2b61b764e5a431794600f55f44e9445062b7df5080",
+      "verification": "Visually matched against frozen Shop reference; owner approval remains separate."
+    },
+    {
+      "id": "shampoo-bag",
+      "localFile": "reference-assets/shop/products/shampoo-bag.jpeg",
+      "sourcePage": "https://www.mykitsch.com/collections/shower-accessories/products/bottle-free-beauty-bar-bag-blush",
+      "sourceUrl": "https://www.mykitsch.com/cdn/shop/files/5496-ShampooBeautyBarBag-BottleFreeBeauty-Blush-Hero-1280x1280px.jpg?v=1777071193&width=1400",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "b0f7585a16c274c85e6ddb14f2a6a33df198160e716ac6b353afc923a0824811",
+      "verification": "Visually matched against frozen Shop reference; owner approval remains separate."
+    },
+    {
+      "id": "carpenter-jeans",
+      "localFile": "reference-assets/shop/products/carpenter-jeans.jpeg",
+      "sourcePage": "https://www.fashionnova.com/en-ca/products/contrast-lining-carpenter-straight-jeans?color=black",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0293/9277/products/10-27-22Studio5_RT_RL_11-27-48_19_FAP0482_Black_0139_JB.jpg?crop=center&height=691&v=1735672169&width=461",
+      "width": 461,
+      "height": 691,
+      "sha256": "677a369c5f6ad8c3188f728cf63fd92e9749f1b1d1d76aff1072bd3f43415c3d",
+      "verification": "Visually matched against frozen Shop reference; owner approval remains separate."
+    },
+    {
+      "id": "heritage-jeans",
+      "localFile": "reference-assets/shop/products/heritage-jeans.jpeg",
+      "sourcePage": "https://originusa.com/products/heritage-cotton-jeans",
+      "sourceUrl": "https://originusa.com/cdn/shop/files/WEB-HCJFront.webp?v=1758049111",
+      "width": 1544,
+      "height": 2012,
+      "sha256": "89eaead18b4bfa866dbfaca34eb4dfaeef16564357dc4ccdf5b2ef8ae33074a2",
+      "verification": "Visually matched against frozen Shop reference; owner approval remains separate."
+    },
+    {
+      "id": "store-hero",
+      "localFile": "reference-assets/shop/products/store-hero.png",
+      "sourcePage": "https://shop.app/m/mykitsch",
+      "sourceUrl": "https://cdn.shopify.com/videos/c/vp/c4a836d3780f487193879ee4c17a7b44/c4a836d3780f487193879ee4c17a7b44.SD-480p-1.5Mbps-64900030.mp4",
+      "width": 442,
+      "height": 480,
+      "sha256": "2b8a65c4618f75e6e10ffb84f90346ac957bc0858a5d76c65eb8d718f06727e2",
+      "frameSeconds": 7.3,
+      "verification": "Derivative from Actions run 34675919506 inspected against frozen flow96 frames002/003: same two pink brushes, orientation and pink background. Previous derivative hashes differed; the cause is not established. This pins the inspected revision, not a visual-parity pass or owner approval.",
+      "pixelSha256": "27832f9a21fa7ce63513d5d152d291a2820b279accb5a9772d7ac29adc975f06",
+      "sourceSha256": "78469e747a3cedae293ef4a09c06286619dbe76ad0035af84d4abdb7fc26dc79"
+    },
+    {
+      "id": "store-kitsch-brushes-clean",
+      "localFile": "reference-assets/shop/products/store-kitsch-brushes-clean.png",
+      "sourcePage": "https://shop.app/m/mykitsch",
+      "sourceUrl": "https://cdn.shopify.com/videos/c/vp/c4a836d3780f487193879ee4c17a7b44/c4a836d3780f487193879ee4c17a7b44.SD-480p-1.5Mbps-64900030.mp4",
+      "width": 442,
+      "height": 480,
+      "sha256": "ee65d695ead32fc67fa30d43690ea0d111454a9d2e9758f3304866e71c191bfc",
+      "frameSeconds": 7.5,
+      "verification": "Clean photograph extracted from the existing local merchant video at 7.5s and visually matched to flow41/001. Source photo aligns at 393px width with a -43px vertical crop. No screenshot logo, rating, control or control-shaped cutout is retained. Source approval remains separate.",
+      "pixelSha256": "576e6437a737b6f1d77fc9ccd54908e1ef79500feec20bb2661a77c3a74e19f7",
+      "sourceSha256": "78469e747a3cedae293ef4a09c06286619dbe76ad0035af84d4abdb7fc26dc79"
+    },
+    {
+      "id": "store-kitsch-woman-clean",
+      "localFile": "reference-assets/shop/products/store-kitsch-woman-clean.png",
+      "sourcePage": "https://shop.app/m/mykitsch",
+      "sourceUrl": "https://cdn.shopify.com/videos/c/vp/c4a836d3780f487193879ee4c17a7b44/c4a836d3780f487193879ee4c17a7b44.SD-480p-1.5Mbps-64900030.mp4",
+      "width": 442,
+      "height": 480,
+      "sha256": "de0702ba8b75841f14e4ee2340252ccef72332eda6ed781edd762ba55e7eb2e1",
+      "frameSeconds": 2.9,
+      "verification": "Clean photograph extracted from the existing local merchant video at 2.9s and visually matched to flow41/002. Source photo aligns at 393px width with a -43px vertical crop. No screenshot logo, rating, control or control-shaped cutout is retained. Source approval remains separate.",
+      "pixelSha256": "8589745557d932b946d00464b188db618fadc5d8c206ed84e9b95e1aa35bf57a",
+      "sourceSha256": "78469e747a3cedae293ef4a09c06286619dbe76ad0035af84d4abdb7fc26dc79"
+    },
+    {
+      "id": "whip-mousse",
+      "localFile": "reference-assets/shop/products/whip-original.jpeg",
+      "sourcePage": "https://langehair.com/products/whip-volumizing-mousse",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/2204/1955/files/WHIP_49bb2925-1038-44f3-8953-47bf17ddfc12.jpg?v=1784753243",
+      "width": 2400,
+      "height": 2400,
+      "sha256": "370c65b4ca3e69f4c436ccb8aa82af78a9e653a8a04eba3d79ab339c01122d7f",
+      "verification": "Actual image visually compared to screen169. Same product, angle, packaging and shadow; clean full square with no baked UI."
+    },
+    {
+      "id": "hanacure-cleanser",
+      "localFile": "reference-assets/shop/products/hanacure-original.png",
+      "sourcePage": "https://www.hanacure.com/products/microphol-cleanser",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/1080/2380/products/1.1.Cleanser.Product.png?v=1762890112",
+      "width": 1000,
+      "height": 1000,
+      "sha256": "7d34a07af606fff4df072271fb7acb99bff4e5c7dfddac75ffa347debc82c313",
+      "verification": "Actual image visually compared to screen169. Same product, angle, packaging and shadow; clean full square with no baked UI."
+    },
+    {
+      "id": "buffy-breeze",
+      "localFile": "reference-assets/shop/products/buffy-original.webp",
+      "sourcePage": "https://buffy.co/products/breeze-comforter",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/2462/9621/files/Insitu-2_3.webp?v=1787084783",
+      "width": 935,
+      "height": 935,
+      "sha256": "2de603236d82e137d8c4b04ab4056f73d029e56ab9b63479f5d2f6e76fcc7646",
+      "verification": "Actual image visually compared. Same bed, angle, pillows and comforter. No baked UI."
+    },
+    {
+      "id": "carbon-crew",
+      "localFile": "reference-assets/shop/products/carbon-original.jpeg",
+      "sourcePage": "https://www.trueclassictees.com/products/carbon-active-crew-neck",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0220/4008/4552/files/Short_Sleeve_Active_Crew_Neck_Carbon_3.jpg?v=1762278056",
+      "width": 2160,
+      "height": 2700,
+      "sha256": "adcf16fc5ccbb5836d026e3016f1a85d413e061f0808d667a9b80032073290b1",
+      "verification": "Actual image visually compared. Same model, tattoo, pose, shirt and shorts. Center square cover reproduces source head crop. No baked UI."
+    },
+    {
+      "id": "jordan-legend",
+      "localFile": "reference-assets/shop/products/jordan-original.jpeg",
+      "sourcePage": "https://www.kickscrew.com/products/air-jordan-11-legend-blue-2024-ct8012-104",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0603/3031/1875/files/main-square_aff3da54-bdf6-4c96-ba6a-3ff5d6a073db_3840x.jpg?=75&v=1772238984",
+      "width": 1584,
+      "height": 1584,
+      "sha256": "3cc8d03a57accbb58b04f292eef3b2bcd1b0398b302f2c74ca87a2137e810fc2",
+      "verification": "Actual image visually compared. Exact white/blue side profile, shadow and square composition. No baked UI."
+    },
+    {
+      "id": "gift-buds",
+      "localFile": "reference-assets/shop/products/skullcandy-original.png",
+      "sourcePage": "https://www.skullcandy.com/products/smokin-buds-true-wireless-earbuds",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0635/5114/3993/files/1_Smokin-buds_pink.png?v=1771460278",
+      "width": 2000,
+      "height": 2000,
+      "sha256": "b8c8a57f84e5c2fd40f647353a258b47736c508128a934dde8b545dd471e6b3f",
+      "verification": "Actual image visually compared. Exact hot pink case and floating earbuds angle. Transparent image; render against white. No baked UI."
+    },
+    {
+      "id": "gift-nirvana",
+      "localFile": "reference-assets/shop/products/nirvana-original.jpeg",
+      "sourcePage": "https://shop.app/products/4792676974689/nirvana",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0090/5415/8945/products/CT18528A_2152b567-335e-46b4-b08d-a4c5244a70d3.jpg?v=1632861850",
+      "width": 2000,
+      "height": 2000,
+      "sha256": "34dcce0d8fd8a84569aeec26315cf3411ce6d2812c5c3ff254eb9eef9c64e843",
+      "verification": "Actual image visually compared. Exact cat tree and cat in left hammock. No baked UI."
+    },
+    {
+      "id": "rice-bundle",
+      "localFile": "reference-assets/shop/products/rice-bundle.jpeg",
+      "sourcePage": "https://www.mykitsch.com/products/rice-water-shampoo-conditioner-combo-pack",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/9081-RiceWaterProtein-Shampoo_Conditioner-2pc-Combo-BottleFreeBeauty-hero-opt2-1280x1280px_2.jpg?v=1780523783",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "7a9c5032738d25024e35793a83f59e6f728f4d8135ce882e4f007e03540afcc1",
+      "verification": "Visually matched to frozen Saved source033; clean original with no interface text."
+    },
+    {
+      "id": "order-hero",
+      "localFile": "reference-assets/shop/products/order-hero.png",
+      "sourcePage": "https://shop.app/m/mykitsch",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/preview_images/c4a836d3780f487193879ee4c17a7b44.thumbnail.0000000000.jpg?v=1765392543",
+      "width": 1080,
+      "height": 470,
+      "sha256": "9b331bb8a8555e9bc68e193c8f7883e68e2d647f9395b8a9195c1cac7e13757e",
+      "cropPixels": [0, 347, 1080, 470],
+      "verification": "Official store poster crop visually matched to order detail reference.",
+      "pixelSha256": "2b9fe510649150d9cc749bd75bc6919854928fd797842cc4dc35d34379d777ee"
+    },
+    {
+      "id": "beachy-gelato",
+      "localFile": "reference-assets/shop/products/gelato-original.jpeg",
+      "sourcePage": "https://www.mykitsch.com/products/kitsch-beachy-gelato-hair-perfume",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/509693-BeachyGelato-HairPerfume-Fragrance-50mL-hero-1280x1280px.jpg?v=1773958437",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "b4b353c5c276c269e5538941a49a8d2fa4f588de45945b4c66743401a6917d44",
+      "verification": "Visually verified same bottle, box, angle, background and packaging as source050. Whole square."
+    },
+    {
+      "id": "black-conditioner-bag",
+      "localFile": "reference-assets/shop/products/black-conditioner-bag.jpeg",
+      "sourcePage": "https://www.mykitsch.com/products/bottle-free-beauty-bar-conditioner-bag-black",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/5977-BarBagConditioner-BottleFreeBeauty-Black-1280x1280px-72dpi.jpg?v=1762182315",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "9fe609559e2ede0feb338ff2a16d0f01cccab0700a1a757c468aaba2f8d5616a",
+      "verification": "Downloaded official product primary photo and visually compared to source flow20 frame003; same product angle, packaging, composition; no baked UI."
+    },
+    {
+      "id": "chocolate-body-bag",
+      "localFile": "reference-assets/shop/products/chocolate-body-bag.jpeg",
+      "sourcePage": "https://www.mykitsch.com/products/body-wash-beauty-bar-bag-chocolate",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/60534-BodyWashBeautyBarBag-BottleFreeBeauty-Chocolate-Hero-1280x1280px.jpg?v=1777069345",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "2c009b99c5925b7d8240bf8caa4f5910be91d9fd3f22b90d85df316f212cae93",
+      "verification": "Downloaded official product primary photo and visually compared to source flow20 frame003; same product angle, packaging, composition; no baked UI."
+    },
+    {
+      "id": "shower-caddy",
+      "localFile": "reference-assets/shop/products/shower-caddy.jpeg",
+      "sourcePage": "https://www.mykitsch.com/products/kitsch-self-draining-shower-caddy",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/7551-SelfDrainingShowerCaddy-BottleFreeBeauty-Hero-1280x1280px_6edcc92e-6a9e-4d46-a947-f270b50c9d4d.jpg?v=1768332837",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "5436dd038843870fd410a22d9bdb89c03bd200c2a0b372c9ee6475e842c75eeb",
+      "verification": "Downloaded revision from Actions run 34675919506 visually inspected against frozen flow20 frame003: same caddy, beige packaging on the left, angle and shadow. Image identity matches; final app color treatment and layout remain subject to pixel comparison. This is not automatic visual acceptance."
+    },
+    {
+      "id": "solid-shave-butter",
+      "localFile": "reference-assets/shop/products/solid-shave-butter.jpeg",
+      "sourcePage": "https://www.mykitsch.com/products/solid-shave-butter",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/60626-ShaveButter-BottleFreeBeauty-hero-opt2-1280x1280px.jpg?v=1783973684",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "e642d30af40a78a24a32fe7cfc4c5cfbc987dae43a6b3b18dcc7c86f2cf6ee60",
+      "verification": "Downloaded official product primary photo and visually compared to source flow20 frame003; same product angle, packaging, composition; no baked UI."
+    },
+    {
+      "id": "mini-homescape-icon",
+      "sourcePage": "https://shop.app/mini/homescape-ai",
+      "sourceUrl": "https://cdn.shopify.com/b/shop-minis-content/icons/73f8b900-c054-4e17-92e7-8e7f20ef7bdc",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "6709f79d71f28502dcbb5f7929a869796d52a736a6f47af680ac57fa8109bd2b",
+      "verification": "Official Mini og:image; actual viewed house/focus/star artwork matches source174 visible portion. Full source icon was partly obscured by dock.",
+      "localFile": "reference-assets/shop/products/homescape-original.png"
+    },
+    {
+      "id": "collection-coastal",
+      "sourcePage": "https://www.mykitsch.com/products/coastal-blue-plush-microfiber-hair-towel-turban-with-bow",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/510651-CoastalCottage-PlushMicrofiberHairTowelTurbanWithBow-CoastalBlue-Model-5-1280x1280px.jpg?v=1774641844",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "67874dcf10e8fbc1007ed218cec713d478e3947c68c29d3993994db5eef8c8d3",
+      "verification": "Exact source047 visible left slice: same model in blue towel holding blue book, same hand pose, background, lighting. Full original now available; no invented replacement.",
+      "localFile": "reference-assets/shop/products/coastal-model-3.jpg"
+    },
+    {
+      "id": "assistant-armor-cap",
+      "sourcePage": "https://www.mobarmor.com/products/misc-hat",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0891/1699/9971/files/MA-BLK-SM-HAT-02.jpg?v=1735833453",
+      "width": 2000,
+      "height": 2000,
+      "sha256": "14b7a6e8fb783be95e22e6c5146b6719b5becc78c31aa7e671977b49f3877e1b",
+      "verification": "Actual viewed exact match to flow d6910bbb-655d-44ad-842e-11da062a1e66/007.webp: American flag underside, tilted white mannequin, white script, side embroidered emblem. Full clean original with no interface overlays.",
+      "verified": true,
+      "localFile": "reference-assets/shop/products/mob-armor-angle.jpg"
+    },
+    {
+      "id": "sugar-body-scrub",
+      "sourcePage": "https://www.mykitsch.com/products/sugar-exfoliating-body-scrub-bar",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/7582-SugarSolidBodyScrubBar-BottleFreeBeauty-Exfoliating-hero-1280x1280px_49686508-e9f3-4138-8f2e-a4daa7a91627.jpg?v=1784132011",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "668644910d6c775280e7914683265c9afa5f679be2430e414c947453369d5f40",
+      "verified": true,
+      "verification": "Actual viewed exact package, bar, lighting and composition match to related grid in frozen flow a99e7161-595d-466c-b0b1-bc1183f1d4d7/008.webp. Full original has no interface controls.",
+      "localFile": "reference-assets/shop/products/sugar-body-scrub.jpg"
+    },
+    {
+      "id": "charcoal-body-wash",
+      "sourcePage": "https://www.mykitsch.com/products/charcoal-detoxifying-body-wash-bar",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/7575-CharcoalSolidBodyWashBar-BottleFreeBeauty-Detoxifying-hero-2-1280x1280px_f7c06529-e41c-4265-a715-1f423642cabd.jpg?v=1755100489",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "a53494f0d5ce8125f0bd72627601ebb3a1ddb485512a47cd71aade22029df403",
+      "verified": true,
+      "verification": "Actual viewed exact package, bar, lighting and composition match to related grid in frozen flow a99e7161-595d-466c-b0b1-bc1183f1d4d7/008.webp. Full original has no interface controls.",
+      "localFile": "reference-assets/shop/products/charcoal-body-wash.jpg"
+    },
+    {
+      "id": "shea-gallery-hero",
+      "localFile": "reference-assets/shop/products/shea-gallery-hero-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/shea-butter-solid-body-wash",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/9852-SheaButterSolidBodyWashBar-BottleFreeBeauty-Moisturizing-Hero-1280x1280px_8d065d67-4e39-44f7-8158-b7be14187326.jpg?v=1778097098",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "2382998c1eaff59c603fb104fcb2ac20275a1ee2a232768363b16a4881e419d9",
+      "verification": "Visually matched exact packaging and composition to frozen screenshots066/067/060. Clean official original; no interface overlays."
+    },
+    {
+      "id": "shea-gallery-testimonial",
+      "localFile": "reference-assets/shop/products/shea-gallery-testimonial-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/shea-butter-solid-body-wash",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/Shea_Butter_Infographic-1.png?v=1778182313",
+      "width": 1400,
+      "height": 1400,
+      "sha256": "e3384fe2a7e5dac2c291d52085dbe72f7fd35d5d8cc7b5b34c8728f0de4165c8",
+      "verification": "Visually matched exact packaging and composition to frozen screenshots066/067/060. Clean official original; no interface overlays."
+    },
+    {
+      "id": "shea-gallery-benefits",
+      "localFile": "reference-assets/shop/products/shea-gallery-benefits-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/shea-butter-solid-body-wash",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/Shea_Butter-Bar-Infographic.png?v=1778182314",
+      "width": 4167,
+      "height": 4167,
+      "sha256": "f3d111a78c18d67a82e4b17db33d3e653331e62aab5bf5aeab2c5e74c2563437",
+      "verification": "Visually matched exact packaging and composition to frozen screenshots066/067/060. Clean official original; no interface overlays."
+    },
+    {
+      "id": "beauty-athena-product",
+      "localFile": "reference-assets/shop/products/beauty-athena.png",
+      "sourcePage": "https://athenaclub.com/products/razor-kit",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0763/3774/2108/files/Coral_Razor_ShopAllATC.webp?v=1744836974",
+      "width": 2092,
+      "height": 2092,
+      "sha256": "a9d59e29df6d79404285051cbbfd365026ba84d0290a35283b32228b93cdcd2f",
+      "verification": "Visually matched source flow51/003-006 product composition; source colors/prices remain frozen."
+    },
+    {
+      "id": "beauty-crown-product",
+      "localFile": "reference-assets/shop/products/beauty-crown.jpg",
+      "sourcePage": "https://www.crownaffair.com/products/the-hydrating-conditioner",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0088/0368/0319/files/TheHydratingConditioner-OnGrey01.jpg?v=1762269264",
+      "width": 1200,
+      "height": 1200,
+      "sha256": "7fc6d80ee25befae45ff469631a2e6ed16dfc5a9582cdc1ad6b3fae8a8d0baae",
+      "verification": "Visually matched source flow51/003-006 product composition; source colors/prices remain frozen."
+    },
+    {
+      "id": "beauty-necessaire-product",
+      "localFile": "reference-assets/shop/products/beauty-necessaire.jpg",
+      "sourcePage": "https://necessaire.com/products/the-body-wash-pump-santal",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0034/8812/0947/files/01_TheBodyWashJumbo_SA.jpg?v=1758837585",
+      "width": 1116,
+      "height": 1302,
+      "sha256": "75257a07cbf89116bdcf10f473c400e3bd54aea4381fcc871f6b852e551cb5a4",
+      "verification": "Visually matched source flow51/003-006 product composition; source colors/prices remain frozen."
+    },
+    {
+      "id": "beauty-fenty-partial",
+      "localFile": "reference-assets/shop/products/beauty-fenty.jpg",
+      "sourcePage": "https://fentybeauty.com/products/eaze-drop-lightweight-blurring-skin-tint-2",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0341/3458/9485/products/FB30031_FB002.jpg?v=1762198669",
+      "width": 1200,
+      "height": 1500,
+      "sha256": "e1bb759c09f5edaed3786e4656a9b6608aec1adbf99358fc83ce4f12386f228b",
+      "verification": "Visually matched source flow51/003-006 product composition; source colors/prices remain frozen."
+    },
+    {
+      "id": "beauty-juvia-partial",
+      "localFile": "reference-assets/shop/products/beauty-juvia.jpg",
+      "sourcePage": "https://www.juviasplace.com/products/blushed-blonzing-stick",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/1476/5372/files/1200765_CartonComponent_01_BLOZINGSTICK_BurntSugar_68e1fcd9-68a3-4ae2-aafe-55c9d615129c.jpg?v=1774794448",
+      "width": 1512,
+      "height": 1512,
+      "sha256": "bfc14b42c6eacbdd0032df59ef5670650fe4783570ccb60331a344cc24cc129b",
+      "verification": "Visually matched source flow51/003-006 product composition; source colors/prices remain frozen."
+    },
+    {
+      "id": "beauty-starface-product",
+      "localFile": "reference-assets/shop/products/beauty-starface.png",
+      "sourcePage": "https://starface.world/products/big-pink-bundle",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0070/8388/4615/files/starface-big-pink-hydro-star-bundle.png?v=1743780890",
+      "sha256": "3ba1be6c7540570b0dfee53a4f73e46c102161bd33d3813e388b07f8ce28d916",
+      "width": 1080,
+      "height": 1350,
+      "verification": "Exact source51/005: perfect pink bundle closed compact lowerleft, four stars upperleft, pink cartonright."
+    },
+    {
+      "id": "shea-gallery-hand",
+      "localFile": "reference-assets/shop/products/shea-gallery-hand.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/shea-butter-solid-body-wash",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/9852-CreativeProductShoot-SheaButterSolidBodyWashBar-BottleFreeBeauty-4-1280x1280px.jpg?v=1787354738",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "d512a6cd249eed7f37c98ec469fec7ede8dc9e7c73190346f953c90de6958ff6",
+      "verification": "Current official merchant gallery continuation. Product identity verified; frozen archive exposes five dots but does not reveal these final two compositions or their historical positions."
+    },
+    {
+      "id": "shea-gallery-shower",
+      "localFile": "reference-assets/shop/products/shea-gallery-shower.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/shea-butter-solid-body-wash",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/65768-9852-ShowerFilterAttachment-SheaButterBodyWashBar-Model-BottleFreeBeauty-Terracotta-1280x1280px.jpg?v=1787354800",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "c1a88609a59d664b5bcb1f4bc2e5d035e8d18d696e63339ee323533d9d90cd74",
+      "verification": "Current official merchant gallery continuation. Product identity verified; frozen archive exposes five dots but does not reveal these final two compositions or their historical positions."
+    },
+    {
+      "id": "home-drmtlgy-retinol",
+      "sourcePage": "https://www.drmtlgy.com/products/retinol-body-lotion",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/1462/0006/files/01_Hero_DTC_a01cad47-dc6e-4fef-bfed-2dded75ae612.jpg?v=1785871029",
+      "width": 2000,
+      "height": 2000,
+      "sha256": "eb67ca25d71fe17584484fbb53f75e90199d9bbd79b1f5d76395f7bd2e31e71a",
+      "verification": "Confirmed black tube, same forward-facing angle and cap; matches flow2/001 and004.",
+      "sourcePrice": 36,
+      "localFile": "reference-assets/shop/products/home-drmtlgy-retinol.jpg"
+    },
+    {
+      "id": "home-drmtlgy-needleless",
+      "sourcePage": "https://www.drmtlgy.com/products/needle-less-growth-factor-serum",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/1462/0006/files/01_Hero_DTC_Cosmo_Holy_Grail_Seal.jpg?v=1779125673",
+      "width": 2000,
+      "height": 2000,
+      "sha256": "fd5b7382064fbc0656c4e11b057dce1fea43dfa037c9e009cc26e3dfcd25e5d1",
+      "verification": "Confirmed black/gold pump and black Cosmopolitan seal in upper-left, matches source2/001 second thumbnail. Seal is intrinsic merchant art.",
+      "sourcePrice": 69,
+      "localFile": "reference-assets/shop/products/home-drmtlgy-needleless.jpg"
+    },
+    {
+      "id": "home-drmtlgy-eye",
+      "sourcePage": "https://www.drmtlgy.com/products/spf-undereye-corrector-deep",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/1462/0006/files/01_Hero_DTC_7b015fb9-c69b-4782-b871-c31ecbe59eaf.jpg?v=1787331830",
+      "width": 2000,
+      "height": 2000,
+      "sha256": "2e663d25b094f127237be04ef11e9748f21ad3791eb7bb607ee5531f931146af",
+      "verification": "Bottle family and gold applicator/angle match source2/004 first thumbnail. Retailer page is Deep shade, but frozen source does not expose shade; do not assign Deep as captured variant.",
+      "sourcePrice": 44,
+      "localFile": "reference-assets/shop/products/home-drmtlgy-eye.jpg"
+    },
+    {
+      "id": "home-drmtlgy-tinted",
+      "sourcePage": "https://www.drmtlgy.com/products/universal-tinted-moisturizer-spf-46",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/1462/0006/files/01_Hero_DTC_Cloud_Background.jpg?v=1783716602",
+      "width": 2000,
+      "height": 2002,
+      "sha256": "daef6dc2e678d729542581766d8b2a27d6c510abc883115265399629211861f2",
+      "verification": "White bottle, rose-gold exposed pump and typography match visible clipped third thumbnail. Cap to right is outside frozen visible card portion; full square cannot be verified from clipped source.",
+      "sourcePrice": 31,
+      "localFile": "reference-assets/shop/products/home-drmtlgy-tinted.jpg"
+    },
+    {
+      "id": "home-curl-cream",
+      "sourcePage": "https://www.mykitsch.com/products/kitsch-moisturizing-curl-cream",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/504001-CurlCream-Moisturizing-hero-1280x1280px.jpg?v=1767136802",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "47c56455894f818fd2b977a8d237916c30ce3a30b4d5d0848726cb10815193ce",
+      "verification": "Confirmed exact yellow tube, ribbed cap and white swirl on left matches source2/006 second thumbnail.",
+      "sourcePrice": 16,
+      "localFile": "reference-assets/shop/products/home-curl-cream.jpg"
+    },
+    {
+      "id": "home-air-dry-cream",
+      "sourcePage": "https://www.mykitsch.com/products/kitsch-smoothing-air-dry-cream",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/500904-AirDryCream-Consumables-hero-1280x1280px.jpg?v=1779490582",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "c00b64fac2c19325282ae3f2167d66210ca4c9a929a73e48ed3544f167dcfdb5",
+      "verification": "Visually matches flow2/006 peach tube, ribbed cap, pale cream smear; source price21 takes precedence over current retailer price.",
+      "localFile": "reference-assets/shop/products/home-air-dry-cream.jpg"
+    },
+    {
+      "id": "idea-rice-wash",
+      "localFile": "reference-assets/shop/products/idea-rice-wash-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/rice-water-protein-restoring-face-body-wash-bar",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/506302-RiceWaterProteinFace_BodyWash_Bar-BottleFreeBeauty-Hero-1280x1280px.jpg?v=1776721281",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "7c1a631db2c36a6545430c3b637d6bdc1ed2daf50b873c2bcca1d25337ebde08",
+      "mediaKeys": ["idea-rice-wash"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "972c6dae-9ab4-4aaf-9f21-999808493dc6",
+        "frame": 2
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "rice-shampoo",
+      "localFile": "reference-assets/shop/products/rice-shampoo-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/rice-water-protein-shampoo-bar-strengthening",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/6745-RiceWaterProteinShampooBar-BottleFreeBeauty-Strengthening-hero-1280x1280px_2.jpg?v=1780529203",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "b161ef12531a6eae1e2a1b84bd5b6dacf2dc6d10d33385454fdac0ee26341aae",
+      "mediaKeys": ["rice-shampoo"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "1df75dd0-05f6-445c-9709-0e0bda2df3af",
+        "frame": 4
+      },
+      "verification": "Downloaded revision from Actions run 34675919506 visually inspected against frozen flow40 frame004 and flow96 frame006: same rice-water package, soap shape, angle and shadow. Image identity matches; app color treatment and final pixels remain unresolved until rendered comparison. No hidden commerce facts inferred."
+    },
+    {
+      "id": "detox-shampoo",
+      "localFile": "reference-assets/shop/products/detox-shampoo-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/detox-shampoo-bar",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/508252-ClarifyingDetoxSolidShampooBar-BottleFreeBeauty-Purifying-Hero-1280x1280px.jpg?v=1779317552",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "620969137b61b1445648b484308416c81583e561b5161af08091871ad3ebfd19",
+      "mediaKeys": ["detox-shampoo"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "1df75dd0-05f6-445c-9709-0e0bda2df3af",
+        "frame": 4
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "rosemary-liquid",
+      "localFile": "reference-assets/shop/products/rosemary-liquid-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/rosemary-biotin-volumizing-shampoo",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/505909-Rosemary_BiotinLiquidShampoo-Volumizing-1-1280x1280px.jpg?v=1765562542",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "853a03bc612fa73f0b1bcadfb0ae8b140cb890e3d19b9cf4a2bb991a023f345c",
+      "mediaKeys": ["rosemary-liquid"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "1df75dd0-05f6-445c-9709-0e0bda2df3af",
+        "frame": 4
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "idea-rosemary-liquid",
+      "localFile": "reference-assets/shop/products/idea-rosemary-liquid-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/rosemary-biotin-volumizing-shampoo-conditioner-combo",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/Rosemary_BiotinLiquidShampoo505909andConditioner505916.jpg?v=1766763910",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "c6250f6259843091ebc1fc11f38ec8531b13732f6147c43b8802c8929bc00e95",
+      "mediaKeys": ["idea-rosemary-liquid"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "972c6dae-9ab4-4aaf-9f21-999808493dc6",
+        "frame": 2
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "idea-jojoba",
+      "localFile": "reference-assets/shop/products/idea-jojoba-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/jojoba-bead-exfoliating-body-wash-bar",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/504667-JojobaBeadSolidBodyWash-BottleFreeBeauty-Exfoliating-hero-1280x1280px_2cbc36ba-69ae-4083-9a1a-4d341a7c7384.jpg?v=1778176828",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "ad276604b18496b7702a88cb95d7d73fc4b1e98ccb89a0c922006fa1caaee34b",
+      "mediaKeys": ["idea-jojoba"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "972c6dae-9ab4-4aaf-9f21-999808493dc6",
+        "frame": 2
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "idea-rosemary-bar",
+      "localFile": "reference-assets/shop/products/idea-rosemary-bar-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/rosemary-biotin-volumizing-solid-shampoo",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/64945-VolumizingSolidShampoo-BottleFreeBeauty-Rosemary_Biotin-hero-1280x1280px_391411c5-771f-45e9-a1b4-84c645d84b58.jpg?v=1778788536",
+      "width": 2570,
+      "height": 2570,
+      "sha256": "f5c69052a79864cc8ef625ee14c4422bf5b3f73a0e087ed7cb6ad65ea3939aaa",
+      "mediaKeys": ["idea-rosemary-bar", "rosemary-bar"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "972c6dae-9ab4-4aaf-9f21-999808493dc6",
+        "frame": 2
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "idea-purple-bundle",
+      "localFile": "reference-assets/shop/products/idea-purple-bundle-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/purple-biotin-shampoo-conditioner-combo",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/510996-PurpleToning-Shampoo_Conditioner-2pc-Combo-BottleFreeBeauty-hero-opt2-1280x1280px_6db00e9e-ecf7-4c9b-b9cf-b5ba27d9436e.jpg?v=1784245535",
+      "width": 3000,
+      "height": 3000,
+      "sha256": "d6aafd5bb382373e541fe0e126ec5d44e0277735cf0a572993101eeeccf6343a",
+      "mediaKeys": ["idea-purple-bundle"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "972c6dae-9ab4-4aaf-9f21-999808493dc6",
+        "frame": 2
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "idea-rosemary-bundle",
+      "localFile": "reference-assets/shop/products/idea-rosemary-bundle-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/rosemary-biotin-shampoo-conditioner-2pc-combo-pack",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/68738-Rosemary_Biotin-Shampoo_Conditioner-2pc-Combo-BottleFreeBeauty-hero-opt2-1280x1280px_8f6bbc9c-73b2-40c7-8361-f10de156af29.jpg?v=1779215859",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "4425b38c37ac06f3a31e71224ce9602325b513d2d400da9c80125428246f6520",
+      "mediaKeys": ["idea-rosemary-bundle"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "972c6dae-9ab4-4aaf-9f21-999808493dc6",
+        "frame": 2
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "rice-liquid",
+      "localFile": "reference-assets/shop/products/rice-liquid-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/rice-water-shampoo-for-hair-growth",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/505886-RiceWaterProteinLiquidShampoo-Strenghtening-1-1280x1280px.jpg?v=1765816742",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "b600b42248fef406b2a28039d197f604886ab7612fc3591cd9ed1e30c61073a6",
+      "mediaKeys": ["rice-liquid"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "1df75dd0-05f6-445c-9709-0e0bda2df3af",
+        "frame": 4
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "argan-liquid-combo",
+      "localFile": "reference-assets/shop/products/argan-liquid-combo-original.jpg",
+      "sourcePage": "https://www.mykitsch.com/products/repairing-argan-oil-shampoo-conditioner-combo",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0104/6904/8384/files/ArganLiquidShampoo505923andConditioner505930.jpg?v=1766763910",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "6a2537264df1ffe1ff715811e7474edb489d52340f44f7855ff5138a3d3911f8",
+      "mediaKeys": ["argan-liquid-combo"],
+      "reference": {
+        "captureId": "7b6adbde-de48-47c5-979b-f629f1eb87a9",
+        "flowId": "c01a7936-24cd-44fb-97fc-a25302b0a2cf",
+        "frame": 2
+      },
+      "verification": "Acquired full merchant original, packaging/angle/composition visually compared with the named frozen frame. Source color treatment and obscured areas are not established by this comparison; no hidden commerce facts inferred."
+    },
+    {
+      "id": "onboarding-order-parcel",
+      "localFile": "reference-assets/shop/products/onboarding-order-parcel.png",
+      "sourceFile": "references/shop/screens/011.mp4",
+      "sourceSha256": "61e1881d61f6f2021b611632345a8b22826c0e686ab83bfe44853c5c6d478bc6",
+      "sourceFrame": 60,
+      "sourceTimeSeconds": 1.0,
+      "width": 62,
+      "height": 62,
+      "sha256": "aa347a7c0ffd9a3f0d2503a3d239b9e4ee098bce6d900339e02a128fcf89a6e6",
+      "verification": "Decorative parcel, airplane or vehicle only; interface text, progress, card edges and controls remain DOM. Extracted from the inherited source video for the local opt-in reference preview.",
+      "cropPixels": [274, 369, 62, 62],
+      "pixelSha256": "19b4b02e1532cd1aa69c7dd01470c52cf6fcc2753ffe96728a8b0e98430f3031"
+    },
+    {
+      "id": "onboarding-transit-plane",
+      "localFile": "reference-assets/shop/products/onboarding-transit-plane.png",
+      "sourceFile": "references/shop/screens/011.mp4",
+      "sourceSha256": "61e1881d61f6f2021b611632345a8b22826c0e686ab83bfe44853c5c6d478bc6",
+      "sourceFrame": 210,
+      "sourceTimeSeconds": 3.5,
+      "width": 62,
+      "height": 62,
+      "sha256": "a8d2d465c48b7eb0fda9187f8e1dd21487abf97dc100a8a1e3e41a528ce86868",
+      "verification": "Decorative parcel, airplane or vehicle only; interface text, progress, card edges and controls remain DOM. Extracted from the inherited source video for the local opt-in reference preview.",
+      "cropPixels": [274, 369, 62, 62],
+      "pixelSha256": "b9e052b2db5b28dc84d1767d086439f30269fdbb95fafd77221e36b8e140f766"
+    },
+    {
+      "id": "onboarding-delivery-vehicle",
+      "localFile": "reference-assets/shop/products/onboarding-delivery-vehicle.png",
+      "sourceFile": "references/shop/screens/011.mp4",
+      "sourceSha256": "61e1881d61f6f2021b611632345a8b22826c0e686ab83bfe44853c5c6d478bc6",
+      "sourceFrame": 330,
+      "sourceTimeSeconds": 5.5,
+      "width": 62,
+      "height": 62,
+      "sha256": "dbb4022ef305aa74e3835434d50dd1855da76f053c0d6f6dd8893efee4fbd3f1",
+      "verification": "Decorative parcel, airplane or vehicle only; interface text, progress, card edges and controls remain DOM. Extracted from the inherited source video for the local opt-in reference preview.",
+      "cropPixels": [274, 369, 62, 62],
+      "pixelSha256": "6ce95e04b83054fd590e9df5519918c07979a4c281123e0008324b3b92ee51d2"
+    },
+    {
+      "id": "kitsch-hero",
+      "mediaType": "video/mp4",
+      "localFile": "reference-assets/shop/products/kitsch-hero.mp4",
+      "sourcePage": "https://shop.app/m/mykitsch",
+      "sourceUrl": "https://cdn.shopify.com/videos/c/vp/c4a836d3780f487193879ee4c17a7b44/c4a836d3780f487193879ee4c17a7b44.SD-480p-1.5Mbps-64900030.mp4",
+      "sourceSha256": "78469e747a3cedae293ef4a09c06286619dbe76ad0035af84d4abdb7fc26dc79",
+      "width": 442,
+      "height": 480,
+      "durationSeconds": 9.958333333333334,
+      "frames": 239,
+      "sha256": "78469e747a3cedae293ef4a09c06286619dbe76ad0035af84d4abdb7fc26dc79",
+      "verification": "Existing verified clean product hero original. Identity orientation, no audio; posters are exact 7.5s and 2.9s frames. Local opt-in preview only."
+    },
+    {
+      "id": "onboarding-status-motion",
+      "mediaType": "video/mp4",
+      "localFile": "reference-assets/shop/products/onboarding-status-motion.mp4",
+      "sourceFile": "references/shop/screens/011.mp4",
+      "sourceSha256": "61e1881d61f6f2021b611632345a8b22826c0e686ab83bfe44853c5c6d478bc6",
+      "cropPixels": [264, 368, 78, 64],
+      "width": 78,
+      "height": 64,
+      "durationSeconds": 8.616666666666667,
+      "frames": 517,
+      "sha256": "3065d22953c85c3fa13a08402273bdb834aee448e7dc834e3e306bf027526b48",
+      "preparation": "Inherited local source; FFmpeg crop, setsar=1, libx264 CRF14, one thread, yuv420p, no audio or metadata, faststart. No resize.",
+      "verification": "Every source frame audited: decorative photography/avatar/parcel only. No interface heading, status, progress, card controls or navigation. DOM remains interactive. Local opt-in preview only."
+    },
+    {
+      "id": "orders-empty-motion",
+      "mediaType": "video/mp4",
+      "localFile": "reference-assets/shop/products/orders-empty-motion.mp4",
+      "sourceFile": "references/shop/screens/215.mp4",
+      "sourceSha256": "bdda38dd83d3dabc8840e2e71c810dbf5614a8655a36d6c400fbfddb62c6337b",
+      "cropPixels": [104, 136, 152, 230],
+      "width": 152,
+      "height": 230,
+      "durationSeconds": 2.966666666666667,
+      "frames": 178,
+      "sha256": "bcaa850b8e93c277041fca75dc83a8b935d7cee2f4b82c9d8f43bfeddfa13979",
+      "preparation": "Inherited local source; FFmpeg crop, setsar=1, libx264 CRF14, one thread, yuv420p, no audio or metadata, faststart. No resize.",
+      "verification": "Every source frame audited: decorative photography/avatar/parcel only. No interface heading, status, progress, card controls or navigation. DOM remains interactive. Local opt-in preview only."
+    },
+    {
+      "id": "sol-welcome-motion",
+      "mediaType": "video/mp4",
+      "localFile": "reference-assets/shop/products/sol-welcome-motion.mp4",
+      "sourceFile": "references/shop/screens/180.mp4",
+      "sourceSha256": "29f7d2dfb1a1f7695276474317d972905ab6d982972c131204c9474908c0ebef",
+      "cropPixels": [0, 94, 360, 276],
+      "width": 360,
+      "height": 276,
+      "durationSeconds": 7.666666666666667,
+      "frames": 460,
+      "sha256": "a9febb24941102c7f41a682aad9ea29b58517e1b9b2c197968bcee9ce7bb5a43",
+      "preparation": "Inherited local source; FFmpeg crop, setsar=1, libx264 CRF14, one thread, yuv420p, no audio or metadata, faststart. No resize.",
+      "verification": "Every source frame audited: decorative photography/avatar/parcel only. No interface heading, status, progress, card controls or navigation. DOM remains interactive. Local opt-in preview only."
+    },
+    {
+      "id": "sol-welcome-lower-left-motion",
+      "mediaType": "video/mp4",
+      "localFile": "reference-assets/shop/products/sol-welcome-lower-left-motion.mp4",
+      "sourceFile": "references/shop/screens/180.mp4",
+      "sourceSha256": "29f7d2dfb1a1f7695276474317d972905ab6d982972c131204c9474908c0ebef",
+      "cropPixels": [0, 444, 62, 122],
+      "width": 62,
+      "height": 122,
+      "durationSeconds": 7.666666666666667,
+      "frames": 460,
+      "sha256": "cbf2e4b9ac0635adf2da724636c12d34e705f4e5cc3a4020da42a3de0ef32eca",
+      "preparation": "Inherited local source; FFmpeg crop, setsar=1, libx264 CRF14, one thread, yuv420p, no audio or metadata, faststart. No resize.",
+      "verification": "Every source frame audited: decorative photography/avatar/parcel only. No interface heading, status, progress, card controls or navigation. DOM remains interactive. Local opt-in preview only."
+    },
+    {
+      "id": "sol-connecting-motion",
+      "mediaType": "video/mp4",
+      "localFile": "reference-assets/shop/products/sol-connecting-motion.mp4",
+      "sourceFile": "references/shop/screens/182.mp4",
+      "sourceSha256": "327220aa71806d6d2a40e9bed3619d1d8f7427adff5cc5ceb2c17e97e25645d1",
+      "cropPixels": [142, 400, 76, 76],
+      "width": 76,
+      "height": 76,
+      "durationSeconds": 7.45,
+      "frames": 447,
+      "sha256": "fb4c8ed50c9d9dbb91846ee0cce2d061b9614713317a3771a2472639b41b26eb",
+      "preparation": "Inherited local source; FFmpeg crop, setsar=1, libx264 CRF14, one thread, yuv420p, no audio or metadata, faststart. No resize.",
+      "verification": "Every source frame audited: decorative photography/avatar/parcel only. No interface heading, status, progress, card controls or navigation. DOM remains interactive. Local opt-in preview only."
+    },
+    {
+      "id": "sol-welcome-lower-right-motion",
+      "mediaType": "video/mp4",
+      "localFile": "reference-assets/shop/products/sol-welcome-lower-right-motion.mp4",
+      "sourceFile": "references/shop/screens/180.mp4",
+      "sourceSha256": "29f7d2dfb1a1f7695276474317d972905ab6d982972c131204c9474908c0ebef",
+      "cropPixels": [290, 520, 70, 112],
+      "width": 70,
+      "height": 112,
+      "durationSeconds": 7.666666666666667,
+      "frames": 460,
+      "sha256": "1121a70927eec4a606b1ee72e5f1476f037bf34e63316da39d5edc8e9651670c",
+      "preparation": "Inherited local source; FFmpeg crop, setsar=1, libx264 CRF14, one thread, yuv420p, no audio or metadata, faststart. No resize.",
+      "verification": "The decorative card shares the source180 clock. A mandatory source-traced convex polygon mask follows all460 frames including both flips, excluding the microphone panel background. No panel text or controls intersect the crop. Outline geometry is in sol-decoration-mask.ts; each convex hull contains source pixels with all RGB channels above165. Reduced-motion/permission/loading states retain their masked posters."
+    }
+  ],
+  "catalogFacts": {
+    "u-see-me": {
+      "price": "USD 14.90",
+      "rating": 4.7,
+      "ratingCount": "6",
+      "source": "references/shop/screens/187.webp"
+    },
+    "round-sunglasses": {
+      "price": "USD 95.00",
+      "source": "references/shop/screens/187.webp",
+      "rating": 4.9,
+      "ratingCount": "10",
+      "ratingSource": "https://shop.app/products/9054261084380/hush",
+      "ratingSourceNote": "Public listing read 2026-09-09; current listing fact, not frozen-reference rating."
+    },
+    "fork": {
+      "rating": 4.6,
+      "ratingCount": "293",
+      "source": "https://shop.app/m/fork-eyewear",
+      "sourceNote": "Public listing read 2026-09-09, not frozen-reference store rating."
+    },
+    "akira": {
+      "rating": 4.7,
+      "ratingCount": "121.1K",
+      "source": "https://shop.app/products/10287043313979/mimi-sunglasses",
+      "sourceNote": "Store identity/rating shown on public Shop listing read 2026-09-09, not frozen-reference store rating."
+    },
+    "charcoal-body-wash": {
+      "price": "USD 14.00",
+      "sourceNote": "Current official product price and reviews read 2026-09-09. Frozen related-grid frame008 hides these facts behind the dock; not frozen-source values.",
+      "rating": 4.8,
+      "ratingCount": "984",
+      "source": "https://www.mykitsch.com/products/charcoal-detoxifying-body-wash-bar"
+    }
+  }
+}

@@ -1,0 +1,807 @@
+.home-page {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+}
+.home-page > .floating-dock[data-fade="true"]::before {
+  background: linear-gradient(
+    to bottom,
+    #fdfdfd00 15%,
+    #fdfdfd8c 67%,
+    #fdfdfda6 82%,
+    #fdfdfda6
+  );
+}
+.home-page > .floating-dock[data-fade="true"]::after {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  bottom: calc(-1 * (var(--dock-bottom) + env(safe-area-inset-bottom)));
+  width: 100vw;
+  height: calc(128px + env(safe-area-inset-bottom));
+  backdrop-filter: blur(20px);
+  mask-image: linear-gradient(transparent, #000);
+  pointer-events: none;
+}
+.home-page:is(
+    [data-feed="tracking"],
+    [data-feed="recent-products"],
+    [data-feed="recent-stores"]
+  )
+  > .floating-dock[data-fade="true"]::before {
+  background: linear-gradient(
+    to bottom,
+    #fdfdfd00 15%,
+    #fdfdfd33 67%,
+    #fdfdfd80 82%,
+    #fdfdfd80
+  );
+}
+.home-page:is(
+    [data-feed="tracking"],
+    [data-feed="recent-products"],
+    [data-feed="recent-stores"]
+  )
+  > .floating-dock[data-fade="true"]::after {
+  backdrop-filter: blur(8px);
+}
+.home-campaigns {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+.home-campaign {
+  position: relative;
+  width: 100%;
+  height: 307px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #2f2e29;
+  color: #fff;
+}
+.campaign-art {
+  position: relative;
+  height: 271px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--campaign-tone, #888176);
+}
+.home-campaign:not(:has(.campaign-offer)) .campaign-art {
+  height: 100%;
+}
+.campaign-princess {
+  --campaign-tone: #79605a;
+  height: 309px;
+}
+.campaign-drmtlgy {
+  --campaign-tone: #a49889;
+  color: #080808;
+}
+.campaign-drmtlgy:not(.campaign-product-grid) {
+  height: 308px;
+}
+.campaign-drmtlgy:not(.campaign-product-grid) .campaign-art {
+  height: 272px;
+}
+.campaign-mountain {
+  --campaign-tone: #65606e;
+}
+.campaign-tea {
+  --campaign-tone: white;
+  background: white;
+  color: #080808;
+  box-shadow: 0 4px 20px #00000004;
+}
+.campaign-accessories {
+  --campaign-tone: #7c7e79;
+}
+.campaign-kitsch {
+  --campaign-tone: #baa18f;
+}
+.campaign-pura {
+  --campaign-tone: #776d60;
+}
+.campaign-tall {
+  height: 630px;
+}
+.campaign-tall .campaign-art {
+  height: 594px;
+}
+.campaign-photo-partial {
+  position: absolute;
+  top: 59px;
+  left: 1px;
+  width: calc(100% - 2px);
+  height: auto;
+  object-fit: contain;
+}
+.campaign-header {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 16px;
+  min-height: 68px;
+  z-index: 1;
+}
+.campaign-brand {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+.campaign-brand > img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.campaign-brand > span {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+  opacity: 0.999;
+}
+.campaign-brand small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+.campaign-wordmark > span {
+  font-size: 23px;
+  white-space: nowrap;
+  line-height: 28px;
+}
+.campaign-princess .campaign-wordmark > span {
+  font-size: 21px;
+  letter-spacing: -1.4px;
+}
+.campaign-drmtlgy .campaign-wordmark > span {
+  letter-spacing: 7px;
+  font-weight: 400;
+  font-size: 20px;
+}
+.campaign-kitsch .campaign-wordmark > span {
+  font-family: Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -2px;
+}
+.campaign-pura .campaign-wordmark > span {
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: -2px;
+}
+.campaign-pura .campaign-brand > img.campaign-wordmark-image {
+  width: 95px;
+  height: 38px;
+  margin-left: 3px;
+  object-fit: fill;
+}
+/* Pura's stills were captured below a 40% black native sheet backdrop.
+   Restore their luminance before the live Sheet applies its own backdrop. */
+.campaign-pura .campaign-photo-partial,
+.campaign-pura .campaign-header-photo,
+.campaign-pura .campaign-wordmark-image {
+  filter: brightness(1.666667);
+}
+.campaign-pura .campaign-header-photo {
+  height: 59px;
+}
+.campaign-pura-reason .campaign-art::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 10px;
+  left: 229px;
+  width: 123px;
+  height: 35px;
+  background: linear-gradient(90deg, rgb(17 7 1), rgb(15 4 1));
+  pointer-events: none;
+}
+.campaign-rating {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.campaign-header > .icon-button {
+  width: 24px;
+  height: 32px;
+  flex: none;
+  color: inherit;
+  background: transparent;
+}
+.campaign-header > .icon-button svg {
+  width: 22px;
+  height: 22px;
+}
+.campaign-product-rail {
+  position: absolute;
+  left: 16px;
+  right: 0;
+  top: 68px;
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+  scrollbar-width: none;
+}
+.campaign-princess .campaign-product-rail {
+  top: 86px;
+}
+.campaign-mountain .campaign-product-rail {
+  top: 90px;
+}
+.campaign-tea .campaign-product-rail {
+  top: 80px;
+}
+.campaign-tall .campaign-product-rail {
+  top: 396px;
+}
+.campaign-product {
+  position: relative;
+  flex: 0 0 135px;
+  width: 135px;
+  height: 135px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #eee;
+  color: #111;
+}
+.campaign-product > a {
+  display: block;
+  height: 100%;
+}
+.campaign-product img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.campaign-partial-product {
+  background: #f5f5f5;
+}
+.campaign-partial-product img {
+  object-fit: contain;
+}
+/* Trailing source tiles preserve only the visible photograph sliver. Their
+   product identities are unknown, so each image decorates the existing store
+   link rather than inventing a catalog item. */
+.campaign-uncaptured img,
+.campaign-source-sliver img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 75px;
+  height: 135px;
+  object-fit: cover;
+}
+.campaign-price {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  border-radius: 14px;
+  background: #969693b8;
+  color: white;
+  font-size: 12px;
+  line-height: 17px;
+  padding: 0 7px;
+  white-space: nowrap;
+}
+.campaign-price del {
+  opacity: 0.6;
+}
+.home-campaign:not(.campaign-product-grid) .campaign-price {
+  font-size: 11px;
+  /* Composite live captions without Windows LCD color fringes. */
+  opacity: 0.999;
+}
+.campaign-rating,
+.campaign-cta strong,
+.campaign-brand small {
+  opacity: 0.999;
+}
+.campaign-product .save-button {
+  width: 32px;
+  height: 32px;
+  bottom: 12px;
+  right: 12px;
+  background: #999a96b8;
+  color: white;
+}
+.campaign-product .save-button svg {
+  width: 21px;
+  height: 21px;
+}
+.home-campaign:not(.campaign-product-grid) .save-button svg {
+  width: 16px;
+  height: 16px;
+}
+.campaign-source-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.campaign-accessory-dark {
+  background: #1f2220;
+}
+.campaign-accessory-dark .campaign-source-save {
+  background: #b3b3b3;
+}
+.campaign-cta {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.campaign-cta strong {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.8px;
+}
+.campaign-cta svg {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  padding: 7px;
+  background: #ffffff30;
+}
+.campaign-tea .campaign-cta svg {
+  background: #d5d5d5;
+}
+.campaign-offer {
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.campaign-offer b {
+  border-radius: 15px;
+  background: var(--color-accent);
+  color: white;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.campaign-drmtlgy .campaign-offer {
+  color: white;
+}
+.campaign-concealed .campaign-art,
+.campaign-concealed .campaign-offer {
+  filter: blur(24px);
+}
+.campaign-hidden-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: white;
+}
+.campaign-hidden-message > svg {
+  width: 24px;
+  height: 24px;
+}
+.campaign-hidden-message p {
+  font-size: 16px;
+}
+.campaign-hidden-message button {
+  min-height: 44px;
+  border-radius: 28px;
+  padding: 8px 18px;
+  background: white;
+  color: black;
+  font-size: 16px;
+  font-weight: 600;
+}
+.campaign-hidden-toast {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 30px;
+  white-space: nowrap;
+  background: black;
+  color: white;
+  font-size: 12px;
+}
+@media (max-width: 360px) {
+  .campaign-wordmark > span {
+    font-size: 18px;
+  }
+  .campaign-drmtlgy .campaign-wordmark > span {
+    letter-spacing: 4px;
+    font-size: 16px;
+  }
+  .campaign-rating {
+    font-size: 10px;
+  }
+}
+
+/* The returning capture uses the same campaign, with a two-column product layout. */
+.campaign-product-grid .campaign-product-rail {
+  top: 62px;
+  right: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  overflow: visible;
+}
+.campaign-product-grid .campaign-product {
+  width: 100%;
+  height: 151px;
+  border-radius: 22px;
+  background: #f0f0f0;
+}
+.campaign-product-grid .campaign-product img {
+  mix-blend-mode: multiply;
+}
+.campaign-product-grid [data-campaign-product="home-drmtlgy-eye"] img {
+  position: absolute;
+  left: 42.2%;
+  top: 4%;
+  width: 19.9%;
+  height: 88.7%;
+  padding: 0;
+}
+.campaign-product-grid [data-campaign-product="home-drmtlgy-tinted"] img {
+  position: absolute;
+  left: 37.9%;
+  top: 3.3%;
+  width: 22.4%;
+  height: 93.4%;
+  padding: 0;
+}
+.campaign-product-grid [data-campaign-product="home-drmtlgy-retinol"] img {
+  position: absolute;
+  left: 31.25%;
+  top: 0;
+  width: 38.125%;
+  height: 99.3%;
+  mix-blend-mode: normal;
+}
+.campaign-product-grid .campaign-product.campaign-bundle img {
+  position: absolute;
+  left: 28.7%;
+  top: 5.3%;
+  width: 51.7%;
+  height: 92.7%;
+}
+.campaign-product-grid .campaign-product.campaign-eye-masks img {
+  position: absolute;
+  left: 21.2%;
+  top: 7.9%;
+  width: 68.5%;
+  height: 90.1%;
+}
+.campaign-product-grid .campaign-price {
+  left: 12px;
+  top: 12px;
+}
+.campaign-product-grid .save-button {
+  right: 12px;
+  bottom: 12px;
+}
+.campaign-product-grid .campaign-header {
+  padding-top: 12px;
+}
+.home-shortcuts + .email-card {
+  margin-top: 0;
+}
+/* Flow 2's mixed history uses the same cards and state as Search. */
+.recent-stores-panel {
+  display: flex;
+  flex-direction: column;
+  height: 630px;
+}
+.recent-store-grid {
+  margin-top: 109px;
+}
+.home-page .recent-store-grid > .product-rail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+.home-page .recent-store-grid [data-recent-kind] {
+  width: 100%;
+  min-width: 0;
+}
+.home-page .recent-store-grid [data-recent-kind] > a,
+.home-page .recent-store-grid .product-media {
+  border: 0;
+  border-radius: 20px;
+}
+.home-page .recent-store-grid .price-badge {
+  font-size: 10px;
+  line-height: 15px;
+  padding: 1px 6px;
+}
+.recent-store-grid [data-recent-id="loaded-tea"] > a {
+  background: #0b0b0b;
+}
+.recent-store-grid [data-recent-id="loaded-tea"] > a > img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72px;
+  height: 72px;
+  transform: translate(-50%, -50%);
+  filter: none;
+  border-radius: 50%;
+}
+.recent-store-grid [data-recent-id="loaded-tea"] > a > span[aria-hidden] {
+  display: none;
+}
+.recent-store-grid [data-recent-id="drmtlgy"] > a {
+  background: #9a8d7e;
+}
+.recent-store-grid [data-recent-id="drmtlgy"] > a > span[aria-hidden] {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 4px;
+}
+.recent-stores-panel .recent-title {
+  margin-top: auto;
+}
+.home-returning .floating-nav {
+  width: 168px;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 350px) {
+  .home-page .email-card > span {
+    min-width: 0;
+  }
+  .home-page .email-card strong {
+    white-space: normal;
+  }
+  .home-page .email-card svg {
+    flex: none;
+  }
+  .campaign-product-grid .campaign-product {
+    height: 134px;
+  }
+  .campaign-product-grid .campaign-brand > span {
+    font-size: 17px;
+    letter-spacing: 4px;
+  }
+  .campaign-product-grid .campaign-price {
+    left: 8px;
+    padding-inline: 4px;
+    font-size: 10px;
+  }
+}
+
+.campaign-isolated-bottle img {
+  padding: 7px;
+}
+.campaign-drmtlgy[data-product-order="welcome"]:not(.campaign-product-grid)
+  [data-campaign-product="home-drmtlgy-tinted"]
+  img {
+  transform: translateX(-22px);
+}
+.campaign-drmtlgy:not(.campaign-product-grid)
+  [data-campaign-product="home-drmtlgy-eye"]
+  img {
+  position: absolute;
+  left: 57px;
+  top: 10px;
+  width: 27px;
+  height: 112px;
+  padding: 0;
+}
+.campaign-drmtlgy:not(.campaign-product-grid)
+  [data-campaign-product="home-drmtlgy-retinol"]
+  img {
+  position: absolute;
+  left: -1px;
+  top: -4px;
+  width: 138px;
+  max-width: none;
+  height: 138px;
+}
+.campaign-product-grid .campaign-isolated-bottle img,
+.campaign-product-grid .campaign-bundle img,
+.campaign-product-grid .campaign-eye-masks img {
+  mix-blend-mode: normal;
+}
+/* Recovered photo regions surround the live campaign controls. */
+.campaign-princess {
+  --campaign-tone: #6f5653;
+}
+.campaign-drmtlgy {
+  --campaign-tone: #938678;
+}
+.campaign-kitsch {
+  --campaign-tone: #a99082;
+}
+.campaign-header-photo,
+.campaign-footer-photo {
+  position: absolute;
+  left: 1px;
+  width: calc(100% - 2px);
+  height: auto;
+  pointer-events: none;
+}
+.campaign-header-photo {
+  top: 0;
+  object-fit: cover;
+}
+.campaign-princess .campaign-header-photo {
+  height: 85px;
+}
+.campaign-drmtlgy:not(.campaign-product-grid) .campaign-header-photo,
+.campaign-accessories .campaign-header-photo {
+  height: 67px;
+}
+.campaign-mountain .campaign-header-photo {
+  height: 89px;
+}
+.campaign-kitsch .campaign-header-photo {
+  height: 59px;
+}
+.campaign-product-grid .campaign-header-photo {
+  /* Blend the bounded photograph into the campaign tone below its source edge. */
+  mask-image: linear-gradient(#000 calc(100% - 40px), transparent);
+}
+.campaign-footer-photo {
+  bottom: 0;
+  object-fit: cover;
+}
+.campaign-drmtlgy .campaign-footer-photo {
+  height: 69px;
+}
+.campaign-kitsch .campaign-footer-photo {
+  height: 63px;
+}
+.campaign-header {
+  gap: 12px;
+  padding-right: 21px;
+}
+.campaign-brand > img.campaign-wordmark-image {
+  width: 162px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0;
+  object-fit: contain;
+}
+.campaign-princess .campaign-wordmark-image {
+  margin-left: -1px;
+}
+.campaign-drmtlgy .campaign-wordmark-image {
+  width: 153px;
+  margin-left: 6px;
+  transform: translateY(2px);
+}
+.campaign-drmtlgy.campaign-product-grid .campaign-wordmark-image {
+  width: 153px;
+  transform: translateY(6px);
+}
+.campaign-drmtlgy.campaign-product-grid .campaign-rating {
+  transform: translateY(2px);
+}
+.campaign-kitsch .campaign-brand .kitsch-wordmark {
+  width: 123px;
+}
+.campaign-tea .campaign-product {
+  height: 128px;
+}
+.home-keep-going {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: 98px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 8px 13px;
+  border-radius: 20px;
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 2px 7px #33118540;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.home-keep-going > svg {
+  width: 17px;
+  height: 17px;
+  transform: rotate(90deg);
+}
+
+/* The next captured campaign exposes Carpe's identity, not its unseen inventory. */
+.campaign-carpe {
+  --campaign-tone: #fff;
+  background: #fff;
+  color: #111;
+}
+.campaign-carpe.campaign-continuation {
+  height: 96px;
+}
+.campaign-carpe.campaign-continuation .campaign-art {
+  height: 100%;
+}
+.campaign-carpe .campaign-header {
+  min-height: 80px;
+  padding: 16px 16px 16px 12px;
+}
+.campaign-carpe .campaign-brand {
+  gap: 8px;
+}
+.campaign-carpe .campaign-brand > img {
+  width: 50px;
+  height: 50px;
+  padding: 14px 4px;
+  object-fit: contain;
+  border: 1.5px solid #aa96ff;
+  background: #fff;
+}
+.campaign-carpe .campaign-art {
+  background:
+    radial-gradient(ellipse 140px 70px at 60% 110px, #e1f5fb, transparent 70%),
+    #fff;
+}
+
+/* f042-004 exposes only the source's already-concealed photograph field.
+   Native text and controls are removed from this bounded photo; live DOM owns
+   the eye, message, Undo action and confirmation toast. */
+.campaign-pura.campaign-concealed {
+  overflow: visible;
+  margin-bottom: 3px;
+}
+.campaign-pura.campaign-concealed .campaign-art {
+  opacity: 0;
+}
+.campaign-hidden-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.campaign-pura.campaign-concealed .campaign-hidden-photo,
+.campaign-pura.campaign-concealed .campaign-hidden-message {
+  bottom: auto;
+  height: 633px;
+}
+.campaign-pura.campaign-concealed .campaign-hidden-message > svg {
+  transform: translate(1px, 3px);
+}
+.campaign-pura.campaign-concealed .campaign-hidden-message p {
+  letter-spacing: -0.16px;
+  opacity: 0.999;
+  transform: translateY(1px);
+}
+.campaign-pura.campaign-concealed .campaign-hidden-message button {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 15px;
+  opacity: 0.999;
+  transform: translateY(-4px);
+}
+.campaign-pura.campaign-concealed .campaign-hidden-toast {
+  bottom: -3px;
+  opacity: 0.999;
+}
+.campaign-hidden-message,
+.campaign-hidden-toast {
+  z-index: 1;
+}

@@ -1,0 +1,950 @@
+@font-face {
+  font-family: "ShopChemicalGeist";
+  src: url("/fonts/shop-chemical-geist.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+.page,
+.filter {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+}
+.page :global(.store-actions) {
+  gap: 4px;
+}
+.store :global(.store-actions .icon-button svg) {
+  width: 16px;
+  height: 16px;
+}
+.filter::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+.filter:global(.store-filter-sheet) :global(.sheet-header) {
+  margin-bottom: 4px;
+}
+.filter :global(.store-filter-options > button) {
+  min-height: 55px;
+  line-height: 20px;
+}
+.filter :global(.sheet-actions > *) {
+  padding-inline: 0;
+}
+.filter
+  :global(
+    .store-filter-options
+      > button
+      > span:not(.store-checkbox):not(.radio-outline)
+      > svg
+  ) {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+}
+
+.store {
+  background: linear-gradient(#393937 0 304px, #c2bfb5 304px);
+}
+.store :global(.floating-dock[data-fade="true"])::before {
+  background: transparent;
+  backdrop-filter: blur(20px);
+  mask-image: linear-gradient(transparent 15%, #000);
+}
+.store :global(.promotion-owner),
+.store :global(.store-promotion) {
+  background: #393937;
+}
+.store :global(.promotion-owner) {
+  font-family: "ShopChemicalGeist", Arial, Helvetica, sans-serif;
+}
+.store :global(.promotion-offers > div > b) {
+  font-weight: 500;
+}
+.store :global(.promotion-offers p),
+.store :global(.promotion-offers span) {
+  font-weight: 400;
+}
+.store :global(.store-promotion > span) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.store :global(.store-promotion > span > svg) {
+  width: 14px;
+  height: 14px;
+}
+.collection :global(.collection-promotion) {
+  width: 100%;
+  padding: 0 0 8px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.collection :global(.collection-promotion b) {
+  font-weight: 500;
+}
+.collection :global(.collection-promotion > span) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.collection :global(.collection-promotion svg) {
+  width: 14px;
+  height: 14px;
+}
+.store :global(.promotion-owner.expanded .store-promotion) {
+  height: 56px;
+  padding-bottom: 20px;
+}
+.store :global(.promotion-owner.expanded .promotion-offers) {
+  height: 208px;
+  grid-template-rows: 88px 88px;
+}
+.store :global(.promotion-offers > div) {
+  padding: 20px;
+  border-radius: 28px;
+}
+.store :global(.promotion-offers > div > b) {
+  font-size: 16px;
+  line-height: 20px;
+}
+.store :global(.promotion-offers p) {
+  font-size: 14px;
+  line-height: 20px;
+}
+.store :global(.promotion-offers span) {
+  display: inline-block;
+  padding: 2px 5px;
+  border: 1px solid #ffffff30;
+  border-radius: 6px;
+}
+.store :global(.store-hero) {
+  border-radius: 36px 36px 0 0;
+}
+.store :global(.store-hero-kitsch) {
+  position: relative;
+  --kitsch-hero-photo: url("/api/reference-media/store-kitsch-default-hero");
+  /* Keep photo aspect and live controls independent at every viewport width.
+     The 393px source uses the original video photo with a -43px vertical crop. */
+  background:
+    linear-gradient(
+        #c2bfb50a 0,
+        #c2bfb517 60px,
+        #c2bfb53d 100px,
+        #c2bfb57d 150px,
+        #c2bfb5b3 200px,
+        #c2bfb5de 250px,
+        #c2bfb5 302px
+      )
+      left top / 100% 100% no-repeat,
+    var(--kitsch-hero-photo) center -43px / 100% auto no-repeat,
+    #c2bfb5;
+}
+.kitschMotion {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 302px;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.kitschVideo {
+  top: -43px;
+  left: 0;
+  width: 100%;
+}
+.kitschMotion:has(video[data-video-ready="true"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    #c2bfb50a 0,
+    #c2bfb517 60px,
+    #c2bfb53d 100px,
+    #c2bfb57d 150px,
+    #c2bfb5b3 200px,
+    #c2bfb5de 250px,
+    #c2bfb5 302px
+  );
+}
+.storeHeader {
+  position: relative;
+}
+.store :global(.store-hero-kitsch.store-hero-followed) {
+  --kitsch-hero-photo: url("/api/reference-media/store-kitsch-followed-hero");
+}
+.store :global(.store-hero-kitsch .store-brand > span) {
+  top: 76px;
+}
+.store :global(.store-hero-kitsch .store-brand > a) {
+  top: 166px;
+  line-height: 16px;
+  font-weight: 400;
+}
+.store :global(.store-brand) > span > svg {
+  display: block;
+  width: 228px;
+  height: 56px;
+  margin: auto;
+}
+.store :global(.store-hero-kitsch .store-recommendations) {
+  background: #d9d8d1;
+  font-family: "ShopChemicalGeist", Arial, Helvetica, sans-serif;
+}
+.store :global(.store-hero-kitsch .store-recommendations h1),
+.store :global(.store-hero-kitsch .store-recommendations h2) {
+  line-height: 29px;
+  margin-bottom: 9px;
+}
+.store
+  :global(
+    .store-hero-kitsch > .store-recommendations + .store-recommendations
+  ) {
+  margin-top: 17px;
+  overflow: visible;
+}
+.store
+  :global(.store-hero-kitsch .store-recommendations .product-copy > strong) {
+  font-weight: 600;
+}
+.store :global(.rating[data-partial-rating] > .review-rating-stars) {
+  width: calc(var(--review-star-size) * var(--partial-rating-stars));
+  overflow: hidden;
+}
+.store :global(.store-collection-rail) {
+  gap: 8px;
+  width: calc(100% + 16px);
+}
+.store :global(.store-collection-rail img) {
+  border: 5px solid #c5c4be;
+  border-radius: 20px;
+}
+.store :global(.store-collection-rail > a) {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.store :global(.store-collection-rail > a > span) {
+  display: block;
+  margin-inline: 8px;
+  white-space: nowrap;
+}
+.store
+  :global(.store-hero-kitsch .store-recommendations :is(h1, h2, .product-copy)),
+.store :global(.store-collection-rail > a > span) {
+  transform: translateY(-2px);
+}
+/* Isolate text compositing from the photographs to retain grayscale glyph
+   edges in the captured storefront and collection surfaces. */
+.store :global(.store-recommendations :is(h1, h2, .product-copy)),
+.store :global(.store-collection-rail > a > span),
+.collection :global(.product-copy),
+.collection :global(.store-criteria .pill),
+.collection :global(.store-collection-hero h1),
+.collection :global(.collection-store),
+.collection :global(.collection-promotion) {
+  opacity: 0.999;
+}
+.store :global(.store-category-navigation.is-pinned) {
+  background: #393937;
+}
+.store :global(.store-category-navigation.is-pinned .category-rail) {
+  background: #c2bfb5;
+}
+.store
+  :global(.store-category-navigation.is-pinned)[data-compact-offer="false"] {
+  padding-top: 8px;
+}
+.store
+  :global(.store-category-navigation.is-pinned)[data-compact-offer="false"]
+  :global(.category-rail) {
+  height: 64px;
+  padding-bottom: 8px;
+}
+.store :global(.product-copy) {
+  padding-top: 10px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.store :global(.product-copy) > strong {
+  font-weight: 500;
+}
+.store :global(.product-copy .rating) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.store :global(.store-actions .follow[aria-pressed="true"]) {
+  color: #111;
+  background: #d7d4ca;
+  border: 1px solid #ffffffa8;
+}
+
+.collection {
+  background: #c2bfb5;
+  font-family: "ShopChemicalGeist", Arial, Helvetica, sans-serif;
+}
+.collection :global(.floating-dock[data-fade="true"])::before {
+  background: linear-gradient(transparent 15%, #fdfdfde6);
+  backdrop-filter: blur(20px);
+  mask-image: linear-gradient(transparent 15%, #000);
+}
+.collection :global(.save-button) {
+  background: rgb(128 128 128 / 60%);
+  backdrop-filter: blur(12px);
+}
+.collection :global(.store-criteria .icon-button) {
+  width: 40px;
+  height: 40px;
+}
+.collection > :global(.product-grid) {
+  column-gap: 12px;
+}
+.collection > :global(.collection-partial-products) {
+  margin-top: 14px;
+}
+.collection[data-collection="best-sellers"] > :global(.product-grid) {
+  column-gap: 10px;
+}
+.collection :global(.product-copy) > strong {
+  font-weight: 500;
+}
+.collection :global(.product-copy .rating),
+.collection :global(.product-copy .rating > span) {
+  color: #080808;
+}
+.collection[data-collection="best-sellers"] :global(.store-collection-hero) {
+  height: 182px;
+  border-radius: 0;
+}
+.collection[data-collection="best-sellers"]
+  :global(.store-collection-hero)
+  > img {
+  height: 100%;
+  opacity: 1;
+  object-position: center;
+  mask-image: linear-gradient(#000 40%, transparent);
+}
+.collection[data-collection="best-sellers"]
+  :global(.store-collection-hero)
+  > div {
+  bottom: 4px;
+}
+.collection[data-collection="best-sellers"]
+  :global(.store-collection-hero > .icon-button) {
+  bottom: 18px;
+}
+
+.search:global(.store-search-editing) {
+  background: #fff;
+}
+.search :global(.store-search-cancel) {
+  font-weight: 500;
+}
+.search :global(.store-search-suggestions small) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.search :global(.product-copy) > strong {
+  font-weight: 600;
+}
+.search :global(.product-grid .product-copy) {
+  row-gap: 1px;
+}
+/* Match the neutral image treatment used by the captured result cards,
+   without changing the original photograph or its provenance. */
+.search :global(.product-grid .product-media img:not([src*="/store-search-"])) {
+  filter: brightness(0.96);
+}
+.search :global(.store-search-products .product-media),
+.search :global(.product-grid .product-media) {
+  background: #e1e1e1;
+  border: 1px solid #d8d8d8;
+}
+.search :global(.store-search-products .product-media) {
+  box-shadow: 0 3px 10px #00000009;
+}
+
+.information {
+  font-family: "ShopChemicalGeist", Arial, Helvetica, sans-serif;
+  background: #c2bfb5;
+  padding-bottom: 55px;
+}
+.information > :global(.store-actions) {
+  top: 8px;
+}
+.information > :global(.store-actions) :global(.icon-button svg) {
+  width: 20px;
+  height: 20px;
+}
+.information > :global(.store-actions) :global(.follow) {
+  font-weight: 500;
+}
+.information :global(.store-info-brand) {
+  font-size: 14px;
+}
+.information :global(.store-info-brand b) {
+  font-weight: 600;
+}
+.information :global(.store-info-brand small) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.information :global(.store-description) {
+  color: #393939;
+  font-size: 14.5px;
+  line-height: 18px;
+}
+.information :global(.store-description-more) {
+  font-size: 14.5px;
+  line-height: 18px;
+}
+.information :global(.store-info-categories) {
+  margin-top: 29px;
+  gap: 13px 16px;
+}
+.information :global(.store-info-categories img),
+.information :global(.store-shop-all img) {
+  border: 4px solid #c5c2b9;
+  box-shadow:
+    0 0 0 1px #b6b3a9,
+    0 8px 40px #00000040;
+  border-radius: 24px;
+}
+.information :global(.store-info-categories img[src$="partial"]) {
+  object-fit: contain;
+  object-position: top;
+}
+.information :global(.store-info-categories span) {
+  margin: 8px 8px 0;
+  line-height: 18px;
+  font-weight: 550;
+}
+.information :global(.store-info-panel) {
+  margin-top: 20px;
+  padding: 16px;
+  background: #dbd7d1;
+  box-shadow: 0 12px 26px #322b2234;
+}
+.information :global(.store-info-links) {
+  padding-bottom: 10px;
+}
+.information :global(.store-info-reviews) {
+  padding-bottom: 19px;
+}
+.information :global(.store-info-panel h2) {
+  margin: 0;
+  font-size: 24px;
+  line-height: 29px;
+  font-weight: 550;
+  letter-spacing: -0.65px;
+}
+.information :global(.store-info-panel .detail-row) {
+  min-height: 44px;
+  margin-top: 0;
+  padding: 12px 0;
+  align-items: center;
+  font-size: 16px;
+  line-height: 20px;
+  color: #393939;
+}
+.information :global(.store-info-panel .detail-row h2) {
+  color: #111;
+}
+.information :global(.store-info-panel .detail-row svg) {
+  width: 20px;
+  height: 20px;
+  color: #73736e;
+}
+.information :global(.store-info-links > h2 + .detail-row) {
+  margin-top: 10px;
+}
+.information :global(.store-info-reviews > .detail-row) {
+  margin-top: 4px;
+  padding: 0;
+  min-height: 40px;
+  height: 40px;
+}
+.information :global(.store-info-reviews > .detail-row > svg) {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 12px;
+  border-radius: 50%;
+  background: #cecdc7;
+  color: #111;
+}
+.information :global(.store-info-rating) {
+  margin-top: 18px;
+}
+.information :global(.store-info-rating > b) {
+  font-size: 24px;
+  line-height: 28px;
+}
+.information :global(.store-info-rating > .review-rating-stars) {
+  --review-star-size: 24px;
+  flex: 0 0 124px;
+  width: 124px;
+  color: #080808;
+  transform: translateY(8px);
+}
+.information :global(.store-info-rating .review-rating-stars-empty) {
+  color: #95958e;
+}
+.information :global(.store-info-rating .review-rating-stars-empty),
+.information :global(.store-info-rating .review-rating-stars-fill > span) {
+  width: 124px;
+  justify-content: space-between;
+}
+.information :global(.store-info-panel > p) {
+  margin: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+.information :global(.store-review-previews) {
+  margin-top: 20px;
+}
+.information :global(.store-review-preview) {
+  min-height: 116px;
+  margin-top: 0;
+  padding: 12px 16px 17px;
+  border: 1px solid #c1c1bf;
+  background: #cdcdcb;
+}
+.information :global(.store-review-preview > span) {
+  font-size: 14px;
+  line-height: 18px;
+}
+.information :global(.store-review-preview > .review-rating-stars) {
+  --review-star-size: 13px;
+  color: #080808;
+}
+.information :global(.store-review-preview b) {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+.information :global(.store-review-preview small) {
+  color: #767672;
+  font-size: 12px;
+  line-height: 16px;
+}
+.information :global(.store-review-preview i) {
+  font-size: 10px;
+}
+.information > :global(a.store-info-panel),
+.information > :global(button.store-info-panel) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  padding: 16px;
+  border: 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.information > :global(a.store-info-panel) > svg,
+.information > :global(button.store-info-panel) > svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: #73736e;
+}
+
+/* A short result set retains the filter trigger's viewport context. */
+.store :global(.store-all-products) {
+  min-height: calc(100dvh - 120px);
+}
+.store :global(.store-hero-kitsch .store-grid-heading) {
+  margin-bottom: 15.5px;
+}
+.storeHeader[inert] {
+  visibility: hidden;
+}
+.store:global(.chemical-store),
+.chemicalPinned {
+  font-family: "ShopChemicalGeist", Arial, Helvetica, sans-serif;
+}
+.store:global(.chemical-store) :global(.store-hero) {
+  background:
+    url("/api/reference-media/chemical-store-header-photo") center top / 100%
+      145px no-repeat,
+    linear-gradient(#939098 0, #b2aab2 145px, #beb6be 300px, #beb6be 100%);
+}
+.store:global(.chemical-store) :global(.store-actions),
+.chemicalPinned :global(.store-actions) {
+  gap: 4px;
+}
+.store:global(.chemical-store) :global(.category-rail),
+.chemicalPinned :global(.category-rail) {
+  gap: 4px;
+}
+.store:global(.chemical-store) :global(.category-rail .pill),
+.chemicalPinned :global(.category-rail .pill) {
+  flex-shrink: 0;
+  gap: 6px;
+  padding-right: 13px;
+  border-color: rgb(223 214 221);
+  background: rgb(203 196 203);
+  font-weight: 600;
+}
+.chemicalCategoryLabel {
+  opacity: 0.95;
+  letter-spacing: -0.25px;
+  transform: translate(2px, -1.5px);
+}
+.store:global(.chemical-store) :global(.category-rail .pill:nth-of-type(1)),
+.chemicalPinned :global(.category-rail .pill:nth-of-type(1)) {
+  flex-basis: 109px;
+  width: 109px;
+}
+.store:global(.chemical-store) :global(.category-rail .pill:nth-of-type(2)),
+.chemicalPinned :global(.category-rail .pill:nth-of-type(2)) {
+  flex-basis: 82px;
+  width: 82px;
+}
+.store:global(.chemical-store) :global(.category-rail .pill:nth-of-type(3)),
+.chemicalPinned :global(.category-rail .pill:nth-of-type(3)) {
+  flex-basis: 108px;
+  width: 108px;
+}
+.store:global(.chemical-store) :global(.category-rail .pill:nth-of-type(4)),
+.chemicalPinned :global(.category-rail .pill:nth-of-type(4)) {
+  flex-basis: 96px;
+  width: 96px;
+}
+.chemicalPinned {
+  position: fixed;
+  z-index: 25;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 760px;
+  height: 153px;
+  padding-top: 24px;
+  background: #383639;
+}
+.chemicalPinned::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 8px;
+  left: 0;
+  right: 0;
+  height: 145px;
+  border-radius: 36px 36px 0 0;
+  background:
+    url("/api/reference-media/chemical-store-header-photo") center top / 100%
+      145px no-repeat,
+    linear-gradient(#939098 0, #aea6ad 137px, #aea6ad 100%);
+}
+.chemicalPinned :global(.category-rail) {
+  position: absolute;
+  top: 93px;
+  left: 0;
+  right: 0;
+  padding-top: 0;
+}
+.store:global(.chemical-store) :global(.store-actions .icon-button),
+.chemicalPinned :global(.store-actions .icon-button) {
+  background: #c9c1cad9;
+}
+.store:global(.chemical-store) :global(.store-actions .icon-button svg),
+.chemicalPinned :global(.store-actions .icon-button svg) {
+  width: 18px;
+  height: 18px;
+}
+.store:global(.chemical-store) :global(.floating-dock)::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  bottom: calc(-1 * (var(--dock-bottom) + env(safe-area-inset-bottom)));
+  width: 100vw;
+  height: calc(128px + env(safe-area-inset-bottom));
+  background: linear-gradient(#ffffff00 43%, #eeecf3b3 100%);
+  backdrop-filter: blur(20px);
+  mask-image: linear-gradient(transparent 35%, #000 75%);
+  pointer-events: none;
+}
+.store:global(.chemical-store) :global(.store-recommendations) {
+  padding-bottom: 13px;
+  background: #d6d3d6;
+}
+.store:global(.chemical-store) :global(.store-recommendations:first-of-type) {
+  padding-bottom: 14px;
+}
+.store:global(.chemical-store) :global(.store-recommendations h1),
+.store:global(.chemical-store) :global(.store-recommendations h2),
+.store:global(.chemical-store) :global(.product-copy),
+.store:global(.chemical-store) :global(.price-badge),
+.store:global(.chemical-store) :global(.store-video-rail span) {
+  opacity: 0.999;
+}
+.store:global(.chemical-store) :global(.store-recommendations h1),
+.store:global(.chemical-store) :global(.store-recommendations h2) {
+  margin-bottom: 9px;
+  font-weight: 650;
+  line-height: 29px;
+  letter-spacing: -0.65px;
+}
+.store:global(.chemical-store)
+  :global(.store-recommendations:first-of-type h1) {
+  letter-spacing: -1.15px;
+  transform: translateY(-3px);
+}
+.store:global(.chemical-store)
+  :global(.store-recommendations:first-of-type .product-copy) {
+  position: relative;
+  top: -1px;
+}
+.store:global(.chemical-store)
+  :global(.store-recommendations:first-of-type .product-copy > strong) {
+  position: relative;
+  top: -1px;
+  letter-spacing: -0.25px;
+}
+.store:global(.chemical-store) :global(.store-recommendations .product-media) {
+  background: #f5f5f5;
+}
+.store:global(.chemical-store) :global(.product-copy) > strong {
+  font-weight: 650;
+}
+.store:global(.chemical-store)
+  :global(.store-recommendations:first-of-type .product-copy > span) {
+  font-weight: 450;
+}
+.store:global(.chemical-store) :global(.price-badge.deal) {
+  padding: 1px 6px;
+  background: #080808;
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 15px;
+}
+.store:global(.chemical-store)
+  :global(.product-media img[src$="chemical-store-deep-partial"]) {
+  width: 57px;
+  height: 133px;
+  margin: 1px;
+  object-fit: fill;
+}
+.store:global(.chemical-store) :global(.store-video-rail) {
+  gap: 8px;
+  padding-top: 18px;
+}
+.store:global(.chemical-store) :global(.store-video-rail) > :is(a, button) {
+  position: relative;
+  flex: 0 0 109px;
+  width: 109px;
+  height: 160px;
+  padding: 0;
+  border-radius: 20px;
+  background: #656866;
+  overflow: hidden;
+}
+.store:global(.chemical-store) :global(.store-video-rail img) {
+  width: 109px;
+  height: 160px;
+  object-fit: fill;
+}
+.store:global(.chemical-store)
+  :global(.store-video-rail img[src$="chemical-store-clip-four-partial"]) {
+  width: 25px;
+}
+.store:global(.chemical-store) :global(.store-video-rail span) {
+  left: 12px;
+  bottom: 10px;
+  color: #d0d0d0;
+  font-weight: 400;
+  line-height: 16px;
+}
+.store:global(.chemical-store) .chemicalFeatured {
+  margin-top: 16px;
+}
+.store:global(.chemical-store) .chemicalFeatured h2 {
+  margin-bottom: 11px;
+  letter-spacing: -1.1px;
+  transform: translateY(-3px);
+}
+.store:global(.chemical-store) .chemicalFeatured :global(.product-rail) {
+  transform: translateY(-1px);
+}
+.chemicalFeatured :global(.product-rail) > button {
+  position: relative;
+  flex: 0 0 135px;
+  width: 135px;
+  height: 160px;
+  padding: 0;
+  border-radius: 20px;
+  background: #788183;
+  overflow: hidden;
+  display: block;
+}
+.chemicalFeatured :global(.product-rail) > button > img {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  display: block;
+  width: 129px;
+  height: 52px;
+  object-fit: fill;
+}
+.chemicalFeatured :global(.product-rail) > button:last-child > img {
+  width: 55px;
+  height: 142px;
+}
+.video {
+  background: linear-gradient(#575950, #383a35 76%, #32332f);
+}
+.video :global(.video-poster) {
+  object-fit: cover;
+}
+.video :global(.video-bottom) {
+  left: 14px;
+  right: 24px;
+  gap: 10px;
+}
+.video :global(.video-bottom) > .videoStore {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+}
+.videoStoreLogo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px #684cde;
+  background: #151515;
+}
+.videoStoreLogo img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+.videoStore > span:last-child,
+.videoProduct > span:nth-child(2) {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.videoStore b,
+.videoProduct b {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+}
+.videoStore small,
+.videoProduct small {
+  color: #c7c7c4;
+  font-size: 12px;
+  line-height: 15px;
+}
+.video :global(.video-bottom) > .videoProduct {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  margin-left: 2px;
+}
+.videoProductPhoto {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  background: white;
+}
+.videoProductPhoto img {
+  width: 15px;
+  height: 29px;
+  object-fit: contain;
+}
+.videoProduct > span:nth-child(2) {
+  flex: 1;
+}
+.videoProduct b {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.videoProduct > svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.video .videoTimeline {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.video .videoTimeline > :global(.icon-button) {
+  background: transparent;
+  flex: none;
+}
+.videoTrack {
+  height: 3px;
+  flex: 1;
+  background: #81817f;
+  border-radius: 2px;
+}
+.video .videoAudio svg {
+  width: 19px;
+  height: 19px;
+}
+
+.unidentifiedGridPhoto {
+  margin: 0;
+  aspect-ratio: 1;
+  align-self: start;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #e1e1e1;
+}
+.page .unidentifiedGridPhoto img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: fill;
+  filter: none;
+}
+.store
+  :global(
+    .store-all-products
+      .product-card:is(
+        [data-product-id="rice-shampoo"],
+        [data-product-id="rice-conditioner"],
+        [data-product-id="rice-bundle"]
+      )
+      .product-media
+      img
+  ) {
+  filter: brightness(0.96);
+}
+
+/* The pinned captured shelf fades under the real, unchanged dock. */
+.store:has(.unidentifiedGridPhoto):has(
+    :global(.store-category-navigation.is-pinned)
+  )::after {
+  content: "";
+  position: fixed;
+  inset: auto 0 0;
+  height: calc(108px + env(safe-area-inset-bottom, 0px));
+  z-index: 9;
+  pointer-events: none;
+  background: linear-gradient(transparent, #fdfdfdea);
+}
+
+/* Source-aligned subpixel heading placement for the captured store-info panels. */
+.information :global(.store-info-panel h2) {
+  translate: 0 -0.25px;
+}

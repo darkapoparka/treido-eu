@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source": {
+    "provider": "Mobbin",
+    "app_id": "shopify-web-2c0bd6a1-d9cd-4467-8e7b-214f748ea467",
+    "version_id": "42a81476-425f-5572-a7bb-bd3b0134c8ec",
+    "screens_url": "https://mobbin.com/apps/shopify-web-2c0bd6a1-d9cd-4467-8e7b-214f748ea467/42a81476-425f-5572-a7bb-bd3b0134c8ec/screens"
+  },
+  "status": "not-acquired",
+  "checked_on": "2026-09-12",
+  "source_totals": {
+    "screens": null,
+    "ui_elements": null,
+    "flows": null,
+    "flow_steps": null,
+    "recordings": null
+  },
+  "assets": [],
+  "flows": [],
+  "access_observations": [
+    {
+      "date": "2026-09-12",
+      "surface": "Mobbin connector",
+      "outcome": "paid-plan-required",
+      "assets_acquired": 0
+    },
+    {
+      "date": "2026-09-12",
+      "surface": "ordinary agent-browser session",
+      "outcome": "navigation-succeeded-but-rendered-unauthenticated-marketing-content-with-login-not-version-gallery",
+      "assets_acquired": 0
+    }
+  ],
+  "private_storage": ".local/references/shopify/",
+  "public_asset_publication": "not-established"
+}

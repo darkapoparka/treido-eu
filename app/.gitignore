@@ -1,0 +1,76 @@
+# Public-repository safety baseline. Extend deliberately with each numbered task.
+# Example files must contain placeholders only.
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+
+# Provider linkage, local credentials and authentication recordings.
+.vercel/
+**/.vercel/
+.neon
+**/.neon
+.expo/
+**/.expo/
+*.pem
+*.key
+*.p12
+*.p8
+*.keystore
+*.jks
+*.mobileprovision
+credentials.json
+**/credentials.json
+playwright/.auth/
+**/playwright/.auth/
+auth-state/
+**/auth-state/
+
+# Private source references and operational evidence do not belong in public Git.
+/mobbin-shop/
+.local/
+**/.local/
+reference-assets/
+**/reference-assets/
+references/raw/
+private-evidence/
+**/private-evidence/
+
+# Generated dependencies, build outputs and test artifacts.
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+.next-parity/
+**/.next-parity/
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+test-results/
+**/test-results/
+playwright-report/
+**/playwright-report/
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Local visual captures, overlays and machine-specific diagnostics.
+.qa/
+**/.qa/
+
+# New Shopify exports and Python helper caches remain private/local.
+/shopify/raw/
+/shopify/downloads/
+**/__pycache__/
+*.pyc

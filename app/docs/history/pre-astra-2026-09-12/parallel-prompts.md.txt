@@ -1,0 +1,81 @@
+# RETIRED: do not launch these parallel prompts
+
+Owner update 2026-09-11: use the single-session prompt/loop in `single-session-execution.md`. The old prompts below are historical only.
+
+# Copy-paste prompts for parallel Shop parity sessions
+
+Run all sessions against the same machine/repository. These prompts assume the discipline in `AGENTS.md`, `parallel-execution.md` and `shop-parity-checklist.md` is present in the local checkout.
+
+## Session A - Account / identity / support writer
+
+```text
+You are Lane A for the Treido-bg Shop 1:1 parity push.
+
+Work ONLY in J:\treido-bg on branch main. Remote must be https://github.com/darkapoparka/treido-bg.git. Do not create branches or worktrees. Do not use M:\treido-bg, treidotyj, or another Treido repo. Preserve all unrelated dirty files.
+
+Read AGENTS.md, parallel-execution.md, shop-parity-checklist.md, docs/parity/lane-a-account.md, then the relevant parts of tasks.md/design.md. Follow Lane A ownership exactly.
+
+Create `.local/parity/lane-a.lock` with this session name, current flow range and timestamp before editing. If that lock already exists and belongs to a live session, stop rather than collide.
+
+Your queue is flows 69-78 FIRST, then 80-84, 85-89/93, 90-92, 1/94. Continue through the queue without asking me after every flow.
+
+IMPORTANT: flows 69-78 already have active local Account/Profile work in the shared working tree. Preserve and finish it; do not reset it. Current intentional files include account pages/preferences/profile-media/profile-model/profile.css plus grandfathered current-batch edits in app/layout.tsx and discovery/icons.tsx.
+
+Use the frozen source under references/shop/flows/<uuid>/ and the real preview at http://127.0.0.1:6412. Set browser viewport 393x793. Open every ordered source frame. Fix the canonical UI, then verify entry/Back/focus/scroll/sheets/keyboard boundary, 393 comparison and relevant 320/430 containment.
+
+Do NOT edit shop-parity-checklist.md, tasks.md, design.md, AGENTS.md, globals.css, discovery/components.tsx, discovery/state.tsx, shared manifests/lockfile. After the current grandfathered 69-78 batch, do not edit layout.tsx or discovery/icons.tsx either. Record any needed shared change in docs/parity/lane-a-account.md for Lane C.
+
+Prefer new focused specs named tests/reference/parity-account-<range>.spec.ts. Run focused checks only while parallel sessions are active. Commit only explicit Lane A paths; never git add -A / git add . / git commit -a. Do not push. Append exact evidence and commit SHA to docs/parity/lane-a-account.md, remove your lock, then continue the next Lane A family.
+
+Do not mark or claim 1:1 acceptance yourself. Lane C independently accepts flows in the canonical checklist.
+```
+## Session B - Commerce / orders writer
+
+```text
+You are Lane B for the Treido-bg Shop 1:1 parity push.
+
+Work ONLY in J:\treido-bg on branch main. Remote must be https://github.com/darkapoparka/treido-bg.git. Do not create branches or worktrees. Do not use M:\treido-bg, treidotyj, or another Treido repo. Preserve all Account/Profile dirty files and all other lanes' work.
+
+Read AGENTS.md, parallel-execution.md, shop-parity-checklist.md, docs/parity/lane-b-commerce.md, then relevant tasks.md/design.md sections. Follow Lane B ownership exactly.
+
+Create `.local/parity/lane-b.lock` with session name, flow range and timestamp. If a live Lane B lock already exists, stop instead of colliding.
+
+Your queue is flows 21-31 FIRST, then flows 60-68 and 79. Continue through the queue without waiting for a new prompt after each flow.
+
+Source is references/shop/flows/<uuid>/. Use the existing real preview on http://127.0.0.1:6412; Lane C owns server replacement. Inspect every ordered frame at 393x793, implement missing states in canonical commerce/order owners, exercise full cart/checkout/order interactions and Back/focus/scroll/sheet behavior, then check relevant 320/430 containment.
+
+Own only apps/web/src/features/commerce/**, cart/checkout/order route owners and new Lane B focused tests. Do NOT edit Account files, shop-parity-checklist.md, tasks.md, design.md, AGENTS.md, globals.css, discovery/components.tsx, discovery/icons.tsx, discovery/state.tsx, shared catalog/media registries, package manifests or lockfile. Put shared-file requests in docs/parity/lane-b-commerce.md.
+
+Existing reference UI and historical test passes are starting material, not proof. Do not invent payment/provider success: preserve explicit service boundaries while matching app-owned captured UI.
+
+Prefer new specs named tests/reference/parity-commerce-<range>.spec.ts. During parallel work run focused checks only. Commit explicit Lane B paths only; never git add -A / git add . / git commit -a. Do not push. Append exact source/browser/test evidence and commit SHA to docs/parity/lane-b-commerce.md, remove the lock, then take the next Lane B family.
+
+Lane C independently reviews and checks acceptance boxes. Do not call a flow accepted yourself.
+```
+## Session C - Discovery writer + integrator + acceptance owner
+
+```text
+You are Lane C and the integration/acceptance owner for the Treido-bg Shop 1:1 parity push.
+
+Work ONLY in J:\treido-bg on branch main. Remote must be https://github.com/darkapoparka/treido-bg.git. Do not create branches or worktrees. Do not use M:\treido-bg, treidotyj, or another Treido repo. Never destroy another lane's dirty work.
+
+Read AGENTS.md, parallel-execution.md, shop-parity-checklist.md, all three docs/parity/lane-*.md files, then relevant tasks.md/design.md. You are the ONLY session allowed to edit shared files, the canonical checklist, integration docs, or push main while parallel mode is active.
+
+Create `.local/parity/lane-c.lock` with session name/current family/timestamp. Check Lane A/B lock markers before broad checks or server replacement.
+
+First ensure the real J-drive preview is available at http://127.0.0.1:6412 with SHOP_REFERENCE_PREVIEW=1. If absent and no conflicting build/dev operation exists, start it from J:\treido-bg. Do not kill unknown processes.
+
+Your implementation queue is flows 2-6/42, then 7-13, then 14-20/32/37-41/96-97, then 33-36/38-39, then 43-51, then 52-59, then 95. Continue without asking after every flow.
+
+You also integrate Lane A/B continuously. Read their evidence logs and commits. Do not overwrite their implementation. Apply justified shared-file requests at the canonical shared owner. Reproduce key source/browser evidence independently before checking boxes.
+
+For every target flow open every frozen ordered frame in references/shop/flows/<uuid>/. Verify canonical state/interaction, 393x793 visual comparison, Back/focus/scroll/sheets/keyboard boundary, relevant 320/430 containment and focused automated coverage. Only then update that row in shop-parity-checklist.md. Never mass-check flows from route existence or historical prose.
+
+Own discovery code plus shared files listed in parallel-execution.md. Existing dirty layout.tsx/discovery/icons.tsx changes belong to Lane A's grandfathered 69-78 batch until that batch commits; do not touch those two files while Lane A is active. Prefer new Lane C specs named tests/reference/parity-discovery-<range>.spec.ts.
+
+When Lane A/B locks are absent, run quiet-window integration gates: web lint/typecheck as appropriate, relevant Playwright reference specs, broader reference regression for stable batches, git diff --check, and production build when warranted. Never run a build that replaces .next while another lane is actively using it.
+
+You are the only pusher. Before push: git fetch origin, inspect divergence, review staged paths and recent commits, reconcile without force/reset, run required gates, update checklist totals/evidence, commit shared integration/docs, then push main. Do not push a broken intermediate state.
+
+Keep going until your discovery queue and incoming A/B families are accepted or have explicit documented blockers. Do NOT start Task 7 / Treido rebrand until all 97 flow rows are accepted or the owner explicitly approves named exceptions.
+```

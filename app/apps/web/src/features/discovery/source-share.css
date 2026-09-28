@@ -1,0 +1,27 @@
+.sheet.native-source-share {
+  width: calc(100% - 16px);
+  max-width: 464px;
+  left: 8px;
+  right: 8px;
+  border-radius: 32px 32px 0 0;
+  background: #fcfcfc;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.native-source-share .sheet-copy {
+  padding: 0;
+  min-width: 0;
+}
+.native-source-share input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 12px 0 16px;
+}
+.native-source-share .primary {
+  width: 100%;
+  min-height: 48px;
+}
+.native-source-share [role="status"] {
+  margin: 12px 0 0;
+  min-height: 20px;
+}

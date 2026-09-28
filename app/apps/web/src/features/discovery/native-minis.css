@@ -1,0 +1,226 @@
+.android-mini {
+  background: #000;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.android-mini > header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 44px;
+  background: #000;
+  color: #fff;
+  font-size: 16px;
+  line-height: 20px;
+}
+.android-mini > header > a,
+.android-mini > header > button {
+  min-height: 44px;
+}
+.android-mini > header .mini-shell-title {
+  font: inherit;
+}
+.native-mini-access {
+  min-height: calc(100svh - 44px);
+  display: grid;
+  place-items: center;
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+  color: #000;
+  padding: 32px 24px;
+}
+.native-mini-access > div {
+  width: min(100%, 299px);
+  text-align: center;
+  transform: translateY(18px);
+}
+.native-mini-access img {
+  display: block;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 16px;
+  object-fit: contain;
+}
+.native-mini-access h1 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.native-mini-access p {
+  margin: 8px 0 46px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.native-mini-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+}
+@media (max-height: 600px) {
+  .native-mini-access > div {
+    transform: none;
+  }
+}
+
+.android-mini > header {
+  font-weight: 400;
+  padding: 0 16px;
+}
+.android-mini > header > a,
+.android-mini > header > button:first-child {
+  display: grid;
+  place-items: center;
+}
+.native-mini-access > div {
+  transform: translateY(14px);
+}
+.makeup-surface {
+  position: relative;
+  min-height: calc(100svh - 44px);
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  color: white;
+}
+.makeup-welcome {
+  background: #f3a6cf;
+}
+.makeup-welcome-art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.makeup-welcome-actions {
+  position: absolute;
+  display: flex;
+  gap: 12px;
+  bottom: 24px;
+  left: 16px;
+  right: 16px;
+}
+.makeup-welcome-actions button {
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #f52888;
+  color: #fff;
+  font:
+    500 16px/20px ShopAndroidRoboto,
+    Roboto,
+    Arial,
+    sans-serif;
+}
+.makeup-welcome-actions button:first-child {
+  flex: 0 0 56px;
+  display: grid;
+  place-items: center;
+  background: #fff5fa;
+  color: #f52888;
+}
+.makeup-welcome-actions button:last-child {
+  flex: 1;
+}
+.makeup-step-back {
+  position: absolute;
+  left: 16px;
+  top: 40px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f52888;
+  color: #fff;
+}
+.makeup-step-back svg {
+  width: 20px;
+  height: 20px;
+}
+.makeup-upload {
+  padding: 104px 16px 12px;
+  background: #f171b0 url("/api/reference-media/live-makeup-pink-texture")
+    center top / 100% auto repeat;
+}
+.makeup-surface h1 {
+  margin: 0;
+}
+.makeup-upload h1 img {
+  display: block;
+  width: min(100%, 303px);
+  height: auto;
+  margin: auto;
+}
+.makeup-introduction {
+  max-width: 395px;
+  margin: 8px auto 24px;
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+}
+.makeup-selfie {
+  display: block;
+  width: calc(100% - 62px);
+  max-width: 333px;
+  height: auto;
+  margin: auto;
+  border-radius: 12px;
+}
+.makeup-upload-action {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  margin: 24px 0 12px;
+  border-radius: 999px;
+  border: 0;
+  background: #f52888;
+  color: white;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.makeup-privacy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+.makeup-privacy img {
+  width: 28px;
+  height: 29px;
+  object-fit: contain;
+}
+.makeup-history {
+  padding: 44px 56px;
+  background: #fff5fa url("/api/reference-media/live-makeup-pale-texture")
+    center top / 100% auto repeat-y;
+}
+.makeup-history h1 img {
+  display: block;
+  width: 181px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+@media (max-height: 600px) {
+  .native-mini-access > div {
+    transform: none;
+  }
+  .makeup-welcome {
+    min-height: 520px;
+  }
+  .native-mini-photo-access {
+    max-height: 100svh;
+  }
+}

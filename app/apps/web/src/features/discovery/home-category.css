@@ -1,0 +1,115 @@
+/* Native Home department; no frozen category styles are changed. */
+.android-explore[data-category="Home"] .native-home-categories {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  width: calc(100% + 32px);
+  margin: 26px -16px 24px;
+  padding: 0 16px;
+  min-height: 40px;
+  align-items: center;
+}
+.native-home-categories > a {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  height: 40px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 24px;
+  border: 1px solid #ececee;
+  background: #fff;
+  box-shadow: 0 1px 3px #00000012;
+  color: #111;
+  font:
+    500 14px/18px ShopAndroidRoboto,
+    Roboto,
+    Arial,
+    sans-serif;
+  white-space: nowrap;
+}
+.native-home-categories img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.native-home-hero {
+  display: block;
+  position: relative;
+  height: auto;
+  aspect-ratio: 1184/664;
+  overflow: hidden;
+  border-radius: 28px;
+  color: #fff;
+  box-shadow: 0 4px 7px #0003;
+}
+.native-home-hero > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.native-home-hero > div {
+  position: absolute;
+  left: 16px;
+  right: 48px;
+  bottom: 16px;
+}
+.native-home-hero strong,
+.native-home-editorial strong {
+  display: block;
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.native-home-hero p {
+  font-size: 12px;
+  line-height: 16px;
+  margin: 0;
+}
+.native-home-hero > svg {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 8px;
+  background: #ffffff33;
+  border-radius: 50%;
+}
+.android-explore[data-category="Home"] .native-home-hero + .explore-shelf {
+  margin-top: 24px;
+}
+.native-home-editorial {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  margin-top: 32px;
+  color: white;
+}
+.native-home-editorial > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center top;
+}
+.native-home-editorial > div {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 16px;
+}
+.native-home-editorial p {
+  font-size: 14px;
+  line-height: 18px;
+  margin: 0;
+}
+
+.android-explore[data-category="Home"] .explore-shelf {
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.native-home-hero > img {
+  filter: brightness(0.96);
+}

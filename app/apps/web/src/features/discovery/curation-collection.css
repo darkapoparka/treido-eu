@@ -1,0 +1,125 @@
+.shop-page.native-curation-collection {
+  padding: 16px 16px 104px;
+  background: #fcfcfc;
+}
+.native-curation-heading h1 {
+  margin: 0;
+  padding-right: 42px;
+  font-family: ShopAndroidBrand, ShopAndroidRoboto, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 28px;
+  letter-spacing: -0.45px;
+}
+.native-curation-heading p {
+  margin: 4px 0 0;
+  color: #454545;
+  font-size: 14px;
+  line-height: 18px;
+}
+.native-curation-share.icon-button {
+  position: fixed;
+  z-index: 40;
+  top: 8px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: none;
+}
+.native-curation-share svg {
+  width: 22px;
+  height: 22px;
+}
+.native-curation-category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 24px;
+  margin: 10px 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.native-curation-category img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #9fa5ac;
+}
+.native-curation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 8px;
+}
+.native-curation-grid .product-card {
+  min-width: 0;
+}
+.native-curation-grid .product-media {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  border: 1px solid #dedfe2;
+  background: #eff0f0;
+}
+.native-curation-grid .product-media > a,
+.native-curation-grid .product-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.native-curation-grid .product-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 8px 4px 0;
+  padding: 0;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+}
+.native-curation-grid .product-copy .product-seller {
+  display: block;
+  margin: 0;
+  color: #303030;
+  font: inherit;
+  font-weight: 400;
+}
+.native-curation-grid .product-copy strong {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: inherit;
+  font-weight: 500;
+}
+.native-curation-grid .product-copy > span:last-child {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.native-curation-grid .save-button {
+  right: 12px;
+  bottom: 12px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 6px;
+  border: 0;
+  color: white;
+  background: #0004;
+}
+.native-curation-grid .save-button svg {
+  width: 20px;
+  height: 20px;
+}
+.native-curation-collection .curation-share-sheet input {
+  width: 100%;
+  margin: 12px 0;
+}

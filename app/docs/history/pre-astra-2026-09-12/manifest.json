@@ -1,0 +1,17 @@
+{
+  "source_commit": "1d03706e84b5c19101246f2df42227bfddf78a54",
+  "files": {
+    "AGENTS.md": "69dba94ccd52c1ed3ec49764c77d6eaca4140bc8d9e680216521e6644b727aed",
+    "README.md": "0cb39a1ebd962a582199c29e2664710f67405e96faf4040024ab1dd9c7b2be35",
+    "product.md": "16693d5211142466fac3277ce5f4739ef43fe58eee73ab7c238aec4fe624f77a",
+    "architecture.md": "cf884319e9f421783cd85f2c94ff877580955f85c7b7cb50ad302d8286893b74",
+    "design.md": "270cda54073da198748cc653eb5f613a58b4acfe71ba0d4b6be56fcc691d5856",
+    "tasks.md": "e1087cdfe3e2c23db73d3a0b85d713e9baa20499020ec833212daf08aaf2d931",
+    "techstack.md": "f09965e8574331a2f874845182c2476c3b33d59c6cecae5d1703321d4efb9559",
+    "verification.md": "b9f4542f201060cc88086b3ad1b3e8aeff6539f39a9d9065945d76967d0bae7f",
+    "single-session-execution.md": "74aeb72ba9a2a1f6ddc858a65ffd70a2388b6d5ba01fd03e1e1c674535070333",
+    "parallel-execution.md": "1011fdebe7f110c6ca101efdf68161b3708ce537ca2c9ca96a06f597597657e2",
+    "parallel-prompts.md": "de2241f522ea2e24966915b3b26d7c7f94f45988e1ada05b8a68cbe1cc0e3621",
+    "shop-implementation-map.md": "7048acd72b26652437d459f5345b74dcae26b864d1c5e73da34a4087df3535fd"
+  }
+}

@@ -1,0 +1,64 @@
+.shop-page.native-merchant-policy {
+  padding: 60px 16px 104px;
+  background: #fcfcfc;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.native-merchant-policy > header {
+  position: fixed;
+  z-index: 15;
+  inset: 0 0 auto;
+  display: grid;
+  place-items: center;
+  height: 44px;
+  background: #fcfcfc;
+}
+.native-merchant-policy > header h1 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.native-merchant-policy > article {
+  font-size: 16px;
+  line-height: 25.6px;
+}
+.native-merchant-policy article p {
+  margin: 0;
+  white-space: pre-line;
+}
+.native-merchant-policy article p + p {
+  margin-top: 26px;
+}
+.native-merchant-policy article h2 {
+  margin: 24px 0 12px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.native-merchant-policy article ul {
+  list-style: disc;
+  margin: 0;
+  padding-left: 40px;
+}
+.native-merchant-policy article li {
+  margin-bottom: 8px;
+}
+.native-merchant-policy .policy-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.native-merchant-policy table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 20px;
+}
+.native-merchant-policy td,
+.native-merchant-policy th {
+  text-align: left;
+  border: 1px solid #ddd;
+  padding: 8px;
+}

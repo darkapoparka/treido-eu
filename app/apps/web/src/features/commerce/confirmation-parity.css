@@ -1,0 +1,262 @@
+/* Captured checkout completion and its receipt, flows 21 and 31. */
+.order-confirmation-page,
+.receipt-page {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+}
+.order-confirmation-page .confirmation-heading {
+  margin: 32px 0 24px;
+}
+.order-confirmation-page .confirmation-heading > div {
+  align-self: flex-start;
+  margin-top: -2px;
+}
+.order-confirmation-page .confirmation-heading h1 {
+  letter-spacing: 0;
+  line-height: 28px;
+}
+.order-confirmation-page .confirmation-heading small {
+  font-size: 14px;
+  line-height: 20px;
+}
+.order-confirmation-page .confirmation-destination {
+  position: relative;
+  min-height: 67px;
+  padding-bottom: 26px;
+}
+.order-confirmation-page .confirmation-destination small,
+.order-confirmation-page .confirmation-delivery small {
+  font-size: 14px;
+  line-height: 18px;
+}
+.order-confirmation-page .confirmation-destination strong {
+  letter-spacing: -0.2px;
+  padding-right: 62px;
+  margin-top: 4px;
+  line-height: 18px;
+}
+.order-confirmation-page .confirmation-destination img {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+}
+.order-confirmation-page .confirmation-delivery {
+  padding: 16px 0;
+}
+.order-confirmation-page .confirmation-delivery strong {
+  margin-top: 8px;
+  line-height: 18px;
+}
+.order-confirmation-page .confirmation-total {
+  padding: 18px 0 14px;
+}
+.order-confirmation-page .confirmation-total p {
+  margin: 0;
+  line-height: 18px;
+}
+.order-confirmation-page .confirmation-total p + p {
+  margin-top: 8px;
+  color: #555;
+  font-size: 14px;
+}
+.order-confirmation-page > .muted-button {
+  margin-top: 0;
+  height: 40px;
+  min-height: 40px;
+  font-size: 14px;
+  background: #f3f4f4;
+}
+.order-confirmation-page > h2 {
+  margin: 36px 0 12px;
+  font-size: 18px;
+  line-height: 22px;
+}
+.order-confirmation-page > h2 a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.order-confirmation-page > h2 span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f3f4f4;
+}
+.order-confirmation-page > .product-rail {
+  margin-right: -16px;
+  padding-right: 16px;
+  gap: 8px;
+}
+.order-confirmation-page .product-card {
+  width: 173px;
+}
+.order-confirmation-page .product-media {
+  border: 1px solid #d5d7d8;
+  border-radius: 20px;
+  box-shadow: 0 3px 8px #00000005;
+}
+.order-confirmation-page .save-button {
+  right: 11px;
+  bottom: 11px;
+}
+.order-confirmation-page .product-copy {
+  padding: 7px 4px 0;
+}
+.order-confirmation-page .product-copy strong {
+  font-weight: 500;
+}
+.order-confirmation-page .product-copy .rating {
+  line-height: 17px;
+}
+.order-confirmation-page .confirmation-deals {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 36px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.receipt-page .receipt-share {
+  position: fixed;
+  z-index: 6;
+  right: max(16px, calc((100vw - 600px) / 2 + 16px));
+  top: 8px;
+}
+.receipt-page .receipt-method {
+  padding-top: 38px;
+}
+.receipt-page .receipt-method .receipt-payment {
+  margin-bottom: 14px;
+}
+.receipt-page .account-heading {
+  margin-bottom: 15px;
+}
+.receipt-page .receipt-method + .receipt-section {
+  margin-top: 47px;
+}
+.receipt-page .receipt-card-line {
+  gap: 12px;
+}
+.receipt-page .receipt-card-number {
+  font-size: 12px;
+  color: #555;
+}
+.receipt-page .receipt-card-number > span {
+  color: inherit;
+}
+.receipt-page .receipt-payment-info {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  margin-left: -5px;
+  color: #555;
+}
+.receipt-page .receipt-payment-info::after {
+  content: "";
+  position: absolute;
+  inset: -16px;
+}
+.receipt-page .receipt-payment-info svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 1.8;
+}
+.receipt-page .receipt-order-meta > strong,
+.receipt-page .receipt-order-meta > p,
+.receipt-page .receipt-product > strong,
+.receipt-page .receipt-product > span,
+.receipt-page .receipt-totals p > span,
+.receipt-page .receipt-totals p > strong,
+.receipt-page .receipt-section > h2,
+.receipt-page .receipt-section > p:not(.receipt-payment, .receipt-card-line),
+.receipt-page .receipt-payment > strong,
+.receipt-page .receipt-payment > span,
+.receipt-page .receipt-card-number,
+.receipt-page .receipt-seller > span {
+  opacity: 0.999;
+}
+/* The one-shot captured confirmation loads details before its product shelves. */
+.confirmation-brand-placeholder {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: white;
+  background: #c3c6c7;
+  font-size: 20px;
+}
+.confirmation-details-skeleton i,
+.confirmation-details-skeleton b,
+.confirmation-shelves-skeleton i,
+.confirmation-shelves-skeleton b {
+  display: block;
+  background: #f0f2f3;
+  border-radius: 6px;
+}
+.confirmation-address-skeleton {
+  position: relative;
+  height: 71px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.confirmation-address-skeleton i:first-child {
+  width: 80px;
+  height: 18px;
+}
+.confirmation-address-skeleton i + i {
+  width: calc(100% - 62px);
+  height: 20px;
+  margin-top: 10px;
+}
+.confirmation-address-skeleton b {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+}
+.confirmation-details-skeleton > p {
+  font-size: 14px;
+  line-height: 18px;
+  margin: 18px 0 4px;
+}
+.confirmation-details-skeleton > i {
+  height: 20px;
+}
+.confirmation-details-skeleton > button.muted-button {
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  margin-top: 16px;
+  font-size: 14px;
+  opacity: 1;
+  background: #f3f4f4;
+}
+.confirmation-shelves-skeleton {
+  overflow: hidden;
+  margin-right: -16px;
+}
+.confirmation-shelves-skeleton > div {
+  margin-top: 36px;
+}
+.confirmation-shelves-skeleton i {
+  width: 120px;
+  height: 25px;
+  margin-bottom: 12px;
+}
+.confirmation-shelves-skeleton > div > div {
+  display: flex;
+  gap: 16px;
+}
+.confirmation-shelves-skeleton b {
+  flex: 0 0 155px;
+  height: 155px;
+  border-radius: 20px;
+}

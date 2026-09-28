@@ -1,0 +1,125 @@
+.photoSheet.photoSheet:global(.sheet) {
+  height: min(194px, calc(100dvh - 64px));
+  max-height: min(194px, calc(100dvh - 64px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.photoSheet::-webkit-scrollbar {
+  display: none;
+}
+
+.photoSheet :global(.account-row) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  position: relative;
+  width: 100%;
+  min-height: 56px;
+  padding-inline: 0;
+  border: 0;
+  text-align: left;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.recentFragment.recentFragment {
+  flex: 0 0 16px;
+  width: 16px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.recentFragmentMedia {
+  display: block;
+  width: 16px;
+  height: 112px;
+  overflow: hidden;
+  border-radius: 20px 0 0 20px;
+  border: 1px solid #d4d5d6;
+  border-right: 0;
+  background: #e1e1e1;
+}
+
+.recentFragmentMedia > img {
+  display: block;
+  width: 16px;
+  height: 112px;
+  object-fit: cover;
+}
+
+.boundedRecommendation.boundedRecommendation {
+  flex: 0 0 55px;
+  width: 55px;
+  min-width: 55px;
+  overflow: hidden;
+}
+
+.boundedRecommendation > span,
+.boundedRecommendation > strong,
+.boundedRecommendation > b {
+  display: block;
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+}
+
+.boundedRecommendation > button.boundedMedia:global(.product-media) {
+  display: block;
+  width: 55px;
+  min-width: 55px;
+  height: 152px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-right: 0;
+  border-radius: 20px 0 0 20px;
+  background: #f5f5f5;
+  text-align: left;
+}
+
+.boundedMedia > img {
+  display: block;
+  width: 55px;
+  height: 148px;
+  padding: 0;
+  object-fit: cover;
+  object-position: left top;
+}
+
+/* Only the exposed photographs are available for these continuation cards.
+   Keep their source dimensions; do not invent product text or destinations. */
+:global(.photo-assistant) .structuredNote.structuredNote {
+  margin-bottom: 12px;
+}
+.structuredRail.structuredRail:global(.assistant-product-rail) {
+  margin-top: 12px;
+}
+.structuredFragment[data-source-boundary] {
+  /* These bounded source photographs already include the bottom fade. */
+  position: relative;
+  z-index: 2;
+  flex: 0 0 152px;
+  min-height: 152px;
+  overflow: hidden;
+}
+.structuredFragment[data-source-boundary="structured-third"] {
+  flex-basis: 56px;
+}
+:global(.photo-assistant) .structuredFragment[data-source-boundary] > img {
+  width: 150px;
+  height: 86px;
+  max-width: none;
+  margin: 1px;
+  object-fit: contain;
+  object-position: left top;
+  border-radius: 20px 20px 0 0;
+}
+:global(.photo-assistant)
+  .structuredFragment[data-source-boundary="structured-third"]
+  > img {
+  width: 55px;
+  border-top-right-radius: 0;
+}

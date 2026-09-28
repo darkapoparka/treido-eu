@@ -1,0 +1,266 @@
+/* Current Android host. Frozen iOS scenarios retain their own styles. */
+.shop-page.android-minis {
+  padding-top: 16px;
+  background: #fcfcfc;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.android-minis > .section-heading {
+  position: sticky;
+  top: 16px;
+  z-index: 15;
+  height: 40px;
+  transform: none;
+  margin: 0 0 24px;
+}
+.android-minis > .section-heading h1 {
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -0.8px;
+}
+.android-minis > .section-heading .icon-button {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border: 1px solid #eceef0;
+}
+.android-minis > .section-heading::before {
+  content: "";
+  position: absolute;
+  inset: -16px -16px -16px;
+  z-index: -1;
+  background: linear-gradient(#fcfcfc 70%, #fcfcfc00);
+  pointer-events: none;
+}
+.android-minis .mini-carousel {
+  margin-block: 0;
+  padding-block: 0;
+  gap: 16px;
+}
+.android-minis .mini-feature {
+  flex-basis: calc(100vw - 40px);
+  padding: 7px;
+  border: 1px solid #eceef0;
+  border-radius: 28px;
+  box-shadow: 0 2px 5px #00000003;
+}
+.android-minis .mini-feature > img {
+  width: 100%;
+  aspect-ratio: 371 / 200;
+  height: auto;
+  border-radius: 20px;
+}
+.android-minis .mini-feature > div {
+  padding: 12px 8px 8px;
+}
+.android-minis h2 {
+  margin: 36px 0 12px;
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+}
+.android-minis .mini-list-pages {
+  gap: 24px;
+}
+.android-minis .mini-list-pages > .mini-list {
+  flex-basis: calc(100vw - 71px);
+}
+.android-minis .mini-list > a,
+.android-minis .mini-list > button {
+  min-height: 48px;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+.android-minis .mini-list > :last-child {
+  margin-bottom: 0;
+}
+.android-minis .mini-list img {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+.android-minis .mini-list p,
+.android-minis .mini-feature p {
+  color: #707070;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-minis .mini-recent {
+  gap: 12px;
+}
+.android-minis .mini-recent img {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+@media (min-width: 481px) {
+  .android-minis .mini-feature {
+    flex-basis: 387px;
+  }
+  .android-minis .mini-list-pages > .mini-list {
+    flex-basis: 356px;
+  }
+}
+.android-minis[data-searching] {
+  padding-top: 4px;
+}
+.native-mini-searchbar {
+  position: sticky;
+  top: 4px;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 44px;
+  margin-bottom: 8px;
+  background: #fcfcfc;
+}
+.native-mini-searchbar label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  background: #f1f2f3;
+  border-radius: 999px;
+  color: #707070;
+}
+.native-mini-searchbar label > svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+.native-mini-searchbar input {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+  height: 44px;
+  padding: 0;
+  outline: none;
+  border: 0;
+  background: transparent;
+  font:
+    400 16px/20px ShopAndroidRoboto,
+    Roboto,
+    Arial,
+    sans-serif;
+}
+.native-mini-searchbar input::-webkit-search-cancel-button {
+  display: none;
+}
+.native-mini-searchbar > button {
+  padding: 0 4px 0 0;
+  background: transparent;
+  color: #5433f6;
+  font-size: 16px;
+  font-weight: 400;
+}
+.native-mini-searchbar label button {
+  display: grid;
+  flex: 0 0 18px;
+  place-items: center;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  background: #858588;
+  color: #fff;
+}
+.native-mini-searchbar label button svg {
+  width: 12px;
+  height: 12px;
+}
+.android-minis[data-searching] h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 20px;
+}
+.android-minis .native-mini-search-results > a,
+.android-minis .native-mini-search-results > button {
+  margin-bottom: 16px;
+}
+.shop-page.android-minis:not([data-searching]) {
+  padding-top: 12px;
+}
+.android-minis > .section-heading {
+  top: 12px;
+  margin-bottom: 28px;
+}
+.android-minis > .section-heading .icon-button svg {
+  width: 22px;
+  height: 22px;
+}
+.android-minis .mini-list-pages > .mini-list {
+  flex: 0 0 calc(100vw - 71px);
+  min-width: 0;
+}
+@media (min-width: 481px) {
+  .android-minis .mini-list-pages > .mini-list {
+    flex-basis: 356px;
+  }
+}
+
+.android-mini .look-surface.live-look {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - 44px);
+  padding: 87px 40px 72px;
+  border-radius: 28px 28px 0 0;
+}
+.android-mini .live-look .look-wordmark {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(327px, 100%);
+  aspect-ratio: 981 / 822;
+  height: auto;
+  margin: 0 auto 48px;
+}
+.android-mini .live-look .look-wordmark img {
+  display: block;
+  position: absolute;
+  left: 1.86%;
+  top: 2.97%;
+  width: 97.037%;
+  height: auto;
+}
+.android-mini .live-look[data-look-phase="welcome"] h1 {
+  margin: auto 0 0;
+  transform: none;
+  font-size: clamp(27px, 8.43vw, 36px);
+  line-height: 1.111111;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.android-mini
+  .live-look[data-look-phase="welcome"][data-look-terms="false"]
+  > p {
+  margin: 16px 0 0;
+  transform: none;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.android-mini .live-look .look-upload {
+  flex-shrink: 0;
+  width: 100%;
+  height: 66px;
+  margin-top: 64px;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+@media (max-width: 360px) {
+  .android-mini .look-surface.live-look {
+    padding-inline: 24px;
+  }
+  .android-mini
+    .live-look[data-look-phase="welcome"][data-look-terms="false"]
+    > p {
+    font-size: 15px;
+    line-height: 24px;
+  }
+}

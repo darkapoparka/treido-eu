@@ -1,0 +1,35 @@
+.product-addition-flight {
+  position: fixed;
+  width: 174px;
+  height: 174px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #e1e1e1;
+  pointer-events: none;
+  user-select: none;
+  z-index: 40;
+}
+.pdp-purchase-buttons .primary[data-addition="flying"] {
+  opacity: 1;
+  cursor: default;
+}
+.pdp-purchase-buttons .primary[data-addition="confirmed"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.pdp-purchase-buttons .primary > svg {
+  width: 16px;
+  height: 16px;
+}
+.pdp-purchase-buttons > button:not(.primary):disabled {
+  opacity: 1;
+  color: #989b9e;
+  background: #eff0f1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-addition-flight {
+    display: none;
+  }
+}

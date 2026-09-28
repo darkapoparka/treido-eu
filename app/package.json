@@ -1,0 +1,37 @@
+{
+  "name": "treido-bg",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": "24.x",
+    "pnpm": "12.3.4"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @treido/web dev:preview",
+    "dev:mobile": "pnpm --filter @treido/mobile dev",
+    "build:web": "turbo run build --filter=@treido/web",
+    "start:web": "pnpm --filter @treido/web start",
+    "lint": "turbo run lint && eslint tests *.mjs",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "turbo run typecheck",
+    "test:unit": "vitest run",
+    "test:smoke:web": "playwright test",
+    "native:check": "pnpm --filter @treido/mobile native:check",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.13.3",
+    "@treido/contracts": "workspace:*",
+    "eslint": "9.39.5",
+    "prettier": "3.9.6",
+    "turbo": "2.10.12",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.0"
+  }
+}

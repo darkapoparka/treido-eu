@@ -1,0 +1,230 @@
+.reviews-page {
+  background: #fdfdfd;
+}
+.reviews-page > .review-summary {
+  padding-right: 4px;
+}
+.reviews-page .review-card {
+  padding-top: 15px;
+  padding-bottom: 14px;
+  margin-bottom: 9px;
+  border-color: #f0f0f0;
+  box-shadow: 0 4px 20px #0000000f;
+}
+.reviews-page .review-card p {
+  font-size: 14.2px;
+  line-height: 18px;
+  letter-spacing: 0.025px;
+}
+.reviews-page .review-card footer {
+  margin-top: 12px;
+}
+.store-reviews > .section-heading h1 {
+  font-weight: 600;
+  color: #303030;
+}
+.store-review-list .review-author {
+  font-size: 14px;
+}
+.store-review-list {
+  gap: 16px;
+}
+.store-review-list article {
+  padding-bottom: 17px;
+  border-color: #aeada6;
+}
+.store-review-product h2 {
+  font-size: 16.2px;
+  letter-spacing: -0.6px;
+}
+.store-review-list article > p {
+  letter-spacing: -0.2px;
+  transform: translateY(-2px);
+}
+.store-review-product .review-rating-stars {
+  transform: translateY(-2px);
+}
+.store-review-summary > b {
+  transform: translateY(2px);
+}
+.store-review-summary .review-rating-stars {
+  transform: translate(3px, -3px);
+}
+.store-review-summary small {
+  transform: translate(3px, 1px);
+}
+.store-review-list .review-helpful {
+  margin-right: 16px;
+}
+.rating-information {
+  position: relative;
+  display: inline-grid;
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  place-items: center;
+  vertical-align: -2px;
+  color: inherit;
+}
+.rating-information::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+.rating-information > svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 1.8;
+}
+.rating-information:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.reviews-page > .section-heading h1 {
+  color: #303030;
+  font-size: 28.4px;
+  letter-spacing: -1.7px;
+}
+.reviews-page > .review-summary > div > strong {
+  font-size: 28.2px;
+  letter-spacing: -0.4px;
+}
+.reviews-page .review-rating-stars {
+  color: #e4bf2c;
+}
+.reviews-page .review-card > .review-rating-stars {
+  transform: translate(-5px, -2px);
+}
+.reviews-page .review-card h2 {
+  margin-top: 7px;
+  font-size: 15.6px;
+  letter-spacing: -0.4px;
+}
+.reviews-page .review-card .read-more {
+  margin-top: 2px;
+}
+.reviews-page .review-card .review-author {
+  font-size: 11.5px;
+  letter-spacing: 0.1px;
+}
+.reviews-page .review-card .review-helpful {
+  margin-right: 6px;
+  font-size: 12.3px;
+  letter-spacing: -0.1px;
+}
+
+/* Product review cards have smaller footer gaps when their body needs no
+   expansion control. Keep other products and store reviews unchanged. */
+.reviews-page[data-product-id="shea-butter"] .review-card {
+  padding-bottom: 15px;
+  margin-bottom: 8px;
+}
+.reviews-page[data-product-id="shea-butter"]
+  .review-card:not(:has(> .read-more))
+  footer {
+  margin-top: 9px;
+}
+.reviews-page[data-product-id="shea-butter"]
+  .review-card:has(> h2):not(:has(> .read-more))
+  footer {
+  margin-top: 10px;
+}
+
+.reviews-page .review-search input::placeholder {
+  color: #929496;
+  opacity: 1;
+}
+.reviews-page .helpful-count {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 400;
+}
+.reviews-page .review-card footer > .icon-button {
+  position: relative;
+  left: 5px;
+}
+.reviews-page .review-card footer > .icon-button svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 3.4;
+  transform: translate(-0.4px, -0.5px);
+}
+.store-review-list article footer > .icon-button svg {
+  stroke-width: 4;
+  transform: translate(-3px, -2px);
+}
+
+/* Composite text separately to match the source's grayscale edges without
+   changing font metrics or compositing product photographs. */
+.reviews-page :is(h1, h2, p, .review-author, .review-variant, .read-more),
+.reviews-page .review-summary > div > strong,
+.reviews-page .rating-bars > div > span,
+.reviews-page .review-search input,
+.reviews-page .review-helpful,
+.store-reviews > .section-heading h1,
+.store-review-summary :is(b, small),
+.store-review-product :is(h2, small),
+.store-review-list article > p,
+.store-reviews .review-author,
+.store-reviews .review-helpful,
+.store-reviews .category-rail .pill,
+.review-report-reasons .sheet-actions > button,
+.review-report-reasons .sheet-actions .primary:disabled,
+.review-report-close {
+  opacity: 0.999;
+}
+
+/* The source card copy uses a lighter Windows raster than Arial while the
+   captured titles retain their existing fitted width. Keep text and control
+   baselines independent so the footer hit targets do not move. */
+.reviews-page .review-card p,
+.reviews-page .read-more,
+.reviews-page .review-author,
+.reviews-page .review-helpful {
+  font-family: "Segoe UI", sans-serif;
+}
+.reviews-page .review-card > p,
+.reviews-page .review-card > .read-more {
+  position: relative;
+  top: -1px;
+  transform: translateY(0.4px);
+}
+.reviews-page .review-card .review-helpful {
+  position: relative;
+  top: -2px;
+}
+
+/* Report reason labels use the source's wider Windows system metrics while
+   the sheet title, subtitle and footer controls retain their fitted stack. */
+.review-report-reasons .review-reason-options :is(strong, small) {
+  font-family: "Segoe UI", sans-serif;
+}
+.review-report-reasons .review-reason-options strong {
+  letter-spacing: 0.145px;
+}
+.review-report-reasons .review-reason-options small {
+  letter-spacing: 0.01px;
+}
+.review-report-reasons .sheet-actions > button {
+  font-size: 16px;
+  padding-inline: 20px;
+  border: 1px solid transparent;
+}
+.review-report-reasons .sheet-actions > .pill {
+  border-color: var(--color-line);
+}
+
+/* Preserve the source sheet rhythm while the disconnected preview keeps its
+   confirmation copy honest and selectable. */
+.review-report-thanks .review-report-confirmation {
+  min-height: 90px;
+}
+
+/* Keep the submitted product-review mark on the captured source baseline. */
+.reviews-page .review-reported-label {
+  margin-top: 1px;
+  padding-right: 5px;
+  font-size: 13.5px;
+}

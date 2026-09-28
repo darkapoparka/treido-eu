@@ -1,0 +1,279 @@
+@font-face {
+  font-family: ShopCuration;
+  src: url("/api/reference-font/regular") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: ShopCuration;
+  src: url("/api/reference-font/medium") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+.shop-page.android-curation {
+  padding: 0 0 100px;
+  background: #fff;
+  font-family: ShopCuration, ShopAndroidRoboto, Arial, sans-serif;
+}
+.android-curation-hero {
+  position: relative;
+  min-height: 518px;
+  color: #fff;
+  background: #704227;
+  overflow: hidden;
+}
+.android-curation-hero > img {
+  position: absolute;
+  inset: -52px 0 0;
+  width: 100%;
+  height: calc(100% + 52px);
+  object-fit: cover;
+}
+.android-curation-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 30%, #0009);
+  pointer-events: none;
+}
+.android-curation-hero .curation-share {
+  position: fixed;
+  right: 16px;
+  top: 8px;
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: #fff;
+  color: #000;
+  border-radius: 50%;
+}
+.android-curation-copy {
+  position: absolute;
+  z-index: 1;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+}
+.android-curation-credit-logo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.android-curation-credit-logo > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  color: #000;
+  border-radius: 50%;
+  font:
+    28px/1 Georgia,
+    serif;
+  letter-spacing: -5px;
+  padding-right: 5px;
+}
+.android-curation-copy h1 {
+  margin: 0;
+  font-family: ShopAndroidDisplay, ShopAndroidRoboto, Arial, sans-serif;
+  font-size: 36px;
+  line-height: 38px;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+}
+.android-curation-copy > p {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 19px;
+}
+.android-curation-photo-credit {
+  margin: 8px 16px 0;
+  color: #454545;
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-curation-intro {
+  margin: 40px 16px 40px;
+  font-size: 14px;
+  line-height: 18px;
+}
+.android-curation-section {
+  margin: 0 16px;
+}
+.android-curation-section > h2 {
+  font-size: 18px;
+  line-height: 22px;
+  margin: 40px 0 8px;
+  font-weight: 500;
+}
+.android-curation-section > p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+.android-curation-section > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 24px;
+  object-fit: cover;
+}
+@media (max-width: 360px) {
+  .android-curation-copy h1 {
+    font-size: 30px;
+    line-height: 33px;
+  }
+}
+
+.curation-share-sheet {
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+  padding: 24px;
+}
+.curation-share-sheet > label {
+  display: block;
+  margin: 8px 0;
+}
+.curation-share-sheet > input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font: inherit;
+}
+.curation-share-sheet > .primary {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 44px;
+}
+
+.android-curation-film {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #f4f4f2;
+}
+.android-curation-film > img,
+.android-curation-film > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.android-curation .android-curation-products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 11px;
+  margin: 40px 0 0;
+}
+.android-curation-products .product-card {
+  min-width: 0;
+  margin: 0;
+}
+.android-curation-products .product-media {
+  aspect-ratio: 1;
+  border: 1px solid #0000001a;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.android-curation-products .product-media img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+.android-curation-products .product-card .product-copy {
+  display: grid;
+  gap: 0;
+  margin: 8px 0 0 4px;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-curation-products .product-copy > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.1px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.android-curation-products .product-copy > .product-seller {
+  font-size: 12px;
+  line-height: 16px;
+  color: #000;
+}
+.android-curation-products .product-copy > .rating {
+  font-size: 12px;
+  line-height: 14px;
+  color: #000;
+}
+.android-curation-products .product-copy > span:last-child {
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-curation-products .product-card .save-button {
+  right: 12px;
+  bottom: 12px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border: 0;
+  color: #fff;
+  background: #0005;
+}
+.android-curation-products .save-button svg {
+  width: 22px;
+  height: 22px;
+}
+.android-curation-quote {
+  margin: 64px 16px 96px;
+  text-align: center;
+}
+.android-curation-quote blockquote {
+  margin: 0;
+  font-family: ShopCuration, ShopAndroidBrand, Arial, sans-serif;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 38px;
+  letter-spacing: -1.2px;
+  filter: blur(8px);
+  opacity: 0.15;
+  transition:
+    filter 800ms ease,
+    opacity 800ms ease;
+}
+.android-curation-quote.is-visible blockquote {
+  opacity: 1;
+  filter: none;
+}
+.android-curation-quote figcaption {
+  margin-top: 24px;
+  color: #383838;
+  font-size: 16px;
+  line-height: 22px;
+}
+@media (max-width: 360px) {
+  .android-curation-quote blockquote {
+    font-size: 30px;
+    line-height: 33px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .android-curation-quote blockquote {
+    filter: none;
+    opacity: 1;
+    transition: none;
+  }
+}

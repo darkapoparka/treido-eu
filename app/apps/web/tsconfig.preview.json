@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "*.ts",
+    "*.mts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.mts",
+    ".qa/shelves-dev/types/**/*.ts",
+    ".qa/shelves-dev/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

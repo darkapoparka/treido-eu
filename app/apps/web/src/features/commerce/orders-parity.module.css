@@ -1,0 +1,2068 @@
+@font-face {
+  font-family: "ShopOrdersGeist";
+  src: url("/fonts/shop-chemical-geist.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+.list,
+.review,
+.orderMenu {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+}
+.detail,
+.tracking,
+.newOrder,
+.manualForm,
+.trackingEditor,
+.activitySheet,
+.list:global(.archive-page),
+.list:has(:global(.order-empty-source)) {
+  font-family: "ShopOrdersGeist", Arial, Helvetica, sans-serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tracking :global(.delivery-confetti) {
+    display: block;
+  }
+  .tracking :global(.delivery-confetti i) {
+    animation: none;
+    opacity: 1;
+    transform: rotate(var(--delivery-confetti-angle));
+  }
+}
+.list {
+  padding-top: 12px;
+}
+.emptyArt {
+  position: relative;
+  display: block;
+  width: 135px;
+  height: 234px;
+  margin: 0 auto;
+}
+.emptyArtVideo {
+  width: calc(min(100vw, 760px) * 152 / 360);
+  top: calc(min(100vw, 760px) * -6 / 360);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.emptyArt:has(video[data-video-ready="true"]) > img {
+  visibility: hidden;
+}
+.deletedOrderNotice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #eeebff;
+  font-size: 14px;
+}
+.deletedOrderNotice button {
+  color: #5532eb;
+  font-weight: 600;
+}
+.list :global(.account-heading) {
+  height: 36px;
+  margin-bottom: 14px;
+}
+.list :global(.account-heading h1) {
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -1px;
+}
+.list :global(.order-actions) {
+  gap: 10px;
+}
+.list :global(.order-actions button) {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+.list :global(.order-actions button svg) {
+  width: 21px;
+  height: 21px;
+}
+.list :global(.tracking-card) {
+  min-height: 112px;
+  padding: 16px;
+  border-radius: 24px;
+  margin-bottom: 14px;
+  box-shadow: 0 5px 18px #00000008;
+}
+.list :global(.tracking-card[data-order-status="Delivered"]) {
+  height: auto;
+  min-height: 122px;
+  padding-block: 15px 17px;
+  align-items: flex-start;
+}
+.list :global(.tracking-card[data-order-status="Delivered"] h2) {
+  margin: 18px 0 0;
+}
+.list :global(.tracking-card h2) {
+  font-size: 16px;
+  line-height: 21px;
+  margin: 10px 0 12px;
+}
+.list :global(.order-seller-label) {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.list :global(.order-seller-label img) {
+  width: 24px;
+  height: 24px;
+}
+.list :global(.tracking-card > img) {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+.list :global(.tracking-card > div) {
+  min-width: 0;
+  flex: 1;
+}
+.list :global(.review-stars) {
+  display: block;
+  height: 24px;
+}
+.list :global(.review-stars .review-rating-stars) {
+  --review-star-size: 24px;
+  width: 152px;
+}
+.list :global(.review-stars .review-rating-stars-empty) {
+  width: 152px;
+  justify-content: space-between;
+  color: #c9cbcb;
+}
+.list :global(.order-archive-link) {
+  margin-top: 42px;
+  font-size: 16px;
+  font-weight: 500;
+  background: none;
+  border: 0;
+}
+.list :global(.orders-deals h2),
+.list :global(.orders-past h2),
+.list :global(.orders-buy-again h2) {
+  font-size: 18px;
+  line-height: 23px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.list :global(.orders-deals h2) {
+  margin-bottom: 10px;
+}
+.list :global(.orders-buy-again h2),
+.list :global(.order-section-heading) {
+  display: flex;
+  align-items: center;
+}
+.list :global(.order-section-chevron) {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  background: #f1f3f3;
+  color: #111;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 500;
+}
+.list :global(.orders-deals) {
+  margin-top: 26px;
+}
+.list :global(.orders-deal-grid) {
+  gap: 8px;
+}
+.list :global(.orders-deal-grid > button) {
+  border-radius: 23px;
+  min-width: 0;
+}
+.list :global(.orders-past) {
+  margin-top: 26px;
+}
+.list :global(.orders-past img) {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border: 1px solid #e1e2e2;
+  border-radius: 8px;
+}
+.list :global(.orders-past a) {
+  gap: 12px;
+  font-size: 14px;
+}
+.list :global(.orders-past small) {
+  font-size: 12px;
+  line-height: 17px;
+}
+.list :global(.orders-buy-again) {
+  margin-top: 10px;
+}
+.list :global(.orders-buy-again > a) {
+  position: relative;
+  display: block;
+  width: 112px;
+  height: 112px;
+  overflow: hidden;
+  border: 1px solid #dedede;
+  border-radius: 20px;
+  background: #f3f3f3;
+}
+.list :global(.orders-buy-again > a > img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.list :global(.orders-buy-again > a > span) {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background: #111;
+}
+.list :global(.orders-buy-again > a > span svg) {
+  width: 18px;
+  height: 18px;
+}
+.list:global(.manual-order-result) :global(.manual-tracking-card) {
+  height: 108px;
+  min-height: 108px;
+  margin-bottom: 13px;
+  align-items: flex-start;
+}
+.list:global(.manual-order-result) :global(.orders-buy-again) {
+  position: relative;
+  top: 3px;
+  margin-top: 19px;
+}
+.list:global(.manual-order-result) :global(.orders-buy-again h2) {
+  position: relative;
+  top: 3px;
+}
+.list:global(.manual-order-result) :global(.order-archive-link) {
+  margin-top: 36px;
+}
+.list :global(.order-empty-source) {
+  padding: 32px 16px 16px;
+  border-radius: 28px;
+}
+.list :global(.order-empty-source h2) {
+  max-width: 280px;
+  font-size: 28px;
+  line-height: 30px;
+  letter-spacing: -1.2px;
+  margin-top: 36px;
+}
+.list :global(.order-empty-source .form-cancel) {
+  min-height: 44px;
+  font-size: 16px;
+  line-height: 21px;
+}
+.detail {
+  padding-top: 0;
+}
+.detail :global(.floating-dock[data-fade="true"])::before,
+.tracking :global(.floating-dock[data-fade="true"])::before {
+  background: transparent;
+  backdrop-filter: blur(20px);
+  mask-image: linear-gradient(transparent 15%, #000);
+}
+.detail :global(.account-heading) {
+  display: none;
+}
+.detail :global(.order-hero) {
+  height: 157px;
+  margin: 0 0 12px;
+  border-radius: 28px;
+  padding: 21px 16px 14px;
+  background-size: cover;
+}
+.detail :global(.order-store-mark) {
+  font:
+    76px/0.9 Georgia,
+    serif;
+  font-weight: 400;
+  letter-spacing: -4px;
+}
+.detail :global(.order-hero > strong),
+.detail :global(.order-hero > p) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.detail :global(.order-more) {
+  width: 40px;
+  height: 40px;
+  top: 12px;
+  right: 12px;
+}
+.detail :global(.order-status) {
+  min-height: 99px;
+  padding: 17px 16px 20px;
+  margin: 0 0 12px;
+  border-radius: 28px;
+}
+.detail :global(.order-status > span:first-child) {
+  min-width: 0;
+}
+.detail :global(.order-status strong) {
+  font-size: 16px;
+  line-height: 21px;
+}
+.detail :global(.order-status small) {
+  font-size: 12px;
+  line-height: 17px;
+}
+.detail :global(.order-status > img) {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+.detail :global(.order-status) > .progress {
+  grid-column: 1/-1;
+  width: 100%;
+}
+.detail :global(.order-item) {
+  margin-bottom: 18px;
+  gap: 14px;
+}
+.detail :global(.order-item img) {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+}
+.detail :global(.order-item strong) {
+  font-size: 14px;
+  line-height: 19px;
+}
+.detail :global(.order-item p) {
+  font-size: 12px;
+  line-height: 17px;
+}
+.detail :global(.muted-button) {
+  min-height: 42px;
+  height: 42px;
+  padding: 10px;
+  margin-top: 9px;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 600;
+  border-radius: 24px;
+}
+.detail > h2 {
+  margin-top: 38px;
+  margin-bottom: 14px;
+  font-size: 18px;
+  line-height: 23px;
+}
+.detail :global(.product-rail),
+.tracking :global(.product-rail) {
+  gap: 8px;
+}
+.detail :global(.product-card),
+.tracking :global(.product-card) {
+  width: 172px;
+  flex: 0 0 172px;
+}
+.detail :global(.product-media),
+.tracking :global(.product-media) {
+  height: 172px;
+  border-radius: 23px;
+}
+.detail :global(.product-copy),
+.tracking :global(.product-copy) {
+  font-size: 12px;
+  line-height: 17px;
+}
+.detail :global(.product-copy strong),
+.tracking :global(.product-copy strong) {
+  font-size: 12px;
+  line-height: 17px;
+}
+.detail :global(.rating),
+.tracking :global(.rating) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.action.action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-start;
+  min-height: 56px;
+  padding: 16px 0;
+  font-size: 16px;
+  line-height: 22px;
+  text-align: left;
+}
+.action > svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+.archiveActionIcon {
+  overflow: visible;
+}
+.action > span {
+  flex: 1;
+}
+.destructive {
+  color: #e42f0c;
+}
+.orderMenu.orderMenu {
+  width: calc(100% - 32px);
+  max-width: 480px;
+  margin: auto auto 2px;
+  padding: 22px 16px 15px;
+  border-radius: 28px;
+}
+.orderMenu :global(.sheet-header) {
+  margin-bottom: 15px;
+}
+.orderMenu :global(.sheet-header h2) {
+  font-size: 20px;
+  line-height: 26px;
+}
+.orderMenu :global(.sheet-header .icon-button) {
+  width: 24px;
+  height: 24px;
+}
+.orderMenu :global(.sheet-header .icon-button svg) {
+  width: 16px;
+  height: 16px;
+}
+.orderMenu .action {
+  border-bottom: 0;
+}
+.orderMenu .action + .action {
+  border-top: 0;
+}
+.orderMenu :global(.sheet-header) + .action {
+  min-height: 58px;
+}
+.progress {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  margin-top: 12px;
+  border-radius: 8px;
+  background: #f0f2f2;
+}
+.progressFill {
+  display: block;
+  width: 48%;
+  height: 8px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #a440f7, #8844f2);
+}
+.progress[data-order-phase="waiting"] .progressFill {
+  width: 0;
+}
+.progress[data-order-phase="label"] .progressFill {
+  width: 24%;
+}
+.progress[data-order-phase="delivered"] .progressFill {
+  width: 100%;
+  background: #67b449;
+}
+.progressCarrier,
+.progressMarker {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #fff;
+}
+.progressCarrier {
+  left: -1px;
+  box-shadow: 0 0 0 1px #ececec;
+}
+.progressMarker {
+  left: calc(48% - 12px);
+}
+.progress[data-order-phase="label"] .progressMarker {
+  left: calc(27% - 12px);
+  border-radius: 0;
+}
+.progress[data-order-phase="delivered"] .progressMarker {
+  left: auto;
+  right: -1px;
+  width: 20px;
+  height: 20px;
+  background: #579f39;
+  color: #fff;
+  box-shadow: 0 0 0 6px #fff;
+}
+.progressMarker > svg {
+  width: 16px;
+  height: 16px;
+}
+.shippingLabelMark.shippingLabelMark {
+  width: 20px;
+  height: 24px;
+  overflow: visible;
+  fill: #fff;
+  stroke: #646767;
+  stroke-width: 1.05;
+  stroke-linecap: square;
+}
+.shippingLabelMark.shippingLabelMark path {
+  fill: none;
+  stroke: #3d4040;
+}
+.progressMarker > img,
+.waitingParcel {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+.waitingParcel {
+  position: absolute;
+  left: 0;
+  top: -6px;
+}
+.amazonMark {
+  display: inline-block;
+  position: relative;
+  font:
+    700 28px/30px Arial,
+    sans-serif;
+  letter-spacing: -1.2px;
+  color: #0c1117;
+  padding-bottom: 12px;
+}
+.amazonMark > svg {
+  position: absolute;
+  left: 8px;
+  bottom: 0;
+  width: 57px;
+  height: 18px;
+  fill: none;
+  stroke: #386afe;
+  stroke-width: 3.8;
+  stroke-linecap: round;
+}
+.dhlMark {
+  display: inline-block;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f2cd2f;
+}
+.genericCarrier {
+  font-size: 12px;
+  font-weight: 600;
+}
+.progressCarrier .amazonMark {
+  font-size: 5px;
+  line-height: 7px;
+  letter-spacing: -0.4px;
+  padding-bottom: 2px;
+}
+.progressCarrier .amazonMark > svg {
+  width: 14px;
+  height: 5px;
+  left: 1px;
+}
+.progressCarrier .dhlMark {
+  width: 23px;
+  height: 23px;
+  font-size: 8px;
+  line-height: 11px;
+}
+.tracking.tracking {
+  padding: 0 16px 112px;
+  background: #fcfcfc;
+}
+.tracking :global(.tracking-status-card) {
+  margin: 0 0 24px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+.tracking :global(.tracking-status-card h1) {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.tracking :global(.tracking-status-card small),
+.tracking :global(.tracking-status-card p) {
+  font-size: 14px;
+  line-height: 18px;
+}
+.trackingMore {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f2f3f3;
+}
+.trackingMore > svg {
+  width: 21px;
+  height: 21px;
+}
+.tracking :global(.tracking-carrier),
+.tracking :global(.tracking-empty),
+.tracking :global(.delivery-preview),
+.tracking :global(.tracking-action-panel) {
+  border: 1px solid #efefef;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 4px 13px #00000003;
+}
+.tracking :global(.tracking-carrier) {
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.tracking :global(.tracking-carrier[data-carrier-mark="amazon"]) {
+  padding: 8px 20px 12px;
+}
+.tracking :global(.tracking-carrier) > .carrierHeading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 13px;
+  font-size: 16px;
+  line-height: 21px;
+}
+.tracking
+  :global(.tracking-carrier[data-carrier-mark="amazon"])
+  > .carrierHeading {
+  margin-bottom: 7px;
+}
+.tracking :global(.tracking-carrier) > .dhlHeading {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.tracking :global(.tracking-carrier > small) {
+  font-size: 14px;
+  line-height: 20px;
+}
+.tracking :global(.tracking-carrier > div:last-child) {
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.tracking :global(.tracking-carrier button) {
+  width: 28px;
+  height: 28px;
+}
+.tracking :global(.tracking-carrier button svg) {
+  width: 21px;
+  height: 21px;
+}
+.tracking :global(.tracking-empty) {
+  padding: 20px;
+}
+.tracking :global(.tracking-empty h2) {
+  font-size: 16px;
+  line-height: 21px;
+  margin-bottom: 6px;
+}
+.tracking :global(.tracking-empty p) {
+  color: #444;
+  font-size: 14px;
+  line-height: 19px;
+}
+.tracking :global(.tracking-order-card) {
+  background-size: 100% 205px;
+  padding: 34px 20px 18px;
+  background-color: #c2bfb5;
+  border-radius: 28px;
+}
+.tracking :global(.tracking-order-card > .order-store-mark) {
+  font:
+    78px/1 Georgia,
+    serif;
+  letter-spacing: -5px;
+  margin-bottom: 8px;
+}
+.tracking :global(.tracking-order-card > strong),
+.tracking :global(.tracking-order-card > p) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.tracking :global(.tracking-order-card .order-item) {
+  margin-top: 44px;
+  font-size: 14px;
+  line-height: 19px;
+}
+.tracking :global(.tracking-order-card .order-item img) {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+}
+.tracking :global(.tracking-order-card .muted-button) {
+  background: #0000001a;
+  font-size: 16px;
+  line-height: 22px;
+  min-height: 43px;
+  height: 43px;
+}
+.tracking :global(.delivery-preview) {
+  padding: 20px 16px 16px;
+}
+.tracking :global(.delivery-preview h2) {
+  font-size: 16px;
+  line-height: 22px;
+  margin-bottom: 18px;
+}
+.tracking :global(.delivery-destination) {
+  position: relative;
+  padding-left: 44px;
+  margin-bottom: 18px;
+}
+.tracking :global(.delivery-destination)::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 31px;
+  height: 31px;
+  border: 1px dashed #e4e4e4;
+  border-radius: 50%;
+}
+.tracking :global(.delivery-destination strong) {
+  font-size: 14px;
+  line-height: 18px;
+}
+.tracking :global(.delivery-destination small) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.tracking :global(.tracking-action-panel) {
+  padding: 0 20px;
+  margin-bottom: 28px;
+}
+.tracking :global(.muted-button) {
+  min-height: 43px;
+  height: 43px;
+  padding: 10px 12px;
+  font-size: 16px;
+  line-height: 23px;
+  border-radius: 24px;
+  background: #f2f3f3;
+}
+.activity > div:not(:last-child)::before {
+  top: 16px;
+  bottom: -16px;
+}
+.activity :global(i[data-event-kind="dot"]) {
+  background: transparent;
+  border-color: transparent;
+}
+.activity :global(i[data-event-kind="dot"]) > span {
+  width: 8px;
+  height: 8px;
+  background: #6331ee;
+  border-radius: 50%;
+}
+.activity :global(i) > svg {
+  width: 20px;
+  height: 20px;
+}
+.activity :global(i) > img {
+  width: 28px;
+  height: 20px;
+  object-fit: contain;
+}
+.activity :global(i) .amazonMark {
+  font-size: 6px;
+  line-height: 8px;
+  padding-bottom: 3px;
+  letter-spacing: -0.4px;
+}
+.activity :global(i) .amazonMark > svg {
+  width: 17px;
+  height: 5px;
+  left: 0;
+}
+.activity :global(small) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.activity :global(strong) {
+  font-size: 14px;
+  line-height: 18px;
+}
+.activitySheet.activitySheet {
+  width: calc(100% - 32px);
+  max-width: 480px;
+  margin: auto;
+  bottom: 34px;
+  max-height: min(512px, calc(100dvh - 70px));
+  padding: 20px 20px 16px;
+  border-radius: 28px;
+}
+.activitySheet.activitySheet::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  z-index: 3;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: #e5e5e5;
+  transform: translateX(-50%);
+}
+.activitySheet :global(.sheet-header) {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: white;
+  box-shadow: 0 -20px 0 #fff;
+  padding-top: 3px;
+  margin-bottom: 9px;
+}
+.activitySheet :global(.sheet-header .icon-button) {
+  visibility: hidden;
+  pointer-events: none;
+}
+.activitySheet :global(.sheet-header h2) {
+  font-size: 16px;
+  line-height: 21px;
+  transform: translateY(1px);
+}
+.activitySheet .activity {
+  margin-top: 1px;
+  margin-left: 0;
+}
+.activitySheet .activity :global(i[data-event-kind="dot"]) {
+  height: 16px;
+}
+.activitySheet .activity > div {
+  padding-bottom: 26px;
+}
+.activitySheet .activity > div:first-child > i,
+.activitySheet .activity > div:first-child > span {
+  transform: translateY(2px);
+}
+.activitySheet .activity > div:last-child {
+  padding-bottom: 0;
+}
+.mapView :global(.tracking-body) {
+  padding-top: 40px;
+}
+.mapView .trackingMore {
+  top: 34px;
+  right: 0;
+}
+.manualForm {
+  gap: 0;
+}
+.manualForm :global(.form-field) {
+  position: relative;
+  height: 58px;
+  min-height: 58px;
+  margin: 0 0 16px;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+}
+.manualForm :global(.form-field input) {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  border-radius: 12px;
+  font-size: 16px;
+  line-height: 22px;
+  padding: 21px 12px 8px;
+}
+.manualForm :global(.form-field) > span {
+  position: absolute;
+  top: 7px;
+  left: 12px;
+  z-index: 1;
+  pointer-events: none;
+  color: #656565;
+}
+.manualForm :global(.form-field:has(input:placeholder-shown)) > span {
+  visibility: hidden;
+}
+.manualForm :global(.form-field input:placeholder-shown) {
+  padding-top: 10px;
+}
+.manualForm :global(.form-field input:not(:placeholder-shown)) {
+  padding-block: 25px 4px;
+}
+.manualForm :global(.form-field input::placeholder) {
+  color: #444;
+  opacity: 1;
+}
+.manualForm :global(.form-submit) {
+  height: 44px;
+  min-height: 44px;
+  padding: 10px 14px;
+  margin-top: 24px;
+  border-radius: 28px;
+  font-size: 16px;
+  line-height: 22px;
+}
+.manualForm > :global(.form-submit:not(:disabled)) {
+  color: white;
+  background: #5532eb;
+}
+.manualForm :global(.form-submit:disabled) {
+  color: #9b9b9b;
+  background: #eff0f0;
+  opacity: 1;
+}
+.manualForm :global(.carrier-search) {
+  margin-top: 1px;
+}
+.manualForm :global(.carrier-search h3) {
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.manualForm :global(.carrier-search .account-row) {
+  box-sizing: border-box;
+  height: 67px;
+  min-height: 67px;
+  width: calc(100% - 32px);
+  margin-inline: 16px;
+  padding: 9px 0;
+  font-size: 16px;
+  line-height: 22px;
+}
+.manualForm :global(.dhl-mark) {
+  display: block;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.manualForm :global(.forward-orders) {
+  margin-top: 14px;
+}
+.manualForm :global(.forward-orders h2) {
+  text-align: left;
+  font-size: 18px;
+  line-height: 24px;
+  margin: 20px 8px 6px;
+}
+.forwardAddress {
+  display: block;
+  width: calc(100% - 16px);
+  height: 43px;
+  margin-inline: 8px;
+  border: 1px dashed #dbcfff;
+  border-radius: 8px;
+  padding: 10px;
+  color: #6a36eb;
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 500;
+  user-select: text;
+}
+.manualForm :global(.forward-orders p) {
+  margin: 5px 0 17px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 18px;
+}
+.manualForm :global(.forward-orders p:not(:first-child)) {
+  margin-inline: 8px;
+}
+.manualForm :global(.forward-orders p a) {
+  color: var(--color-accent);
+}
+.manualForm :global(.forward-orders p:first-child) {
+  display: flex;
+  margin: 10px 0 12px;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  text-align: center;
+}
+.manualForm :global(.forward-orders p:first-child)::before,
+.manualForm :global(.forward-orders p:first-child)::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: #efefef;
+}
+.manualForm :global(.forward-orders .primary) {
+  width: calc(100% - 16px);
+  height: 44px;
+  min-height: 44px;
+  margin: 10px 8px 27px;
+  padding-block: 11px;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 500;
+  background: #111;
+  color: white;
+}
+.manualForm :global(.forward-orders > a:last-child) {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.newOrder {
+  padding-top: 40px;
+  border-radius: 28px 28px 0 0;
+  background: #fdfdfd;
+  box-shadow: 0 -28px 0 28px #ccc;
+}
+.newOrder :global(.account-heading h1),
+.trackingEditor :global(.sheet-header h2) {
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -1px;
+}
+.newOrder :global(.account-heading) {
+  margin-bottom: 30px;
+}
+.carrierEmpty {
+  padding: 8px 16px 24px;
+  color: #666;
+}
+.carrierEmpty button {
+  margin-top: 12px;
+  color: #5532eb;
+}
+.manualForm :global(.forward-orders) .copyStatus {
+  color: #5532eb;
+}
+/* Composite text only: avoid Windows subpixel fringes without creating a
+   containing block for the fixed dock, dialogs, or source photography. */
+.newOrder :global(.account-heading h1),
+.manualForm > h2,
+.manualForm :global(.form-field),
+.manualForm :global(.form-submit),
+.manualForm :global(.carrier-search h3),
+.manualForm :global(.carrier-search .account-row),
+.manualForm :global(.forward-orders),
+.list :global(.account-heading h1),
+.list :global(.tracking-card h2),
+.list :global(.order-seller-label),
+.tracking :global(.tracking-status-card),
+.tracking .carrierHeading,
+.tracking :global(.tracking-carrier > small),
+.tracking .trackingNumber,
+.tracking :global(.tracking-empty h2),
+.tracking :global(.tracking-empty p),
+.tracking :global(.tracking-empty .muted-button),
+.detail :global(.order-status > span:first-child),
+.detail :global(.order-item > div),
+.detail :global(.muted-button),
+.detail .orderBrandDate,
+.tracking :global(.delivery-preview h2),
+.tracking :global(.delivery-destination),
+.tracking .activity small,
+.tracking .activity strong,
+.tracking :global(.delivery-preview > .muted-button),
+.recommendationHeading,
+.orderRecommendations :global(.product-copy),
+.action > span,
+.trackingEditor :global(.sheet-header h2) {
+  opacity: 0.999;
+}
+.newOrder :global(.account-form > h2) {
+  font-size: 18px;
+  line-height: 24px;
+  margin: 0 0 12px;
+}
+.trackingEditor.trackingEditor {
+  top: 0;
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: min(100%, 500px);
+  max-width: 500px;
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0 auto;
+  padding: 40px 16px 24px;
+  border-radius: 28px 28px 0 0;
+  background: #fdfdfd;
+}
+.trackingEditor :global(.sheet-header) {
+  margin-bottom: 30px;
+}
+.trackingEditor :global(.sheet-header .icon-button) {
+  background: transparent;
+}
+.trackingEditor :global(.sheet-header .icon-button svg) {
+  width: 24px;
+  height: 24px;
+}
+.review {
+  position: relative;
+  padding-top: 16px;
+  background: var(--color-canvas);
+}
+.review :global(.review-close) {
+  margin: -16px 0 10px;
+}
+.review :global(.review-count) {
+  margin-bottom: 12px;
+}
+.review :global(.review-product) {
+  gap: 16px;
+  margin-top: 5px;
+  margin-bottom: 24px;
+}
+.review :global(.review-product .rating-picker) {
+  gap: 8px;
+  margin-top: 6px;
+}
+.review :global(.review-product .rating-picker button) {
+  width: 24px;
+}
+.review :global(.review-product .rating-picker svg) {
+  width: 24px;
+  height: 24px;
+}
+.review :global(.review-text textarea) {
+  border-radius: 5px;
+}
+.reviewMore {
+  position: absolute;
+  top: 0;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+.reviewMore > svg {
+  width: 24px;
+  height: 24px;
+}
+.reviewStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 360px) {
+  .list :global(.tracking-card) {
+    padding: 13px;
+  }
+  .list :global(.tracking-card > img) {
+    width: 60px;
+    height: 60px;
+  }
+  .detail :global(.order-store-mark),
+  .tracking :global(.tracking-order-card > .order-store-mark) {
+    font-size: 66px;
+  }
+  .tracking :global(.tracking-carrier) > .dhlHeading {
+    gap: 9px;
+  }
+  .manualForm :global(.forward-orders > a:last-child) {
+    font-size: 14px;
+  }
+}
+
+/* Append to the existing order-family module; other owners' typography and
+   reduced-motion rules remain intact. */
+.list :global(.orders-deal-grid > button) {
+  border-color: #e4e5e5;
+  border-radius: 22px;
+  background: #f4f4f4;
+  box-shadow: 0 5px 16px #00000008;
+}
+.list :global(.orders-deal-grid > button > img) {
+  object-fit: cover;
+}
+.list :global(.orders-deal-grid > button > span) {
+  top: 11px;
+  left: 11px;
+  padding: 1px 6px;
+  font-size: 10px;
+  line-height: 16px;
+  background: #5433f5;
+}
+.list :global(.orders-deal-grid > button > i) {
+  width: 33px;
+  height: 33px;
+  right: 11px;
+  bottom: 11px;
+}
+.manualDeals :global(.product-card) {
+  width: 173px;
+  flex: 0 0 173px;
+}
+.manualDeals :global(.product-media) {
+  width: 173px;
+  height: 173px;
+  border: 1px solid #e3e4e4;
+  border-radius: 23px;
+  background: #f4f4f4;
+}
+.manualDeals :global(.product-media img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.manualDeals :global(.product-copy) {
+  padding: 8px 4px 0;
+  gap: 0;
+  color: #111;
+  font-size: 12px;
+  line-height: 16px;
+}
+.manualDeals :global(.product-copy strong) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+.manualDeals :global(.product-seller) {
+  display: block;
+  font-weight: 400;
+}
+.manualDeals :global(.price-badge) {
+  top: 11px;
+  left: 11px;
+  padding: 0 6px;
+  font-size: 10px;
+  line-height: 18px;
+  background: #5433f5;
+}
+.manualDeals :global(.save-button) {
+  right: 11px;
+  bottom: 11px;
+  width: 33px;
+  height: 33px;
+}
+.manualDeals :global(.rating) {
+  display: flex;
+  margin: 1px 0;
+  color: #111;
+}
+.manualDeals :global(.rating > span) {
+  letter-spacing: -0.5px;
+  font-size: 14px;
+  color: #debb30;
+}
+.manualDeals
+  :global(
+    .product-card:has(a[href="/products/home-drmtlgy-eye"]) .rating > span
+  ) {
+  background: linear-gradient(90deg, #debb30 80%, #c4c9cb 80%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.manualDeals :global(del) {
+  color: #777;
+}
+
+.tracking .manualDeals {
+  margin-right: -16px;
+}
+.deliveredTracking .manualDeals {
+  margin-top: 8px;
+}
+.deliveredTracking .manualDeals :global(.product-media) {
+  height: 174px;
+}
+.tracking .carrierHeading > .dhlMark {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+  line-height: 14px;
+}
+.tracking :global(.tracking-carrier) > .dhlHeading {
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.tracking :global(.tracking-carrier) > .trackingNumber {
+  margin-top: 0;
+  align-items: center;
+  font-size: 14px;
+  line-height: 20px;
+}
+.trackingNumber > span > small {
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+  color: #666;
+}
+
+.manualTracking :global(.tracking-carrier) {
+  padding: 16px 16px 14px;
+  box-shadow: 0 4px 20px #00000008;
+}
+.manualTracking:not(.deliveredTracking) :global(.tracking-carrier) {
+  margin-bottom: 13px;
+}
+.manualTracking :global(.tracking-empty) {
+  margin-bottom: 13px;
+  padding: 16px;
+  border-radius: 16px;
+}
+.manualTracking :global(.tracking-empty h2) {
+  margin-bottom: 2px;
+}
+.manualTracking :global(.tracking-empty p) {
+  line-height: 18px;
+}
+.manualTracking :global(.tracking-empty .muted-button) {
+  margin-top: 16px;
+}
+.manualTracking :global(.tracking-action-panel) {
+  padding: 0 16px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 20px #00000008;
+}
+.manualTracking.manualTracking :global(.tracking-action-panel) .action {
+  min-height: 52px;
+  padding: 14px 4px;
+  font-weight: 600;
+  gap: 10px;
+}
+.manualTracking .trackingMore {
+  width: 32px;
+  height: 32px;
+}
+.manualPicked {
+  margin: 37px 0 12px;
+  line-height: 24px;
+}
+
+/* Source-specific geographic raster and independently rendered map overlays. */
+.mapView .sourceMap {
+  height: auto;
+  aspect-ratio: 393 / 250;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  background: #f4f6f8;
+}
+.mapGeography {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.sourceMap > .mapRoute {
+  width: 100%;
+  height: 100%;
+}
+.mapRoute path {
+  fill: none;
+  stroke: #050606;
+  stroke-width: 2;
+}
+.mapCard {
+  position: absolute;
+  left: 37.659%;
+  top: 23.6%;
+  width: 24.428%;
+  aspect-ratio: 1;
+  border: 5px solid #fff;
+  border-radius: 19px;
+  background: #eaeaec;
+  box-shadow: 0 3px 10px #0002;
+}
+.mapCard > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  object-fit: cover;
+}
+.mapCard::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 10px);
+  bottom: -16px;
+  width: 20px;
+  height: 13px;
+  background: #fff;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.mapPin {
+  position: absolute;
+  left: 50.042%;
+  top: 72.2%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  border: 6px solid #000;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px #0002;
+}
+.mapView :global(.tracking-body) {
+  margin: -28px -16px 0;
+  padding: 40px 16px 0;
+  border-radius: 28px 28px 0 0;
+  background: #fcfcfc;
+}
+.mapView :global(.tracking-body)::before {
+  content: "";
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  width: calc(100% + 32px);
+  height: 24px;
+  margin: -40px -16px 16px;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(#e3e4e5, #e3e4e5) center 10px / 36px 4px no-repeat
+    #fcfcfc;
+}
+.mapView .trackingMore {
+  top: 40px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+}
+
+/* f061-002..005/007: one canonical brand header and a full-width status grid. */
+.orderBrand {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  text-align: center;
+}
+.orderBrand::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  width: 100%;
+  aspect-ratio: 1080 / 470;
+  background:
+    linear-gradient(#c5c4ba2e, #c5c4baeb),
+    url(/api/reference-media/order-hero) center / cover;
+}
+.orderBrandMark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+}
+.detailBrand {
+  height: 157px;
+}
+.detailBrand .orderBrandMark {
+  top: 30px;
+  width: 200px;
+  height: 55px;
+}
+.orderBrandDate {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  margin: 0;
+  color: #111;
+  font-size: 12px;
+  line-height: 16px;
+}
+.detailBrand .orderBrandDate {
+  top: 92px;
+}
+.orderBrandDate strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.orderBrandDate p {
+  margin: 0;
+}
+.detail :global(.order-hero) {
+  padding: 0;
+  overflow: hidden;
+  background: #c5c4ba;
+}
+.detail :global(.order-more) {
+  z-index: 2;
+  border: 1px solid #ffffffb0;
+  border-radius: 50%;
+}
+.detail :global(.review-invitation) {
+  display: flex;
+  height: 70px;
+  min-height: 70px;
+  margin: 0 0 12px;
+}
+.detail :global(.review-invitation strong) {
+  font-size: 14px;
+  line-height: 19px;
+}
+.detail :global(.review-invitation small) {
+  font-size: 12px;
+  line-height: 16px;
+}
+.detail :global(.review-invitation .review-stars) {
+  flex: none;
+  width: 120px;
+}
+.detail :global(.review-invitation .review-rating-stars) {
+  --review-star-size: 24px;
+  width: 120px;
+}
+.detail :global(.review-invitation .review-rating-stars-empty) {
+  color: #c9cbcb;
+}
+.detail :global(.order-item .pill) {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 32px;
+  flex: none;
+  border-radius: 999px;
+  background: #f1f3f3;
+  font-weight: 600;
+}
+.review :global(.review-identity button) {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 4px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 10px;
+  line-height: 1;
+}
+.list :global(.history-connect-banner) {
+  grid-template-columns: 32px minmax(0, 1fr) 20px;
+  gap: 12px;
+  min-height: 60px;
+  margin-bottom: 0;
+  padding: 10px 11px;
+  border-radius: 18px;
+}
+.list :global(.history-connect-banner img) {
+  width: 32px;
+  height: 32px;
+}
+.list :global(.history-connect-banner strong) {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.3px;
+  line-height: 18px;
+}
+.list :global(.history-connect-banner small) {
+  margin-top: 2px;
+  line-height: 16px;
+  color: #111;
+}
+.list :global(.history-connect-banner button) {
+  align-self: start;
+  font-size: 20px;
+  line-height: 20px;
+}
+.list :global(.order-history-row) {
+  gap: 12px;
+  padding: 16px 0;
+  min-height: 77px;
+}
+.list :global(.order-history-row strong) {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.list :global(.order-history-row small) {
+  line-height: 17px;
+}
+.list :global(.order-history-row > span:nth-child(2) small) {
+  margin-top: 2px;
+}
+.list :global(.order-history-row.is-kitsch) {
+  padding-bottom: 36px;
+  border-bottom: 0;
+}
+.list :global(.order-history-row.is-kitsch > img:first-child) {
+  width: 44px;
+  height: 44px;
+}
+.list :global(.order-history-row .history-product-thumb) {
+  width: 32px;
+  height: 32px;
+}
+.list :global(.order-history-row b) {
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+  margin: 0;
+  padding: 1px 8px;
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 500;
+}
+.list :global(.order-history-row.is-kitsch .history-order-date) {
+  position: absolute;
+  bottom: 10px;
+  right: 0;
+}
+.list:global(.archive-page) :global(.notification-empty) {
+  margin-top: 64px;
+  padding: 0;
+}
+.list :global(.archive-empty-package) {
+  display: block;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 15px;
+  transform: translateX(-6px);
+}
+.list:global(.archive-page) :global(.notification-empty h2) {
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -1.4px;
+}
+.list :global(.history-connect-banner a),
+.list :global(.order-history-row strong),
+.list :global(.order-history-row small),
+.list :global(.order-history-row b),
+.list:global(.archive-page) :global(.notification-empty h2),
+.list:global(.archive-page) :global(.notification-empty p) {
+  opacity: 0.999;
+}
+.list:global(.archive-page) :global(.notification-empty p) {
+  max-width: 310px;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 22px;
+}
+.detail :global(.order-status) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  min-height: 102px;
+  padding: 17px 16px 20px;
+}
+.detail :global(.order-status[data-status="Delivered"]) {
+  min-height: 72px;
+  padding: 16px;
+}
+.detail :global(.order-status[data-status="Delivered"] small) {
+  margin-top: 0;
+}
+.detail :global(.order-status) .waitingParcel,
+.detail :global(.order-status) .progressMarker > img {
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  object-fit: contain;
+}
+.detail :global(.order-status) .waitingParcel {
+  top: -4px;
+}
+.detail :global(.muted-button),
+.tracking :global(.tracking-order-card .muted-button) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+.detail :global(.order-status + .account-panel) {
+  padding: 16px;
+}
+.detail :global(.order-status + .account-panel .order-item) {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.detail :global(.order-status + .account-panel .muted-button) {
+  height: 44px;
+  min-height: 44px;
+  margin: 8px 0 0;
+}
+.detail :global(.order-status + .account-panel a.muted-button) {
+  height: 40px;
+  min-height: 40px;
+}
+
+.tracking :global(.tracking-order-card) {
+  padding: 0 16px 16px;
+  overflow: hidden;
+}
+.trackingBrand {
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  height: 136px;
+}
+.trackingBrand::before {
+  background:
+    linear-gradient(
+      #c2bfb500 55%,
+      #c2bfb50d 58%,
+      #c2bfb52e 65%,
+      #c2bfb566 71%,
+      #c2bfb5ad 81%,
+      #c2bfb5cf 84%,
+      #c2bfb5f2 91%,
+      #c2bfb5 95%
+    ),
+    linear-gradient(#0000001a, #0000001a),
+    url(/api/reference-media/order-hero) center -7px / 100% auto no-repeat;
+}
+.trackingBrand .orderBrandMark {
+  top: 24px;
+  width: min(286px, 88%);
+  height: 78px;
+}
+.trackingBrand .orderBrandDate {
+  top: 116px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #00000012;
+}
+.tracking :global(.tracking-order-card .order-item) {
+  position: relative;
+  margin: 26px 0 16px;
+}
+.tracking :global(.tracking-order-card .muted-button) {
+  height: 44px;
+  min-height: 44px;
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+.tracking :global(.tracking-order-card .order-item + .muted-button) {
+  margin-top: 0;
+}
+.waitingTracking :global(.tracking-order-card) {
+  margin-bottom: 14px;
+}
+.waitingTracking::after {
+  content: "";
+  position: fixed;
+  z-index: 19;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: calc(var(--dock-bottom) + env(safe-area-inset-bottom));
+  background: #fff;
+  pointer-events: none;
+}
+.tracking :global(.delivery-preview[data-waiting="true"]) {
+  margin-top: 14px;
+  padding: 15px 16px 16px;
+}
+.tracking :global(.delivery-preview[data-waiting="true"] h2) {
+  margin-bottom: 15px;
+}
+.tracking
+  :global(.delivery-preview[data-waiting="true"] .delivery-destination) {
+  margin-bottom: 0;
+}
+.tracking :global(.tracking-action-panel) {
+  padding: 0 16px;
+}
+.tracking :global(.tracking-action-panel) .action {
+  min-height: 50px;
+  padding: 13px 0;
+  font-weight: 500;
+  gap: 12px;
+}
+.tracking :global(.tracking-action-panel) .action > svg {
+  width: 22px;
+  height: 22px;
+}
+.tracking:not(.manualTracking) :global(.tracking-action-panel) .action > svg {
+  width: 24px;
+  height: 24px;
+  margin-block: -1px;
+  transform: translateX(4px);
+}
+.inTransitTracking :global(.delivery-preview) {
+  padding: 18px 16px 15px;
+}
+.inTransitTracking :global(.delivery-preview h2) {
+  margin-bottom: 16px;
+}
+.inTransitTracking :global(.delivery-destination) {
+  margin-bottom: 25px;
+}
+.inTransitTracking :global(.delivery-destination small),
+.inTransitTracking .activity :global(small) {
+  line-height: 15px;
+}
+.inTransitTracking .activity > div:first-child {
+  padding-bottom: 25px;
+}
+.inTransitTracking :global(.delivery-preview > .muted-button) {
+  margin-top: 17px;
+}
+.inTransitTracking :global(.tracking-action-panel) {
+  margin-bottom: 23px;
+  padding-bottom: 10px;
+}
+.inTransitTracking :global(.tracking-action-panel) .action {
+  min-height: 48px;
+  padding: 16px 0 8px;
+}
+.recommendationHeading.recommendationHeading {
+  margin: 36px 0 14px;
+  font-size: 18px;
+  line-height: 23px;
+  font-weight: 600;
+}
+.tracking .recommendationHeading {
+  margin-top: 26px;
+}
+.labelTracking .recommendationHeading {
+  margin-bottom: 9px;
+  transform: translateY(-4px);
+}
+.inTransitTracking .recommendationHeading.recommendationHeading {
+  margin: 23px 0 12px;
+}
+.labelTracking :global(.delivery-preview) {
+  margin-bottom: 14px;
+  padding: 16px 16px 15px;
+}
+.labelTracking :global(.delivery-preview h2) {
+  margin-bottom: 15px;
+}
+.labelTracking :global(.delivery-destination) {
+  margin-bottom: 24px;
+}
+.recommendationHeading > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+}
+.recommendationHeading > a > span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f0f2f2;
+  font-size: 23px;
+  line-height: 20px;
+}
+.orderRecommendations.orderRecommendations {
+  gap: 8px;
+  margin-right: -16px;
+}
+.orderRecommendations :global(.product-card) {
+  width: 173px;
+  flex-basis: 173px;
+}
+.orderRecommendations :global(.product-media) {
+  width: 173px;
+  height: 173px;
+  border: 1px solid #d6d9da;
+  background: #e4e6e7;
+}
+.orderRecommendations :global(.product-copy) {
+  gap: 0;
+  padding: 8px 4px 0;
+}
+.orderRecommendations :global(.product-copy strong) {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+.orderRecommendations :global(.rating) {
+  display: flex;
+  margin: 0;
+}
+.orderRecommendations :global(.product-copy > span:last-child) {
+  margin-top: 2px;
+}
+.orderRecommendations :global(.rating > span) {
+  color: #debb30;
+  font-size: 14px;
+  letter-spacing: -0.5px;
+}
+.tracking .inspiredHeading {
+  margin: 34px 0 9px;
+  font-size: 18px;
+  line-height: 23px;
+}
+.inspiredPartialRail {
+  display: flex;
+  gap: 8px;
+  width: calc(100vw - 17px);
+  height: 92px;
+  margin-left: 1px;
+  overflow: hidden;
+}
+.inspiredPartialCard {
+  position: relative;
+  flex: 0 0 calc(100vw - 41px);
+  height: 92px;
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #888984 0%, #b5b9bb 72%, #e8eaeb 100%);
+}
+.inspiredPartialCard > img,
+.inspiredPartialNext > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.inspiredPartialRating {
+  position: absolute;
+  top: 29px;
+  right: 15px;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+.inspiredPartialNext {
+  flex: 0 0 16px;
+  height: 92px;
+  overflow: hidden;
+}
+
+.manualRecommendationLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  vertical-align: top;
+}
+.manualRecommendationLabel > svg {
+  width: 24px;
+  height: 24px;
+  padding: 5px;
+  border-radius: 50%;
+  background: #f1f4f5;
+  stroke-width: 3;
+}
+.manualPickedPreview {
+  width: calc(100% - 1px);
+  height: 74px;
+  margin-left: 1px;
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  background: linear-gradient(#e9e9e9, #f1f0ed);
+}
+.manualPickedPreview > img {
+  display: block;
+  width: 100%;
+  height: 74px;
+  object-fit: fill;
+}
+.manualDeals
+  :global(
+    .product-card:has(a[href="/products/order-peach-bee"]) .product-media
+  ) {
+  background: #edca5d;
+}
+.manualDeals :global(.save-button svg) {
+  width: 16px;
+  height: 16px;
+}
+/* The newly delivered capture has a warmer photo treatment than the
+   separately captured label-created and later-history recommendations. */
+.manualTracking.deliveredTracking:not(.laterManualTracking)
+  .manualDeals
+  :global(
+    .product-card:has(a[href="/products/order-peach-bee"]) .product-media img
+  ) {
+  filter: saturate(1.225);
+}
+
+/* Manual-package geometry is independent of purchased-order tracking. */
+.manualTracking :global(.tracking-status-card) > small {
+  display: block;
+  line-height: 20px;
+  color: #444;
+}
+.manualTracking :global(.tracking-status-card p) {
+  color: #444;
+}
+.manualTracking .trackingNumber > button {
+  display: grid;
+  place-items: center;
+  position: relative;
+  left: 5px;
+}
+.manualTracking:not(.deliveredTracking) .manualDeals {
+  margin-top: 10px;
+}
+.manualTracking .progress[data-order-phase="label"] .progressFill {
+  width: 22.5%;
+}
+.manualTracking .shippingLabelMark.shippingLabelMark {
+  width: 16px;
+  height: 21px;
+  stroke-width: 0.7;
+}
+.manualTracking .progress[data-order-phase="delivered"] .progressFill {
+  width: calc(100% - 28px);
+  background: linear-gradient(90deg, #34c56e, #4ab52f);
+}
+.manualTracking .progress[data-order-phase="delivered"] .progressMarker {
+  right: 2px;
+  background: #299d21;
+}
+.manualTracking :global(.order-action-toast) {
+  min-width: 147px;
+  height: 40px;
+  bottom: 103px;
+  padding: 12px 16px;
+  font-size: 12px;
+}
+.manualTracking:not(.deliveredTracking)::after {
+  content: "";
+  position: fixed;
+  inset: auto 0 0;
+  height: 116px;
+  z-index: 9;
+  pointer-events: none;
+  background: linear-gradient(transparent, #fcfcfcd9 53%, #fcfcfc 86%);
+}
+
+.manualTracking.deliveredTracking :global(.tracking-carrier) {
+  margin-bottom: 14px;
+}
+.laterManualTracking .progress[data-order-phase="delivered"] .progressFill {
+  background: linear-gradient(90deg, #64c575, #69b243);
+}
+.laterManualTracking .progress[data-order-phase="delivered"] .progressMarker {
+  background: #579f39;
+}

@@ -1,0 +1,29 @@
+packages:
+  - apps/*
+  - packages/*
+
+minimumReleaseAgeExclude:
+  - "@expo/cli@57.0.23"
+  - "@expo/metro-file-map@57.0.3"
+  - "@expo/ui@57.0.17"
+  - "@typescript-eslint/eslint-plugin@8.70.0"
+  - "@typescript-eslint/parser@8.70.0"
+  - "@typescript-eslint/project-service@8.70.0"
+  - "@typescript-eslint/scope-manager@8.70.0"
+  - "@typescript-eslint/tsconfig-utils@8.70.0"
+  - "@typescript-eslint/type-utils@8.70.0"
+  - "@typescript-eslint/types@8.70.0"
+  - "@typescript-eslint/typescript-estree@8.70.0"
+  - "@typescript-eslint/utils@8.70.0"
+  - "@typescript-eslint/visitor-keys@8.70.0"
+  - babel-preset-expo@57.0.11
+  - expo-glass-effect@57.0.2
+  - expo-modules-core@57.0.17
+  - expo-modules-jsi@57.1.0
+  - expo-router@57.0.20
+  - expo@57.0.21
+  - typescript-eslint@8.70.0
+saveExact: true
+strictPeerDependencies: true
+allowBuilds:
+  unrs-resolver: true

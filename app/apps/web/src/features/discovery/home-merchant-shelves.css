@@ -1,0 +1,63 @@
+/* Source: installed Android Still interested state, 427x876 content field. */
+.android-still-interested .android-interest-product {
+  display: grid;
+  grid-template-columns: 144px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  height: 160px;
+  flex: 0 0 160px;
+  margin: 44px 15px 0;
+  padding: 7px;
+  border: 1px solid #eef0f3;
+  border-radius: 28px;
+}
+.android-still-interested .android-interest-product .product-card.compact {
+  width: 144px;
+}
+.android-still-interested .android-interest-product .product-media {
+  width: 144px;
+  height: 144px;
+  border-radius: 22px;
+}
+.android-interest-product .price-badge {
+  display: none;
+}
+.android-interest-copy {
+  min-width: 0;
+  padding-right: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.android-interest-copy > strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 500;
+}
+.android-interest-copy > span {
+  display: block;
+}
+.android-interest-copy .rating {
+  margin: 2px 0 0;
+  font-weight: 400;
+}
+.android-interest-copy .review-stars {
+  color: #e9b908;
+}
+.android-interest-copy del {
+  color: #707070;
+  font-weight: 400;
+}
+@media (max-width: 359px) {
+  .android-still-interested .android-interest-product {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .android-still-interested .android-interest-product .product-card.compact,
+  .android-still-interested .android-interest-product .product-media {
+    width: 112px;
+    height: 112px;
+  }
+}

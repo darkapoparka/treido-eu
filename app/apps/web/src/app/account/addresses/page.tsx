@@ -1,0 +1,6 @@
+import { readCatalog } from "@/features/catalog/queries.server";
+import { AddressesPage } from "@/features/account/pages";
+export default async function Page() {
+  await readCatalog();
+  return <AddressesPage />;
+}

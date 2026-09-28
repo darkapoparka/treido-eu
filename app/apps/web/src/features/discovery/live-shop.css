@@ -1,0 +1,1958 @@
+/* Current Android measurements. Frozen iOS scenarios keep their own owners. */
+@font-face {
+  font-family: ShopAndroidRoboto;
+  src: url("/api/reference-font") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: ShopAndroidBrand;
+  src: url("/api/reference-font/bold") format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: ShopAndroidDisplay;
+  src: url("/api/reference-font/display") format("opentype");
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+.shop-page.android-live,
+.account-page.current-live-intro,
+.account-page.current-track-intro,
+.current-preferences-intro,
+.current-updates-intro,
+.sheet.live-notification-dialog {
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.android-home {
+  padding: 56px 16px 104px;
+  background: #fcfcfc;
+}
+.android-home .home-shortcuts {
+  position: fixed;
+  top: 8px;
+  left: 16px;
+  right: 0;
+  height: 40px;
+  width: auto;
+  padding: 0;
+  margin: 0;
+  gap: 4px;
+  z-index: 50;
+  border: 0;
+  overflow-x: auto;
+  background: #fcfcfc;
+}
+.android-home .home-shortcuts .avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 1px solid #a696eb;
+  background: linear-gradient(140deg, #cabbff, #a288fb);
+}
+.android-guest-avatar {
+  width: 40px;
+  height: 40px;
+}
+.android-home .home-shortcuts .pill,
+.android-home .home-shortcuts .icon-button {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 12px;
+  gap: 4px;
+  border: 1px solid #efefef;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px #00000003;
+}
+.android-home .home-shortcuts .icon-button {
+  width: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+}
+.android-home .home-shortcuts svg {
+  width: 18px;
+  height: 18px;
+}
+.android-home .home-shortcuts .android-guest-avatar {
+  width: 40px;
+  height: 40px;
+}
+.home-merchant-shelves {
+  display: grid;
+  gap: 16px;
+}
+.android-merchant-card {
+  height: 358px;
+  min-width: 0;
+  padding: 15px 0 11px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 28px;
+  box-shadow:
+    0 5px 7px #00000026,
+    0 1px 3px #0000000d;
+}
+.android-merchant-card .store-row {
+  margin: 0 15px;
+  height: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+}
+.android-merchant-card .store-row-identity {
+  min-width: 0;
+  flex: 1;
+  gap: 8px;
+}
+.android-merchant-card .store-row-identity > img,
+.android-merchant-card .store-logo-fallback {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 50%;
+  border: 1px solid #e7e9ee;
+}
+.android-merchant-card .store-logo-fallback {
+  display: grid;
+  place-items: center;
+  background: #cacdce;
+  color: white;
+  font-size: 12px;
+}
+.android-merchant-card .store-row-identity > span:not(.store-logo-fallback) {
+  min-width: 0;
+}
+.android-merchant-card .store-row strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.android-merchant-card .store-row-identity > span > span {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.android-merchant-card .store-row > .icon-button {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: none;
+}
+.android-merchant-card .store-row > .icon-button svg {
+  width: 22px;
+  height: 22px;
+  color: #000;
+  stroke-width: 3.2;
+}
+.android-merchant-card .product-rail {
+  margin: 48px 0 0;
+  padding: 0 15px;
+  gap: 8px;
+  height: 150px;
+  flex: 0 0 150px;
+  scroll-padding-inline: 15px;
+  scroll-snap-type: x proximity;
+}
+.android-merchant-card .product-card.compact {
+  width: 150px;
+  flex: 0 0 150px;
+  scroll-snap-align: start;
+}
+.android-merchant-card .product-media {
+  width: 150px;
+  height: 150px;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  border: 1px solid #dedfe2;
+}
+.android-merchant-card .price-badge {
+  top: 11px;
+  left: 11px;
+  padding: 1px 5px;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  background: #0007;
+  border-radius: 999px;
+}
+.android-merchant-card .price-badge del {
+  margin-left: 4px;
+  font-weight: 400;
+  opacity: 0.7;
+}
+.android-merchant-card .save-button {
+  bottom: 11px;
+  right: 11px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: #8889;
+  backdrop-filter: blur(8px);
+}
+.android-merchant-card .save-button svg {
+  width: 20px;
+  height: 20px;
+}
+.merchant-shop-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  flex: 0 0 40px;
+  margin: auto 15px 0;
+  color: #000;
+}
+.merchant-shop-all strong {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.65px;
+}
+.merchant-shop-all > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: #bfbfbf;
+  border-radius: 50%;
+}
+.merchant-shop-all svg {
+  width: 20px;
+  height: 20px;
+}
+.android-merchant-card .hidden-shop {
+  flex: 1;
+}
+.shop-page.android-live .floating-dock {
+  bottom: 8px;
+}
+.shop-page.android-live .floating-nav {
+  width: 212px;
+  height: 56px;
+  padding: 6px;
+  gap: 6px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 4px #0000000a;
+}
+.shop-page.android-live .floating-nav a {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+}
+.shop-page.android-live .floating-nav svg {
+  width: 24px;
+  height: 24px;
+}
+.shop-page.android-live .floating-nav a[aria-current="page"] {
+  background: #f1f2f3;
+}
+.shop-page.android-live .dock-back {
+  width: 56px;
+  height: 56px;
+}
+.shop-page.android-live.android-store {
+  background: #fcfcfc;
+  padding: 0 16px 100px;
+}
+.android-store .store-hero {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+.android-store .store-actions {
+  position: fixed;
+  top: 8px;
+  left: 16px;
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  gap: 8px;
+  height: 48px;
+  padding: 0;
+  margin: 0;
+  align-items: center;
+}
+.android-store .store-actions > .icon-button:first-child {
+  width: 36px;
+  height: 40px;
+  flex: 0 0 36px;
+  background: white;
+}
+.android-store .store-actions .android-store-search {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+.android-store .android-store-search svg {
+  width: 16px;
+  height: 16px;
+}
+.android-store .store-actions .follow {
+  height: 40px;
+  flex: 0 0 88px;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+  border: 0;
+}
+.android-store .store-brand {
+  justify-content: flex-start;
+  margin: 0;
+  padding: 118px 0 0;
+  height: 260px;
+  min-height: 260px;
+  box-sizing: border-box;
+  color: #000;
+}
+.shop-page.android-store .store-brand > span {
+  margin: 0;
+  font-family: ShopAndroidBrand, ShopAndroidRoboto, Roboto, Arial, sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 44px;
+  letter-spacing: -1px;
+}
+.android-store .store-brand > a {
+  color: #000;
+  font-size: 14px;
+}
+.android-store .store-all-products {
+  padding: 0;
+  margin: 0;
+}
+.android-store .store-grid-heading {
+  height: 40px;
+  margin: 0 0 16px;
+  align-items: center;
+}
+.android-store .store-grid-heading h2 {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.5px;
+}
+.android-store .store-grid-heading > button {
+  width: 40px;
+  height: 40px;
+  background: #111;
+  color: white;
+  border: 0;
+  border-radius: 50%;
+}
+.android-store .product-grid {
+  gap: 20px 12px;
+}
+.android-store .product-media {
+  border-radius: 20px;
+  aspect-ratio: 1;
+  height: auto;
+}
+.shop-page.android-live.android-store .product-copy {
+  gap: 2px;
+  padding: 6px 4px 0;
+}
+.android-store .product-copy strong {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.android-store .product-copy > span {
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-store .save-button {
+  width: 32px;
+  height: 32px;
+  bottom: 12px;
+  right: 12px;
+  background: #8889;
+  border: 0;
+  backdrop-filter: blur(8px);
+}
+.android-store .save-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.android-home .android-merchant-card .product-media img,
+.android-store .product-media img {
+  object-fit: cover;
+}
+.shop-page.android-product {
+  background: #fcfcfc;
+  padding: 8px 16px 100px;
+}
+.shop-page.android-live.android-product .product-underlay > .store-row {
+  height: 40px;
+  min-height: 40px;
+  margin: 0 0 16px;
+}
+.shop-page.android-live.android-product .store-row-identity {
+  gap: 12px;
+  min-width: 0;
+  padding: 4px;
+}
+.shop-page.android-live.android-product .store-row-identity > img,
+.shop-page.android-live.android-product .store-logo-fallback {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+}
+.shop-page.android-live.android-product .store-logo-fallback {
+  display: grid;
+  place-items: center;
+  background: #cacdce;
+  color: white;
+  font-size: 12px;
+}
+.shop-page.android-live.android-product .store-row strong {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.shop-page.android-live.android-product .store-row-identity > span > span {
+  font-size: 12px;
+  line-height: 16px;
+}
+.shop-page.android-live.android-product .product-gallery {
+  display: flex;
+  align-items: flex-start;
+  height: auto;
+  margin: 0 -16px;
+  padding: 0 16px;
+  gap: 8px;
+  scroll-padding-inline: 16px;
+}
+.shop-page.android-live.android-product .product-gallery > button {
+  flex: 0 0 100%;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  border-radius: 12px;
+}
+.shop-page.android-live.android-product .product-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.shop-page.android-live.android-product .product-details {
+  padding: 28px 0 0;
+  margin: 0;
+}
+.shop-page.android-live.android-product .product-heading {
+  position: relative;
+  display: block;
+  min-height: 21px;
+  padding-right: 100px;
+}
+.shop-page.android-live.android-product .product-heading h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 21px;
+  letter-spacing: -0.2px;
+}
+.shop-page.android-live.android-product .product-heading > button {
+  position: absolute;
+  top: -10px;
+  width: 44px;
+  height: 44px;
+  background: #fff;
+  border: 1px solid #e4e4e4;
+  border-radius: 50%;
+}
+.shop-page.android-live.android-product
+  .product-heading
+  > button:nth-of-type(1) {
+  right: 48px;
+}
+.shop-page.android-live.android-product
+  .product-heading
+  > button:nth-of-type(2) {
+  right: 0;
+}
+.shop-page.android-live.android-product .review-link {
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+.shop-page.android-live.android-product .product-price {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 22px;
+  margin: 16px 0 0;
+}
+.shop-page.android-live.android-product .product-heading:has(+ .product-price) {
+  min-height: 37px;
+}
+.shop-page.android-live.android-product .product-heading + .product-price {
+  margin-top: 16px;
+}
+.shop-page.android-live.android-product .product-price + p {
+  font-size: 12px;
+  line-height: 16px;
+  margin: 2px 0 0;
+}
+.shop-page.android-live.android-product .quantity {
+  margin: 18px 0 0;
+  gap: 0;
+}
+.shop-page.android-live.android-product .quantity > label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  margin-bottom: 4px;
+}
+.shop-page.android-live.android-product .stepper {
+  width: 108px;
+  height: 40px;
+  border: 1px solid #e4e4e4;
+  border-radius: 24px;
+  background: #fff;
+}
+.shop-page.android-live.android-product .stepper button {
+  width: 36px;
+  height: 40px;
+  background: transparent;
+  border: 0;
+}
+.shop-page.android-live.android-product .stepper output {
+  font-size: 14px;
+  font-weight: 500;
+}
+.shop-page.android-live.android-product .pdp-purchase-buttons {
+  margin-top: 12px;
+  gap: 8px;
+}
+.shop-page.android-live.android-product .pdp-purchase-buttons > button {
+  height: 52px;
+  min-height: 52px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.shop-page.android-live.android-product .pdp-purchase-buttons > .primary {
+  height: 52px;
+  min-height: 52px;
+  background: #5433eb;
+}
+.shop-page.android-live.android-product:not(.cart-visible)::after {
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+.sheet.android-shop-menu {
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.sheet.android-shop-menu.campaign-menu-menu[open] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  left: clamp(16px, var(--shop-menu-left, 16px), calc(100vw - 256px));
+  top: clamp(16px, var(--shop-menu-top, 110px), calc(100dvh - 224px));
+  width: min(240px, calc(100vw - 32px));
+  height: 208px;
+  min-height: 0;
+  max-height: calc(100dvh - 32px);
+  padding: 8px 0;
+  border: 1px solid #f0f0f0;
+  border-radius: 28px;
+  box-shadow:
+    0 6px 8px #0003,
+    0 1px 4px #0000000a;
+  background: #fff;
+  animation: none;
+  transform: none;
+}
+.sheet.android-shop-menu.campaign-menu-menu::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+.android-shop-menu.campaign-menu-menu .campaign-menu-store {
+  display: none;
+}
+.android-shop-menu.campaign-menu-menu .campaign-menu-rows {
+  padding: 0;
+  gap: 0;
+}
+.android-shop-menu.campaign-menu-menu .campaign-menu-rows > :is(button, a) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 28px;
+  gap: 16px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20px;
+  border: 0;
+  background: none;
+}
+.android-shop-menu.campaign-menu-menu .campaign-menu-rows svg {
+  width: 20px;
+  height: 20px;
+}
+.android-shop-menu.campaign-menu-menu .danger-text {
+  color: #e9230d;
+}
+
+.android-recent-panel {
+  margin-bottom: 16px;
+  background: #1e1e1e;
+  border-color: #1e1e1e;
+}
+.android-recent-panel > p {
+  margin: 0 15px;
+  color: white;
+  height: 16px;
+  flex: 0 0 16px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-recent-panel .product-rail {
+  margin-top: 60px;
+}
+.android-recent-panel .merchant-shop-all {
+  color: #fff;
+}
+.android-recent-panel .merchant-shop-all > span {
+  background: #242424;
+}
+
+.shop-page.android-live.android-product .product-underlay > .store-row img {
+  outline: none;
+  box-shadow: none;
+  filter: brightness(0.91);
+}
+.shop-page.android-live.android-store .product-copy .review-rating-stars-fill {
+  color: #000;
+}
+
+.sheet.android-shop-menu:not(.campaign-menu-menu) {
+  inset: auto 8px 0;
+  margin: 0;
+  width: calc(100% - 16px);
+  max-width: none;
+  padding: 24px 20px 12px;
+  border-radius: 40px 40px 32px 32px;
+  background: #fcfcfc;
+  color: #000;
+  box-shadow: none;
+}
+.sheet.android-shop-menu.campaign-menu-reason {
+  height: 300px;
+  min-height: 0;
+  max-height: calc(100dvh - 16px);
+  padding-bottom: 10px;
+}
+.sheet.android-shop-menu:not(.campaign-menu-menu)::backdrop {
+  background: #0005;
+  backdrop-filter: none;
+}
+.android-shop-menu:not(.campaign-menu-menu) .sheet-drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 8px;
+  margin: 0;
+  padding: 0;
+  width: 48px;
+}
+.android-shop-menu:not(.campaign-menu-menu) .sheet-drag-handle span {
+  width: 48px;
+  height: 5px;
+  background: #c6c8ca;
+  border-radius: 5px;
+}
+.android-shop-menu:not(.campaign-menu-menu) .sheet-header {
+  padding: 0;
+  height: 32px;
+  min-height: 32px;
+  margin: 0;
+}
+.android-shop-menu:not(.campaign-menu-menu) .sheet-header h2 {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: -0.6px;
+}
+.android-shop-menu:not(.campaign-menu-menu) .sheet-header button {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 0;
+}
+.android-shop-menu:not(.campaign-menu-menu) > p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #707070;
+}
+.sheet.android-shop-menu .campaign-reasons {
+  padding: 18px 0 0;
+  margin: 0;
+  gap: 0;
+}
+.sheet.android-shop-menu .campaign-reasons button {
+  padding: 0;
+  height: 50px;
+  min-height: 50px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.shop-page.android-live .floating-dock::before,
+.shop-page.android-live .floating-dock::after {
+  display: none;
+}
+
+.shop-page.android-guest-profile {
+  padding: 0 16px 67px;
+  background: #fcfcfc;
+}
+.android-guest-profile > .account-heading {
+  display: none;
+}
+.guest-sign-in {
+  padding: 37px 16px 0;
+  text-align: center;
+}
+.guest-sign-in > img {
+  display: block;
+  width: 28px;
+  height: 30px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+.guest-sign-in h1 {
+  margin: 16px 0 4px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
+}
+.guest-sign-in p {
+  margin: 0;
+  color: #707070;
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 400;
+}
+.guest-sign-in > .primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  min-height: 52px;
+  margin-top: 14px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 999px;
+}
+.guest-profile-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 32px;
+}
+.guest-profile-panels > a {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 110px;
+  padding: 15px;
+  border: 1px solid #eef0f1;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 3px 5px #00000003;
+}
+.guest-profile-panels > a > span {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #eef0f1;
+}
+.guest-profile-panels svg {
+  width: 24px;
+  height: 24px;
+}
+.guest-profile-panels strong {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.android-guest-profile .profile-recent-heading {
+  margin: 32px 0 8px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 500;
+}
+.android-guest-profile .profile-recent-heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.android-guest-profile .profile-recent-heading span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  background: #f0f1f2;
+  border-radius: 50%;
+}
+.android-guest-profile .profile-recent-heading svg {
+  width: 12px;
+  height: 12px;
+  transform: rotate(180deg);
+}
+.android-guest-profile .profile-recent-rail {
+  display: flex;
+  gap: 8px;
+  height: 124px;
+  overflow-x: auto;
+  margin-right: -16px;
+  padding-right: 16px;
+  scroll-padding-inline: 0;
+}
+.android-guest-profile .profile-recent-rail .product-card.compact {
+  flex: 0 0 124px;
+  width: 124px;
+}
+.android-guest-profile .profile-recent-rail .product-media {
+  height: 124px;
+  width: 124px;
+  border-radius: 22px;
+  border: 1px solid #dedfe2;
+}
+.android-guest-profile .profile-recent-rail .product-media img {
+  object-fit: cover;
+}
+.android-guest-profile .profile-recent-rail .price-badge {
+  top: 11px;
+  left: 11px;
+  font-size: 10px;
+  line-height: 13px;
+  padding: 1px 5px;
+  border-radius: 99px;
+  background: #0007;
+}
+.android-guest-profile .profile-recent-rail .save-button {
+  width: 32px;
+  height: 32px;
+  bottom: 11px;
+  right: 11px;
+  border: 0;
+  background: #aaa9;
+}
+.android-guest-profile .profile-recent-rail .save-button svg {
+  width: 18px;
+  height: 18px;
+}
+.guest-profile-orders {
+  margin-top: 32px;
+}
+.guest-profile-orders > h2 {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 24px;
+  margin: 0 0 8px;
+}
+.guest-no-orders {
+  min-height: 102px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #eef0f1;
+  border-radius: 28px;
+  background: white;
+}
+.guest-no-orders > img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  flex: 0 0 64px;
+}
+.guest-no-orders strong {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.guest-no-orders p {
+  margin: 4px 0 0;
+  color: #707070;
+  font-size: 14px;
+  line-height: 18px;
+}
+.guest-profile-settings {
+  padding: 0 15px;
+  margin-top: 32px;
+  border: 1px solid #eef0f1;
+  border-radius: 28px;
+  background: white;
+}
+.guest-profile-settings .account-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 0;
+  min-height: 53px;
+  height: 53px;
+  font-size: 14px;
+  border-bottom: 1px solid #eef0f1;
+}
+.guest-profile-settings .account-row > :last-child {
+  margin-left: auto;
+}
+.guest-profile-settings .account-row svg {
+  width: 16px;
+  height: 16px;
+}
+.guest-profile-settings .account-row:disabled {
+  color: #999;
+}
+
+.shop-page.android-saved {
+  padding: 16px 16px 100px;
+  background: #fcfcfc;
+}
+.shop-page.android-saved .saved-heading {
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0;
+}
+.shop-page.android-saved .saved-heading h1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  letter-spacing: -1px;
+}
+.shop-page.android-saved .saved-empty-source {
+  margin: 66px 0 0;
+  padding: 0;
+  text-align: center;
+}
+.shop-page.android-saved .saved-sock-card {
+  position: relative;
+  border: 0;
+  transform: none;
+  box-shadow: none;
+  width: 164px;
+  height: 164px;
+  margin: 0 auto;
+  border-radius: 24px;
+  background: white;
+}
+.shop-page.android-saved .saved-sock-card img {
+  position: absolute;
+  left: 12px;
+  top: 28px;
+  width: 138px;
+  height: 86px;
+  margin: 0;
+  object-fit: contain;
+}
+.shop-page.android-saved .saved-sock-card svg {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  right: 12px;
+  bottom: 12px;
+  padding: 9px;
+  background: #bfbfbf;
+  color: white;
+  border-radius: 50%;
+}
+.shop-page.android-saved .saved-empty-source h2 {
+  margin: 16px 0 6px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.6px;
+}
+.shop-page.android-saved .saved-empty-source p {
+  margin: 0 0 16px;
+  max-width: none;
+  color: #454545;
+  font-size: 14px;
+  line-height: 18px;
+}
+.shop-page.android-saved .saved-empty-source .primary {
+  margin: 0;
+  background: #5433eb;
+  height: 44px;
+  min-height: 44px;
+  width: 100%;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.shop-page.android-orders {
+  padding: 16px 16px 100px;
+  background: #fcfcfc;
+}
+.shop-page.android-orders > .account-heading {
+  height: 32px;
+  min-height: 32px;
+  margin: 0 0 32px;
+  padding: 0;
+}
+.shop-page.android-orders > .account-heading h1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  letter-spacing: -1px;
+}
+.shop-page.android-orders .order-actions {
+  gap: 4px;
+}
+.shop-page.android-orders .order-actions button {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #eef0f1;
+  box-shadow: 0 1px 2px #00000008;
+}
+.shop-page.android-orders .order-empty-source {
+  margin: 0;
+  padding: 19px 15px 15px;
+  min-height: 0;
+  border: 1px solid #eceef0;
+  border-radius: 28px;
+  background: white;
+  box-shadow: 0 4px 6px #00000003;
+}
+.shop-page.android-orders .order-empty-source .android-order-art {
+  position: relative;
+  display: block;
+  width: 190px;
+  height: 276px;
+  margin: 0 auto 26px;
+  padding: 0;
+}
+.shop-page.android-orders .order-empty-source .android-order-art > img {
+  position: static;
+  width: 190px;
+  height: 276px;
+  margin: 0;
+  transform: none;
+  object-fit: contain;
+}
+.shop-page.android-orders .order-empty-source h2 {
+  margin: 0 auto 16px;
+  max-width: 350px;
+  font-family: ShopAndroidDisplay, ShopAndroidRoboto, Roboto, Arial, sans-serif;
+  font-size: clamp(28px, 8.44vw, 36px);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -1.3px;
+}
+.shop-page.android-orders .order-empty-source p {
+  margin: 0 auto 16px;
+  max-width: 330px;
+  font-size: 16px;
+  line-height: 22px;
+  color: #707070;
+}
+.shop-page.android-orders .order-empty-source .primary {
+  height: 44px;
+  background: #5433eb;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.shop-page.android-following {
+  padding: 16px 16px 100px;
+  background: #fcfcfc;
+}
+.shop-page.android-following .following-heading {
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  margin: 0 0 26px;
+}
+.shop-page.android-following .following-heading h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  letter-spacing: -1px;
+  translate: none;
+}
+.shop-page.android-following .following-empty {
+  margin: 0 20px 20px;
+  width: auto;
+  padding: 11px;
+  border: 1px solid #eceef0;
+  border-radius: 20px;
+  background: white;
+}
+.shop-page.android-following .following-empty h2 {
+  margin: 0;
+  font-size: clamp(16px, 4.68vw, 20px);
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.65px;
+  translate: none;
+}
+.shop-page.android-following .following-empty p {
+  margin: 8px 0 14px;
+  color: #454545;
+  font-size: 14px;
+  line-height: 18px;
+  translate: none;
+}
+.shop-page.android-following .following-empty .primary {
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 500;
+  translate: none;
+}
+.shop-page.android-following .following-post {
+  margin: 0 0 32px;
+  padding: 0;
+}
+.shop-page.android-following .following-post-identity {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.shop-page.android-following .following-post-identity .following-logo {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  border: 1px solid #eceef0;
+}
+.shop-page.android-following .following-post-identity > span:last-child {
+  min-width: 0;
+}
+.shop-page.android-following .following-post-identity strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.shop-page.android-following .following-post-identity small {
+  display: block;
+  font-size: 14px;
+  line-height: 18px;
+  color: #707070;
+}
+.shop-page.android-following .following-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 8px;
+  padding: 0;
+  margin: 0;
+}
+.shop-page.android-following .following-post-single .following-product-grid {
+  grid-template-columns: 1fr;
+}
+.shop-page.android-following .product-media {
+  height: auto;
+  aspect-ratio: 1;
+  border: 1px solid #d9dcdf;
+  border-radius: 20px;
+}
+.shop-page.android-following .product-media img {
+  object-fit: cover;
+}
+.shop-page.android-following .product-copy {
+  display: grid;
+  gap: 2px;
+  padding: 4px 4px 0;
+}
+.shop-page.android-following .product-copy strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.shop-page.android-following .product-copy > span {
+  font-size: 12px;
+  line-height: 16px;
+}
+.shop-page.android-following .save-button {
+  bottom: 11px;
+  right: 11px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: #9999;
+}
+.shop-page.android-following .save-button svg {
+  width: 20px;
+  height: 20px;
+}
+.following-logo-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: #cacdce;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+}
+.following-management-row .following-logo-fallback {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+}
+
+.shop-page.android-saved .saved-sock-card::before,
+.shop-page.android-saved .saved-sock-card::after {
+  display: none;
+}
+.shop-page.android-saved .saved-empty-source h2 {
+  width: auto;
+  max-width: none;
+  text-align: center;
+}
+.shop-page.android-following .following-post-identity {
+  min-height: 44px;
+}
+.shop-page.android-following .following-empty {
+  box-shadow: none;
+}
+.shop-page.android-live .dock-back {
+  position: fixed;
+  left: auto;
+  right: calc(50% + 116px);
+  border: 1px solid #eef0f1;
+  box-shadow: 0 2px 4px #00000008;
+}
+@media (max-width: 359px) {
+  .shop-page.android-live .floating-nav {
+    width: 188px;
+    padding: 5px;
+    gap: 0;
+  }
+  .shop-page.android-live .dock-back {
+    width: 44px;
+    height: 44px;
+    right: calc(50% + 104px);
+    bottom: 6px;
+  }
+}
+
+.shop-page.android-guest-profile .guest-sign-in .primary {
+  background: #5433f6;
+  color: #fff;
+}
+.shop-page.android-orders .order-empty-source .primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shop-page.android-orders .order-empty-source {
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.shop-page.android-saved .saved-grid:empty {
+  display: none;
+  margin: 0;
+}
+.shop-page.android-saved .saved-grid {
+  margin-top: 22px;
+  gap: 18px 12px;
+}
+.shop-page.android-saved .saved-product .product-media {
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  border: 1px solid #dedfe2;
+}
+.shop-page.android-saved .saved-product .product-media img {
+  object-fit: cover;
+}
+.shop-page.android-saved .saved-product > span {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  margin: 6px 4px 0;
+  color: #454545;
+}
+.shop-page.android-saved .saved-item-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.shop-page.android-saved .saved-product > b {
+  display: block;
+  margin: 0 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.shop-page.android-saved .saved-product > b del {
+  color: #707070;
+  font-weight: 400;
+}
+.shop-page.android-saved .saved-promotion {
+  top: 11px;
+  left: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #000;
+  color: white;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 500;
+}
+.shop-page.android-saved .saved-product .save-button {
+  width: 40px;
+  height: 40px;
+  bottom: 11px;
+  right: 11px;
+  border: 0;
+}
+.shop-page.android-live .save-button[aria-pressed="true"] {
+  background: #5433f6;
+  color: white;
+}
+
+.shop-page.android-product
+  .product-heading
+  button[aria-label="Save product"][aria-pressed="true"] {
+  background: #5433f6;
+  border-color: #5433f6;
+  color: white;
+}
+
+/* Clean native PDP media and observed inline disclosures (emulator-5560). */
+.android-product[data-product-id^="live-cozy-"]
+  .product-underlay
+  > .store-row
+  img {
+  filter: none;
+}
+.shop-page.android-live.android-product .product-gallery {
+  scroll-snap-type: none;
+}
+.shop-page.android-live.android-product .pdp-purchase-buttons > button {
+  box-shadow: none;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.android-product .pdp-purchase-buttons > button svg {
+  width: 20px;
+  height: 20px;
+}
+.android-product .pdp-color-choice {
+  border: 0;
+  padding: 0;
+  margin: 16px 0 0;
+  min-width: 0;
+}
+.android-product .pdp-color-choice legend {
+  padding: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #454545;
+}
+.android-product .pdp-color-choice legend strong {
+  font-weight: 500;
+  color: #000;
+}
+.android-product .pdp-color-choice button {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 12px 0 0 4px;
+  padding: 3px;
+  border: 1px solid #111;
+  border-radius: 50%;
+  background: #fff;
+}
+.android-product .pdp-color-choice img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.android-product .native-pdp-disclosure {
+  margin: 16px 0 0;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 1px solid #eef0f1;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.android-product .pdp-description.native-pdp-disclosure {
+  margin-top: 24px;
+}
+.android-product .native-pdp-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  list-style: none;
+  cursor: pointer;
+  min-height: 24px;
+}
+.android-product .native-pdp-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.android-product .native-pdp-disclosure > summary h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+.android-product .native-pdp-disclosure > summary svg {
+  width: 16px;
+  height: 16px;
+  transform: rotate(90deg);
+}
+.android-product .native-pdp-disclosure[open] > summary svg {
+  transform: rotate(-90deg);
+}
+.android-product .pdp-description > p {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 18px;
+  color: #000;
+  white-space: pre-line;
+}
+.android-product .pdp-review-preview .review-summary {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+}
+.android-product .pdp-review-preview .review-summary > div > strong {
+  font-size: 28px;
+  line-height: 32px;
+}
+.android-product .pdp-review-preview .review-summary p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #454545;
+}
+.android-product .pdp-review-preview .rating-bars {
+  padding: 0;
+  gap: 3px;
+}
+.android-product .pdp-review-preview .rating-bars > div {
+  height: 12px;
+  font-size: 10px;
+  line-height: 12px;
+}
+.android-product .pdp-review-preview .rating-bars i {
+  height: 8px;
+}
+.android-product .pdp-review-rail {
+  margin: 0;
+  padding: 0;
+  gap: 12px;
+}
+.android-product .pdp-review-rail > article {
+  flex: 0 0 100%;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #eceef0;
+  border-radius: 24px;
+  background: #fff;
+}
+.android-product .pdp-review-rail > article .review-rating-stars {
+  font-size: 14px;
+  line-height: 16px;
+}
+.android-product .pdp-review-rail > article > p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-product .pdp-preview-reviewer {
+  padding-top: 0;
+  margin-top: 12px;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #707070;
+}
+.android-product .pdp-preview-reviewer > span {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+.android-product .pdp-review-preview > a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 24px;
+  background: #f1f2f3;
+  font-size: 14px;
+  font-weight: 500;
+}
+.android-product .pdp-delivery > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  min-height: 24px;
+  font-size: 14px;
+  color: #454545;
+}
+.android-product .pdp-delivery > button svg {
+  width: 18px;
+  height: 18px;
+  color: #000;
+}
+.android-product .pdp-delivery > button b {
+  color: #000;
+}
+.android-product .pdp-delivery > p {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 0;
+  min-height: 24px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #454545;
+}
+.android-product .pdp-delivery > p svg {
+  width: 18px;
+  height: 18px;
+  color: #000;
+  flex-shrink: 0;
+}
+.android-product .pdp-delivery > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+.android-product .pdp-delivery > div button,
+.android-product .pdp-delivery > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
+  background: #f1f2f3;
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+}
+.android-product .pdp-delivery > a {
+  margin-top: 16px;
+}
+.android-product .pdp-delivery > a svg {
+  width: 14px;
+  height: 14px;
+}
+.sheet.android-product-lightbox > .icon-button {
+  top: 10px;
+  width: 44px;
+  height: 44px;
+  background: #111;
+  color: #fff;
+  border: 1px solid #2d2d2d;
+}
+.sheet.android-product-lightbox > .icon-button svg {
+  width: 24px;
+  height: 24px;
+}
+.android-product-lightbox .lightbox-swipe {
+  padding-bottom: 28px;
+}
+.android-product-lightbox .photo-dots button[data-edge="small"]::before {
+  width: 6px;
+  height: 6px;
+}
+
+.android-product .native-description-preview {
+  margin-top: 16px;
+  max-height: 144px;
+  overflow: hidden;
+  mask-image: linear-gradient(#000 calc(100% - 28px), transparent);
+  font-size: 14px;
+  line-height: 18px;
+}
+.android-product .native-description-preview p {
+  margin: 0;
+}
+.android-product .native-description-preview ul {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.android-product .native-description-more {
+  width: 100%;
+  height: 40px;
+  margin-top: 8px;
+  padding: 0;
+  border-radius: 999px;
+  background: #f1f2f3;
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+}
+.android-product .pdp-delivery > div[data-policy-count="2"] {
+  flex-direction: row;
+  gap: 16px;
+}
+.android-product .pdp-delivery > div[data-policy-count="2"] button {
+  flex: 1;
+  width: auto;
+}
+.android-product .native-return-note > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.android-product .native-return-note small {
+  font-size: 12px;
+  line-height: 16px;
+}
+.sheet.android-description-sheet {
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  width: calc(100% - 16px);
+  max-width: 464px;
+  max-height: calc(100svh - 16px);
+  padding: 24px 16px;
+  border-radius: 40px;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.android-description-sheet .sheet-header {
+  min-height: 32px;
+  margin: 0 0 16px;
+}
+.android-description-sheet .sheet-header h2 {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 500;
+}
+.sheet.android-description-sheet .sheet-header .icon-button {
+  width: 32px;
+  height: 32px;
+}
+.sheet.android-description-sheet .sheet-header .icon-button svg {
+  width: 22px;
+  height: 22px;
+}
+.sheet.android-description-sheet .sheet-copy {
+  padding: 0;
+  font-size: 14px;
+  line-height: 18px;
+  color: #454545;
+}
+.android-description-sheet .native-description-content p {
+  margin: 0;
+}
+.android-description-sheet .native-description-content ul {
+  margin: 24px 0 0;
+  padding-left: 24px;
+}
+.android-description-sheet .native-description-content li {
+  line-height: 18px;
+}
+.android-description-sheet .native-description-content li + li {
+  margin-top: 4px;
+}
+
+.sheet.android-description-sheet .native-description-content a {
+  color: #5433f6;
+}
+
+.android-product .pdp-delivery > div[data-policy-count="2"] a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: auto;
+  height: 40px;
+  border-radius: 24px;
+  background: #f1f2f3;
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Current guest Profile, Support and the source-disabled development switch. */
+.android-guest-profile .guest-profile-settings .account-row:last-child {
+  border-bottom: 0;
+}
+.android-guest-profile .profile-footer {
+  margin-top: 32px;
+  color: #707070;
+  line-height: 16px;
+}
+.android-guest-profile .profile-footer > p:nth-child(2) {
+  margin-top: 6px;
+  gap: 12px;
+}
+.android-guest-profile .profile-footer .profile-powered {
+  margin-top: 18px;
+}
+.shop-page.android-development {
+  padding: 24px 16px 88px;
+  background: #fcfcfc;
+}
+.android-development > .account-heading {
+  display: none;
+}
+.native-development-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 69px;
+  padding: 16px 0;
+  gap: 16px;
+  text-align: left;
+  font:
+    400 16px/20px ShopAndroidRoboto,
+    Roboto,
+    Arial,
+    sans-serif;
+  background: transparent;
+  border: 0;
+}
+.native-development-toggle:disabled {
+  color: #afb0b1;
+  opacity: 1;
+}
+.native-development-toggle small {
+  display: block;
+  font-size: 14px;
+  line-height: 18px;
+}
+.native-disabled-switch {
+  display: block;
+  flex: 0 0 52px;
+  height: 32px;
+  border: 2px solid #afb0b1;
+  border-radius: 999px;
+  background: #f5f6f6;
+}
+.native-disabled-switch::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 6px;
+  border-radius: 50%;
+  background: #afb0b1;
+}
+.shop-page.android-support {
+  padding-top: 16px;
+  background: #fcfcfc;
+}
+.android-support .account-heading {
+  height: 34px;
+  margin: 0 0 38px;
+}
+.android-support .account-heading h1 {
+  font-size: 28px;
+  line-height: 34px;
+}
+.android-support .support-links a {
+  margin: 0;
+  padding: 16px 0;
+  gap: 16px;
+  align-items: center;
+  font-size: 16px;
+  line-height: 19px;
+}
+.android-support .support-links small {
+  margin-top: 0;
+  color: #454545;
+  font-size: 14px;
+  line-height: 18px;
+}
+.android-support .support-links .account-icon {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+}
+
+/* Current native merchandise details; frozen reference variants keep their owner. */
+.android-product .native-product-badge {
+  display: table;
+  margin: 24px 0 0;
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: #c92314;
+  background: #fff0ed;
+  font-size: 10px;
+  line-height: 14px;
+}
+.android-product .native-product-badge + .product-price {
+  margin-top: 16px;
+}
+.android-product .variants {
+  margin-top: 32px;
+  gap: 8px;
+}
+.android-product .variants legend {
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-product .variants .pill {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 15px;
+  background: #fff;
+  color: #111;
+  border: 1px solid #e2e3e4;
+  font-size: 14px;
+  font-weight: 400;
+}
+.android-product .variants .pill[aria-pressed="true"] {
+  border: 1.5px solid #000;
+  background: #fff;
+  color: #000;
+}
+.android-product .native-product-highlights ul {
+  margin: 16px 0 0;
+  padding-left: 14px;
+  list-style: disc;
+  font-size: 14px;
+  line-height: 18px;
+}
+.android-product .native-product-highlights li + li {
+  margin-top: 4px;
+}
+.android-product .native-product-highlights > small {
+  display: block;
+  margin: 16px 0 0;
+  color: #707070;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* Observed native specifications remain selectable text and reversible panels. */
+.android-product .native-product-specifications dl {
+  margin: 18px 0 0;
+}
+.android-product .native-product-specifications dl > div + div {
+  margin-top: 4px;
+}
+.android-product .native-product-specifications dl > div:not(:last-child) {
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ededed;
+}
+.android-product .native-product-specifications dt {
+  color: #707070;
+  font-size: 12px;
+  line-height: 16px;
+}
+.android-product .native-product-specifications dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+.android-product .native-product-specifications > small {
+  display: block;
+  margin-top: 16px;
+  color: #707070;
+  font-size: 12px;
+  line-height: 16px;
+}
+.shop-page.android-product[data-product-id^="live-staud-"] .product-details {
+  padding-top: 32px;
+}
+.android-product[data-product-id^="live-staud-"] .pdp-color-choice + .variants {
+  margin-top: 16px;
+}
+
+.android-product .native-product-specifications > .native-summary-credit,
+.android-product .native-product-highlights > .native-summary-credit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.android-product .native-summary-credit img {
+  width: 16px;
+  height: 16px;
+  filter: grayscale(1);
+  opacity: 0.8;
+}
+
+/* Native photograph crops are not tinted a second time. */
+.android-live [data-native-photo] .product-media img,
+.android-live[data-native-photo] .product-gallery img {
+  filter: none;
+}

@@ -1,0 +1,184 @@
+/* Installed Android Search, 2026-09-26 / emulator-5560. These rules do not
+   change the frozen iOS Search, composer drafts, or source fixtures. */
+.shop-page.android-live.android-search {
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+  background: #fcfcfc;
+  padding-top: 16px;
+}
+.android-search[data-native-search-mode="root"] > h1,
+.android-search[data-native-search-mode="history"] > h1 {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+  letter-spacing: -0.85px;
+  margin: 0 56px 26px 0;
+}
+.android-search .android-search-close {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  z-index: 5;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fcfcfc;
+  border-radius: 50%;
+  background: white;
+  box-shadow:
+    inset 0 0 0 1px #f0f0f0,
+    0 1px 2px #00000008;
+}
+.android-search .android-search-close svg {
+  width: 24px;
+  height: 24px;
+}
+.android-search .search-section-heading h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+}
+.android-search .search-section-heading svg {
+  width: 20px;
+  height: 20px;
+  padding: 5px;
+  background: #f1f2f3;
+  border-radius: 50%;
+}
+.android-search > .product-rail {
+  gap: 8px;
+  margin-right: -16px;
+  padding-right: 16px;
+}
+.android-search > .product-rail > [data-recent-id] {
+  flex: 0 0 124px;
+  width: 124px;
+}
+.android-search > .product-rail .product-media {
+  width: 124px;
+  height: 124px;
+  border-radius: 22px;
+  border-color: #dedfe2;
+  box-shadow: none;
+}
+.android-search .product-media img {
+  object-fit: cover;
+}
+.android-search .price-badge {
+  top: 11px;
+  left: 11px;
+  padding: 1px 5px;
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 500;
+  background: #0007;
+}
+.android-search .save-button {
+  width: 32px;
+  height: 32px;
+  bottom: 11px;
+  right: 11px;
+  border: 0;
+  background: #8889;
+  backdrop-filter: blur(8px);
+}
+.android-search .save-button svg {
+  width: 20px;
+  height: 20px;
+}
+.android-search .search-composer {
+  bottom: max(80px, calc(16px + var(--search-keyboard-inset, 0px)));
+  left: 12px;
+  right: 12px;
+  width: auto;
+  transform: none;
+  min-height: 56px;
+  padding: 7px;
+  gap: 10px;
+  border: 1px solid #ebebeb;
+  background: #fff;
+  box-shadow: none;
+}
+.android-search .search-composer > input {
+  font: inherit;
+  font-size: 16px;
+  line-height: 20px;
+}
+.android-search .search-composer > button[type="submit"]:disabled {
+  background: #f4f4f4;
+  color: #666;
+}
+.android-search .search-composer > button > svg {
+  width: 20px;
+  height: 20px;
+}
+.android-search[data-keyboard-visible] .floating-dock {
+  display: none;
+}
+.android-search .recent-history-grid {
+  margin-top: 12px;
+}
+.android-search .recent-history-grid .product-media {
+  aspect-ratio: 1;
+}
+
+.android-search .search-suggestions-surface {
+  padding-top: 0;
+}
+.android-search .search-suggestions-surface > header {
+  height: 20px;
+  margin-bottom: 0;
+}
+.android-search .search-suggestions-surface > header h2 {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #707070;
+}
+.android-search .search-suggestions-surface > header > button {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #efefef;
+  background: white;
+}
+.android-search .android-suggestion-store {
+  display: flex;
+  gap: 12px;
+  height: 68px;
+  padding: 6px 0;
+  align-items: center;
+}
+.android-search
+  .android-suggestion-store
+  > :is(img, .android-suggestion-initial) {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 50%;
+  border: 1px solid #d7d9dc;
+  background: #e5e6e8;
+}
+.android-search .android-suggestion-store strong {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.android-search .suggestion-query {
+  min-height: 56px;
+  padding: 6px 0;
+  gap: 8px;
+  font-size: 14px;
+}
+.android-search .suggestion-query > span {
+  width: 44px;
+  height: 44px;
+  background: #f1f2f3;
+  border-radius: 12px;
+}

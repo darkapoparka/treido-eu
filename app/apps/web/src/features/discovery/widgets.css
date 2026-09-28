@@ -1,0 +1,131 @@
+.widget-page {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+}
+.widget-page .order-widget {
+  position: relative;
+  margin-bottom: 20px;
+  border-radius: 28px;
+}
+.widget-page .widget-large {
+  height: 360px;
+}
+.widget-page .widget-medium {
+  height: 162px;
+}
+.widget-page .widget-small {
+  height: 162px;
+}
+.widget-page .order-widget header b,
+.widget-page .widget-delivery b {
+  font-weight: 500;
+}
+.widget-page .widget-large .widget-order-status {
+  margin-top: 68px;
+}
+.widget-page .widget-small .widget-order-status {
+  margin-top: 20px;
+}
+.widget-page .widget-order-status > b {
+  line-height: 19px;
+}
+.widget-page .widget-order-status > p,
+.widget-page .widget-delivery p {
+  line-height: 20px;
+  color: #737373;
+}
+.widget-page .widget-order-status > img {
+  width: 58px;
+  height: 58px;
+  bottom: 0;
+  box-shadow: 0 2px 12px #00000012;
+}
+.widget-page .widget-medium .widget-order-status > img {
+  width: 64px;
+  height: 64px;
+  bottom: -4px;
+}
+.widget-page .widget-order-status progress {
+  position: relative;
+  overflow: visible;
+  border: 0;
+  width: 72%;
+  height: 4px;
+  margin-top: 10px;
+  appearance: none;
+  background: #f1f4f4;
+  border-radius: 3px;
+}
+.widget-page .widget-order-status progress::-webkit-progress-bar {
+  background: #f1f4f4;
+  border-radius: 3px;
+}
+.widget-page .widget-order-status progress::-webkit-progress-value {
+  background: #5b32f5;
+  border-radius: 3px;
+}
+.widget-page .widget-order-status progress::-moz-progress-bar {
+  background: #5b32f5;
+  border-radius: 3px;
+}
+.widget-page .widget-order-status progress::before,
+.widget-page .widget-order-status progress::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5b32f5;
+  left: calc(20% - 4px);
+}
+.widget-page .widget-order-status progress::after {
+  left: auto;
+  right: -3px;
+  background: #f1f4f4;
+}
+.widget-page .widget-delivery {
+  position: relative;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-color: #ededed;
+}
+.widget-page .widget-delivery > div {
+  margin-top: 84px;
+  line-height: 19px;
+}
+.widget-page .order-widget header .widget-shop-mark {
+  width: 15px;
+  height: 16px;
+  border-radius: 0;
+  align-self: flex-start;
+}
+.widget-page .widget-medium > header > img:first-child {
+  width: 44px;
+  height: 44px;
+}
+.widget-page .widget-medium .widget-order-status {
+  margin-top: 24px;
+}
+.widget-page .widget-small header .widget-shop-mark {
+  width: 15px;
+  height: 16px;
+}
+.widget-page .widget-order-open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+.widget-page .widget-large > .widget-order-open {
+  bottom: 180px;
+}
+.widget-page .widget-order-open:focus-visible {
+  outline: 3px solid #5b32f5;
+  outline-offset: 4px;
+}
+.widget-page .widget-delivery > .widget-order-open {
+  z-index: 2;
+}
+.widget-page > .pill {
+  margin-top: 20px;
+}

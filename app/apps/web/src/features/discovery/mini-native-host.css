@@ -1,0 +1,197 @@
+.mini-shell.android-mini > header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 44px;
+  padding: 0 8px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  background: #000;
+  color: #fff;
+  font:
+    400 16px/20px ShopAndroidRoboto,
+    Roboto,
+    Arial,
+    sans-serif;
+}
+.mini-shell.android-mini > header > a,
+.mini-shell.android-mini > header > button:first-child {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  width: 44px;
+}
+.mini-shell.android-mini > header .mini-shell-title {
+  font: inherit;
+}
+.mini-native-menu {
+  position: fixed;
+  z-index: 40;
+  left: 16px;
+  right: 16px;
+  top: 44px;
+  padding: 16px 20px;
+  border-radius: 28px;
+  background: #282828;
+  color: #fff;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.mini-native-menu > p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+.mini-native-menu > small {
+  display: block;
+  margin-top: 4px;
+  color: #cdcdcd;
+  font-size: 12px;
+  line-height: 16px;
+}
+.mini-native-menu > div {
+  margin-top: 8px;
+}
+.mini-native-menu button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 48px;
+  padding: 0;
+  text-align: left;
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.mini-native-menu button svg {
+  width: 24px;
+  height: 24px;
+}
+.mini-native-shade {
+  position: fixed;
+  z-index: 35;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 0;
+  padding: 0;
+  background: #0006;
+}
+.mini-native-content {
+  transition: transform 180ms ease-out;
+}
+.mini-native-document {
+  position: fixed;
+  inset: 44px 0 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #000;
+}
+.mini-native-document > header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 64px;
+  background: #fff;
+  font-size: 18px;
+}
+.mini-native-document > header a {
+  color: #000;
+  text-decoration: none;
+}
+.mini-native-document > header button {
+  position: absolute;
+  right: 0;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+.mini-native-document iframe {
+  display: block;
+  width: 100%;
+  flex: 1;
+  border: 0;
+  background: #fff;
+}
+.mini-native-document > p {
+  padding: 24px;
+  font-size: 16px;
+  line-height: 24px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mini-native-content {
+    transition: none;
+  }
+}
+
+.sheet.native-mini-photo-access {
+  max-width: 480px;
+  padding: 48px 24px 40px;
+  border-radius: 28px 28px 0 0;
+  background: #f7f2fb;
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+}
+.native-mini-photo-access::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: calc(50% - 16px);
+  width: 32px;
+  height: 4px;
+  border-radius: 4px;
+  background: #454545;
+}
+.native-mini-photo-access > .icon-button {
+  display: none;
+}
+.native-mini-access-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.native-mini-access-heading > div {
+  flex: 1;
+}
+.native-mini-access-heading h2 {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+.native-mini-access-heading p {
+  font-size: 12px;
+  line-height: 16px;
+  color: #707070;
+  margin: 12px 0 0;
+}
+.native-mini-access-heading img {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+}
+.native-mini-access-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+.native-mini-access-actions button {
+  flex: 1;
+  height: 44px;
+  border-radius: 999px;
+  color: #fff;
+  background: #111;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.native-mini-access-actions button:last-child {
+  background: #5433f6;
+}
