@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile, symlink } from "node:fs/promises";
+import {
+  mkdtemp,
+  mkdir,
+  rm,
+  readFile,
+  writeFile,
+  symlink,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, parse, relative, resolve } from "node:path";
 import test from "node:test";
+import { URL } from "node:url";
 import { auditProductionOutput } from "./production-output.mjs";
 
 async function fixture(t, dependencies = []) {
@@ -51,11 +59,12 @@ test("rejects private reference archives inside the workspace", async (t) => {
   const { workspace, output } = await fixture(t, [
     (root) => join(root, ".local/archive/image.png"),
     (root) => join(root, "apps/web/reference-assets/font.ttf"),
+    (root) => join(root, "apps/web/public/reference-live/preferences/man.png"),
   ]);
   const result = await auditProductionOutput(output, workspace);
   assert.equal(
     result.issues.filter((issue) => issue.includes("Private reference")).length,
-    2,
+    3,
   );
 });
 
@@ -86,6 +95,53 @@ test("rejects unqualified emitted font and video bytes", async (t) => {
     2,
   );
 });
+
+async function merchantFont(t, mode = "valid") {
+  const { workspace, output } = await fixture(t);
+  const directory = join(
+    output,
+    mode === "wrong-location"
+      ? "output/static/fonts/unreviewed"
+      : "output/static/fonts/admin",
+  );
+  await mkdir(directory, { recursive: true });
+  const source = new URL("../../apps/web/public/fonts/admin/", import.meta.url);
+  const font = await readFile(new URL("InterVariable.woff2", source));
+  if (mode === "changed-font") font[0] ^= 1;
+  await writeFile(join(directory, "InterVariable.woff2"), font);
+  if (mode !== "missing-license") {
+    await writeFile(
+      join(directory, "OFL.txt"),
+      mode === "changed-license"
+        ? "unapproved license"
+        : await readFile(new URL("OFL.txt", source)),
+    );
+  }
+  return { workspace, output };
+}
+
+test("accepts only the reviewed merchant Inter bytes accompanied by the upstream OFL", async (t) => {
+  const { workspace, output } = await merchantFont(t);
+  assert.deepEqual(await auditProductionOutput(output, workspace), {
+    tracesChecked: 1,
+    issues: [],
+  });
+});
+
+for (const mode of [
+  "changed-font",
+  "missing-license",
+  "changed-license",
+  "wrong-location",
+]) {
+  test(`rejects merchant font publication with ${mode}`, async (t) => {
+    const { workspace, output } = await merchantFont(t, mode);
+    assert.match(
+      (await auditProductionOutput(output, workspace)).issues.join("\n"),
+      /Unqualified font/,
+    );
+  });
+}
 
 test("malformed dependency traces fail rather than reporting success", async (t) => {
   const { workspace, output } = await fixture(t);

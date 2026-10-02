@@ -1,5 +1,6 @@
 import { readdir, readFile, realpath, stat } from "node:fs/promises";
 import { log } from "node:console";
+import { createHash } from "node:crypto";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import process from "node:process";
 import { URL, fileURLToPath } from "node:url";
@@ -10,8 +11,35 @@ const privateDirectories = new Set([
   "reference-assets",
   "private-evidence",
   "_references",
+  "reference-live",
 ]);
 const capturedMedia = /\.(?:woff2?|ttf|otf|mp4|webm)$/i;
+
+async function isQualifiedMerchantFont(file, output) {
+  if (
+    relative(output, file).split(sep).join("/") !==
+    "output/static/fonts/admin/InterVariable.woff2"
+  )
+    return false;
+  // October 2 approved merchant asset, independently matched to the official
+  // Inter distribution. Retain its exact bytes and accompanying upstream OFL.
+  try {
+    const [font, license] = await Promise.all([
+      readFile(file),
+      readFile(resolve(dirname(file), "OFL.txt"), "utf8"),
+    ]);
+    return (
+      createHash("sha256").update(font).digest("hex") ===
+        "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3" &&
+      createHash("sha256")
+        .update(license.replace(/\r\n/g, "\n"))
+        .digest("hex") ===
+        "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    );
+  } catch {
+    return false;
+  }
+}
 
 async function isPinnedPostgresLink(path, name, output, workspace) {
   if (
@@ -189,7 +217,10 @@ export async function auditProductionOutput(
     }
   }
   for (const file of files) {
-    if (capturedMedia.test(file))
+    if (
+      capturedMedia.test(file) &&
+      !(await isQualifiedMerchantFont(file, output))
+    )
       issues.push(`Unqualified font/video output: ${relative(output, file)}`);
   }
   return { tracesChecked: traces.length, issues };

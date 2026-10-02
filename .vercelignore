@@ -15,3 +15,6 @@ app/private-evidence/**
 app/.local/**
 app/shopify/raw/**
 app/shopify/downloads/**
+app/apps/web/public/__probe-*
+app/apps/web/public/reference-live/**
+app/apps/web/public/fonts/shop-chemical-geist.woff2
