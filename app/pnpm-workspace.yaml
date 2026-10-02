@@ -39,6 +39,7 @@ minimumReleaseAgeExclude:
 saveExact: true
 strictPeerDependencies: true
 allowBuilds:
+  '@embedded-postgres/linux-x64@18.4.0-beta.17': true
   "@embedded-postgres/windows-x64": true
   '@parcel/watcher': false
   '@swc/core': false
