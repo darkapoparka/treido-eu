@@ -107,6 +107,75 @@ test("missing output fails rather than reporting a clean build", async (t) => {
   );
 });
 
+async function hostedFunctionLink(t, mode = "valid") {
+  const { workspace, output } = await fixture(t);
+  const functions = join(output, "output/functions");
+  const target =
+    mode === "escaped"
+      ? join((await fixture(t)).workspace, "outside.func")
+      : mode === "private"
+        ? join(functions, ".local/shared.func")
+        : mode === "outside-functions"
+          ? join(output, "server/shared.func")
+          : join(functions, "shared.func");
+  await mkdir(target, { recursive: true });
+  const alias =
+    mode === "nested"
+      ? join(target, "nested.func")
+      : join(functions, "route.segments/__PAGE__.segment.rsc.func");
+  await mkdir(dirname(alias), { recursive: true });
+  await symlink(target, alias, "junction");
+  await writeFile(
+    join(target, "handler.js.nft.json"),
+    JSON.stringify({ files: [] }),
+  );
+  return { workspace, output, target };
+}
+
+test("audits each generated Vercel function once through bounded route aliases", async (t) => {
+  const { workspace, output } = await hostedFunctionLink(t);
+  assert.deepEqual(await auditProductionOutput(output, workspace), {
+    tracesChecked: 2,
+    issues: [],
+  });
+});
+
+for (const mode of ["escaped", "private", "outside-functions", "nested"]) {
+  test(`rejects a generated function alias with ${mode}`, async (t) => {
+    const { workspace, output } = await hostedFunctionLink(t, mode);
+    await assert.rejects(
+      auditProductionOutput(output, workspace),
+      /Unexpected link/,
+    );
+  });
+}
+
+test("function aliases cannot conceal captured media or private dependency traces", async (t) => {
+  const { workspace, output, target } = await hostedFunctionLink(t);
+  await writeFile(join(target, "capture.woff2"), "unqualified font");
+  await writeFile(
+    join(target, "handler.js.nft.json"),
+    JSON.stringify({
+      files: [relative(target, join(workspace, ".local/archive.png"))],
+    }),
+  );
+  const result = await auditProductionOutput(output, workspace);
+  assert.equal(result.issues.length, 2);
+  assert.match(result.issues.join("\n"), /Unqualified font/);
+  assert.match(result.issues.join("\n"), /Private reference dependency/);
+});
+
+test("function aliases still reject unreviewed nested runtime links", async (t) => {
+  const { workspace, output, target } = await hostedFunctionLink(t);
+  const privateTarget = join(workspace, ".local/archive");
+  await mkdir(privateTarget, { recursive: true });
+  await symlink(privateTarget, join(target, "runtime"), "junction");
+  await assert.rejects(
+    auditProductionOutput(output, workspace),
+    /Unexpected link/,
+  );
+});
+
 async function postgresLink(t, mode = "valid") {
   const { workspace, output } = await fixture(t);
   const target = join(

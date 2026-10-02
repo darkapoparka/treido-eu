@@ -1,4 +1,4 @@
-import { readdir, readFile, realpath } from "node:fs/promises";
+import { readdir, readFile, realpath, stat } from "node:fs/promises";
 import { log } from "node:console";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import process from "node:process";
@@ -91,11 +91,53 @@ async function isPinnedSharpLink(path, name, output, workspace) {
   return installed.name === "sharp" && installed.version === version;
 }
 
-async function filesUnder(directory, output, workspace) {
+async function isHostedFunctionLink(path, name, output) {
+  // Vercel permits route aliases between .func directories in its generated
+  // function tree. Resolve both sides so parent links cannot escape that tree.
+  const functions = resolve(output, "output/functions");
+  const alias = relative(functions, path);
+  if (
+    !name.endsWith(".func") ||
+    isAbsolute(alias) ||
+    alias === ".." ||
+    alias.startsWith(`..${sep}`) ||
+    alias
+      .split(sep)
+      .slice(0, -1)
+      .some((part) => part.endsWith(".func"))
+  )
+    return false;
+  const target = await realpath(path);
+  const inside = relative(await realpath(functions), target);
+  return (
+    target.endsWith(".func") &&
+    !isAbsolute(inside) &&
+    inside !== ".." &&
+    !inside.startsWith(`..${sep}`) &&
+    !inside.split(sep).some((part) => privateDirectories.has(part)) &&
+    (await stat(target)).isDirectory()
+  );
+}
+
+async function filesUnder(directory, output, workspace, visited = new Set()) {
+  const canonical = await realpath(directory);
+  if (visited.has(canonical)) return [];
+  visited.add(canonical);
   const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = resolve(directory, entry.name);
     if (entry.isSymbolicLink()) {
+      if (await isHostedFunctionLink(path, entry.name, output)) {
+        files.push(
+          ...(await filesUnder(
+            await realpath(path),
+            output,
+            workspace,
+            visited,
+          )),
+        );
+        continue;
+      }
       // Next 16 Turbopack links this external server package into its output.
       // Only exact owned, manifest-pinned pg and raster-processing Sharp packages
       // are allowed. Traversal
@@ -105,9 +147,9 @@ async function filesUnder(directory, output, workspace) {
         !(await isPinnedSharpLink(path, entry.name, output, workspace))
       )
         throw new Error(`Unexpected link in production output: ${path}`);
-      files.push(...(await filesUnder(path, output, workspace)));
+      files.push(...(await filesUnder(path, output, workspace, visited)));
     } else if (entry.isDirectory())
-      files.push(...(await filesUnder(path, output, workspace)));
+      files.push(...(await filesUnder(path, output, workspace, visited)));
     else if (entry.isFile()) files.push(path);
   }
   return files;
