@@ -10,6 +10,8 @@
 
 **Open checks:** the dependency audit fails with 1 critical, 5 high and 4 moderate advisories; T02 remains a release gate. Initial Windows route generation failed on the default SWC cache DACL; an isolated owned cache resolves generation. The subsequent type/build process was interrupted without a final result and is being resumed. Production build/output, remote commit confirmation and hosted route checks remain pending. Vercel `tyj5/treido-eu` uses `app/apps/web`, Next.js, Node 24.x and exact-pinned pnpm commands, with Vercel authentication protection. Evidence stays in ignored `app/.qa/publication-20261003/`. Full provider and production-launch acceptance remain open.
 
+**Git checkpoint:** `8c8e5a0a4eefb042660e6d5dde449ef893bc0f39` committed all 561 reviewed changed/new files and was pushed to the intended main; live remote SHA matched and the working tree was clean. The resumed local build failed on an installed Inngest/OpenTelemetry junction escaping Turbopack's filesystem root. Existing installed links were preserved. The hosted build will install fresh frozen dependencies on Linux and run the same production-output audit through a narrow `.next` entry point. The Vercel plugin deployment endpoint returned unavailable; its documented authenticated CLI workflow is the fallback. No dependency version was changed or audit gate weakened.
+
 ## T39 - Listing publication and public contact integration
 
 **State/claim:** DONE for implementation and isolated end-to-end integration; claim released. Local main remains the current checkout. No package upgrade, native Expo work, provider-account mutation, hosted migration, Git publication or deployment.
