@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { formatMoney } from "../catalog/types";
 import { Icon } from "../discovery/icons";
@@ -38,24 +40,28 @@ export function CheckoutExtras({
   added?: string[];
   disabled?: boolean;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const [reverse, setReverse] = useState(false);
   const products = reverse ? [...recommendations].reverse() : recommendations;
   if (!products.length) return null;
   return (
     <section className="checkout-recommendations">
       <header>
-        <h2>Don’t forget our most loved</h2>
+        <h2>{ui("donTForgetOurMostLoved")}</h2>
         <button
-          aria-label="Previous recommendations"
+          aria-label={ui("previousRecommendations")}
           disabled={disabled}
           onClick={() => setReverse(!reverse)}
+          data-ui-label="previousRecommendations"
         >
           <Icon name="arrow" style={{ transform: "rotate(180deg)" }} />
         </button>
         <button
-          aria-label="Next recommendations"
+          aria-label={ui("nextRecommendations")}
           disabled={disabled}
           onClick={() => setReverse(!reverse)}
+          data-ui-label="nextRecommendations"
         >
           <Icon name="arrow" />
         </button>
@@ -67,15 +73,19 @@ export function CheckoutExtras({
             <strong>{p.name}</strong>
             <p className="checkout-recommendation-rating">
               <ReviewStars rating={5} variant="rounded" />{" "}
-              <em>{p.reviews} reviews</em>
+              <em>
+                {p.reviews} {ui("reviews_546410")}
+              </em>
             </p>
-            <span>{formatMoney({ amount: p.amount, currency: "USD" })}</span>
+            <span>
+              {formatMoney({ amount: p.amount, currency: "USD" }, intlLocale)}
+            </span>
           </div>
           <button
             disabled={disabled || added.includes(p.id)}
             onClick={() => onAdd?.(p.id)}
           >
-            {added.includes(p.id) ? "Added" : "Add"}
+            {added.includes(p.id) ? ui("added") : ui("add")}
           </button>
         </article>
       ))}

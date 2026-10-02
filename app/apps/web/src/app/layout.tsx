@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { localeSchema } from "@treido/contracts";
+import { LanguagePrompt } from "@/features/locale/language-prompt";
+import { LocaleProvider } from "@/features/locale/provider";
+import { readLocaleRequest } from "@/features/locale/request.server";
 import "./globals.css";
 import "@/features/account/account.css";
 import "@/features/account/profile.css";
@@ -23,22 +25,28 @@ export const metadata: Metadata = {
   icons: { icon: "data:," },
 };
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const scenario = await readReferenceScenario();
+  const [scenario, preference] = await Promise.all([
+    readReferenceScenario(),
+    readLocaleRequest(),
+  ]);
   return (
     <html
-      lang={localeSchema.parse("en")}
+      lang={preference.locale}
       data-reference-scenario={scenario?.name ?? "live-android"}
     >
       <body>
-        <DiscoveryProvider
-          initial={scenario ? scenario.discovery : liveGuestDiscovery}
-        >
-          <AccountProvider
-            initial={scenario ? scenario.account : liveGuestAccount}
+        <LocaleProvider initial={preference}>
+          <DiscoveryProvider
+            initial={scenario ? scenario.discovery : liveGuestDiscovery}
           >
-            {children}
-          </AccountProvider>
-        </DiscoveryProvider>
+            <AccountProvider
+              initial={scenario ? scenario.account : liveGuestAccount}
+            >
+              {children}
+              <LanguagePrompt />
+            </AccountProvider>
+          </DiscoveryProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

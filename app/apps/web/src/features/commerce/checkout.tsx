@@ -1,9 +1,19 @@
 "use client";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "../discovery/hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import type { CartCatalog } from "./cart-catalog";
 import {
   formatMoney,
   referenceVariantProduct,
@@ -67,8 +77,9 @@ function blankCheckoutAddress(): Address {
 }
 
 export function CartPage({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("commerceUI");
   return (
-    <AccountPage title="Your cart">
+    <AccountPage title={ui("yourCart")}>
       <CartContents catalog={catalog} />
     </AccountPage>
   );
@@ -76,13 +87,16 @@ export function CartPage({ catalog }: { catalog: Catalog }) {
 
 export function CartOverlay({
   catalog,
+  content,
   open,
   onClose,
 }: {
-  catalog: Catalog;
+  catalog: CartCatalog;
+  content?: ReactNode;
   open: boolean;
   onClose: () => void;
 }) {
+  const ui = useTranslations("commerceUI");
   const [offer, setOffer] = useState("");
   const sourceOrigin = useRef<{ href: string; token: string | null } | null>(
     null,
@@ -142,30 +156,34 @@ export function CartOverlay({
     >
       <Sheet
         open={open}
-        title="Your cart"
+        title={ui("yourCart")}
         className="dark-cart-sheet"
         headerless
         onClose={onClose}
       >
-        <CartContents
-          catalog={catalog}
-          onNavigate={(href) => {
-            if (sourceOrigin.current?.token)
-              bindSourceDestination(sourceOrigin.current.token, href);
-            onClose();
-          }}
-          onOffer={setOffer}
-        />
+        {content ?? (
+          <CartContents
+            catalog={catalog}
+            onNavigate={(href) => {
+              if (sourceOrigin.current?.token)
+                bindSourceDestination(sourceOrigin.current.token, href);
+              onClose();
+            }}
+            onOffer={setOffer}
+          />
+        )}
         <button
           className="cart-close"
-          aria-label="Close cart"
+          aria-label={ui("closeCart")}
           onClick={onClose}
+          data-ui-label="closeCart"
         >
           <Icon name="close" />
         </button>
       </Sheet>
       <CartOffer
         catalog={catalog}
+        content={content}
         storeId={offer}
         open={Boolean(offer)}
         onClose={() => setOffer("")}
@@ -183,6 +201,9 @@ export function Checkout({
   storeId?: string;
   initialStage?: CheckoutStep;
 }) {
+  const intlLocale = useIntlLocale();
+  const caption = useCaption();
+  const ui = useTranslations("commerceUI");
   const state = useDiscovery();
   const account = useAccount();
   const searchParams = useSearchParams();
@@ -391,14 +412,12 @@ export function Checkout({
 
   if (!lines.length)
     return (
-      <AccountPage title="Checkout">
+      <AccountPage title={ui("checkout")}>
         <div className="notification-empty order-empty-source">
-          <h2>Your cart is empty</h2>
-          <p>
-            Add products while you shop, so they’ll be ready for checkout later.
-          </p>
+          <h2>{ui("yourCartIsEmpty")}</h2>
+          <p>{ui("addProductsWhileYouShopSoTheyLlBeReady")}</p>
           <Link href="/search" className="form-cancel">
-            Go shopping
+            {ui("goShopping")}
           </Link>
         </div>
       </AccountPage>
@@ -424,24 +443,32 @@ export function Checkout({
     >
       <header className="checkout-header">
         {step === "review" ? (
-          <Link href="/cart" aria-label="Close checkout">
+          <Link
+            href="/cart"
+            aria-label={ui("closeCheckout")}
+            data-ui-label="closeCheckout"
+          >
             <Icon name="close" />
           </Link>
         ) : (
-          <button aria-label="Go back" onClick={backFromSetup}>
+          <button
+            aria-label={ui("goBack")}
+            onClick={backFromSetup}
+            data-ui-label="goBack"
+          >
             <Icon name="back" />
           </button>
         )}
         <h1>
           {step === "review"
-            ? "Review & Pay"
+            ? ui("reviewPay")
             : step === "phone"
               ? phoneStage === "code"
-                ? "Confirm it’s you"
-                : "Add phone number"
+                ? ui("confirmItSYou")
+                : ui("addPhoneNumber")
               : step === "address" || step === "address-search"
-                ? "Shipping address"
-                : "Add a card"}
+                ? ui("shippingAddress")
+                : ui("addACard")}
         </h1>
       </header>
 
@@ -522,7 +549,8 @@ export function Checkout({
             <div
               className="captured-review-loading"
               role="status"
-              aria-label="Loading captured checkout"
+              aria-label={ui("loadingCapturedCheckout")}
+              data-ui-label="loadingCapturedCheckout"
             >
               <i />
             </div>
@@ -542,7 +570,7 @@ export function Checkout({
                 aria-expanded={expanded.includes("ship")}
                 onClick={() => toggle("ship")}
               >
-                <span className="checkout-section-label">Ship to</span>
+                <span className="checkout-section-label">{ui("shipTo")}</span>
                 {!expanded.includes("ship") && address && (
                   <span className="checkout-section-value">
                     <strong>
@@ -551,7 +579,8 @@ export function Checkout({
                     <span>
                       {address.street}, {address.city} {address.region}
                       <br />
-                      {address.postalCode}, US
+                      {address.postalCode}
+                      {ui("uS")}
                     </span>
                   </span>
                 )}
@@ -580,13 +609,16 @@ export function Checkout({
                             {entry.firstName} {entry.lastName}, {entry.street}
                           </strong>
                           <span>
-                            {entry.city} {entry.region} {entry.postalCode}, US
+                            {entry.city} {entry.region} {entry.postalCode}
+                            {ui("uS")}
                             {entry.phone
                               ? `, ${entry.phone.replace(/\s/g, "")}`
                               : ""}
                           </span>
                           {entry.isDefault && (
-                            <small className="default-pill">Default</small>
+                            <small className="default-pill">
+                              {ui("default")}
+                            </small>
                           )}
                         </span>
                       </label>
@@ -594,7 +626,9 @@ export function Checkout({
                         <button
                           type="button"
                           className="source-default-action"
-                          aria-label={`Set ${entry.street} as default address`}
+                          aria-label={ui("setValue1AsDefaultAddress", {
+                            value1: entry.street ?? "",
+                          })}
                           onClick={() =>
                             setAddresses((current) =>
                               current.map((item) => ({
@@ -604,12 +638,14 @@ export function Checkout({
                             )
                           }
                         >
-                          Set as default
+                          {ui("setAsDefault")}
                         </button>
                       )}
                       <button
                         className="context-trigger"
-                        aria-label={`Address options for ${entry.street}`}
+                        aria-label={ui("addressOptionsForValue1", {
+                          value1: entry.street ?? "",
+                        })}
                         onClick={(event) => {
                           addressFocus.current = event.currentTarget;
                           setAddressMenu(
@@ -629,7 +665,7 @@ export function Checkout({
                               setAddressModal(true);
                             }}
                           >
-                            Edit
+                            {ui("edit")}
                           </button>
                           <button
                             className="danger-text"
@@ -638,7 +674,7 @@ export function Checkout({
                               setAddressMenu("");
                             }}
                           >
-                            Delete
+                            {ui("delete")}
                           </button>
                         </div>
                       )}
@@ -656,7 +692,7 @@ export function Checkout({
                       setAddressModal(true);
                     }}
                   >
-                    <Icon name="plus" /> Use a different address
+                    <Icon name="plus" /> {ui("useADifferentAddress_deaf31")}
                   </button>
                 </div>
               )}
@@ -668,21 +704,25 @@ export function Checkout({
                 aria-expanded={expanded.includes("shipping")}
                 onClick={() => toggle("shipping")}
               >
-                <span className="checkout-section-label">Shipping</span>
+                <span className="checkout-section-label">{ui("shipping")}</span>
                 {!expanded.includes("shipping") && (
                   <span className="checkout-section-value">
                     <strong>
                       {shipping === 0
-                        ? "Standard Shipping"
-                        : "Priority Shipping"}{" "}
-                      · {formatMoney({ amount: fee, currency: "USD" })}
+                        ? ui("standardShipping")
+                        : ui("priorityShipping")}{" "}
+                      ·{" "}
+                      {formatMoney(
+                        { amount: fee, currency: "USD" },
+                        intlLocale,
+                      )}
                     </strong>
                     <span>
                       <span className="checkout-shipping-status">
-                        Ready to ship
+                        {ui("readyToShip")}
                       </span>
                       <br />
-                      {shipping === 0 ? "3-5 days" : "1-3 days"}
+                      {shipping === 0 ? ui("text35Days") : ui("text13Days")}
                     </span>
                   </span>
                 )}
@@ -717,15 +757,18 @@ export function Checkout({
                         onChange={() => setShipping(index)}
                       />
                       <span>
-                        <strong>{name}</strong>
+                        <strong>{caption(name)}</strong>
                         <span>{eta}</span>
                         <span>{delivery}</span>
                       </span>
                       <b>
-                        {formatMoney({
-                          amount: Number(price),
-                          currency: "USD",
-                        })}
+                        {formatMoney(
+                          {
+                            amount: Number(price),
+                            currency: "USD",
+                          },
+                          intlLocale,
+                        )}
                       </b>
                     </label>
                   ))}
@@ -739,11 +782,11 @@ export function Checkout({
                 aria-expanded={expanded.includes("plan")}
                 onClick={() => toggle("plan")}
               >
-                <span className="checkout-section-label">Plan</span>
+                <span className="checkout-section-label">{ui("plan")}</span>
                 {!expanded.includes("plan") && (
                   <span className="checkout-section-value">
-                    <strong>Pay now</strong>
-                    <span>Pay the entire amount today</span>
+                    <strong>{ui("payNow")}</strong>
+                    <span>{ui("payTheEntireAmountToday")}</span>
                   </span>
                 )}
                 <span className="checkout-section-caret">
@@ -755,25 +798,22 @@ export function Checkout({
                   <div className="installment-unavailable">
                     <strong>
                       <Icon name="info" />
-                      <span>Installments unavailable</span>
+                      <span>{ui("installmentsUnavailable")}</span>
                     </strong>
-                    <p>
-                      Installments can only be used for orders between $35.00
-                      and $30,000.00.
-                    </p>
+                    <p>{ui("installmentsCanOnlyBeUsedForOrdersBetween3500")}</p>
                   </div>
                   <label className="shipping-option selected">
                     <input type="radio" checked readOnly />
                     <span>
-                      <strong>Pay now</strong>
-                      <span>Pay the entire amount today</span>
+                      <strong>{ui("payNow")}</strong>
+                      <span>{ui("payTheEntireAmountToday")}</span>
                     </span>
                   </label>
                   <label className="shipping-option is-disabled">
                     <input type="radio" disabled />
                     <span>
-                      <strong>Pay in 2 installments</strong>
-                      <span>Pay every 15 days with no interest or fees</span>
+                      <strong>{ui("payIn2Installments")}</strong>
+                      <span>{ui("payEvery15DaysWithNoInterestOrFees")}</span>
                     </span>
                   </label>
                 </div>
@@ -786,7 +826,7 @@ export function Checkout({
                 aria-expanded={expanded.includes("payment")}
                 onClick={() => toggle("payment")}
               >
-                <span className="checkout-section-label">Payment</span>
+                <span className="checkout-section-label">{ui("payment")}</span>
                 {!expanded.includes("payment") && selectedPayment && (
                   <span className="checkout-section-value payment-summary-value">
                     <strong>Visa ···· {selectedPayment.last4}</strong>
@@ -825,13 +865,15 @@ export function Checkout({
                             <span className="checkout-payment-address">
                               {billing
                                 ? `${billing.firstName} ${billing.lastName}, ${billing.street}, ${billing.city} ...`
-                                : "Add billing address"}
+                                : ui("addBillingAddress")}
                             </span>
                           </span>
                         </label>
                         <button
                           className="context-trigger"
-                          aria-label={`Payment method options ${card.last4}`}
+                          aria-label={ui("paymentMethodOptionsValue1", {
+                            value1: card.last4 ?? "",
+                          })}
                           onClick={() =>
                             setPaymentMenu(
                               paymentMenu === card.id ? "" : card.id,
@@ -854,7 +896,7 @@ export function Checkout({
                                 setPaymentMenu("");
                               }}
                             >
-                              Edit
+                              {ui("edit")}
                             </button>
                             <button
                               className="danger-text"
@@ -873,7 +915,7 @@ export function Checkout({
                                 setPaymentMenu("");
                               }}
                             >
-                              Delete
+                              {ui("delete")}
                             </button>
                           </div>
                         )}
@@ -885,7 +927,7 @@ export function Checkout({
                       className="checkout-link source-checkout-link"
                       onClick={() => setPaymentModal(true)}
                     >
-                      <span>＋</span> Pay another way
+                      <span>＋</span> {ui("payAnotherWay")}
                     </button>
                     <span className="payment-marks" aria-hidden="true">
                       <svg className="source-generic-card" viewBox="0 0 32 20">
@@ -912,9 +954,9 @@ export function Checkout({
                 <section className="shop-cash-section">
                   <span>Shop Cash</span>
                   <div>
-                    Get $20.00 off on orders over $50.00
+                    {ui("get2000OffOnOrdersOver5000")}
                     <br />
-                    <Link href="/search">Keep Shopping</Link>
+                    <Link href="/search">{ui("keepShopping_45f176")}</Link>
                   </div>
                 </section>
               )}
@@ -927,14 +969,15 @@ export function Checkout({
               disabled={processing || reviewPending}
               onChange={(event) => setStoreOffers(event.target.checked)}
             />
-            <span>Sign me up for news and offers from this store</span>
+            <span>{ui("signMeUpForNewsAndOffersFromThisStore")}</span>
           </label>
 
           {(reviewStage === 3 || reviewStage === 4) && (
             <div
               className="captured-review-extras-loading"
               role="status"
-              aria-label="Loading captured recommendations"
+              aria-label={ui("loadingCapturedRecommendations")}
+              data-ui-label="loadingCapturedRecommendations"
             >
               <i />
               {reviewStage === 3 && (
@@ -962,40 +1005,37 @@ export function Checkout({
 
           {hasCapturedKitschMerchandising && (
             <section className="checkout-text-offers">
-              <h2>Text offers</h2>
-              <p>
-                Sign up to be in the loop on exclusive offers, new products, and
-                haircare tips.
-              </p>
+              <h2>{ui("textOffers")}</h2>
+              <p>{ui("signUpToBeInTheLoopOnExclusiveOffers")}</p>
               <div className="source-text-offer-phone">
                 <input
                   type="tel"
-                  aria-label="Phone number for text offers"
-                  placeholder="Phone number"
+                  aria-label={ui("phoneNumberForTextOffers")}
+                  placeholder={ui("phoneNumber")}
                   autoComplete="tel-national"
                   value={textOfferPhone}
                   disabled={processing || reviewPending}
                   onChange={(event) => setTextOfferPhone(event.target.value)}
+                  data-ui-label="phoneNumberForTextOffers"
                 />
                 <button
                   type="button"
-                  aria-label="Text offers country: United States (+1)"
+                  aria-label={ui("textOffersCountryUnitedStates1")}
                   aria-haspopup="dialog"
                   onClick={() => setHelp("country")}
+                  data-ui-label="textOffersCountryUnitedStates1"
                 >
                   <SourceUnitedStatesFlag />
                   <span aria-hidden="true">⌄</span>
                 </button>
               </div>
               <p className="checkout-sms-terms">
-                &quot;By providing your number and clicking the button, you
-                agree to receive recurring auto-dialed marketing SMS (including
-                cart reminders; AI content; artificial or prerecorded voices)
-                and our <a href={policies?.terms}>TERMS OF SERVICE</a>{" "}
-                (including arbitration). Consent is not required to purchase.
-                Msg & data rates may apply. Msg frequency varies. Reply HELP for
-                help; STOP to opt-out. View{" "}
-                <a href={policies?.privacy}>PRIVACY POLICY</a>.
+                {ui("byProvidingYourNumberAndClickingTheButtonYouAgree")}{" "}
+                <a href={policies?.terms}>{ui("tERMSOFSERVICE")}</a>{" "}
+                {ui(
+                  "includingArbitrationConsentIsNotRequiredToPurchaseMsgData",
+                )}{" "}
+                <a href={policies?.privacy}>{ui("pRIVACYPOLICY")}</a>.
               </p>
             </section>
           )}
@@ -1018,7 +1058,7 @@ export function Checkout({
                 disabled={processing || reviewPending}
                 onClick={() => setSummary(true)}
               >
-                <Icon name="price-tag" /> Add discount
+                <Icon name="price-tag" /> {ui("addDiscount")}
               </button>
             )}
             <button
@@ -1031,16 +1071,19 @@ export function Checkout({
                 {lines[0] && <img src={lines[0].product.images[0]} alt="" />}
               </span>
               <span>
-                <strong>{summary ? "Order summary" : "Total"}</strong>
+                <strong>{summary ? ui("orderSummary") : ui("total")}</strong>
                 <small>
-                  {quantity} {quantity === 1 ? "item" : "items"}
+                  {quantity} {quantity === 1 ? ui("item") : ui("items")}
                 </small>
               </span>
               <span className="source-total-value">
                 <span className="source-total-price">
                   <b>USD</b>
                   <strong>
-                    {formatMoney({ amount: total, currency: "USD" })}
+                    {formatMoney(
+                      { amount: total, currency: "USD" },
+                      intlLocale,
+                    )}
                   </strong>
                   <span className="source-total-caret" aria-hidden="true">
                     <Icon name="chevron" />
@@ -1048,8 +1091,11 @@ export function Checkout({
                 </span>
                 {savings > 0 && (
                   <small>
-                    <Icon name="price-tags" /> Total savings{" "}
-                    {formatMoney({ amount: savings, currency: "USD" })}
+                    <Icon name="price-tags" /> {ui("totalSavings")}{" "}
+                    {formatMoney(
+                      { amount: savings, currency: "USD" },
+                      intlLocale,
+                    )}
                   </small>
                 )}
               </span>
@@ -1061,18 +1107,15 @@ export function Checkout({
                   <summary>
                     <AccountIcon name="info" />
                     <span className="order-points-label">
-                      Complete this purchase to
+                      {ui("completeThisPurchaseTo")}
                       <br />
-                      earn 4 points
+                      {ui("earn4Points")}
                     </span>
                     <span className="order-points-caret" aria-hidden="true">
                       <Icon name="chevron" />
                     </span>
                   </summary>
-                  <p>
-                    The captured offer awards 4 points. No loyalty account is
-                    connected in this reference preview.
-                  </p>
+                  <p>{ui("theCapturedOfferAwards4PointsNoLoyaltyAccountIs")}</p>
                 </details>
                 {lines.map((line) => {
                   const net = capturedLineAmount(
@@ -1090,21 +1133,28 @@ export function Checkout({
                         {net !== line.product.price.amount && (
                           <small className="source-line-discount">
                             <Icon name="price-tag" />
-                            <span>27% OFF BACK TO SCHOOL SALE (-$1.35)</span>
+                            <span>{ui("text27OFFBACKTOSCHOOLSALE135")}</span>
                           </small>
                         )}
                         {line.quantity > 1 && (
-                          <small>Quantity {line.quantity}</small>
+                          <small>
+                            {ui("quantity")} {line.quantity}
+                          </small>
                         )}
                       </span>
                       <strong>
                         {net !== line.product.price.amount && (
-                          <del>{formatMoney(line.product.price)}</del>
+                          <del>
+                            {formatMoney(line.product.price, intlLocale)}
+                          </del>
                         )}{" "}
-                        {formatMoney({
-                          amount: net * line.quantity,
-                          currency: line.product.price.currency,
-                        })}
+                        {formatMoney(
+                          {
+                            amount: net * line.quantity,
+                            currency: line.product.price.currency,
+                          },
+                          intlLocale,
+                        )}
                       </strong>
                     </div>
                   );
@@ -1119,10 +1169,13 @@ export function Checkout({
                       <img src={product.image} alt="" />
                       <span>{product.name}</span>
                       <strong>
-                        {formatMoney({
-                          amount: product.amount,
-                          currency: "USD",
-                        })}
+                        {formatMoney(
+                          {
+                            amount: product.amount,
+                            currency: "USD",
+                          },
+                          intlLocale,
+                        )}
                       </strong>
                     </div>
                   ))}
@@ -1134,66 +1187,87 @@ export function Checkout({
                   }}
                 >
                   <input
-                    aria-label="Discount code"
-                    placeholder="Discount code or gift card"
+                    aria-label={ui("discountCode")}
+                    placeholder={ui("discountCodeOrGiftCard")}
                     disabled={processing || reviewPending}
                     value={code}
                     onChange={(event) => {
                       setCode(event.target.value);
                       setDiscountError(false);
                     }}
+                    data-ui-label="discountCode"
                   />
                   <button type="submit" disabled={processing || !code.trim()}>
-                    Apply
+                    {ui("apply")}
                   </button>
                 </form>
                 {discountError && (
                   <p className="form-error" role="alert">
-                    Discount codes cannot be validated in this reference
-                    preview.
+                    {ui("discountCodesCannotBeValidatedInThisReferencePreview")}
                   </p>
                 )}
                 <div className="checkout-totals">
                   <p>
-                    Subtotal{" "}
+                    {ui("subtotal")}{" "}
                     <span>
-                      {formatMoney({ amount: subtotal, currency: "USD" })}
+                      {formatMoney(
+                        { amount: subtotal, currency: "USD" },
+                        intlLocale,
+                      )}
                     </span>
                   </p>
                   <p>
                     <button
                       type="button"
                       className="checkout-fee-label"
-                      aria-label="About shipping"
+                      aria-label={ui("aboutShipping")}
                       onClick={() => setHelp("shipping")}
+                      data-ui-label="aboutShipping"
                     >
-                      Shipping <Icon name="question-circle" />
+                      {ui("shipping")} <Icon name="question-circle" />
                     </button>
-                    <span>{formatMoney({ amount: fee, currency: "USD" })}</span>
+                    <span>
+                      {formatMoney(
+                        { amount: fee, currency: "USD" },
+                        intlLocale,
+                      )}
+                    </span>
                   </p>
                   <p>
                     <button
                       type="button"
                       className="checkout-fee-label"
-                      aria-label="About estimated taxes"
+                      aria-label={ui("aboutEstimatedTaxes")}
                       onClick={() => setHelp("taxes")}
+                      data-ui-label="aboutEstimatedTaxes"
                     >
-                      Estimated taxes <Icon name="question-circle" />
+                      {ui("estimatedTaxes")} <Icon name="question-circle" />
                     </button>
-                    <span>{formatMoney({ amount: tax, currency: "USD" })}</span>
+                    <span>
+                      {formatMoney(
+                        { amount: tax, currency: "USD" },
+                        intlLocale,
+                      )}
+                    </span>
                   </p>
                   <p className="checkout-total-line">
-                    <strong>Total</strong>
+                    <strong>{ui("total")}</strong>
                     <strong>
-                      {formatMoney({ amount: total, currency: "USD" })}
+                      {formatMoney(
+                        { amount: total, currency: "USD" },
+                        intlLocale,
+                      )}
                     </strong>
                   </p>
                   {savings > 0 && (
                     <strong className="checkout-savings">
                       <Icon name="price-tags" />
                       <span>
-                        TOTAL SAVINGS{" "}
-                        {formatMoney({ amount: savings, currency: "USD" })}
+                        {ui("tOTALSAVINGS")}{" "}
+                        {formatMoney(
+                          { amount: savings, currency: "USD" },
+                          intlLocale,
+                        )}
                       </span>
                     </strong>
                   )}
@@ -1202,26 +1276,26 @@ export function Checkout({
             )}
 
             <p className="checkout-terms">
-              By clicking ‘Pay Now’ you agree to {checkoutStoreName}’s{" "}
+              {ui("byClickingPayNowYouAgreeTo")} {checkoutStoreName}’s{" "}
               {policies ? (
-                <a href={policies.terms}>Terms of Service</a>
+                <a href={policies.terms}>{ui("termsOfService_4afa55")}</a>
               ) : (
                 <button
                   className="checkout-policy-link"
                   onClick={() => setHelp("terms")}
                 >
-                  Terms of Service
+                  {ui("termsOfService_4afa55")}
                 </button>
               )}{" "}
-              and{" "}
+              {ui("and")}{" "}
               {policies ? (
-                <a href={policies.privacy}>Privacy Policy</a>
+                <a href={policies.privacy}>{ui("privacyPolicy_506ff3")}</a>
               ) : (
                 <button
                   className="checkout-policy-link"
                   onClick={() => setHelp("privacy")}
                 >
-                  Privacy Policy
+                  {ui("privacyPolicy_506ff3")}
                 </button>
               )}
               .
@@ -1253,13 +1327,16 @@ export function Checkout({
                   data-processing-caption={processingCaption}
                 >
                   <i aria-hidden="true" />{" "}
-                  {processingCaption && "Processing..."}
+                  {processingCaption && ui("processing")}
                 </span>
               ) : (
                 <>
-                  <span>Pay now</span>
+                  <span>{ui("payNow")}</span>
                   <b>
-                    {formatMoney({ amount: previewPayAmount, currency: "USD" })}
+                    {formatMoney(
+                      { amount: previewPayAmount, currency: "USD" },
+                      intlLocale,
+                    )}
                   </b>
                 </>
               )}
@@ -1270,7 +1347,7 @@ export function Checkout({
 
       <Sheet
         open={addressModal}
-        title={editingAddressId ? "Edit address" : "Add address"}
+        title={editingAddressId ? ui("editAddress") : ui("addAddress")}
         className="source-address-sheet"
         onClose={() => setAddressModal(false)}
       >
@@ -1289,7 +1366,7 @@ export function Checkout({
 
       <Sheet
         open={paymentModal}
-        title="Payment methods"
+        title={ui("paymentMethods")}
         className="source-payment-sheet"
         onClose={() => setPaymentModal(false)}
       >
@@ -1320,7 +1397,7 @@ export function Checkout({
 
       <Sheet
         open={Boolean(editingPaymentId)}
-        title="Edit payment method"
+        title={ui("editPaymentMethod")}
         onClose={() => setEditingPaymentId("")}
       >
         {payments.find((card) => card.id === editingPaymentId) && (
@@ -1342,14 +1419,14 @@ export function Checkout({
         open={Boolean(help)}
         title={
           help === "shipping"
-            ? "Shipping"
+            ? ui("shipping")
             : help === "taxes"
-              ? "Estimated taxes"
+              ? ui("estimatedTaxes")
               : help === "country"
-                ? "Country or region"
+                ? ui("countryOrRegion")
                 : help === "terms"
-                  ? "Terms of Service"
-                  : "Privacy Policy"
+                  ? ui("termsOfService_4afa55")
+                  : ui("privacyPolicy_506ff3")
         }
         onClose={() => setHelp("")}
       >
@@ -1358,48 +1435,48 @@ export function Checkout({
             <button
               className="checkout-country-choice shipping-option selected"
               onClick={() => setHelp("")}
-              aria-label="Use United States (+1)"
+              aria-label={ui("useUnitedStates1")}
+              data-ui-label="useUnitedStates1"
             >
-              <SourceUnitedStatesFlag /> United States (+1){" "}
+              <SourceUnitedStatesFlag /> {ui("unitedStates1")}{" "}
               <Icon name="check" />
             </button>
             <p className="sheet-copy">
-              United States is the only country available for text offers in
-              this reference preview.
+              {ui("unitedStatesIsTheOnlyCountryAvailableForTextOffers")}
             </p>
           </>
         ) : help === "shipping" ? (
           <p className="sheet-copy">
-            The selected shipping option is{" "}
-            {shipping === 0 ? "Standard Shipping" : "Priority Shipping"},{" "}
-            {formatMoney({ amount: fee, currency: "USD" })}. You can change it
-            in Shipping method. This is the captured checkout rate; no live
-            carrier quote has been requested.
+            {ui("theSelectedShippingOptionIs")}{" "}
+            {shipping === 0 ? ui("standardShipping") : ui("priorityShipping")},{" "}
+            {formatMoney({ amount: fee, currency: "USD" }, intlLocale)}
+            {ui("youCanChangeItInShippingMethodThisIsThe")}
           </p>
         ) : help === "taxes" ? (
           <p className="sheet-copy">
-            The estimated tax shown for this reference order is{" "}
-            {formatMoney({ amount: tax, currency: "USD" })}. It is a captured
-            preview amount, not a live tax calculation. No payment will be
-            submitted.
+            {ui("theEstimatedTaxShownForThisReferenceOrderIs")}{" "}
+            {formatMoney({ amount: tax, currency: "USD" }, intlLocale)}
+            {ui("itIsACapturedPreviewAmountNotALiveTax")}
           </p>
         ) : (
           <p className="sheet-copy">
             {checkoutStoreName}’s{" "}
-            {help === "terms" ? "Terms of Service" : "Privacy Policy"} are not
-            included in this reference preview.
+            {help === "terms"
+              ? ui("termsOfService_4afa55")
+              : ui("privacyPolicy_506ff3")}{" "}
+            {ui("areNotIncludedInThisReferencePreview")}
           </p>
         )}
       </Sheet>
 
       <Sheet
         open={Boolean(deleteAddressId)}
-        title="Delete address"
+        title={ui("deleteAddress")}
         className="delete-address-confirm source-delete-address"
         onClose={closeDeleteAddress}
       >
         <p>
-          Are you sure you want to delete the address{" "}
+          {ui("areYouSureYouWantToDeleteTheAddress")}{" "}
           {(() => {
             const target = addresses.find(
               (entry) => entry.id === deleteAddressId,
@@ -1411,7 +1488,7 @@ export function Checkout({
         </p>
         <div className="editor-actions">
           <button className="form-cancel" onClick={closeDeleteAddress}>
-            Cancel
+            {ui("cancel")}
           </button>
           <button
             className="danger-button form-submit"
@@ -1433,29 +1510,22 @@ export function Checkout({
               closeDeleteAddress();
             }}
           >
-            Delete
+            {ui("delete")}
           </button>
         </div>
       </Sheet>
 
       <Sheet
         open={paymentBoundary}
-        title="Payment service is not connected"
+        title={ui("paymentServiceIsNotConnected")}
         className="source-payment-boundary"
         onClose={() => setPaymentBoundary(false)}
       >
         <p>
           {hasCapturedKitschMerchandising ? (
-            <>
-              No card was charged and no order was created. The confirmation in
-              the frozen reference is available below only as a captured source
-              state.
-            </>
+            <>{ui("noCardWasChargedAndNoOrderWasCreatedThe")}</>
           ) : (
-            <>
-              No card was charged and no order was created. This seller checkout
-              does not have a captured confirmation.
-            </>
+            <>{ui("noCardWasChargedAndNoOrderWasCreatedThis")}</>
           )}
         </p>
         {hasCapturedKitschMerchandising && (
@@ -1477,14 +1547,14 @@ export function Checkout({
               setPaymentBoundary(false);
             }}
           >
-            View captured source confirmation
+            {ui("viewCapturedSourceConfirmation")}
           </Link>
         )}
         <button
           className="form-cancel"
           onClick={() => setPaymentBoundary(false)}
         >
-          Back to checkout
+          {ui("backToCheckout")}
         </button>
       </Sheet>
     </ShopSurface>
@@ -1504,6 +1574,7 @@ function SourcePhoneSetup({
   onStageChange: (stage: "phone" | "code") => void;
   onDone: (phone: string) => void;
 }) {
+  const ui = useTranslations("commerceUI");
   const [code, setCode] = useState("");
   const [processing, setProcessing] = useState(false);
   const [nextPending, setNextPending] = useState(false);
@@ -1549,22 +1620,22 @@ function SourcePhoneSetup({
         {stage === "phone" ? (
           <>
             <p className="source-phone-intro">
-              Check out faster and safer. Your mobile number will be used to
-              secure your payment information with Shop Pay.
+              {ui("checkOutFasterAndSaferYourMobileNumberWillBe")}
             </p>
             <label className="source-phone-field">
-              <span>Phone number</span>
+              <span>{ui("phoneNumber")}</span>
               <div>
                 <b>+1</b>
                 <input
-                  aria-label="Phone number"
+                  aria-label={ui("phoneNumber")}
                   inputMode="tel"
                   autoFocus
                   value={phone}
                   onChange={(event) =>
                     onPhoneChange(event.target.value.replace(/[^0-9 ()-]/g, ""))
                   }
-                  placeholder="Enter your phone number"
+                  placeholder={ui("enterYourPhoneNumber")}
+                  data-ui-label="phoneNumber"
                 />
                 <span aria-hidden="true">
                   <SourceUnitedStatesFlag />
@@ -1573,18 +1644,19 @@ function SourcePhoneSetup({
               </div>
             </label>
             <p className="source-phone-note">
-              We’ll send you a security code to confirm it’s you.
+              {ui("weLlSendYouASecurityCodeToConfirmIt")}
             </p>
             <button
               className="primary source-phone-next"
               disabled={digits.length < 7 || nextPending}
-              aria-label="Next"
+              aria-label={ui("next")}
               aria-busy={nextPending}
+              data-ui-label="next"
             >
               {nextPending ? (
                 <span className="captured-button-spinner" aria-hidden="true" />
               ) : (
-                "Next"
+                ui("next")
               )}
             </button>
           </>
@@ -1593,17 +1665,17 @@ function SourcePhoneSetup({
             <p className="source-code-intro">
               {digits
                 ? `Enter the code sent to +1${digits}`
-                : "Enter your security code to continue."}
+                : ui("enterYourSecurityCodeToContinue")}
             </p>
             <label className="source-code-entry">
-              <span className="sr-only">Security code</span>
+              <span className="sr-only">{ui("securityCode")}</span>
               <div aria-hidden="true">
                 {Array.from({ length: 6 }, (_, index) => (
                   <span key={index}>{code[index] ?? ""}</span>
                 ))}
               </div>
               <input
-                aria-label="Security code"
+                aria-label={ui("securityCode")}
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 autoFocus
@@ -1616,12 +1688,14 @@ function SourcePhoneSetup({
                   setCode(next);
                   if (next.length === 6) window.setTimeout(beginBoundary, 0);
                 }}
+                data-ui-label="securityCode"
               />
             </label>
             {processing && (
               <span
                 className="source-code-spinner"
-                aria-label="Checking code"
+                aria-label={ui("checkingCode")}
+                data-ui-label="checkingCode"
               />
             )}
             <button
@@ -1629,22 +1703,18 @@ function SourcePhoneSetup({
               className="checkout-link source-resend-code"
               onClick={() => setBoundary(true)}
             >
-              Resend code
+              {ui("resendCode")}
             </button>
           </>
         )}
       </form>
       <Sheet
         open={boundary}
-        title="Phone verification is not connected"
+        title={ui("phoneVerificationIsNotConnected")}
         className="source-phone-boundary"
         onClose={() => setBoundary(false)}
       >
-        <p>
-          No security code was sent and this number has not been verified. The
-          next screen is available only to continue the frozen reference
-          journey.
-        </p>
+        <p>{ui("noSecurityCodeWasSentAndThisNumberHasNot")}</p>
         <button
           className="primary form-submit"
           onClick={() => {
@@ -1652,10 +1722,10 @@ function SourcePhoneSetup({
             onDone(`+1${digits}`);
           }}
         >
-          Continue to captured shipping address
+          {ui("continueToCapturedShippingAddress")}
         </button>
         <button className="form-cancel" onClick={() => setBoundary(false)}>
-          Back to code entry
+          {ui("backToCodeEntry")}
         </button>
       </Sheet>
     </>
@@ -1671,6 +1741,7 @@ function SourceAddressLookup({
   onManual: () => void;
   onSearchingChange: (searching: boolean) => void;
 }) {
+  const ui = useTranslations("commerceUI");
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -1683,9 +1754,9 @@ function SourceAddressLookup({
     <div className={`source-address-lookup ${focused ? "is-searching" : ""}`}>
       {!focused && (
         <label className="form-field source-country-field">
-          Country/region
+          {ui("countryRegion")}
           <select defaultValue="United States">
-            <option>United States</option>
+            <option value="United States">{ui("unitedStates")}</option>
           </select>
           <span aria-hidden="true">
             <SourceUnitedStatesFlag />
@@ -1694,11 +1765,11 @@ function SourceAddressLookup({
       )}
       <label className="form-field source-address-search-field">
         <Icon name="search" />
-        <span>{focused ? "Address" : ""}</span>
+        <span>{focused ? ui("address") : ""}</span>
         <input
           ref={searchInput}
-          aria-label="Search address"
-          placeholder="Start typing address..."
+          aria-label={ui("searchAddress")}
+          placeholder={ui("startTypingAddress")}
           value={query}
           onFocus={() => {
             setFocused(true);
@@ -1711,15 +1782,17 @@ function SourceAddressLookup({
               searchInput.current?.blur();
             }
           }}
+          data-ui-label="searchAddress"
         />
         {query && (
           <button
             type="button"
-            aria-label="Clear address"
+            aria-label={ui("clearAddress")}
             onClick={() => {
               setQuery("");
               searchInput.current?.focus();
             }}
+            data-ui-label="clearAddress"
           >
             ×
           </button>
@@ -1733,7 +1806,7 @@ function SourceAddressLookup({
             onManual();
           }}
         >
-          <span aria-hidden="true">▱</span> Enter address manually
+          <span aria-hidden="true">▱</span> {ui("enterAddressManually")}
         </button>
       )}
       {showSuggestion && (
@@ -1753,17 +1826,17 @@ function SourceAddressLookup({
           <AccountIcon name="location" filled />
           <span>
             1226 University Dr, Menlo Park CA 94025,
-            <br /> United States
+            <br /> {ui("unitedStates")}
           </span>
         </button>
       )}
       {focused && !showSuggestion && query.trim() && (
         <p className="source-address-no-match" role="status">
-          No captured suggestion matches. Enter your address manually.
+          {ui("noCapturedSuggestionMatchesEnterYourAddressManually")}
         </p>
       )}
       {focused && (
-        <p className="source-google-note">Suggestions powered by Google</p>
+        <p className="source-google-note">{ui("suggestionsPoweredByGoogle")}</p>
       )}
       {!focused && (
         <div className="source-address-lookup-actions">
@@ -1771,7 +1844,7 @@ function SourceAddressLookup({
             className="primary address-lookup-continue"
             onClick={onManual}
           >
-            Continue to payment details
+            {ui("continueToPaymentDetails")}
           </button>
         </div>
       )}
@@ -1796,6 +1869,8 @@ function SourceAddressEditor({
   onExpand?: () => void;
   variant: "initial" | "sheet";
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("commerceUI");
   const [value, setValue] = useState(initialValue);
   const [suggestions, setSuggestions] = useState(false);
   const [phoneHelp, setPhoneHelp] = useState(false);
@@ -1827,11 +1902,11 @@ function SourceAddressEditor({
         className="form-field source-floating-field"
         data-filled={Boolean(value[key])}
       >
-        <span>{label}</span>
+        <span>{caption(label)}</span>
         <input
-          aria-label={label}
+          aria-label={caption(label)}
           value={String(value[key] ?? "")}
-          placeholder={label}
+          placeholder={caption(label)}
           required={required}
           type={key === "phone" ? "tel" : "text"}
           autoComplete="off"
@@ -1856,15 +1931,16 @@ function SourceAddressEditor({
           <button
             type="button"
             className="source-address-phone-help"
-            aria-label="About delivery phone number"
+            aria-label={ui("aboutDeliveryPhoneNumber")}
             aria-expanded={phoneHelp}
             onClick={() => setPhoneHelp((current) => !current)}
+            data-ui-label="aboutDeliveryPhoneNumber"
           >
             <Icon name="question-circle" />
           </button>
           {phoneHelp && (
             <p className="source-security-help" role="status">
-              A phone number is optional for this delivery address.
+              {ui("aPhoneNumberIsOptionalForThisDeliveryAddress")}
             </p>
           )}
         </>
@@ -1873,11 +1949,12 @@ function SourceAddressEditor({
         suggestions &&
         /1226|university|menlo/i.test(value.street) && (
           <div className="source-inline-address-suggestion">
-            <span>SUGGESTIONS</span>
+            <span>{ui("sUGGESTIONS")}</span>
             <button
               type="button"
-              aria-label="Close address suggestions"
+              aria-label={ui("closeAddressSuggestions")}
               onClick={() => setSuggestions(false)}
+              data-ui-label="closeAddressSuggestions"
             >
               ×
             </button>
@@ -1897,8 +1974,8 @@ function SourceAddressEditor({
                 setSuggestions(false);
               }}
             >
-              <strong>1226 University Dr,</strong> Menlo Park CA 94025, United
-              States
+              <strong>1226 University Dr,</strong>{" "}
+              {ui("menloParkCA94025UnitedStates")}
             </button>
           </div>
         )}
@@ -1906,12 +1983,12 @@ function SourceAddressEditor({
   );
   const country = (
     <label className="form-field source-country-field">
-      Country/Region
+      {ui("countryRegion_1d79d2")}
       <select
         value={value.country}
         onChange={(event) => change("country", event.target.value)}
       >
-        <option>United States</option>
+        <option value="United States">{ui("unitedStates")}</option>
       </select>
       {variant === "initial" && (
         <span aria-hidden="true">
@@ -1927,15 +2004,16 @@ function SourceAddressEditor({
         className="form-field source-floating-field"
         data-filled={Boolean(value.region)}
       >
-        <span>State</span>
+        <span>{ui("state")}</span>
         <select
-          aria-label="State"
+          aria-label={ui("state")}
           value={value.region}
           onChange={(event) => change("region", event.target.value)}
           required
+          data-ui-label="state"
         >
-          <option value="">State</option>
-          <option value="CA">California</option>
+          <option value="">{ui("state")}</option>
+          <option value="CA">{ui("california")}</option>
         </select>
       </label>
       {field("postalCode", "ZIP code")}
@@ -1955,11 +2033,12 @@ function SourceAddressEditor({
           <span>
             <strong>{value.street}</strong>
             <small>
-              {value.city}, {value.region}, {value.postalCode}, US
+              {value.city}, {value.region}, {value.postalCode}
+              {ui("uS")}
             </small>
           </span>
           <button type="button" onClick={onExpand}>
-            Edit
+            {ui("edit")}
           </button>
         </div>
       )}
@@ -1981,19 +2060,19 @@ function SourceAddressEditor({
             checked={value.isDefault}
             onChange={(event) => change("isDefault", event.target.checked)}
           />
-          This is my default address
+          {ui("thisIsMyDefaultAddress")}
         </label>
       )}
       <div className="editor-actions">
         {variant === "sheet" && (
           <button type="button" className="form-cancel" onClick={onCancel}>
-            Cancel
+            {ui("cancel")}
           </button>
         )}
         <button type="submit" className="primary form-submit">
           {variant === "initial"
-            ? "Continue to payment details"
-            : "Save address"}
+            ? ui("continueToPaymentDetails")
+            : ui("saveAddress")}
         </button>
       </div>
     </form>
@@ -2021,6 +2100,7 @@ function SourceUnitedStatesFlag() {
 }
 
 function SourceApplePayMark() {
+  const ui = useTranslations("commerceUI");
   return (
     <span className="source-apple-mark" aria-hidden="true">
       <svg viewBox="0 0 18 21">
@@ -2029,7 +2109,7 @@ function SourceApplePayMark() {
           d="M12.3.6c.2 1.8-.6 3.7-2.8 4.3-.4-1.9.8-3.8 2.8-4.3ZM8.7 6c1.7 0 2.2-1.1 3.9-.9 1.6.1 2.5.8 3.1 1.7-3.1 1.9-2.6 5.6.5 7-.6 1.6-1.4 3.2-2.4 4.4-1.9 2.4-2.7.6-5 .6s-3.3 1.9-5.1-.8C1.3 14.4.2 9.7 3.1 6.6 4.7 4.9 6.6 5.2 8.7 6Z"
         />
       </svg>
-      Pay
+      {ui("pay")}
     </span>
   );
 }
@@ -2045,6 +2125,7 @@ function SourcePaymentEditor({
   onCancel: () => void;
   onPreviewSaved: () => void;
 }) {
+  const ui = useTranslations("commerceUI");
   const [method, setMethod] = useState<"card" | "apple">("card");
   const [number, setNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -2101,7 +2182,7 @@ function SourcePaymentEditor({
               onChange={() => setMethod("card")}
             />
             <span>
-              <strong>Credit card</strong>
+              <strong>{ui("creditCard")}</strong>
               <small className="source-payment-brands">
                 <b className="visa-mark">VISA</b>
                 {!number && (
@@ -2123,9 +2204,9 @@ function SourcePaymentEditor({
           </label>
           <div className="source-card-fields">
             <label className="form-field">
-              Card number
+              {ui("cardNumber")}
               <input
-                aria-label="Card number"
+                aria-label={ui("cardNumber")}
                 inputMode="numeric"
                 autoComplete="off"
                 disabled={method !== "card"}
@@ -2133,79 +2214,85 @@ function SourcePaymentEditor({
                 onChange={(event) =>
                   setNumber(event.target.value.replace(/[^0-9 ]/g, ""))
                 }
-                placeholder="Card number"
+                placeholder={ui("cardNumber")}
+                data-ui-label="cardNumber"
               />
               <Icon name="lock" />
             </label>
             <div>
               <label className="form-field">
                 {" "}
-                Expiration date (MM / YY)
+                {ui("expirationDateMMYY")}
                 <input
-                  aria-label="Expiration"
+                  aria-label={ui("expiration")}
                   disabled={method !== "card"}
                   value={expiry}
                   onChange={(event) => setExpiry(event.target.value)}
-                  placeholder="Expiration date (MM / YY)"
+                  placeholder={ui("expirationDateMMYY")}
+                  data-ui-label="expiration"
                 />
               </label>{" "}
               <div className="form-field source-security-field">
-                <span>Security code</span>
+                <span>{ui("securityCode")}</span>
                 <input
-                  aria-label="Security code"
+                  aria-label={ui("securityCode")}
                   inputMode="numeric"
                   disabled={method !== "card"}
                   value={cvc}
                   onChange={(event) =>
                     setCvc(event.target.value.replace(/\D/g, ""))
                   }
-                  placeholder="Security code"
+                  placeholder={ui("securityCode")}
+                  data-ui-label="securityCode"
                 />
                 <button
                   type="button"
                   className="source-card-help"
-                  aria-label="About security code"
+                  aria-label={ui("aboutSecurityCode")}
                   aria-expanded={securityHelp}
                   onClick={() => setSecurityHelp((current) => !current)}
+                  data-ui-label="aboutSecurityCode"
                 >
                   ?
                 </button>
                 {securityHelp && (
                   <p className="source-security-help" role="status">
-                    The 3 or 4 digit security code printed on your card.
+                    {ui("the3Or4DigitSecurityCodePrintedOnYour")}
                   </p>
                 )}
               </div>
             </div>
           </div>{" "}
           <div className="form-field source-card-name">
-            <span>Name on card</span>
+            <span>{ui("nameOnCard")}</span>
             <input
               ref={nameInput}
-              aria-label="Name on card"
-              placeholder="Name on card"
+              aria-label={ui("nameOnCard")}
+              placeholder={ui("nameOnCard")}
               value={name}
               disabled={method !== "card"}
               onChange={(event) => setName(event.target.value)}
+              data-ui-label="nameOnCard"
             />
             {name && (
               <button
                 type="button"
-                aria-label="Clear name on card"
+                aria-label={ui("clearNameOnCard")}
                 disabled={method !== "card"}
                 onClick={() => {
                   setName("");
                   nameInput.current?.focus();
                 }}
+                data-ui-label="clearNameOnCard"
               >
                 <Icon name="close" />
               </button>
             )}
           </div>
           <label className="form-field">
-            Nickname (optional){" "}
+            {ui("nicknameOptional")}{" "}
             <input
-              placeholder="Nickname (optional)"
+              placeholder={ui("nicknameOptional")}
               value={nickname}
               onChange={(event) => setNickname(event.target.value)}
             />
@@ -2228,7 +2315,7 @@ function SourcePaymentEditor({
             aria-expanded={billOpen}
             onClick={() => setBillOpen((current) => !current)}
           >
-            <span>Bill to</span>
+            <span>{ui("billTo")}</span>
             {!billOpen && selectedBilling && (
               <span>
                 <strong>
@@ -2238,7 +2325,8 @@ function SourcePaymentEditor({
                 {selectedBilling.street}
                 <br />
                 {selectedBilling.city} {selectedBilling.region}{" "}
-                {selectedBilling.postalCode}, US
+                {selectedBilling.postalCode}
+                {ui("uS")}
               </span>
             )}
             <span className="source-billing-chevron" aria-hidden="true">
@@ -2264,11 +2352,12 @@ function SourcePaymentEditor({
                       {entry.firstName} {entry.lastName}, {entry.street}
                     </strong>
                     <span>
-                      {entry.city} {entry.region} {entry.postalCode}, US,
+                      {entry.city} {entry.region} {entry.postalCode}
+                      {ui("uS_eb65e8")}
                     </span>
                     {entry.phone && <span>{entry.phone}</span>}
                     {entry.isDefault && (
-                      <small className="default-pill">Default</small>
+                      <small className="default-pill">{ui("default")}</small>
                     )}
                   </span>
                 </label>
@@ -2278,48 +2367,48 @@ function SourcePaymentEditor({
                 className="checkout-link"
                 onClick={() => setBillingEditor(true)}
               >
-                ＋ Use a different address
+                {ui("useADifferentAddress_602ad8")}
               </button>
             </div>
           )}
         </div>
         {boundary && (
           <div className="payment-preview-boundary" role="status">
-            <strong>Payment service is not connected.</strong>
-            <p>No payment method was added and no card data was sent.</p>
+            <strong>{ui("paymentServiceIsNotConnected_2881d2")}</strong>
+            <p>{ui("noPaymentMethodWasAddedAndNoCardDataWas")}</p>
             {method === "card" && validCard && (
               <button
                 type="button"
                 className="primary form-submit"
                 onClick={onPreviewSaved}
               >
-                Preview captured post-save state
+                {ui("previewCapturedPostSaveState")}
               </button>
             )}
             {method === "card" && !validCard && (
               <p className="form-error">
-                Check the card fields before previewing the captured state.
+                {ui("checkTheCardFieldsBeforePreviewingTheCapturedState")}
               </p>
             )}
             {method === "apple" && (
               <p className="form-error">
-                Apple Pay is not connected in this reference preview.
+                {ui("applePayIsNotConnectedInThisReferencePreview")}
               </p>
             )}
           </div>
         )}
         <div className="editor-actions">
           <button type="button" className="form-cancel" onClick={onCancel}>
-            Cancel
+            {ui("cancel")}
           </button>
           <button className="primary form-submit" type="submit">
-            Save
+            {ui("save")}
           </button>
         </div>
       </form>
       <Sheet
         open={billingEditor}
-        title="Billing address"
+        title={ui("billingAddress")}
         className="source-address-sheet"
         onClose={() => setBillingEditor(false)}
       >
@@ -2342,15 +2431,19 @@ function SourcePaymentEditor({
 
 export function CartOffer({
   catalog,
+  content,
   storeId,
   open,
   onClose,
 }: {
-  catalog: Catalog;
+  catalog: CartCatalog;
+  content?: ReactNode;
   storeId: string;
   open: boolean;
   onClose: () => void;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const state = useDiscovery();
   const { hasPaymentProfile } = useAccount();
   const offerIds = [
@@ -2391,73 +2484,90 @@ export function CartOffer({
   return (
     <Sheet
       open={open}
-      title={`Add ${formatMoney({ amount: Math.max(0, 5000 - subtotal), currency: "USD" })} to save $20 with your exclusive offer`}
+      title={ui("addValue1ToSave20WithYourExclusiveOffer", {
+        value1: formatMoney(
+          { amount: Math.max(0, 5000 - subtotal), currency: "USD" },
+          intlLocale,
+        ),
+      })}
       onClose={onClose}
       className="cart-offer"
     >
-      <div className="offer-progress">
-        <span style={{ width: `${Math.min(100, subtotal / 50)}%` }} />
-      </div>
-      <div className="offer-products">
-        {products.map((product) => (
-          <article key={product.id}>
-            <Link href={`/products/${product.id}`} onClick={onClose}>
-              <img src={product.images[0]} alt="" />
-              {product.compareAt && (
-                <span className="offer-discount">47% off</span>
-              )}
-              <strong>{product.title}</strong>
+      {content ?? (
+        <>
+          <div className="offer-progress">
+            <span style={{ width: `${Math.min(100, subtotal / 50)}%` }} />
+          </div>
+          <div className="offer-products">
+            {products.map((product) => (
+              <article key={product.id}>
+                <Link href={`/products/${product.id}`} onClick={onClose}>
+                  <img src={product.images[0]} alt="" />
+                  {product.compareAt && (
+                    <span className="offer-discount">{ui("text47Off")}</span>
+                  )}
+                  <strong>{product.title}</strong>
+                  <span>
+                    {formatMoney(product.price, intlLocale)}{" "}
+                    {product.compareAt && (
+                      <del>{formatMoney(product.compareAt, intlLocale)}</del>
+                    )}
+                  </span>
+                </Link>
+                <button
+                  className="offer-heart"
+                  aria-label={ui("saveValue1", { value1: product.title ?? "" })}
+                  aria-pressed={state.saved.includes(product.id)}
+                  onClick={() => state.toggleSaved(product.id)}
+                >
+                  <Icon
+                    name="heart"
+                    filled={state.saved.includes(product.id)}
+                  />
+                </button>
+              </article>
+            ))}
+          </div>
+          <div className="offer-footer">
+            <p>
+              {ui("inYourCart")}{" "}
+              <strong>{lines.reduce((n, line) => n + line.quantity, 0)}</strong>
               <span>
-                {formatMoney(product.price)}{" "}
-                {product.compareAt && (
-                  <del>{formatMoney(product.compareAt)}</del>
-                )}
+                {comparison !== undefined && comparison > subtotal && (
+                  <del>
+                    {formatMoney(
+                      { amount: comparison, currency: "USD" },
+                      intlLocale,
+                    )}
+                  </del>
+                )}{" "}
+                {formatMoney({ amount: subtotal, currency: "USD" }, intlLocale)}
               </span>
-            </Link>
-            <button
-              className="offer-heart"
-              aria-label={`Save ${product.title}`}
-              aria-pressed={state.saved.includes(product.id)}
-              onClick={() => state.toggleSaved(product.id)}
+            </p>
+            <div className="offer-cart-thumbnails" aria-hidden="true">
+              {lines.slice(0, 3).map((line) => {
+                const product = catalog.products.find(
+                  (entry) => entry.id === line.productId,
+                );
+                return product ? (
+                  <img
+                    key={`${line.productId}-${line.variantId}`}
+                    src={product.images[0]}
+                    alt=""
+                  />
+                ) : null;
+              })}
+            </div>
+            <Link
+              className="primary form-submit"
+              onClick={onClose}
+              href={`/checkout?store=${encodeURIComponent(storeId)}${hasPaymentProfile ? "" : "&stage=phone"}`}
             >
-              <Icon name="heart" filled={state.saved.includes(product.id)} />
-            </button>
-          </article>
-        ))}
-      </div>
-      <div className="offer-footer">
-        <p>
-          In your cart{" "}
-          <strong>{lines.reduce((n, line) => n + line.quantity, 0)}</strong>
-          <span>
-            {comparison !== undefined && comparison > subtotal && (
-              <del>{formatMoney({ amount: comparison, currency: "USD" })}</del>
-            )}{" "}
-            {formatMoney({ amount: subtotal, currency: "USD" })}
-          </span>
-        </p>
-        <div className="offer-cart-thumbnails" aria-hidden="true">
-          {lines.slice(0, 3).map((line) => {
-            const product = catalog.products.find(
-              (entry) => entry.id === line.productId,
-            );
-            return product ? (
-              <img
-                key={`${line.productId}-${line.variantId}`}
-                src={product.images[0]}
-                alt=""
-              />
-            ) : null;
-          })}
-        </div>
-        <Link
-          className="primary form-submit"
-          onClick={onClose}
-          href={`/checkout?store=${encodeURIComponent(storeId)}${hasPaymentProfile ? "" : "&stage=phone"}`}
-        >
-          Continue to checkout
-        </Link>
-      </div>
+              {ui("continueToCheckout")}
+            </Link>
+          </div>
+        </>
+      )}
     </Sheet>
   );
 }

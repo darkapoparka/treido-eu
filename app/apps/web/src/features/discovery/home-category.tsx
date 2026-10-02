@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Verified private native photographs. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { Icon } from "./icons";
 import { SourceLink } from "./return-navigation";
 import "./home-category.css";
@@ -15,9 +17,15 @@ const categories = [
   ["Furniture", "furniture"],
 ] as const;
 export function HomeCategoryIntro() {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   return (
     <>
-      <nav className="native-home-categories" aria-label="Home categories">
+      <nav
+        className="native-home-categories"
+        aria-label={ui("homeCategories")}
+        data-ui-label="homeCategories"
+      >
         {categories.map(([name, image]) => (
           <SourceLink
             key={name}
@@ -25,7 +33,7 @@ export function HomeCategoryIntro() {
             startAtTop
           >
             <img src={`/api/reference-media/live-home-${image}-icon`} alt="" />
-            <span>{name}</span>
+            <span>{caption(name)}</span>
           </SourceLink>
         ))}
       </nav>
@@ -36,11 +44,11 @@ export function HomeCategoryIntro() {
       >
         <img
           src="/api/reference-media/live-home-living-room"
-          alt="Paper lantern beside a vase of branches"
+          alt={ui("paperLanternBesideAVaseOfBranches")}
         />
         <div>
-          <strong>Living room glow up</strong>
-          <p>Chic lighting, side tables, and linen layers.</p>
+          <strong>{ui("livingRoomGlowUp")}</strong>
+          <p>{ui("chicLightingSideTablesAndLinenLayers")}</p>
         </div>
         <Icon name="arrow" />
       </SourceLink>
@@ -49,6 +57,7 @@ export function HomeCategoryIntro() {
 }
 
 export function HomeCategoryEditorial() {
+  const ui = useTranslations("discoveryUI");
   return (
     <SourceLink
       className="native-home-editorial"
@@ -57,11 +66,11 @@ export function HomeCategoryEditorial() {
     >
       <img
         src="/api/reference-media/live-explore-cozy-room"
-        alt="Architectural Digest's cozy living room"
+        alt={ui("architecturalDigestSCozyLivingRoom")}
       />
       <div>
-        <strong>Architectural Digest&apos;s cozy edit</strong>
-        <p>Make your home feel like a sanctuary this fall.</p>
+        <strong>{ui("architecturalDigestSCozyEdit")}</strong>
+        <p>{ui("makeYourHomeFeelLikeASanctuaryThisFall")}</p>
       </div>
     </SourceLink>
   );

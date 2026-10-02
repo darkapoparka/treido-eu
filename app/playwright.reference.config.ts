@@ -1,7 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
-// Stop the other web runtime before using REFERENCE_DEV=1: Next shares .next.
-const development = process.env.REFERENCE_DEV === "1";
+// Reference data is development-only. Production gets separate fail-closed smoke
+// checks, never fixture journeys through next start. Without an external preview,
+// stop another runtime that owns this workspace's .next directory.
 // A confirmed local preview can serve captures and journey tests without two
 // Next processes writing .next. CI retains its existing owned-server default.
 const externalPreview = process.env.REFERENCE_BASE_URL;
@@ -11,11 +12,12 @@ if (externalPreview) {
     !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
     url.protocol !== "http:" ||
     url.username ||
-    url.password
+    url.password ||
+    url.port === "6412"
   )
     throw new Error("Reference journeys require the owned loopback preview");
 }
-// Build first for the default production run. Media is deliberately acquired.
+// Media is deliberately acquired; it is never an implicit install-time download.
 export default defineConfig({
   testDir: "./tests/reference",
   fullyParallel: false,
@@ -49,9 +51,14 @@ export default defineConfig({
   webServer: externalPreview
     ? undefined
     : {
-        command: `pnpm --filter @treido/web exec next ${development ? "dev" : "start"} --hostname 127.0.0.1 --port 3103`,
+        command:
+          "pnpm --filter @treido/web exec next dev --hostname 127.0.0.1 --port 3103",
         url: "http://127.0.0.1:3103",
-        env: { SHOP_REFERENCE_PREVIEW: "1", VERCEL_ENV: "preview" },
+        env: {
+          SHOP_REFERENCE_PREVIEW: "1",
+          VERCEL_ENV: "preview",
+          NODE_ENV: "development",
+        },
         reuseExistingServer: false,
         timeout: 60_000,
       },

@@ -9,7 +9,9 @@
     "pnpm": "12.3.4"
   },
   "scripts": {
+    "test:database": "vitest run --config vitest.database.config.mjs",
     "dev:web": "pnpm --filter @treido/web dev:preview",
+    "dev:platform": "pnpm --filter @treido/web dev:platform",
     "dev:mobile": "pnpm --filter @treido/mobile dev",
     "build:web": "turbo run build --filter=@treido/web",
     "start:web": "pnpm --filter @treido/web start",
@@ -20,7 +22,13 @@
     "test:unit": "vitest run",
     "test:smoke:web": "playwright test",
     "native:check": "pnpm --filter @treido/mobile native:check",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit"
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit",
+    "test:tooling": "node --test apps/web/scripts/preview-options.test.mjs apps/web/scripts/platform-options.test.mjs",
+    "ci:format": "prettier --check package.json apps/web/tsconfig.ci.json scripts/ci tests/workspace.test.ts ../.github/workflows/ci.yml",
+    "ci:lint": "pnpm --filter @treido/web exec eslint src scripts/dev-preview.mjs scripts/preview-options.mjs scripts/preview-options.test.mjs --max-warnings=0 && eslint packages/contracts/src scripts/ci tests/workspace.test.ts --max-warnings=0",
+    "ci:types": "pnpm --filter @treido/contracts typecheck && pnpm --filter @treido/web exec next typegen && pnpm --filter @treido/web exec tsc --noEmit --incremental false -p tsconfig.ci.json",
+    "test:ci": "node --test scripts/ci/production-output.test.mjs",
+    "ci:verify-output": "node scripts/ci/production-output.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

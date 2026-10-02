@@ -6,7 +6,7 @@ export function ProductDescriptionContent({
   preview = false,
   onExternal,
 }: {
-  product: Product;
+  product: Pick<Product, "description" | "detail">;
   preview?: boolean;
   onExternal?: () => void;
 }) {

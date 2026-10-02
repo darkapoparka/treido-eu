@@ -1,4 +1,6 @@
 "use client";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Sheet, commitSheetQuery } from "./components";
 import { useSheetStages } from "./sheet-stages";
@@ -61,6 +63,8 @@ export function Filters({
   value: initialValue,
   onChange: commit,
 }: FilterProps) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   // Keep native controlled inputs in this sheet synchronous with their event.
   // The URL remains the committed result state, but its external-store update
   // can arrive after the browser checks whether a checkbox changed.
@@ -229,7 +233,7 @@ export function Filters({
               });
           }}
         >
-          {option}
+          {caption(option)}
           {opensChildren ? (
             <Icon name="chevron" />
           ) : (
@@ -245,14 +249,14 @@ export function Filters({
     <>
       <Sheet
         open={open && flow.active}
-        title="Filter"
+        title={ui("filter")}
         className={`${styles.filterSheet} filter-tall ${section ? "filter-covered" : ""}`}
         onClose={() => flow.close()}
         manageHistory={false}
       >
         <div className="filter-options">
           <label>
-            Your deals
+            {ui("yourDeals")}
             <input
               type="checkbox"
               checked={value.deals}
@@ -268,9 +272,9 @@ export function Filters({
                 flow.navigate(key);
               }}
             >
-              {names[key]}
+              {caption(names[key])}
               <span className="filter-value">
-                {value[key]}
+                {caption(value[key])}
                 <Icon name="back" />
               </span>
             </button>
@@ -282,20 +286,20 @@ export function Filters({
             className="pill"
             onClick={() => onChange({ ...emptyFilters })}
           >
-            Clear all
+            {ui("clearAll")}
           </button>
           <button
             type="button"
             className="primary"
             onClick={() => flow.close()}
           >
-            Done
+            {ui("done")}
           </button>
         </div>
       </Sheet>
       <Sheet
         open={open && flow.active && section !== null}
-        title={section ? names[section] : "Filter"}
+        title={section ? caption(names[section]) : ui("filter")}
         className={`${styles.filterSheet} ${section === "sort" ? "filter-short" : "filter-tall"} ${section === "category" && categoryPath ? "filter-covered" : ""}`}
         onClose={closeSection}
         manageHistory={false}
@@ -314,16 +318,16 @@ export function Filters({
               onChange({ ...value, [section]: emptyFilters[section] })
             }
           >
-            Reset
+            {ui("reset")}
           </button>
           <button type="button" className="primary" onClick={closeSection}>
-            Done
+            {ui("done")}
           </button>
         </div>
       </Sheet>
       <Sheet
         open={open && flow.active && section === "category" && categoryPath}
-        title="Women"
+        title={ui("women")}
         className={`${styles.filterSheet} filter-tall ${unavailableCategory ? "filter-covered" : ""}`}
         onClose={() => flow.back()}
         manageHistory={false}
@@ -339,22 +343,21 @@ export function Filters({
             disabled={!value.category}
             onClick={() => onChange({ ...value, category: "" })}
           >
-            Reset
+            {ui("reset")}
           </button>
           <button type="button" className="primary" onClick={() => flow.back()}>
-            Done
+            {ui("done")}
           </button>
         </div>
       </Sheet>
       <Sheet
         open={open && flow.active && !!unavailableCategory}
-        title={unavailableCategory}
+        title={caption(unavailableCategory)}
         onClose={() => flow.back()}
         manageHistory={false}
       >
         <p className="sheet-copy">
-          These subcategories are not included in the captured reference. Your
-          current filters are unchanged.
+          {ui("theseSubcategoriesAreNotIncludedInTheCapturedReferenceYour")}
         </p>
       </Sheet>
     </>

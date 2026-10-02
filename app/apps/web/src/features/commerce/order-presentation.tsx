@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Icon, type IconName } from "../discovery/icons";
 import { ProductCard } from "../discovery/components";
@@ -133,18 +134,19 @@ export function OrderProgress({
   phase: "waiting" | "label" | "transit" | "delivered";
   carrier?: string;
 }) {
+  const ui = useTranslations("commerceUI");
   return (
     <div
       className={styles.progress}
       data-order-phase={phase}
       aria-label={
         phase === "waiting"
-          ? "Waiting for carrier details"
+          ? ui("waitingForCarrierDetails")
           : phase === "label"
-            ? "Shipping label created"
+            ? ui("shippingLabelCreated")
             : phase === "transit"
-              ? "Package in transit"
-              : "Package delivered"
+              ? ui("packageInTransit")
+              : ui("packageDelivered")
       }
     >
       <span className={styles.progressFill} />
@@ -195,6 +197,7 @@ export function OrderBrand({
   number: string;
   tracking?: boolean;
 }) {
+  const ui = useTranslations("commerceUI");
   return (
     <div
       className={`${styles.orderBrand} ${tracking ? styles.trackingBrand : styles.detailBrand}`}
@@ -205,11 +208,16 @@ export function OrderBrand({
         alt="KITSCH"
       />
       {tracking ? (
-        <p className={styles.orderBrandDate}>#{number} · Jul 27, 2026</p>
+        <p className={styles.orderBrandDate}>
+          #{number} {ui("jul272026")}
+        </p>
       ) : (
         <div className={styles.orderBrandDate}>
-          <strong>Order #{number}</strong>
-          <p>Jul 27, 2026</p>
+          <strong>
+            {ui("order")}
+            {number}
+          </strong>
+          <p>{ui("jul272026_06535c")}</p>
         </div>
       )}
     </div>
@@ -235,11 +243,12 @@ export function ManageOrderIcon() {
 }
 
 export function OrderRecommendations({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("commerceUI");
   return (
     <>
       <h2 className={styles.recommendationHeading}>
         <SourceLink href="/stores/kitsch" startAtTop>
-          Popular at KITSCH <span aria-hidden="true">›</span>
+          {ui("popularAtKITSCH")} <span aria-hidden="true">›</span>
         </SourceLink>
       </h2>
       <div className={`product-rail ${styles.orderRecommendations}`}>

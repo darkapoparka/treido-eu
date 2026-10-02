@@ -13,7 +13,11 @@ export default defineConfig({
     command:
       "pnpm --filter @treido/web exec next start --hostname 127.0.0.1 --port 3102",
     port: 3102,
-    env: { SHOP_REFERENCE_PREVIEW: "0" },
+    // Exercise both ordinary production and an attempted reference opt-in.
+    env: {
+      SHOP_REFERENCE_PREVIEW:
+        process.env.REFERENCE_SMOKE_OPT_IN === "1" ? "1" : "0",
+    },
     reuseExistingServer: false,
     timeout: 60_000,
   },

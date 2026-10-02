@@ -1,4 +1,7 @@
 "use client";
+import { displayCount } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { formatMoney, type Catalog, type Product } from "../catalog/types";
 import { ProductCard, StoreRow } from "./components";
 import { SourceLink } from "./return-navigation";
@@ -20,6 +23,8 @@ export function HomeMerchantShelves({
   onMore: (id: string) => void;
   onUndo: (id: string) => void;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const storeIds = catalog.liveHomeStoreIds ?? [];
   const interested =
     recommendation?.referenceStyle === "android" &&
@@ -54,9 +59,9 @@ export function HomeMerchantShelves({
             {hidden.includes(id) ? (
               <div className="hidden-shop">
                 <Icon name="eye-off" />
-                <p>We’ll show you less like this</p>
+                <p>{ui("weLlShowYouLessLikeThis")}</p>
                 <button type="button" onClick={() => onUndo(id)}>
-                  Undo
+                  {ui("undo")}
                 </button>
               </div>
             ) : product ? (
@@ -70,15 +75,15 @@ export function HomeMerchantShelves({
                   {product.rating !== undefined && product.ratingCount && (
                     <span className="rating">
                       <ReviewStars rating={product.rating} /> (
-                      {product.ratingCount})
+                      {displayCount(product.ratingCount, intlLocale)})
                     </span>
                   )}
                   <span>
-                    {formatMoney(product.price)}
+                    {formatMoney(product.price, intlLocale)}
                     {product.compareAt && (
                       <>
                         {" "}
-                        <del>{formatMoney(product.compareAt)}</del>
+                        <del>{formatMoney(product.compareAt, intlLocale)}</del>
                       </>
                     )}
                   </span>
@@ -103,7 +108,7 @@ export function HomeMerchantShelves({
                   : `Shop all at ${store.name}`
               }
             >
-              <strong>{product ? "Still interested?" : "Shop all"}</strong>
+              <strong>{product ? ui("stillInterested") : ui("shopAll")}</strong>
               <span>
                 <Icon name="arrow" />
               </span>

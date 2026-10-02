@@ -1,0 +1,20 @@
+import type { DraftPayload } from "../selling/draft-model";
+export type PublishedListing = {
+  id: string;
+  revision: number;
+  publishedAt: string;
+  seller: { id: string; name: string; kind: "personal" | "business" };
+  title: string;
+  description: string;
+  categoryId: NonNullable<DraftPayload["categoryId"]>;
+  condition: DraftPayload["condition"];
+  fields: DraftPayload["fields"];
+  price: { amount: number; currency: "EUR" };
+  locality: string;
+  country: "BG";
+  handover: ("pickup" | "shipping")[];
+  deliveryDetails: string;
+  defects: string;
+  photos: { id: string; url: string; width: number; height: number }[];
+  purchaseMode: "contact";
+};

@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, type KeyboardEvent } from "react";
@@ -38,6 +40,7 @@ function LiveNotificationDialog({
   onAllow: () => void;
   onDeny: () => void;
 }) {
+  const ui = useTranslations("accountUI");
   const permission = stage === "permission";
   const cycleActions = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Tab" || event.altKey || event.ctrlKey || event.metaKey)
@@ -59,8 +62,8 @@ function LiveNotificationDialog({
       open={stage !== null}
       title={
         permission
-          ? "Allow Shop to send you notifications?"
-          : "Skip notifications?"
+          ? ui("allowShopToSendYouNotifications")
+          : ui("skipNotifications")
       }
       onClose={onClose}
       headerless
@@ -79,30 +82,29 @@ function LiveNotificationDialog({
             />
           </svg>
           <h2 className="live-notification-heading" aria-hidden="true">
-            Allow <strong>Shop</strong> to send you notifications?
+            {ui("allow")} <strong>Shop</strong> {ui("toSendYouNotifications")}
           </h2>
           <p className="sr-only">
-            Local reference preview only. Neither choice changes your browser or
-            Android notification permission.
+            {ui("localReferencePreviewOnlyNeitherChoiceChangesYourBrowserOr")}
           </p>
           <div
             className="live-notification-permission-actions"
             onKeyDown={cycleActions}
           >
             <button type="button" autoFocus onClick={onAllow}>
-              Allow
+              {ui("allow")}
             </button>
             <button type="button" onClick={onDeny}>
-              Don’t allow
+              {ui("donTAllow")}
             </button>
           </div>
         </>
       ) : (
         <>
           <h2 className="live-notification-heading" aria-hidden="true">
-            Skip notifications?
+            {ui("skipNotifications")}
           </h2>
-          <p>You won’t be able to receive order updates from Shop.</p>
+          <p>{ui("youWonTBeAbleToReceiveOrderUpdatesFrom")}</p>
           <div
             className="live-notification-skip-actions"
             onKeyDown={cycleActions}
@@ -113,14 +115,14 @@ function LiveNotificationDialog({
               autoFocus
               onClick={onSkip}
             >
-              Skip
+              {ui("skip")}
             </button>
             <button
               className="live-notification-turn-on-action"
               type="button"
               onClick={onTurnOn}
             >
-              Turn on
+              {ui("turnOn")}
             </button>
           </div>
         </>
@@ -130,36 +132,36 @@ function LiveNotificationDialog({
 }
 
 export function SupportPage({ android = false }: { android?: boolean }) {
+  const ui = useTranslations("accountUI");
   return (
     <AccountPage
       android={android}
-      title="Support"
+      title={ui("support")}
       className={`account-settings-page support-page${android ? " android-support" : ""}`}
     >
       <div className="support-links">
         <Link href="https://help.shop.app/en/shop">
           <AccountIcon name="person-question" />
           <div>
-            Help Center
+            {ui("helpCenter")}
             <small>
-              Learn more about your account, Shop Pay, or order tracking
+              {ui("learnMoreAboutYourAccountShopPayOrOrderTracking")}
             </small>
           </div>
         </Link>
         <SourceLink href="/support/chat">
           <AccountIcon name="support-chat" />
           <div>
-            Support Chat
-            <small>Ask questions, and get support from our AI assistant</small>
+            {ui("supportChat")}
+            <small>{ui("askQuestionsAndGetSupportFromOurAIAssistant")}</small>
           </div>
         </SourceLink>
         <Link href="/about">
           <AccountIcon name="info" />
           <div>
-            About
+            {ui("about")}
             <small>
-              Learn more about Shop, read our privacy policy, and terms and
-              conditions
+              {ui("learnMoreAboutShopReadOurPrivacyPolicyAndTerms")}
             </small>
           </div>
         </Link>
@@ -168,8 +170,10 @@ export function SupportPage({ android = false }: { android?: boolean }) {
   );
 }
 export function HelpPage() {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   return (
-    <AccountPage title="Help Center">
+    <AccountPage title={ui("helpCenter")}>
       <div className="help-topics">
         {[
           [
@@ -188,10 +192,12 @@ export function HelpPage() {
             "/account/payments",
           ],
         ].map(([title, copy, href]) => (
-          <details key={title}>
-            <summary>{title}</summary>
+          <details key={caption(title)}>
+            <summary>{caption(title)}</summary>
             <p>{copy}</p>
-            <Link href={href}>View {title.toLowerCase()} ›</Link>
+            <Link href={href}>
+              {ui("view")} {title.toLowerCase()} ›
+            </Link>
           </details>
         ))}
       </div>
@@ -200,6 +206,8 @@ export function HelpPage() {
 }
 export { SupportChat } from "./support-chat";
 export function AboutPage() {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const [document, setDocument] = useState("");
   return (
     <AccountPage className="source-about">
@@ -212,9 +220,9 @@ export function AboutPage() {
         />
       </div>
       <p className="centered">
-        Pay Better. Track Better.
+        {ui("payBetterTrackBetter")}
         <br />
-        Shop Better.
+        {ui("shopBetter")}
         <a href="https://shop.app">shop.app</a>
       </p>
       <div className="about-links">
@@ -239,7 +247,7 @@ export function AboutPage() {
                 <AccountIcon
                   name={(["clipboard", "lock", "document-check"] as const)[i]}
                 />
-                {label}
+                {caption(label)}
               </span>
               <Icon name="chevron" />
             </button>
@@ -247,44 +255,57 @@ export function AboutPage() {
         )}
       </div>
       <div className="about-social">
-        <a href="https://twitter.com/shop" aria-label="Shop on Twitter">
+        <a
+          href="https://twitter.com/shop"
+          aria-label={ui("shopOnTwitter")}
+          data-ui-label="shopOnTwitter"
+        >
           <AccountIcon name="twitter" />
         </a>
-        <a href="https://www.instagram.com/shop" aria-label="Shop on Instagram">
+        <a
+          href="https://www.instagram.com/shop"
+          aria-label={ui("shopOnInstagram")}
+          data-ui-label="shopOnInstagram"
+        >
           <AccountIcon name="instagram" />
         </a>
       </div>
       <p className="about-legal">
-        <span>By using Shop, you agree to the</span>
+        <span>{ui("byUsingShopYouAgreeToThe")}</span>
         <span>
           <a href="https://shop.app/terms-of-service?locale=en-US">
-            Terms and conditions
+            {ui("termsAndConditions")}
           </a>{" "}
-          and{" "}
+          {ui("and")}{" "}
           <a href="https://www.shopify.com/legal/privacy/consumers">
-            Privacy policy
+            {ui("privacyPolicy")}
           </a>
           .
         </span>
       </p>
-      <small className="about-version">VERSION 2.266.0-RELEASE.377556</small>
-      <Sheet open={!!document} title={document} onClose={() => setDocument("")}>
-        <p>The source capture does not include the app’s license list.</p>
+      <small className="about-version">{ui("vERSION22660RELEASE377556")}</small>
+      <Sheet
+        open={!!document}
+        title={caption(document)}
+        onClose={() => setDocument("")}
+      >
+        <p>{ui("theSourceCaptureDoesNotIncludeTheAppSLicense")}</p>
         <button className="form-cancel" onClick={() => setDocument("")}>
-          Close
+          {ui("close")}
         </button>
       </Sheet>
     </AccountPage>
   );
 }
 export function NotificationsPage() {
+  const ui = useTranslations("accountUI");
   return (
-    <AccountPage title="Notifications">
+    <AccountPage title={ui("notifications")}>
       <div className="notification-empty">
-        <h2>Nothing to see yet</h2>
-        <p>You’ll get updates on your account and shopping activity here.</p>
+        <h2>{ui("nothingToSeeYet")}</h2>
+        <p>{ui("youLlGetUpdatesOnYourAccountAndShoppingActivity")}</p>
         <Link className="primary notification-shopping" href="/">
-          Start shopping
+          {ui("startShopping")}
         </Link>
       </div>
     </AccountPage>
@@ -298,6 +319,8 @@ export function OnboardingPage({
   catalog: Catalog;
   initialStep?: number;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const params = useSearchParams();
   const stage = params.get("step");
   const step =
@@ -361,7 +384,7 @@ export function OnboardingPage({
     return (
       <AccountPage dock={false} className="source-intro discover-intro">
         <small className="intro-powered">
-          Powered by{" "}
+          {ui("poweredBy_fdc5d2")}{" "}
           <b>
             <svg aria-hidden="true" viewBox="0 0 20 22">
               <path
@@ -401,9 +424,9 @@ export function OnboardingPage({
           ))}
         </div>
         <h1>
-          Discover your next
+          {ui("discoverYourNext")}
           <br />
-          favorite brand
+          {ui("favoriteBrand")}
         </h1>
         <div className="intro-actions">
           <Link
@@ -413,7 +436,8 @@ export function OnboardingPage({
                 ? "/login?reference=captured&journey=new"
                 : "/login?journey=new"
             }
-            aria-label="Continue to sign in"
+            aria-label={ui("continueToSignIn")}
+            data-ui-label="continueToSignIn"
           >
             <img
               className="discover-loading-mark"
@@ -422,14 +446,14 @@ export function OnboardingPage({
             />
           </Link>
           <p>
-            By proceeding to use Shop, you agree to our
+            {ui("byProceedingToUseShopYouAgreeToOur")}
             <br />
             <Link href="https://shop.app/terms-of-service">
-              terms of service
+              {ui("termsOfService")}
             </Link>{" "}
-            and{" "}
+            {ui("and")}{" "}
             <Link href="https://www.shopify.com/legal/privacy/consumers">
-              privacy policy
+              {ui("privacyPolicy_2b7281")}
             </Link>
             .
           </p>
@@ -443,7 +467,7 @@ export function OnboardingPage({
         className={`source-intro ${motion ? "intro-motion" : ""} ${currentLiveIntro ? "current-live-intro" : ""} ${returningWelcome ? "current-returning-welcome" : ""}`}
       >
         <small className="intro-powered">
-          Powered by{" "}
+          {ui("poweredBy_fdc5d2")}{" "}
           <b>
             <svg aria-hidden="true" viewBox="0 0 20 22">
               <path
@@ -461,10 +485,11 @@ export function OnboardingPage({
           <button
             type="button"
             className="onboarding-skip"
-            aria-label="Skip Get Started"
+            aria-label={ui("skipGetStarted")}
             onClick={() => setStep(3)}
+            data-ui-label="skipGetStarted"
           >
-            Skip
+            {ui("skip")}
           </button>
         )}
         {currentLiveIntro ? (
@@ -518,17 +543,17 @@ export function OnboardingPage({
               navigateAccountStage(`/onboarding?${query}`);
             }}
           >
-            Get Started
+            {ui("getStarted_983f31")}
           </Link>
           <p>
-            By proceeding to use Shop, you agree to our
+            {ui("byProceedingToUseShopYouAgreeToOur")}
             <br />
             <Link href="https://shop.app/terms-of-service">
-              terms of service
+              {ui("termsOfService")}
             </Link>{" "}
-            and{" "}
+            {ui("and")}{" "}
             <Link href="https://www.shopify.com/legal/privacy/consumers">
-              privacy policy
+              {ui("privacyPolicy_2b7281")}
             </Link>
             .
           </p>
@@ -560,9 +585,9 @@ export function OnboardingPage({
             else finishPreviewOnboarding();
           }}
         >
-          Skip
+          {ui("skip")}
         </button>
-        {step === 0 && <small>Powered by Shopify</small>}
+        {step === 0 && <small>{ui("poweredByShopify")}</small>}
         {step === 1 && (
           <div className="preference-onboarding-art">
             <div className="preference-onboarding-art-inner">
@@ -613,24 +638,24 @@ export function OnboardingPage({
           {step === 0 ? (
             "shop"
           ) : step === 1 ? (
-            "What are you shopping for?"
+            ui("whatAreYouShoppingFor")
           ) : step === 2 ? (
-            "Track all of your orders in one place"
+            ui("trackAllOfYourOrdersInOnePlace")
           ) : (
             <>
-              Follow your order every step
+              {ui("followYourOrderEveryStep")}
               <br />
-              of the way
+              {ui("ofTheWay")}
             </>
           )}
         </h1>
         {step > 0 && step < 3 && (
           <p>
             {step === 1
-              ? "We'll show you brands and products that match your style and interests"
+              ? ui("weLlShowYouBrandsAndProductsThatMatchYour")
               : step === 2
-                ? "Connect the email you use for online shopping to track your orders with Shop."
-                : "Get updates about your orders."}
+                ? ui("connectTheEmailYouUseForOnlineShoppingToTrack")
+                : ui("getUpdatesAboutYourOrders")}
           </p>
         )}
         {step === 1 && (
@@ -642,7 +667,7 @@ export function OnboardingPage({
                 aria-pressed={choice === c}
                 onClick={() => setChoice(c)}
               >
-                {c}
+                {caption(c)}
               </button>
             ))}
           </div>
@@ -669,10 +694,10 @@ export function OnboardingPage({
           {step === 0 ? (
             <>
               <Link className="primary form-submit" href="/login">
-                Get Started
+                {ui("getStarted_983f31")}
               </Link>
               <button className="form-cancel" onClick={() => setStep(1)}>
-                Explore the preview
+                {ui("exploreThePreview")}
               </button>
             </>
           ) : step === 1 ? (
@@ -684,7 +709,7 @@ export function OnboardingPage({
                 else setStep(2);
               }}
             >
-              Next
+              {ui("next")}
             </button>
           ) : step === 2 ? (
             <>
@@ -697,10 +722,10 @@ export function OnboardingPage({
                   src="/api/reference-media/connection-google"
                   alt=""
                 />{" "}
-                Connect Google
+                {ui("connectGoogle")}
               </Link>
               <small>
-                We’ll only use shopping-related emails for order tracking.
+                {ui("weLlOnlyUseShoppingRelatedEmailsForOrderTracking")}
               </small>
             </>
           ) : (
@@ -714,11 +739,10 @@ export function OnboardingPage({
                   else setPermission(true);
                 }}
               >
-                Get tracking updates
+                {ui("getTrackingUpdates")}
               </button>
               <small>
-                We will also send you updates with information about your
-                orders, special offers, and news.
+                {ui("weWillAlsoSendYouUpdatesWithInformationAboutYour")}
               </small>
             </>
           )}

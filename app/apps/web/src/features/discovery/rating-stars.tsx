@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 type RatingStarVariant = "standard" | "rounded";
 
 export function RatingStar({
@@ -34,12 +35,13 @@ export function ReviewStars({
   label?: string;
   variant?: RatingStarVariant;
 }) {
+  const ui = useTranslations("discoveryUI");
   const fill = Math.max(0, Math.min(5, rating)) * 20;
   return (
     <span
       className="review-rating-stars"
       role="img"
-      aria-label={label ?? `${rating} out of 5 stars`}
+      aria-label={label ?? ui("ratingNumberOutOf5Stars", { rating })}
     >
       <span className="review-rating-stars-empty" aria-hidden="true">
         <StarRow variant={variant} />

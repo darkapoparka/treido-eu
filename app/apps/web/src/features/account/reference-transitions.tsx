@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "../discovery/hydration-boundary";
 /* eslint-disable @next/next/no-img-element -- Allowlisted reference branding. */
 import { useEffect } from "react";
@@ -14,6 +15,7 @@ export function ShopSplash({
   newJourney?: boolean;
   captured?: boolean;
 }) {
+  const ui = useTranslations("accountUI");
   const router = useRouter();
   useEffect(() => {
     const timer = window.setTimeout(
@@ -32,7 +34,8 @@ export function ShopSplash({
   return (
     <ShopSurface
       className={"shop-splash" + (newJourney ? " purple" : "")}
-      aria-label="Shop loading"
+      aria-label={ui("shopLoading")}
+      data-ui-label="shopLoading"
     >
       <img
         className="splash-wordmark"
@@ -43,7 +46,7 @@ export function ShopSplash({
       />
       {!newJourney && (
         <div className="splash-powered">
-          powered by{" "}
+          {ui("poweredBy")}{" "}
           <b>
             <svg viewBox="0 0 20 22" aria-hidden="true">
               <path
@@ -65,6 +68,7 @@ export function ShopSplash({
 // Reachable only by explicitly choosing the captured completion in the
 // unconnected-provider boundary. This is not a submitted deletion request.
 export function DeletionOutcomePreview({ received }: { received: boolean }) {
+  const ui = useTranslations("accountUI");
   const router = useRouter();
   useEffect(() => {
     if (received) return;
@@ -82,27 +86,29 @@ export function DeletionOutcomePreview({ received }: { received: boolean }) {
       <Link
         className="deletion-received-close"
         href="/account/privacy"
-        aria-label="Close captured deletion example"
+        aria-label={ui("closeCapturedDeletionExample")}
+        data-ui-label="closeCapturedDeletionExample"
       >
         <Icon name="close" />
       </Link>
       <div className="deletion-received-copy">
-        <h1>Your deletion request has been received</h1>
-        <p>Your data will be deleted within 30 days.</p>
+        <h1>{ui("yourDeletionRequestHasBeenReceived")}</h1>
+        <p>{ui("yourDataWillBeDeletedWithin30Days")}</p>
       </div>
       <span className="sr-only">
-        Captured reference example. No deletion request was submitted.
+        {ui("capturedReferenceExampleNoDeletionRequestWasSubmitted")}
       </span>
     </AccountPage>
   ) : (
     <AccountPage className="delete-account-page">
-      <h1>Delete your Shop account</h1>
+      <h1>{ui("deleteYourShopAccount")}</h1>
       <div className="delete-code">
-        <h2>Enter the verification code sent to your email</h2>
+        <h2>{ui("enterTheVerificationCodeSentToYourEmail")}</h2>
         <div
           role="status"
-          aria-label="Captured deletion processing"
+          aria-label={ui("capturedDeletionProcessing")}
           className="deletion-processing-spinner"
+          data-ui-label="capturedDeletionProcessing"
         />
       </div>
     </AccountPage>

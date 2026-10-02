@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.build.json",
+  "include": [
+    "*.ts",
+    "*.mts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.mts",
+    ".qa/treido-ci/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

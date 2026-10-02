@@ -1,4 +1,7 @@
 "use client";
+import { displayRating, displayCount } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
@@ -17,7 +20,8 @@ import {
   useTransition,
   type ChangeEvent,
 } from "react";
-import { formatMoney, type Catalog } from "../catalog/types";
+import { formatMoney } from "../catalog/types";
+import type { SearchCatalog } from "../catalog/search-catalog";
 import {
   FloatingNav,
   IconButton,
@@ -53,9 +57,16 @@ import styles from "./search-entry.module.css";
 import photoStyles from "./search-photo.module.css";
 import "./search-loading.css";
 import "./live-search.css";
+import { readDiscoveryInput } from "../catalog/discovery-input";
+import { BrowseScopeControl, BrowseScopeUnavailable } from "./browse-scope";
+import { useLocale } from "../locale/provider";
+import {
+  discoveryDestination,
+  referenceSearchDestination,
+} from "./browse-scope-route";
 
 const capturedCapPhoto = "/api/reference-media/assistant-uploaded-cap";
-const composerSelector = 'form[role="search"][aria-label="Search products"]';
+const composerSelector = 'form[role="search"].search-form';
 const jeansProgressStorageKey = "shop-jeans-preview-started";
 const filteredStoreDeals: Record<string, string> = {
   "arrow-twenty-two": "Save $5",
@@ -66,13 +77,19 @@ export function Search({
   catalog,
   filters: initialFilters,
 }: {
-  catalog: Catalog;
+  catalog: SearchCatalog;
   query?: string;
   filters: SearchFilters;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const router = useRouter();
   const androidLive = Boolean(catalog.liveHomeStoreIds);
   const params = useSearchParams();
+  const { messages } = useLocale();
+  const text = messages.search;
+  const scoped =
+    readDiscoveryInput(new URLSearchParams(params)).input.seller !== "all";
   // An absent q after browser navigation means an empty query, not the stale
   // server prop from a previous result page.
   const query = params.get("q") ?? "";
@@ -295,7 +312,7 @@ export function Search({
     next.set("answer", "jeans");
     const drafts = prepareSearchDraftOwner("jeans-answer");
     answerOrigin.current = rememberSourcePosition(
-      'button[aria-label="View answer for Jeans"]',
+      'button[data-ui-label="viewAnswerForJeans"]',
     );
     pendingAnswer.current = {
       parent: `${window.location.pathname}${window.location.search}`,
@@ -320,7 +337,12 @@ export function Search({
   }
 
   function update(next: SearchFilters) {
-    commitSheetQuery(searchParameters(query, next));
+    commitSheetQuery(
+      referenceSearchDestination(
+        new URLSearchParams(params),
+        searchParameters(query, next),
+      ),
+    );
   }
   function closeSuggestions() {
     setFocused(false);
@@ -341,13 +363,13 @@ export function Search({
     setPhotoUnavailable(false);
     requestAnimationFrame(() => inputRef.current?.focus());
   }
-  function submitQuery(value: string) {
+  function submitQuery(value: string, now: number) {
     const next = value.trim();
     const previewJeans = next.toLowerCase() === "jeans";
-    const startedAt = previewJeans ? Date.now() : 0;
+    const startedAt = previewJeans ? now : 0;
     jeansProgressQueued.current = previewJeans;
     jeansProgressStarted.current = startedAt;
-    setJeansProgress(jeansProgressAt(startedAt, Date.now()));
+    setJeansProgress(jeansProgressAt(startedAt, now));
     setJeansProgressRequest((request) => request + 1);
     try {
       if (previewJeans)
@@ -361,7 +383,11 @@ export function Search({
     setPhoto("");
     closeSuggestions();
     startTransition(() => {
-      router.push(`/search${next ? `?q=${encodeURIComponent(next)}` : ""}`);
+      const destination = referenceSearchDestination(
+        new URLSearchParams(params),
+        searchParameters(next, filters),
+      );
+      router.push(`/search${destination.size ? `?${destination}` : ""}`);
     });
   }
   function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -369,7 +395,7 @@ export function Search({
     event.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setPhotoError("Choose an image file.");
+      setPhotoError(ui("chooseAnImageFile"));
       return;
     }
     setPhotoError("");
@@ -388,7 +414,7 @@ export function Search({
     <form
       ref={formRef}
       role="search"
-      aria-label="Search products"
+      aria-label={text.products}
       tabIndex={-1}
       className={`search-form ${resultsMode ? "top-search" : "search-composer"} ${styles.composer} ${photo ? styles.photoComposer : ""} ${resultsMode ? styles.resultComposer : ""}`}
       onSubmit={(e) => {
@@ -408,8 +434,15 @@ export function Search({
         if (photo === capturedCapPhoto) {
           composer.update({ draft, photo });
           rememberSourceReturn("/assistant?example=photo", composerSelector);
-          startTransition(() => router.push("/assistant?example=photo"));
-        } else submitQuery(draft);
+          startTransition(() =>
+            router.push(
+              discoveryDestination(
+                "/assistant?example=photo",
+                new URLSearchParams(params),
+              ),
+            ),
+          );
+        } else submitQuery(draft, performance.timeOrigin + e.timeStamp);
       }}
     >
       {resultsMode ? (
@@ -417,7 +450,7 @@ export function Search({
       ) : (
         <IconButton
           icon={androidLive ? "camera" : "plus"}
-          label="Add photos"
+          label={text.photos}
           onClick={() => {
             setPhotoError("");
             setPhotos(true);
@@ -427,8 +460,8 @@ export function Search({
       <input
         key="query"
         ref={inputRef}
-        aria-label="Search products"
-        placeholder={answerOpen ? "Search" : "Search or ask anything"}
+        aria-label={text.products}
+        placeholder={answerOpen ? messages.navigation.search : text.placeholder}
         autoComplete="off"
         enterKeyHint="search"
         value={answerOpen ? "" : draft}
@@ -446,10 +479,10 @@ export function Search({
       />
       {photo && (
         <div className={styles.photoChip}>
-          <img src={photo} alt="Selected photo" />
+          <img src={photo} alt={text.selectedPhoto} />
           <button
             type="button"
-            aria-label="Remove selected photo"
+            aria-label={text.removePhoto}
             onClick={removePhoto}
           >
             <Icon name="close" />
@@ -459,13 +492,13 @@ export function Search({
       {draft && !suggestions && !photo && (
         <IconButton
           icon="close"
-          label="Clear search"
-          onClick={() => submitQuery("")}
+          label={text.clear}
+          onClick={() => submitQuery("", 0)}
         />
       )}
       <button
         className="icon-button"
-        aria-label="Submit search"
+        aria-label={text.submit}
         type="submit"
         disabled={!draft.trim() && !photo}
       >
@@ -494,35 +527,107 @@ export function Search({
         <ContextualCloseLink
           href="/"
           className="android-search-close"
-          aria-label="Close search"
+          aria-label={text.close}
         >
           <Icon name="close" />
         </ContextualCloseLink>
       )}
       {searchForm}
+      {!suggestions && !photoEditing && (
+        <div className="filter-chips">
+          {showResults && !history && (
+            <IconButton
+              icon="filter-circles"
+              label={text.filter}
+              pressed={filtered}
+              onClick={() => {
+                setFilterUnderlay(filters);
+                setFilter(true);
+              }}
+            />
+          )}
+          <BrowseScopeControl />
+          {showResults && !history && (
+            <>
+              <button
+                className="pill"
+                aria-pressed={!!visibleFilters.origin}
+                onClick={() =>
+                  update({
+                    ...filters,
+                    origin: filters.origin ? "" : "United States",
+                  })
+                }
+              >
+                {text.origin}
+                <svg
+                  className={styles.countryFlag}
+                  role="img"
+                  aria-label={ui("unitedStates")}
+                  viewBox="0 0 19 12"
+                  data-ui-label="unitedStates"
+                >
+                  <path fill="#fff" d="M0 0h19v12H0z" />
+                  <path
+                    stroke="#bc4558"
+                    strokeWidth="1.1"
+                    d="M0 .6h19M0 2.5h19M0 4.3h19M0 6.2h19M0 8h19M0 9.8h19M0 11.6h19"
+                  />
+                  <path fill="#52688b" d="M0 0h8v6.6H0z" />
+                  <path
+                    stroke="#fff"
+                    strokeWidth=".5"
+                    strokeDasharray=".5 1.2"
+                    d="M1 1h6M1 2.5h6M1 4h6M1 5.5h6"
+                  />
+                </svg>
+              </button>
+              <button
+                className="pill"
+                aria-pressed={visibleFilters.deals}
+                onClick={() => update({ ...filters, deals: !filters.deals })}
+              >
+                {text.deals}
+              </button>
+              <button
+                className="pill"
+                aria-pressed={visibleFilters.following}
+                onClick={() =>
+                  update({ ...filters, following: !filters.following })
+                }
+              >
+                {messages.navigation.following}
+              </button>
+            </>
+          )}
+        </div>
+      )}
       {photoEditing && (
         <IconButton
           icon="close"
-          label="Cancel photo search"
+          label={ui("cancelPhotoSearch")}
           className={styles.photoClose}
           onClick={() => {
             setPhoto("");
             cancelEditing();
             rememberComposer(query, "", false);
           }}
+          data-ui-label="cancelPhotoSearch"
         />
       )}
       {photoEditing && draft.trim() ? null : suggestions ? (
         <section className="search-suggestions-surface">
           <header>
-            <h2>Suggestions</h2>
+            <h2>{ui("suggestions")}</h2>
             <IconButton
               icon="close"
-              label="Close suggestions"
+              label={ui("closeSuggestions")}
               onClick={cancelEditing}
+              data-ui-label="closeSuggestions"
             />
           </header>
           {androidLive &&
+            !scoped &&
             searchStores(catalog, draft, emptyFilters, [])
               .filter((store) => store.referenceStyle === "android")
               .slice(0, 3)
@@ -587,7 +692,7 @@ export function Search({
             <Link
               className="suggestion-query"
               key={q}
-              href={`/search?q=${encodeURIComponent(q)}`}
+              href={`/search?${referenceSearchDestination(new URLSearchParams(params), searchParameters(q, filters))}`}
               onClick={(event) => {
                 if (
                   event.button === 0 &&
@@ -597,7 +702,7 @@ export function Search({
                   !event.altKey
                 ) {
                   event.preventDefault();
-                  submitQuery(q);
+                  submitQuery(q, performance.timeOrigin + event.timeStamp);
                 }
               }}
             >
@@ -612,74 +717,17 @@ export function Search({
         <SearchLoading />
       ) : history ? (
         <>
-          <h1>Recently viewed</h1>
+          <h1>{ui("recentlyViewed")}</h1>
           <RecentSearchItems
             catalog={catalog}
             expanded
             capturedContinuation={state.capturedSearchHistory}
           />
         </>
+      ) : scoped ? (
+        <BrowseScopeUnavailable />
       ) : showResults ? (
         <>
-          <div className="filter-chips">
-            <IconButton
-              icon="filter-circles"
-              label="Filter"
-              pressed={filtered}
-              onClick={() => {
-                setFilterUnderlay(filters);
-                setFilter(true);
-              }}
-            />
-            <button
-              className="pill"
-              aria-pressed={!!visibleFilters.origin}
-              onClick={() =>
-                update({
-                  ...filters,
-                  origin: filters.origin ? "" : "United States",
-                })
-              }
-            >
-              Sells from
-              <svg
-                className={styles.countryFlag}
-                role="img"
-                aria-label="United States"
-                viewBox="0 0 19 12"
-              >
-                <path fill="#fff" d="M0 0h19v12H0z" />
-                <path
-                  stroke="#bc4558"
-                  strokeWidth="1.1"
-                  d="M0 .6h19M0 2.5h19M0 4.3h19M0 6.2h19M0 8h19M0 9.8h19M0 11.6h19"
-                />
-                <path fill="#52688b" d="M0 0h8v6.6H0z" />
-                <path
-                  stroke="#fff"
-                  strokeWidth=".5"
-                  strokeDasharray=".5 1.2"
-                  d="M1 1h6M1 2.5h6M1 4h6M1 5.5h6"
-                />
-              </svg>
-            </button>
-            <button
-              className="pill"
-              aria-pressed={visibleFilters.deals}
-              onClick={() => update({ ...filters, deals: !filters.deals })}
-            >
-              Your deals
-            </button>
-            <button
-              className="pill"
-              aria-pressed={visibleFilters.following}
-              onClick={() =>
-                update({ ...filters, following: !filters.following })
-              }
-            >
-              Following
-            </button>
-          </div>
           {stores.length > 0 && (
             <div className="search-stores">
               {stores.map((store) => {
@@ -700,7 +748,7 @@ export function Search({
                     ) : (
                       <span className="store-monogram">
                         {store.id === "miss-me"
-                          ? "MM"
+                          ? ui("mM")
                           : store.name
                               .split(/\s+/)
                               .slice(0, 2)
@@ -710,14 +758,16 @@ export function Search({
                     )}
                     {(deal || store.id === "fitjeans") && (
                       <span className={styles.storeDeal}>
-                        {deal ?? "Save $30"}
+                        {deal ?? ui("save30")}
                       </span>
                     )}
                     <strong>{store.name}</strong>
                     {store.rating !== undefined && (
                       <span>
-                        {store.rating} ★
-                        {store.ratingCount ? ` (${store.ratingCount})` : ""}
+                        {displayRating(store.rating, intlLocale)} ★
+                        {store.ratingCount
+                          ? ` (${displayCount(store.ratingCount, intlLocale)})`
+                          : ""}
                       </span>
                     )}
                   </SourceLink>
@@ -761,12 +811,15 @@ export function Search({
                   </SourceLink>
                   {p.ratingCount && (
                     <p className="rating">
-                      <span>★★★★★</span> ({p.ratingCount})
+                      <span>★★★★★</span> (
+                      {displayCount(p.ratingCount, intlLocale)})
                     </p>
                   )}
                   <p>
-                    {formatMoney(p.price)}{" "}
-                    {p.compareAt && <del>{formatMoney(p.compareAt)}</del>}
+                    {formatMoney(p.price, intlLocale)}{" "}
+                    {p.compareAt && (
+                      <del>{formatMoney(p.compareAt, intlLocale)}</del>
+                    )}
                   </p>
                   <div className={styles.resultMerchant}>
                     <SourceLink
@@ -798,20 +851,20 @@ export function Search({
                     className={styles.capturedRelatedProducts}
                     href="/search?q=Valentino%20Blue%20Denim"
                   >
-                    See related products
+                    {ui("seeRelatedProducts")}
                   </Link>
                 )}
               </article>
             ))}
             {!displayedResults.length && (
               <div className="empty-state" role="status">
-                <h2>No results found</h2>
-                <p>Try another search or clear your filters.</p>
+                <h2>{ui("noResultsFound")}</h2>
+                <p>{ui("tryAnotherSearchOrClearYourFilters")}</p>
                 <button
                   className="pill"
                   onClick={() => update({ ...emptyFilters })}
                 >
-                  Clear filters
+                  {ui("clearFilters")}
                 </button>
               </div>
             )}
@@ -819,7 +872,7 @@ export function Search({
           {jeansQuery && (
             <>
               <section className={styles.relatedSearches}>
-                <h2>Related searches</h2>
+                <h2>{ui("relatedSearches")}</h2>
                 <div>
                   {[
                     "light wash jeans",
@@ -846,7 +899,8 @@ export function Search({
                   role="status"
                   aria-live="polite"
                   data-search-progress={jeansProgress.id}
-                  aria-label="Recorded Jeans answer preview"
+                  aria-label={ui("recordedJeansAnswerPreview")}
+                  data-ui-label="recordedJeansAnswerPreview"
                 >
                   <span className={styles.progressSpinner} aria-hidden="true" />
                   <span>{jeansProgress.label}</span>
@@ -857,7 +911,8 @@ export function Search({
                   type="button"
                   className={styles.answerTeaser}
                   onClick={openAnswer}
-                  aria-label="View answer for Jeans"
+                  aria-label={ui("viewAnswerForJeans")}
+                  data-ui-label="viewAnswerForJeans"
                 >
                   <span className={styles.answerThumbnails}>
                     <img
@@ -870,8 +925,8 @@ export function Search({
                     />
                   </span>
                   <span>
-                    From everyday straight legs to bold, vintage-inspired...{" "}
-                    <span className={styles.answerMore}>View more ›</span>
+                    {ui("fromEverydayStraightLegsToBoldVintageInspired")}{" "}
+                    <span className={styles.answerMore}>{ui("viewMore")}</span>
                   </span>
                 </button>
               )}
@@ -880,13 +935,13 @@ export function Search({
         </>
       ) : (
         <>
-          <h1>Search</h1>
+          <h1>{messages.navigation.search}</h1>
           <SourceLink
             className="search-section-heading"
             href="/search?view=recent"
           >
             <h2>
-              Recently viewed <Icon name="back" />
+              {ui("recentlyViewed")} <Icon name="back" />
             </h2>
           </SourceLink>
           <RecentSearchItems
@@ -901,25 +956,26 @@ export function Search({
                 href="/assistant"
               >
                 <h2>
-                  Keep shopping <Icon name="back" />
+                  {ui("keepShopping")} <Icon name="back" />
                 </h2>
               </SourceLink>
               <SourceLink
                 startAtTop
                 className={styles.conversation}
                 href="/assistant"
-                aria-label="Continue Finding the right pair of jeans"
+                aria-label={ui("continueFindingTheRightPairOfJeans")}
+                data-ui-label="continueFindingTheRightPairOfJeans"
               >
                 <img
                   src="/api/reference-media/recent-jeans-conversation"
                   alt=""
                 />
                 <span>
-                  Finding the right pair of jeans
+                  {ui("findingTheRightPairOfJeans")}
                   <small>
                     {state.newlyViewedAnswers.includes("jeans")
-                      ? "Just now"
-                      : "Jul 24"}
+                      ? ui("justNow")
+                      : ui("jul24")}
                   </small>
                 </span>
               </SourceLink>
@@ -929,18 +985,18 @@ export function Search({
       )}
       <Sheet
         open={photos}
-        title="Add photos"
+        title={ui("addPhotos")}
         className={`${styles.photoSheet} ${photoStyles.photoSheet}`}
         onClose={() => setPhotos(false)}
       >
         <label className="account-row">
           <Icon name="photo-library" />
-          Choose from library
+          {ui("chooseFromLibrary")}
           <input type="file" accept="image/*" onChange={selectPhoto} />
         </label>
         <label className="account-row">
           <Icon name="camera" />
-          Take a photo
+          {ui("takeAPhoto")}
           <input
             type="file"
             accept="image/*"
@@ -958,27 +1014,24 @@ export function Search({
             setPhotos(false);
           }}
         >
-          Use captured cap example
+          {ui("useCapturedCapExample")}
         </button>
         {photoError && <p role="alert">{photoError}</p>}
         <p className="form-note">
-          Photos stay on this device. The captured answer can be viewed without
-          sending a photo.
+          {ui("photosStayOnThisDeviceTheCapturedAnswerCanBe")}
         </p>
       </Sheet>
       <Sheet
         open={photoUnavailable}
-        title="Photo search unavailable"
+        title={ui("photoSearchUnavailable")}
         onClose={() => setPhotoUnavailable(false)}
       >
         <p className="sheet-copy">
-          Photo search is not connected. Your photo stays on this device and has
-          not been analyzed. The captured cap example is a separate reference
-          answer, not a result for another photo or a different question.
+          {ui("photoSearchIsNotConnectedYourPhotoStaysOnThis")}
         </p>
         <div className="sheet-actions">
           <button className="pill" onClick={removePhoto}>
-            Remove photo
+            {ui("removePhoto")}
           </button>
           <Link
             className="primary"
@@ -991,7 +1044,7 @@ export function Search({
                 );
             }}
           >
-            View captured example
+            {ui("viewCapturedExample")}
           </Link>
         </div>
       </Sheet>
@@ -1001,7 +1054,7 @@ export function Search({
       )}
       <Sheet
         open={answerOpen}
-        title="Jeans answer"
+        title={ui("jeansAnswer")}
         headerless
         dragHandle
         className={styles.answerSheet}

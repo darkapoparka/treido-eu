@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Private reference photographs. */
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ShopSurface } from "./hydration-boundary";
 import { FloatingNav, IconButton, ProductCard, Sheet } from "./components";
@@ -100,6 +101,7 @@ function EditorialQuote({
 }
 
 export function CozyEdit({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("discoveryUI");
   const [sharing, setSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
@@ -108,38 +110,37 @@ export function CozyEdit({ catalog }: { catalog: Catalog }) {
       <header className="android-curation-hero">
         <img
           src="/api/reference-media/live-explore-cozy-room"
-          alt="Warm living room photographed by Chris Mottalini"
+          alt={ui("warmLivingRoomPhotographedByChrisMottalini")}
         />
         <IconButton
           icon="share-android"
-          label="Share The cozy edit"
+          label={ui("shareTheCozyEdit")}
           className="curation-share"
           onClick={() => {
             setShareUrl(window.location.href);
             setCopyStatus("");
             setSharing(true);
           }}
+          data-ui-label="shareTheCozyEdit"
         />
         <div className="android-curation-copy">
           <div className="android-curation-credit-logo">
-            <span aria-hidden="true">AD</span>Curated by Architectural Digest
+            <span aria-hidden="true">AD</span>
+            {ui("curatedByArchitecturalDigest")}
           </div>
           <h1>
-            The cozy edit by
+            {ui("theCozyEditBy")}
             <br />
             Architectural Digest
           </h1>
-          <p>Make your home feel like a sanctuary this fall.</p>
+          <p>{ui("makeYourHomeFeelLikeASanctuaryThisFall")}</p>
         </div>
       </header>
       <p className="android-curation-photo-credit">
-        Credit: Chris Mottalini; Art: © Alec Soth/Magnum Photos/Weinstein
-        Hammons Gallery
+        {ui("creditChrisMottaliniArtAlecSothMagnumPhotosWeinsteinHammons")}
       </p>
       <p className="android-curation-intro">
-        {
-          "Let AD help you embrace sweater weather with our editors' curation of the softest throws, plushest pillows, moodiest lighting, and more."
-        }
+        {ui("letADHelpYouEmbraceSweaterWeatherWithOurEditors")}
       </p>
       {sections.map((section) => (
         <section
@@ -203,11 +204,11 @@ export function CozyEdit({ catalog }: { catalog: Catalog }) {
       <FloatingNav android back fade />
       <Sheet
         open={sharing}
-        title="Sharing link"
+        title={ui("sharingLink")}
         onClose={() => setSharing(false)}
         className="curation-share-sheet"
       >
-        <label htmlFor="curation-share-url">Link to this edit</label>
+        <label htmlFor="curation-share-url">{ui("linkToThisEdit")}</label>
         <input
           id="curation-share-url"
           value={shareUrl}
@@ -226,7 +227,7 @@ export function CozyEdit({ catalog }: { catalog: Catalog }) {
             }
           }}
         >
-          Copy link
+          {ui("copyLink")}
         </button>
         <p role="status">{copyStatus}</p>
       </Sheet>

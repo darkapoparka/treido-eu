@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "dev:platform": "node --env-file-if-exists=.env.local scripts/dev-platform.mjs",
     "dev:preview": "node scripts/dev-preview.mjs",
     "dev": "next dev --port 3100",
     "build": "next build",
@@ -11,17 +13,27 @@
     "typecheck": "next typegen && tsc --noEmit -p tsconfig.build.json"
   },
   "dependencies": {
+    "@clerk/localizations": "4.21.2",
+    "@clerk/nextjs": "7.9.9",
     "@treido/contracts": "workspace:*",
+    "aws4fetch": "1.0.20",
+    "drizzle-orm": "0.45.3",
+    "inngest": "4.21.0",
     "next": "16.3.4",
+    "next-intl": "4.14.9",
+    "pg": "8.23.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "server-only": "0.0.1",
     "sharp": "0.35.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.13.3",
+    "@types/pg": "8.23.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
+    "embedded-postgres": "18.4.0-beta.17",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "4.3.3",

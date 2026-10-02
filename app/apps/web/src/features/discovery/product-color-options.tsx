@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Verified native product photography. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { ProductVariant } from "../catalog/types";
 import { Sheet } from "./components";
@@ -18,6 +20,8 @@ export function ProductColorOptions({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const [open, setOpen] = useState(false);
   const selected = variants.find((option) => option.id === value);
   const shown = visibleNativeOptions(
@@ -36,7 +40,7 @@ export function ProductColorOptions({
     <>
       <fieldset className="pdp-color-choice native-product-colors">
         <legend>
-          <strong>{label}:</strong> {selected?.label}
+          <strong>{caption(label)}:</strong> {selected?.label}
         </legend>
         <div className="native-color-grid">
           {shown.map((option) => (
@@ -69,7 +73,9 @@ export function ProductColorOptions({
           {shown.length < variants.length && (
             <button
               type="button"
-              aria-label={`View ${variants.length - shown.length} more colors`}
+              aria-label={ui("viewValue1MoreColors", {
+                value1: variants.length - shown.length,
+              })}
               onClick={() => setOpen(true)}
             >
               <span className="native-color-more">
@@ -82,13 +88,13 @@ export function ProductColorOptions({
       <Sheet
         open={open}
         onClose={() => setOpen(false)}
-        title={label}
+        title={caption(label)}
         headerless
         dragHandle
         initialFocus='button[aria-pressed="true"]'
         className="native-color-sheet"
       >
-        <h2 aria-hidden="true">{label}</h2>
+        <h2 aria-hidden="true">{caption(label)}</h2>
         <div className="native-color-list">
           {variants.map((option) => (
             <button
@@ -102,7 +108,7 @@ export function ProductColorOptions({
               <img src={option.referenceColor?.photo} alt="" />
               <span>{option.label}</span>
               {option.referenceColor?.unavailable ? (
-                <small>Sold out</small>
+                <small>{ui("soldOut")}</small>
               ) : value === option.id ? (
                 <Icon name="check" />
               ) : null}
@@ -114,7 +120,7 @@ export function ProductColorOptions({
           type="button"
           onClick={() => setOpen(false)}
         >
-          Close {label}
+          {ui("close")} {caption(label)}
         </button>
       </Sheet>
     </>

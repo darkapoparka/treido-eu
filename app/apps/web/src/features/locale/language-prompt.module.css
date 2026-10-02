@@ -1,0 +1,111 @@
+.prompt {
+  position: fixed;
+  z-index: 39;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, calc(100vw - 32px));
+  display: flex;
+  align-items: stretch;
+  background: #111;
+  color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 5px 22px #0002;
+  padding: 4px;
+}
+.trigger {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  padding: 10px 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.trigger > span:first-of-type {
+  flex: 1;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.trigger small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: #c9c9c9;
+  margin-top: 2px;
+}
+.trigger svg {
+  flex-shrink: 0;
+}
+.dismiss {
+  width: 44px;
+  min-height: 44px;
+  padding: 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.prompt button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+  border-radius: 16px;
+}
+.sheet {
+  max-width: 480px;
+}
+.note {
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.options {
+  display: grid;
+  margin-bottom: 20px;
+}
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  border-bottom: 1px solid var(--color-line);
+  cursor: pointer;
+}
+.option input {
+  width: 22px;
+  height: 22px;
+  accent-color: #111;
+  margin: 0;
+}
+.apply {
+  width: 100%;
+  min-height: 48px;
+  height: auto;
+  white-space: normal;
+}
+.error {
+  color: #b42318;
+  margin-bottom: 12px;
+}
+
+.preferences {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 12px;
+  color: inherit;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.preferences:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 4px;
+}

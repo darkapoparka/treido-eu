@@ -1,23 +1,7 @@
-# Design — Treido Global / general marketplace
+# Design direction
 
-## Visual foundation
+The existing Shop-derived buyer frontend and Shopify-derived Studio are separate scoped visual foundations. **[styling.md](styling.md) is the sole styling and visual-regression contract.** This file remains as a compatibility entry point for older links.
 
-**Current direction, 27 September 2026:** Shop is the proposed single visual/code base. Adapt seller-profile/product containers within its original components, spacing and typography; do not import a second CSS system.
+The approved direction is general physical-goods resale with personal and business sellers. The implemented public browse selector, item-condition/seller disclosures, selling and messaging surfaces retain their existing component families. Read the relevant [UI pattern](docs/ui-patterns.md) and [acceptance protocol](docs/ui-verification.md); the buyer and merchant systems are not interchangeable. Branding/content changes and any visible accessibility correction need a recorded, bounded task; they do not authorize a new theme or a generic dashboard.
 
-Keep Global distinct from Bulgarian food producers. Reuse listing/seller/message/trust knowledge, not food-only cart, merchant or fulfillment assumptions.
-
-Reference selection and UI recommendations are not blanket visual approval. This phase does not code or capture new emulator screens. During Phase 2, compare identical reference/candidate states before changing components; keep original typography, spacing, controls and layout patterns unless a specific product change is approved.
-
-## Product changes
-
-- Replace demo brands/products with original general-goods examples and actual listing photos.
-- Add condition/defects, availability and seller type with restrained existing text hierarchy.
-- Extend selling/inbox/offer and business screens using the donor primitives; do not attach a generic SaaS dashboard theme.
-
-## Working method
-
-After Phase 2 is explicitly requested, open a representative source screen and stateful flow and save a few baseline screenshots. This is a starting reference, not another full-app parity project. Each new screen should reuse a real component example from the actual selected app.
-
-Branding, categories, product content, required fields and usability refinements are expected. Compare affected screens to the baseline, preserve the recognizable visual language, and check return navigation, short/narrow layouts, long copy and keyboard behavior. Do not require identical pixels after intentional content changes.
-
-Use original branding and owned/licensed production media and fonts; keep reference captures private. Text and controls remain real components, not screenshot backgrounds.
+Refactoring first preserves rendered output. Product changes subsequently document their deliberate differences. Reference evidence is not permission to publish Shop branding, private captures, contact details or unlicensed assets. See [operations](docs/operations.md) before public release.

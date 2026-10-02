@@ -1,0 +1,260 @@
+/* Shared data-driven seller chrome; captured palettes remain seller data, not route CSS. */
+.native-merchant-categories:empty {
+  display: none;
+}
+.native-merchant-brand > h1:not(.sr-only) {
+  min-height: 108px;
+  max-width: 100%;
+  gap: 10px;
+}
+.native-merchant-brand > h1:not(.sr-only) > span {
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: clamp(22px, 6.7vw, 29px);
+  line-height: 1.12;
+}
+.native-merchant-brand > h1 > img {
+  width: 64px;
+  height: 64px;
+  flex: none;
+}
+.native-merchant-monogram {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border: 1px solid #ffffff40;
+  border-radius: 50%;
+  background: var(--merchant-panel);
+  color: inherit;
+  font:
+    600 24px/1 ShopSellerBrand,
+    Arial,
+    sans-serif;
+}
+.native-merchant-identity > .native-merchant-monogram {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+.native-merchant-identity > div {
+  min-width: 0;
+}
+.native-merchant-identity b {
+  overflow-wrap: anywhere;
+}
+.native-merchant-brand:has(> h1:not(.sr-only)) {
+  padding-top: 72px;
+}
+.native-merchant-rating-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--merchant-panel);
+  border: 1px solid #ffffff20;
+  border-radius: 24px;
+}
+.native-merchant-rating-product > img {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.native-merchant-rating-product > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 4px;
+}
+.native-merchant-rating-product strong {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.native-merchant-rating-product small {
+  font-size: 12px;
+  line-height: 16px;
+}
+.native-merchant .native-merchant-rating-product .review-rating-stars {
+  --merchant-star: 16px;
+  width: 80px;
+  height: 16px;
+}
+.native-merchant
+  .native-merchant-rating-product
+  .review-rating-stars-fill
+  > span {
+  width: 80px;
+}
+.native-merchant-product-ratings {
+  margin: 24px 0;
+}
+.native-merchant-return-products {
+  margin-top: 16px;
+  min-height: 44px;
+  padding: 12px 20px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--merchant-panel);
+}
+.native-merchant-catalog-preview {
+  margin: 20px 0;
+}
+.native-merchant-catalog-preview h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.native-merchant-catalog-preview > div {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+.native-merchant-catalog-preview img {
+  width: calc((100% - 16px) / 3);
+  max-width: 150px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 20px;
+}
+.native-merchant-search-header {
+  position: fixed;
+  z-index: 35;
+  inset: 8px 16px auto;
+  display: flex;
+  gap: 8px;
+  height: 44px;
+}
+.native-merchant-search-header::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -8px -16px -16px;
+  background: linear-gradient(var(--merchant-bg) 70%, transparent);
+  pointer-events: none;
+}
+.native-merchant-search-header form {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--merchant-panel);
+  border-radius: 999px;
+}
+.native-merchant-search-header form > svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.native-merchant-search-header input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font:
+    400 16px/20px ShopAndroidRoboto,
+    Arial,
+    sans-serif;
+  outline-offset: 3px;
+}
+.native-merchant-search-header input::placeholder {
+  color: inherit;
+  opacity: 0.75;
+}
+.native-merchant-search-header input::-webkit-search-cancel-button {
+  display: none;
+}
+.native-merchant-search-header > .icon-button {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--merchant-panel);
+  color: inherit;
+}
+.native-merchant-search-header form button {
+  flex: none;
+  width: 32px;
+  height: 40px;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+.native-merchant-search-header form button svg {
+  width: 16px;
+  height: 16px;
+}
+.native-merchant-search-title {
+  padding-top: 80px;
+  margin: 0 0 16px;
+  font:
+    600 23.667px/28px ShopSellerBrand,
+    Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.native-merchant-search-count {
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+.native-merchant[data-merchant-tone="dark"]
+  .native-merchant-review-filters
+  > button {
+  color: var(--merchant-ink);
+  background: color-mix(in srgb, var(--merchant-ink) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--merchant-ink) 16%, transparent);
+}
+.native-merchant[data-merchant-tone="dark"]
+  .native-merchant-review-list
+  article {
+  background: color-mix(in srgb, var(--merchant-ink) 6%, transparent);
+  border-color: #ffffff1a;
+}
+.native-merchant-product-recovery {
+  margin: 24px 0;
+}
+.native-merchant-product-recovery > h2 {
+  font-size: 18px;
+  line-height: 24px;
+  margin: 0 0 16px;
+}
+@media (max-width: 350px) {
+  .native-merchant-brand > h1:not(.sr-only) > span {
+    font-size: 23px;
+  }
+  .native-merchant-search-header {
+    gap: 4px;
+  }
+  .native-merchant-rating-product {
+    padding: 8px;
+    gap: 8px;
+  }
+}
+
+.native-merchant-bounded-listings {
+  margin-top: 24px;
+}
+.native-merchant-bounded-listings > h2 {
+  margin-bottom: 16px;
+}
+.native-merchant-bounded-listings .saved-item-title,
+.native-merchant-bounded-listings .saved-product {
+  color: inherit;
+}
+.native-merchant-bounded-listings .saved-promotion {
+  background: var(--merchant-panel);
+  color: inherit;
+}

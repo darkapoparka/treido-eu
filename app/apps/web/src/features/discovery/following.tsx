@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Allowlisted frozen product photographs. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { SourceLink } from "./return-navigation";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -72,6 +74,8 @@ function LiveFollowingPosts({ catalog }: { catalog: Catalog }) {
 }
 
 export function Following({ catalog }: { catalog: Catalog }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const native = !!catalog.liveHomeStoreIds;
   const state = useDiscovery();
   const router = useRouter();
@@ -125,7 +129,7 @@ export function Following({ catalog }: { catalog: Catalog }) {
       className={`shop-page following-page ${native ? "android-live android-following" : ""}`}
     >
       <header className="following-heading">
-        <h1>{manage ? "Following list" : "Following"}</h1>
+        <h1>{manage ? ui("followingList") : ui("following")}</h1>
         {!manage && stores.length > 0 && (
           <button
             ref={manageButton}
@@ -133,7 +137,7 @@ export function Following({ catalog }: { catalog: Catalog }) {
             type="button"
             onClick={openManage}
           >
-            Manage
+            {ui("manage")}
           </button>
         )}
       </header>
@@ -161,14 +165,14 @@ export function Following({ catalog }: { catalog: Catalog }) {
                   aria-pressed={followed}
                   onClick={() => state.toggleFollow(store.id)}
                 >
-                  {followed ? "Following" : "Follow"}
+                  {followed ? ui("following") : ui("follow")}
                 </button>
               </div>
             );
           })}
           {!stores.length && (
             <p className="following-list-empty">
-              You’re not following any brands yet.
+              {ui("youReNotFollowingAnyBrandsYet")}
             </p>
           )}
         </div>
@@ -177,23 +181,23 @@ export function Following({ catalog }: { catalog: Catalog }) {
           <section className="following-empty">
             <h2>
               {native ? (
-                "You’re not following any brands yet"
+                ui("youReNotFollowingAnyBrandsYet_badbe3")
               ) : (
                 <>
-                  You&apos;re not following
+                  {ui("youReNotFollowing")}
                   <br />
-                  any brands yet
+                  {ui("anyBrandsYet")}
                 </>
               )}
             </h2>
             <p>
               {native ? (
-                "Here are new products from brands you might like"
+                ui("hereAreNewProductsFromBrandsYouMightLike")
               ) : (
                 <>
-                  Here are new products from brands
+                  {ui("hereAreNewProductsFromBrands")}
                   <br />
-                  you might like
+                  {ui("youMightLike")}
                 </>
               )}
             </p>
@@ -207,7 +211,7 @@ export function Following({ catalog }: { catalog: Catalog }) {
                   : "/explore"
               }
             >
-              Go shopping
+              {ui("goShopping")}
             </SourceLink>
           </section>
           {native ? (
@@ -215,7 +219,8 @@ export function Following({ catalog }: { catalog: Catalog }) {
           ) : (
             <section
               className="following-post following-recommendation"
-              aria-label="Recommended brand"
+              aria-label={ui("recommendedBrand")}
+              data-ui-label="recommendedBrand"
             >
               <button
                 className="following-post-identity"
@@ -229,33 +234,36 @@ export function Following({ catalog }: { catalog: Catalog }) {
                 </span>
                 <span>
                   <strong>Quilting Books Patterns and Notions</strong>
-                  <small>1 item added 10 hours ago</small>
+                  <small>{ui("text1ItemAdded10HoursAgo")}</small>
                 </span>
               </button>
               <div className="following-recommendation-photo product-media">
                 <button
                   type="button"
-                  aria-label="View quilt pattern"
+                  aria-label={ui("viewQuiltPattern")}
                   onClick={() => setDetails("Quilt pattern")}
+                  data-ui-label="viewQuiltPattern"
                 >
                   <img
                     src="/api/reference-media/following-photo-quilt"
-                    alt="Purple and green star quilt"
+                    alt={ui("purpleAndGreenStarQuilt")}
                   />
                 </button>
-                <span className="price-badge deal">Save $3</span>
+                <span className="price-badge deal">{ui("save3")}</span>
                 <IconButton
                   icon="heart"
                   className="save-button"
-                  label={`${quiltSaved ? "Unsave" : "Save"} quilt pattern`}
+                  label={ui("value1QuiltPattern", {
+                    value1: quiltSaved ? ui("unsave") : ui("save"),
+                  })}
                   pressed={quiltSaved}
                   onClick={() => setQuiltSaved((saved) => !saved)}
+                  data-ui-label="value1QuiltPattern"
                 />
               </div>
               {quiltSaved && (
                 <p className="sr-only" role="status">
-                  Pattern bookmarked on this page. Its full catalog record was
-                  not captured.
+                  {ui("patternBookmarkedOnThisPageItsFullCatalogRecordWas")}
                 </p>
               )}
             </section>
@@ -263,12 +271,16 @@ export function Following({ catalog }: { catalog: Catalog }) {
         </>
       ) : (
         <>
-          <nav className="following-brand-rail" aria-label="Followed brands">
+          <nav
+            className="following-brand-rail"
+            aria-label={ui("followedBrands")}
+            data-ui-label="followedBrands"
+          >
             {stores.map((store) => (
               <SourceLink
                 key={store.id}
                 href={`/stores/${store.id}`}
-                aria-label={`Visit ${store.name}`}
+                aria-label={ui("visitValue1", { value1: store.name ?? "" })}
                 className={`following-logo ${store.id === "pura" ? "has-offer" : ""}`}
               >
                 {store.logo ? (
@@ -285,7 +297,8 @@ export function Following({ catalog }: { catalog: Catalog }) {
             <section
               className="following-post"
               data-following-post="pura-new"
-              aria-label="New Pura products"
+              aria-label={ui("newPuraProducts")}
+              data-ui-label="newPuraProducts"
             >
               <PostIdentity store={pura} added="7 items added 4 hours ago" />
               <div className="following-product-grid">
@@ -308,7 +321,8 @@ export function Following({ catalog }: { catalog: Catalog }) {
             <section
               className="following-post following-post-single"
               data-following-post="kitsch"
-              aria-label="New KITSCH products"
+              aria-label={ui("newKITSCHProducts")}
+              data-ui-label="newKITSCHProducts"
             >
               <PostIdentity store={kitsch} added="1 item added 2 days ago" />
               <div className="following-product-grid">
@@ -322,21 +336,25 @@ export function Following({ catalog }: { catalog: Catalog }) {
             <section
               className="following-post following-post-single"
               data-following-post="pura-older"
-              aria-label="Earlier Pura product"
+              aria-label={ui("earlierPuraProduct")}
+              data-ui-label="earlierPuraProduct"
             >
               <PostIdentity store={pura} added="1 item added 3 days ago" />
               <div className="following-partial-photo product-media">
                 <button
                   type="button"
-                  aria-label="View earlier Pura item"
+                  aria-label={ui("viewEarlierPuraItem")}
                   onClick={() => setDetails("Earlier Pura item")}
+                  data-ui-label="viewEarlierPuraItem"
                 >
                   <img
                     src="/api/reference-media/following-photo-older-pura"
-                    alt="Visible upper part of the earlier Pura product photograph"
+                    alt={ui(
+                      "visibleUpperPartOfTheEarlierPuraProductPhotograph",
+                    )}
                   />
                 </button>
-                <span className="price-badge deal">$30 off order</span>
+                <span className="price-badge deal">{ui("text30OffOrder")}</span>
               </div>
             </section>
           )}
@@ -346,7 +364,7 @@ export function Following({ catalog }: { catalog: Catalog }) {
               <section
                 className="following-post"
                 key={store.id}
-                aria-label={`${store.name} products`}
+                aria-label={ui("value1Products", { value1: store.name ?? "" })}
               >
                 <PostIdentity store={store} added="Products from this brand" />
                 <div className="following-product-grid">
@@ -384,18 +402,20 @@ export function Following({ catalog }: { catalog: Catalog }) {
             : undefined
         }
       />
-      <Sheet open={!!details} title={details} onClose={() => setDetails("")}>
+      <Sheet
+        open={!!details}
+        title={caption(details)}
+        onClose={() => setDetails("")}
+      >
         <p className="sheet-copy">
-          The frozen capture shows this post but does not include its complete
-          product record or a recorded destination. No price, inventory or
-          service response has been invented for this item.
+          {ui("theFrozenCaptureShowsThisPostButDoesNotInclude")}
         </p>
         <button
           className="primary form-submit"
           type="button"
           onClick={() => setDetails("")}
         >
-          Return to Following
+          {ui("returnToFollowing")}
         </button>
       </Sheet>
     </ShopSurface>

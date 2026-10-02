@@ -1,4 +1,4 @@
-import { readCatalog } from "@/features/catalog/queries.server";
+import { readSearchCatalog } from "@/features/catalog/queries.server";
 import { Search } from "@/features/discovery/search";
 import { readSearchFilters } from "@/features/discovery/search-model";
 
@@ -16,7 +16,7 @@ export default async function Page({
   const query = params.get("q") ?? "";
   return (
     <Search
-      catalog={await readCatalog()}
+      catalog={await readSearchCatalog()}
       query={query}
       filters={readSearchFilters(params)}
     />

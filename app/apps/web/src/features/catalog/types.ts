@@ -160,6 +160,8 @@ export type ReferencePolicy = Readonly<{
   blocks: readonly ReferencePolicyBlock[];
 }>;
 export type Store = Readonly<{
+  /** Local source presentation only; not a verified seller or commerce capability. */
+  referenceMerchant?: import("./merchant-types").MerchantPresentation;
   referenceStyle?: "android";
   id: string;
   name: string;
@@ -212,18 +214,17 @@ export function resolveSavedListing(
     catalog.products.find((item) => item.id === id)
   );
 }
-export function formatMoney(money: Money): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatMoney(money: Money, locale: "bg" | "en" = "en"): string {
+  return new Intl.NumberFormat(locale === "bg" ? "bg-BG" : "en-US", {
     style: "currency",
     currency: money.currency,
   }).format(money.amount / 100);
 }
 
 /** Local reference projections retain variant identity without rewriting catalog facts. */
-export function referenceVariantProduct(
-  product: Product,
-  variant?: ProductVariant,
-): Product {
+export function referenceVariantProduct<
+  T extends Pick<Product, "price" | "compareAt" | "images">,
+>(product: T, variant?: ProductVariant): T {
   const photo = variant?.referenceImage ?? variant?.referenceColor?.photo;
   if (!photo && !variant?.referencePrice) return product;
   return {

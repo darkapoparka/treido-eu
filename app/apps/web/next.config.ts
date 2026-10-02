@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 const nextConfig: NextConfig = {
   transpilePackages: ["@treido/contracts"],
   devIndicators: false,
@@ -16,4 +17,7 @@ const nextConfig: NextConfig = {
     ? { distDir: process.env.SHOP_PARITY_DIST_DIR }
     : {}),
 };
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin(
+  "./src/features/locale/intl-request.ts",
+);
+export default withNextIntl(nextConfig);

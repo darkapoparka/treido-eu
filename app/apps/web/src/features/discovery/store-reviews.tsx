@@ -1,4 +1,6 @@
 "use client";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element -- Existing allowlisted reference crops. */
 import { useRef, useState } from "react";
@@ -61,6 +63,8 @@ const sorts: ReviewSort[] = [
 ];
 const ratings: ReviewRating[] = [5, 4, 3, 2, 1];
 export function StoreReviews() {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const params = useSearchParams();
   const q = params.get("q") ?? "";
   const sort =
@@ -93,11 +97,12 @@ export function StoreReviews() {
   return (
     <ShopSurface className="shop-page store-reviews">
       <header className="section-heading">
-        <h1>Reviews</h1>
+        <h1>{ui("reviews")}</h1>
         <ContextualCloseLink
           href="/stores/kitsch/info"
           className="icon-button"
-          aria-label="Close reviews"
+          aria-label={ui("closeReviews")}
+          data-ui-label="closeReviews"
         >
           <Icon name="close" />
         </ContextualCloseLink>
@@ -107,36 +112,42 @@ export function StoreReviews() {
         <div>
           <ReviewStars rating={4.5} />
           <small>
-            194.9K ratings <RatingInformation />
+            {ui("text1949KRatings")} <RatingInformation />
           </small>
         </div>
       </div>
       <div className="category-rail">
         <IconButton
           icon="filter-circles"
-          label="Filter reviews"
+          label={ui("filterReviews")}
           onClick={() => setPanel("Filter")}
+          data-ui-label="filterReviews"
         />
         <button className="pill" onClick={() => setPanel("Sort by")}>
-          Sort by <Icon name="back" style={{ transform: "rotate(-90deg)" }} />
+          {ui("sortBy")}{" "}
+          <Icon name="back" style={{ transform: "rotate(-90deg)" }} />
         </button>
         <button className="pill" onClick={() => setPanel("Rating")}>
-          {rating === null ? "Rating" : `${rating} stars`}{" "}
+          {rating === null ? ui("rating") : `${rating} stars`}{" "}
           <Icon name="back" style={{ transform: "rotate(-90deg)" }} />
         </button>
       </div>
-      {q.trim() && <p className="store-review-query">Search: {q}</p>}
+      {q.trim() && (
+        <p className="store-review-query">
+          {ui("search_bd689c")} {q}
+        </p>
+      )}
       {!visible.length && (
         <div className="review-empty" role="status">
-          <h2>No matching reviews</h2>
-          <p>No captured reviews match these filters.</p>
+          <h2>{ui("noMatchingReviews")}</h2>
+          <p>{ui("noCapturedReviewsMatchTheseFilters")}</p>
           <button
             className="pill"
             onClick={() =>
               updateCriteria({ q: "", rating: null, sort: "Most recent" })
             }
           >
-            Clear filters
+            {ui("clearFilters")}
           </button>
         </div>
       )}
@@ -145,7 +156,9 @@ export function StoreReviews() {
           <article
             key={review.id}
             data-review-id={review.id}
-            aria-label={`Review by ${review.syntheticAuthor}`}
+            aria-label={ui("reviewByValue1", {
+              value1: review.syntheticAuthor ?? "",
+            })}
             className={reported[review.id] ? "review-reported" : ""}
           >
             <div className="store-review-product">
@@ -175,16 +188,19 @@ export function StoreReviews() {
               />
               <IconButton
                 icon="more"
-                label={`More options for ${review.title}`}
+                label={ui("moreOptionsForValue1", {
+                  value1: review.title ?? "",
+                })}
                 onClick={() => {
                   lastReport.current = review.id;
                   setReport(review.id);
                 }}
+                data-ui-label="moreOptionsForValue1"
               />
             </footer>
             {reported[review.id] && (
               <small className="review-reported-label">
-                You reported this review
+                {ui("youReportedThisReview")}
               </small>
             )}
           </article>
@@ -196,23 +212,23 @@ export function StoreReviews() {
         onReopen={() => setReport(lastReport.current)}
         onReport={(reason) => feedback.markReported(lastReport.current, reason)}
       />
-      <Sheet open={!!panel} title={panel} onClose={() => setPanel("")}>
+      <Sheet open={!!panel} title={caption(panel)} onClose={() => setPanel("")}>
         {panel === "Filter" ? (
           <>
             <label className="account-input">
-              Search reviews
+              {ui("searchReviews")}
               <input
                 value={q}
                 type="search"
                 onChange={(event) => updateCriteria({ q: event.target.value })}
-                placeholder="Search reviews"
+                placeholder={ui("searchReviews")}
               />
             </label>
             <button
               className="primary form-submit"
               onClick={() => setPanel("")}
             >
-              Done
+              {ui("done")}
             </button>
           </>
         ) : panel === "Sort by" ? (
@@ -226,7 +242,7 @@ export function StoreReviews() {
                   setPanel("");
                 }}
               >
-                {value}
+                {caption(value)}
                 <span
                   className={`radio-outline ${sort === value ? "selected" : ""}`}
                 />
@@ -242,7 +258,7 @@ export function StoreReviews() {
                 setPanel("");
               }}
             >
-              All ratings
+              {ui("allRatings")}
               <span
                 className={`radio-outline ${rating === null ? "selected" : ""}`}
               />
@@ -256,7 +272,7 @@ export function StoreReviews() {
                   setPanel("");
                 }}
               >
-                {value} {value === 1 ? "star" : "stars"}
+                {caption(value)} {value === 1 ? ui("star") : ui("stars")}
                 <span
                   className={`radio-outline ${rating === value ? "selected" : ""}`}
                 />

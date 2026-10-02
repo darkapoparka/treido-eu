@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 /* eslint-disable @next/next/no-img-element -- Allowlisted local reference media. */
 import Link from "next/link";
 import type { Catalog } from "../catalog/types";
@@ -10,6 +11,7 @@ import { useDiscovery } from "../discovery/state";
 import { recentStoreCover } from "../discovery/recent-store-media";
 
 export function ProfileRecent({ catalog }: { catalog: Catalog }) {
+  const t = useTranslations("account");
   const state = useDiscovery();
   const miniIds = state.recentActivity === "minis" ? state.visitedMinis : [];
   // Recent Minis precede, rather than erase, the earlier product/store history.
@@ -19,7 +21,7 @@ export function ProfileRecent({ catalog }: { catalog: Catalog }) {
     <>
       <h2 className="profile-recent-heading">
         <Link href="/search?view=recent">
-          Recently viewed{" "}
+          {t("recentlyViewed")}{" "}
           <span aria-hidden="true">
             <Icon name="back" />
           </span>
@@ -66,7 +68,7 @@ export function ProfileRecent({ catalog }: { catalog: Catalog }) {
               href={`/stores/${store.id}`}
               className="profile-recent-store"
               data-captured-cover={capturedCover || undefined}
-              aria-label={`Visit ${store.name}`}
+              aria-label={t("visitStore", { store: store.name })}
             >
               {image && <img src={image} alt="" />}
               {!capturedCover && (

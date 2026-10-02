@@ -1,0 +1,116 @@
+name: Treido CI
+
+on:
+  push:
+    branches: [main, "codex/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: treido-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-foundation:
+    name: Web foundation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: app
+    env:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: app/.node-version
+          package-manager-cache: false
+
+      - name: Product documentation contracts
+        run: |
+          node scripts/check-product-docs.mjs
+          node --test scripts/check-product-docs.test.mjs
+
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: app/package.json
+          run_install: false
+          cache: false
+
+      - name: Verify exact runtime
+        run: |
+          test "$(node --version)" = "v$(cat .node-version)"
+          test "$(pnpm --version)" = "$(node -p "require('./package.json').packageManager.split('@').at(-1)")"
+
+      - name: Fresh frozen install
+        run: pnpm install --frozen-lockfile --package-import-method=copy
+
+      - name: Format maintained CI files
+        run: pnpm ci:format
+
+      - name: Product documentation tooling style
+        run: |
+          pnpm exec prettier --check scripts/check-product-docs.mjs scripts/check-product-docs.test.mjs
+          pnpm exec eslint scripts/check-product-docs.mjs scripts/check-product-docs.test.mjs --max-warnings=0
+
+      - name: Focused web, contracts and tooling lint
+        run: pnpm ci:lint
+
+      - name: Unit tests
+        run: pnpm test:unit --maxWorkers=1 --no-file-parallelism
+
+      - name: Preview launcher tests
+        run: pnpm test:tooling
+
+      - name: CI boundary tests
+        run: pnpm test:ci
+
+      - name: Shared and web types
+        run: pnpm ci:types
+        env:
+          NODE_ENV: production
+          VERCEL_ENV: production
+          SHOP_REFERENCE_PREVIEW: "0"
+          SHOP_PARITY_DIST_DIR: .qa/treido-ci
+          SHOP_PARITY_TSCONFIG_PATH: tsconfig.ci.json
+
+      - name: Production build
+        run: pnpm --filter @treido/web build
+        env:
+          NODE_ENV: production
+          VERCEL_ENV: production
+          SHOP_REFERENCE_PREVIEW: "0"
+          SHOP_PARITY_DIST_DIR: .qa/treido-ci
+          SHOP_PARITY_TSCONFIG_PATH: tsconfig.ci.json
+
+      - name: Production output isolation
+        run: pnpm ci:verify-output
+
+      # The smoke spec uses APIRequestContext; no browser or private assets needed.
+      - name: Production reference denial
+        run: pnpm test:smoke:web --workers=1 --reporter=line
+        env:
+          VERCEL_ENV: production
+          SHOP_PARITY_DIST_DIR: .qa/treido-ci
+          REFERENCE_SMOKE_OPT_IN: "0"
+
+      - name: Production denies attempted reference opt-in
+        run: pnpm test:smoke:web --workers=1 --reporter=line
+        env:
+          VERCEL_ENV: production
+          SHOP_PARITY_DIST_DIR: .qa/treido-ci
+          REFERENCE_SMOKE_OPT_IN: "1"
+
+      - name: Dependency audit release gate
+        run: pnpm audit --audit-level=high

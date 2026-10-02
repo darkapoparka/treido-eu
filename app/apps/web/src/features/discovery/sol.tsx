@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Allowlisted product artwork only. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import {
   useCallback,
   useEffect,
@@ -47,6 +49,8 @@ const choices = {
 } as const;
 
 export function Sol({ catalog }: { catalog: Catalog }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const router = useRouter();
   const params = useSearchParams();
   const query = params.toString();
@@ -224,20 +228,20 @@ export function Sol({ catalog }: { catalog: Catalog }) {
               },
             ]}
           />
-          <h1>Hi, I’m Sol</h1>
+          <h1>{ui("hiIMSol")}</h1>
           <p>
-            Shop with your voice. Just tell
+            {ui("shopWithYourVoiceJustTell")}
             <br />
-            Sol what you’re looking for.
+            {ui("solWhatYouReLookingFor")}
           </p>
           <div>
             <h2>
-              Sol needs microphone access
+              {ui("solNeedsMicrophoneAccess")}
               <br />
-              to hear you speak.
+              {ui("toHearYouSpeak")}
             </h2>
             <button onClick={() => setPermission(true)}>
-              Allow & Continue ›
+              {ui("allowContinue")}
             </button>
           </div>
         </section>
@@ -266,9 +270,11 @@ export function Sol({ catalog }: { catalog: Catalog }) {
             <p
               className={styles.connecting}
               role="status"
-              aria-label={phase === "ready" ? "Almost ready" : "Connecting"}
+              aria-label={
+                phase === "ready" ? ui("almostReady") : ui("connecting")
+              }
             >
-              {phase === "ready" ? "Almost ready" : "Connecting"}{" "}
+              {phase === "ready" ? ui("almostReady") : ui("connecting")}{" "}
               <span aria-hidden="true">•••</span>
             </p>
           ) : (
@@ -285,14 +291,14 @@ export function Sol({ catalog }: { catalog: Catalog }) {
                 {phase === "results" ? (
                   <>
                     <span className={styles.spoken}>
-                      a slim profile first. Flip through and see
+                      {ui("aSlimProfileFirstFlipThroughAndSee")}
                     </span>{" "}
-                    which one feels the easiest to wear every day.
+                    {ui("whichOneFeelsTheEasiestToWearEveryDay")}
                   </>
                 ) : phase === "choices" && motion && topic === "glasses" ? (
                   <span className={styles.promptTransition} aria-hidden="true">
                     <span className={styles.choiceLead}>
-                      Nice, sunglasses are a fun pick.
+                      {ui("niceSunglassesAreAFunPick")}
                     </span>
                     <span className={styles.choicePrompt}>
                       {title.split(" ").map((word, index) => (
@@ -313,7 +319,9 @@ export function Sol({ catalog }: { catalog: Catalog }) {
                   title
                 )}
               </h1>
-              {phase === "choices" && <p className={styles.tap}>Tap one</p>}
+              {phase === "choices" && (
+                <p className={styles.tap}>{ui("tapOne")}</p>
+              )}
               {(phase === "choices" || phase === "selected") && (
                 <div className={`sol-picks ${styles.picks}`}>
                   {(phase === "selected" && choice
@@ -322,7 +330,7 @@ export function Sol({ catalog }: { catalog: Catalog }) {
                   ).map(([id, artwork, label]) => (
                     <button
                       key={id}
-                      aria-label={label}
+                      aria-label={caption(label)}
                       aria-pressed={phase === "selected" && choice?.[0] === id}
                       onClick={() => {
                         chosenResult.current =
@@ -338,13 +346,15 @@ export function Sol({ catalog }: { catalog: Catalog }) {
               {phase === "selected" && choice?.[0] !== "gold" && (
                 <div className={styles.continuation} role="status">
                   <p>
-                    {choice?.[2]} selected. Further recommendations for this
-                    choice were not included in the recording.
+                    {choice?.[2]}{" "}
+                    {ui(
+                      "selectedFurtherRecommendationsForThisChoiceWereNotIncludedIn",
+                    )}
                   </p>
                   <button
                     onClick={() => change({ sol: "choices", choice: null })}
                   >
-                    Choose another
+                    {ui("chooseAnother")}
                   </button>
                 </div>
               )}
@@ -352,8 +362,9 @@ export function Sol({ catalog }: { catalog: Catalog }) {
                 <div
                   className={`product-rail sol-product-results ${styles.results}`}
                   role="region"
-                  aria-label="Captured sunglasses recommendations"
+                  aria-label={ui("capturedSunglassesRecommendations")}
                   tabIndex={0}
+                  data-ui-label="capturedSunglassesRecommendations"
                 >
                   {gold && (
                     <ProductCard
@@ -388,8 +399,8 @@ export function Sol({ catalog }: { catalog: Catalog }) {
               <div className={styles.composer}>
                 <input
                   ref={input}
-                  aria-label="Message Sol"
-                  placeholder="Tap to type..."
+                  aria-label={ui("messageSol")}
+                  placeholder={ui("tapToType")}
                   value={draft}
                   maxLength={500}
                   onChange={(event) => {
@@ -401,16 +412,22 @@ export function Sol({ catalog }: { catalog: Catalog }) {
                       "",
                     );
                   }}
+                  data-ui-label="messageSol"
                 />
                 {draft.trim() ? (
-                  <button type="submit" aria-label="Send local message">
+                  <button
+                    type="submit"
+                    aria-label={ui("sendLocalMessage")}
+                    data-ui-label="sendLocalMessage"
+                  >
                     <Icon name="arrow" />
                   </button>
                 ) : (
                   <button
                     type="button"
-                    aria-label="Return to voice controls"
+                    aria-label={ui("returnToVoiceControls")}
                     onClick={() => change({ mode: null })}
+                    data-ui-label="returnToVoiceControls"
                   >
                     <Icon name="back" />
                   </button>
@@ -419,15 +436,18 @@ export function Sol({ catalog }: { catalog: Catalog }) {
             ) : (
               <IconButton
                 icon="type-input"
-                label="Type instead"
+                label={ui("typeInstead")}
                 disabled={phase === "connecting" || phase === "ready"}
                 onClick={() => change({ mode: "text" })}
+                data-ui-label="typeInstead"
               />
             )}
             <IconButton
               icon={muted ? "mic-off" : "mic"}
               label={
-                muted ? "Unmute microphone preview" : "Mute microphone preview"
+                muted
+                  ? ui("unmuteMicrophonePreview")
+                  : ui("muteMicrophonePreview")
               }
               pressed={muted}
               filled={false}
@@ -448,13 +468,13 @@ export function Sol({ catalog }: { catalog: Catalog }) {
       />
       <Sheet
         open={permission}
-        title="Allow access to your microphone?"
+        title={ui("allowAccessToYourMicrophone")}
         headerless
         className={`mini-access ${styles.permission}`}
         onClose={() => setPermission(false)}
       >
         <div className="mini-access-heading">
-          <h2 aria-hidden="true">Allow access to your microphone?</h2>
+          <h2 aria-hidden="true">{ui("allowAccessToYourMicrophone")}</h2>
           <div className={styles.permissionMark} aria-hidden="true">
             <img
               className={styles.permissionIcon}
@@ -469,10 +489,10 @@ export function Sol({ catalog }: { catalog: Catalog }) {
           </div>
         </div>
         <p role="note">
-          This local preview does not request microphone access or send audio.
+          {ui("thisLocalPreviewDoesNotRequestMicrophoneAccessOrSend")}
         </p>
         <div className={styles.permissionActions}>
-          <button onClick={() => setPermission(false)}>Cancel</button>
+          <button onClick={() => setPermission(false)}>{ui("cancel")}</button>
           <button
             onClick={() => {
               change(
@@ -488,19 +508,17 @@ export function Sol({ catalog }: { catalog: Catalog }) {
               setPermission(false);
             }}
           >
-            Share
+            {ui("share")}
           </button>
         </div>
       </Sheet>
       <Sheet
         open={menu}
-        title="Sol preview controls"
+        title={ui("solPreviewControls")}
         onClose={() => setMenu(false)}
       >
         <p className="sheet-copy">
-          These are recorded examples, not a live assistant. No audio is
-          captured or sent. Type a sunglasses or baseball-cap query, or replay
-          the recorded voice example.
+          {ui("theseAreRecordedExamplesNotALiveAssistantNoAudio")}
         </p>
         <div className={styles.menu}>
           <button
@@ -520,7 +538,7 @@ export function Sol({ catalog }: { catalog: Catalog }) {
               setDraft("");
             }}
           >
-            Use captured sunglasses voice example
+            {ui("useCapturedSunglassesVoiceExample")}
           </button>
           <button
             className="pill"
@@ -534,7 +552,7 @@ export function Sol({ catalog }: { catalog: Catalog }) {
               setMenu(false);
             }}
           >
-            Continue with text
+            {ui("continueWithText")}
           </button>
           <button
             className="pill"
@@ -554,24 +572,23 @@ export function Sol({ catalog }: { catalog: Catalog }) {
               setMenu(false);
             }}
           >
-            Restart Sol preview
+            {ui("restartSolPreview")}
           </button>
         </div>
       </Sheet>
       <Sheet
         open={unsupported}
-        title="Recorded responses"
+        title={ui("recordedResponses")}
         onClose={() => setUnsupported(false)}
       >
         <p className="sheet-copy">
-          This recording contains sunglasses and baseball-cap examples, not a
-          live answer to every query. Your message has not been sent anywhere.
+          {ui("thisRecordingContainsSunglassesAndBaseballCapExamplesNotA")}
         </p>
         <button
           className="primary form-submit"
           onClick={() => setUnsupported(false)}
         >
-          Return to my draft
+          {ui("returnToMyDraft")}
         </button>
       </Sheet>
     </MiniShell>

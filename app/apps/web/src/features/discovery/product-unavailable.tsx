@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { AccountIcon } from "../account/icons";
 
 /** A saved reference item is not a purchase or a live restock subscription. */
@@ -8,18 +9,18 @@ export function ProductUnavailable({
   saved: boolean;
   onSave: () => void;
 }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <div className="native-sold-out-actions">
       <button type="button" aria-pressed={saved} onClick={onSave}>
-        {saved ? "Saved" : "Add to saved items"}
+        {saved ? ui("saved") : ui("addToSavedItems")}
       </button>
       <p>
-        <AccountIcon name="bell" /> We notify you when saved items are back in
-        stock
+        <AccountIcon name="bell" />{" "}
+        {ui("weNotifyYouWhenSavedItemsAreBackInStock")}
       </p>
       <span className="sr-only">
-        Local reference preview only. No restock notifications have been
-        enabled.
+        {ui("localReferencePreviewOnlyNoRestockNotificationsHaveBeenEnabled")}
       </span>
     </div>
   );

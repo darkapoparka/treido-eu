@@ -1,9 +1,10 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Existing catalog artwork only. */
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { SourceLink } from "./return-navigation";
 import { useRef } from "react";
-import type { Catalog } from "../catalog/types";
+import type { SearchCatalog } from "../catalog/search-catalog";
 import { IconButton, ProductCard } from "./components";
 import { KitschWordmark } from "./kitsch-wordmark";
 import { useDiscovery } from "./state";
@@ -18,12 +19,13 @@ export function RecentSearchItems({
   capturedContinuation,
   surface = "search",
 }: {
-  catalog: Catalog;
+  catalog: SearchCatalog;
   expanded?: boolean;
   limit?: number;
   capturedContinuation?: "photo" | null;
   surface?: "search" | "home";
 }) {
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const grid = useRef<HTMLDivElement>(null);
   const items = state.viewedItems.flatMap((item) => {
@@ -41,8 +43,8 @@ export function RecentSearchItems({
   if (!items.length)
     return (
       <div ref={grid} className={styles.empty} role="status">
-        <p>No recently viewed items</p>
-        <Link href="/">Browse products</Link>
+        <p>{ui("noRecentlyViewedItems")}</p>
+        <Link href="/">{ui("browseProducts")}</Link>
       </div>
     );
   return (
@@ -78,7 +80,7 @@ export function RecentSearchItems({
               className={`${styles.store} ${recentStoreCover(store.id, surface) ? styles.capturedStore : ""} ${store.id === "loaded-tea" ? styles.logoStore : ""} ${store.id === "drmtlgy" && surface !== "home" ? styles.partialStore : ""}`}
               data-recent-store={store.id}
               href={`/stores/${store.id}`}
-              aria-label={`Visit ${store.name}`}
+              aria-label={ui("visitValue1", { value1: store.name ?? "" })}
             >
               {(recentStoreCover(store.id, surface) ||
                 store.coverImage ||
@@ -106,7 +108,9 @@ export function RecentSearchItems({
           {expanded && (
             <IconButton
               icon="close"
-              label={`Remove ${product?.title ?? store?.name} from recently viewed`}
+              label={ui("removeValue1FromRecentlyViewed", {
+                value1: product?.title ?? store?.name ?? "",
+              })}
               className={styles.remove}
               onClick={() => {
                 const visible = items.slice(0, limit);
@@ -126,6 +130,7 @@ export function RecentSearchItems({
                     ?.focus({ preventScroll: true });
                 });
               }}
+              data-ui-label="removeValue1FromRecentlyViewed"
             />
           )}
         </div>

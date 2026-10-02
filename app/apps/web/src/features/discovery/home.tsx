@@ -1,4 +1,7 @@
 "use client";
+import { displayCount, displayRating } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import { rememberSourceReturn, SourceLink } from "./return-navigation";
@@ -14,9 +17,19 @@ import { Icon } from "./icons";
 import { useDiscovery } from "./state";
 import { useAccount } from "../account/state";
 import { CartOverlay } from "../commerce/checkout";
+import { readDiscoveryInput } from "../catalog/discovery-input";
+import { BrowseScopeControl, BrowseScopeUnavailable } from "./browse-scope";
+import { useLocale } from "../locale/provider";
+import { localeDestination, parseLocale } from "../locale/locale";
 export function Home({ catalog }: { catalog: Catalog }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const router = useRouter();
   const params = useSearchParams();
+  const { messages } = useLocale();
+  const text = messages.navigation;
+  const scoped =
+    readDiscoveryInput(new URLSearchParams(params)).input.seller !== "all";
   const state = useDiscovery(),
     { profile } = useAccount();
   // Different recorded journeys share these same feed components; only their data/order changes.
@@ -87,7 +100,11 @@ export function Home({ catalog }: { catalog: Catalog }) {
       }
     >
       <header className="home-shortcuts">
-        <SourceLink href="/profile" aria-label="Profile" className="avatar">
+        <SourceLink
+          href="/profile"
+          aria-label={text.profile}
+          className="avatar"
+        >
           {nativeHome && !profile.avatar ? (
             <svg
               className="android-guest-avatar"
@@ -106,18 +123,20 @@ export function Home({ catalog }: { catalog: Catalog }) {
         <IconButton
           icon="bell"
           filled
-          label="Notifications"
+          label={text.notifications}
           onClick={() => {
-            rememberSourceReturn(
+            const href = localeDestination(
               "/notifications",
-              '.home-shortcuts button[aria-label="Notifications"]',
+              parseLocale(params.get("lang")),
             );
-            router.push("/notifications");
+            rememberSourceReturn(href, ".home-shortcuts .icon-button");
+            router.push(href);
           }}
         />
+        <BrowseScopeControl />
         <SourceLink className="pill" href="/deals">
           <Icon name="tag" filled />
-          Deals
+          {text.deals}
         </SourceLink>
         <SourceLink className="pill" href="/following">
           <span className="following-shortcut-icon">
@@ -126,15 +145,15 @@ export function Home({ catalog }: { catalog: Catalog }) {
               <i aria-hidden="true" />
             )}
           </span>
-          Following
+          {text.following}
         </SourceLink>
         <SourceLink className="pill" href="/saved">
           <Icon name="heart" filled />
-          Saved
+          {text.saved}
         </SourceLink>
         <SourceLink className="pill" href="/minis">
           <Icon name="minis" filled />
-          Minis
+          {text.minis}
         </SourceLink>
       </header>
       {tracking && (
@@ -145,9 +164,12 @@ export function Home({ catalog }: { catalog: Catalog }) {
           />
           <span>
             <small>KITSCH</small>
-            <strong>Ordered Jul 27</strong>
+            <strong>{ui("orderedJul27")}</strong>
           </span>
-          <img src="/api/reference-media/shampoo-bag" alt="Shampoo bar bag" />
+          <img
+            src="/api/reference-media/shampoo-bag"
+            alt={ui("shampooBarBag")}
+          />
         </SourceLink>
       )}
       {!nativeHome && (
@@ -163,8 +185,8 @@ export function Home({ catalog }: { catalog: Catalog }) {
         >
           <img src="/api/reference-media/parcel" alt="" />
           <span>
-            <strong>Connect email to see more deliveries</strong>
-            <span>Track more of your packages with Shop</span>
+            <strong>{ui("connectEmailToSeeMoreDeliveries")}</strong>
+            <span>{ui("trackMoreOfYourPackagesWithShop")}</span>
           </span>
           <Icon name="back" />
         </button>
@@ -172,21 +194,26 @@ export function Home({ catalog }: { catalog: Catalog }) {
       {recentStores && (
         <section
           className="recent-panel recent-stores-panel"
-          aria-label="Recently viewed shops"
+          aria-label={ui("recentlyViewedShops")}
+          data-ui-label="recentlyViewedShops"
         >
-          <p>Jump back in</p>
+          <p>{ui("jumpBackIn")}</p>
           <div className="recent-store-grid">
             <RecentSearchItems catalog={catalog} limit={4} surface="home" />
           </div>
           <SourceLink href="/search?view=recent" className="recent-title">
-            <h1>Recently viewed</h1>
+            <h1>{ui("recentlyViewed")}</h1>
             <Icon name="arrow" />
           </SourceLink>
         </section>
       )}
       {recentProducts && (
-        <section className="recent-panel" aria-label="Recently viewed products">
-          <p>Jump back in</p>
+        <section
+          className="recent-panel"
+          aria-label={ui("recentlyViewedProducts")}
+          data-ui-label="recentlyViewedProducts"
+        >
+          <p>{ui("jumpBackIn")}</p>
           <div className="product-rail">
             {recent.map((p) => (
               <ProductCard
@@ -201,7 +228,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
             ))}
           </div>
           <SourceLink href="/search?view=recent" className="recent-title">
-            <h1>Recently viewed</h1>
+            <h1>{ui("recentlyViewed")}</h1>
             <Icon name="arrow" />
           </SourceLink>
         </section>
@@ -222,13 +249,13 @@ export function Home({ catalog }: { catalog: Catalog }) {
               {hidden.includes(store.id) ? (
                 <div className="hidden-shop">
                   <Icon name="eye-off" />
-                  <p>We’ll show you less like this</p>
+                  <p>{ui("weLlShowYouLessLikeThis")}</p>
                   <button
                     onClick={() =>
                       setHidden((v) => v.filter((id) => id !== store.id))
                     }
                   >
-                    Undo
+                    {ui("undo")}
                   </button>
                 </div>
               ) : (
@@ -249,9 +276,10 @@ export function Home({ catalog }: { catalog: Catalog }) {
                         <SourceLink href={`/products/${p.id}`}>
                           <strong>{p.title}</strong>
                           <p className="rating">
-                            <span>★★★★★</span> ({p.ratingCount})
+                            <span>★★★★★</span> (
+                            {displayCount(p.ratingCount, intlLocale)})
                           </p>
-                          <p>{formatMoney(p.price)}</p>
+                          <p>{formatMoney(p.price, intlLocale)}</p>
                         </SourceLink>
                       </div>
                     ))}
@@ -264,7 +292,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
         store={menuStore}
         rating={
           menuStore
-            ? `${menuStore.rating} ★ (${menuStore.ratingCount})`
+            ? `${displayRating(menuStore.rating, intlLocale)} ★ (${displayCount(menuStore.ratingCount, intlLocale)})`
             : undefined
         }
         stage={shopStage}
@@ -280,23 +308,26 @@ export function Home({ catalog }: { catalog: Catalog }) {
       {nativeRecentProducts && (
         <section
           className="android-merchant-card android-recent-panel"
-          aria-label="Recently viewed products"
+          aria-label={ui("recentlyViewedProducts")}
+          data-ui-label="recentlyViewedProducts"
         >
-          <p>Jump back in</p>
+          <p>{ui("jumpBackIn")}</p>
           <div className="product-rail">
             {recent.map((product) => (
               <ProductCard key={product.id} product={product} compact />
             ))}
           </div>
           <SourceLink href="/search?view=recent" className="merchant-shop-all">
-            <strong>Recently viewed</strong>
+            <strong>{ui("recentlyViewed")}</strong>
             <span>
               <Icon name="arrow" />
             </span>
           </SourceLink>
         </section>
       )}
-      {nativeHome ? (
+      {scoped ? (
+        <BrowseScopeUnavailable />
+      ) : nativeHome ? (
         <HomeMerchantShelves
           catalog={catalog}
           hidden={hidden}
@@ -325,6 +356,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
         />
       )}
       {!nativeHome &&
+        !scoped &&
         !tracking &&
         !recentProducts &&
         !recentStores &&
@@ -351,7 +383,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
               }
             }}
           >
-            Keep going <Icon name="arrow" />
+            {ui("keepGoing")} <Icon name="arrow" />
           </button>
         )}
       {showCart && (

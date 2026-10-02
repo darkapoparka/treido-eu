@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MiniShell, NativeMiniPhotoAccess } from "./mini-frame";
@@ -11,6 +12,7 @@ import "./native-minis.css";
 
 /** The installed guest Mini stops here. No registry or authentication is simulated. */
 export function NativeMiniSignIn({ name }: { name: string }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <MiniShell
       name={name}
@@ -23,10 +25,12 @@ export function NativeMiniSignIn({ name }: { name: string }) {
       <section className="native-mini-access">
         <div>
           <img src="/api/reference-media/live-mini-signin" alt="" />
-          <h1>Sign in required</h1>
-          <p>Please sign in to your Shop account to load {name}.</p>
+          <h1>{ui("signInRequired")}</h1>
+          <p>
+            {ui("pleaseSignInToYourShopAccountToLoad")} {name}.
+          </p>
           <ContextualCloseLink href="/minis" className="native-mini-close">
-            Close
+            {ui("close")}
           </ContextualCloseLink>
         </div>
       </section>
@@ -35,6 +39,7 @@ export function NativeMiniSignIn({ name }: { name: string }) {
 }
 
 export function MakeupMaster() {
+  const ui = useTranslations("discoveryUI");
   const router = useRouter();
   const { params, change } = useMiniRoute("/minis/makeup");
   const requested = params.get("makeup");
@@ -63,16 +68,17 @@ export function MakeupMaster() {
             <img
               className="makeup-welcome-art"
               src="/api/reference-media/live-makeup-welcome-art"
-              alt="Makeup Master beauty inspiration"
+              alt={ui("makeupMasterBeautyInspiration")}
               data-media-state="source-still"
             />
             <div className="makeup-welcome-actions">
               <button
                 type="button"
-                aria-label="Your past makeups"
+                aria-label={ui("yourPastMakeups")}
                 onClick={() =>
                   change({ makeup: "history" }, false, { makeupStep: true })
                 }
+                data-ui-label="yourPastMakeups"
               >
                 <Icon name="history" />
               </button>
@@ -82,7 +88,7 @@ export function MakeupMaster() {
                   change({ makeup: "upload" }, false, { makeupStep: true })
                 }
               >
-                Get started
+                {ui("getStarted")}
               </button>
             </div>
           </>
@@ -91,8 +97,9 @@ export function MakeupMaster() {
             <button
               type="button"
               className="makeup-step-back"
-              aria-label="Back to Makeup Master"
+              aria-label={ui("backToMakeupMaster")}
               onClick={back}
+              data-ui-label="backToMakeupMaster"
             >
               <Icon name="back" />
             </button>
@@ -100,7 +107,7 @@ export function MakeupMaster() {
               <h1>
                 <img
                   src="/api/reference-media/live-makeup-history-wordmark"
-                  alt="Your past makeups"
+                  alt={ui("yourPastMakeups")}
                 />
               </h1>
             ) : (
@@ -108,31 +115,30 @@ export function MakeupMaster() {
                 <h1>
                   <img
                     src="/api/reference-media/live-makeup-upload-wordmark"
-                    alt="Upload your best selfie"
+                    alt={ui("uploadYourBestSelfie")}
                   />
                 </h1>
                 <p className="makeup-introduction">
-                  For the most accurate makeup try-on, please upload a no-makeup
-                  selfie. Look straight into the camera, keep your face relaxed,
-                  and avoid strong shadows or filters.
+                  {ui("forTheMostAccurateMakeupTryOnPleaseUploadA")}
                 </p>
                 <img
                   className="makeup-selfie"
                   src="/api/reference-media/live-makeup-selfie"
-                  alt="Example of a front-facing selfie"
+                  alt={ui("exampleOfAFrontFacingSelfie")}
                 />
                 <button
                   className="makeup-upload-action"
                   type="button"
                   onClick={() => setAccess(true)}
                 >
-                  Upload image
+                  {ui("uploadImage")}
                 </button>
                 <p className="makeup-privacy">
                   <img src="/api/reference-media/live-makeup-lipstick" alt="" />
                   <span>
-                    Your no-makeup selfie is here for the glow-up only —<br />
-                    never saved, never shared
+                    {ui("yourNoMakeupSelfieIsHereForTheGlowUp")}
+                    <br />
+                    {ui("neverSavedNeverShared")}
                   </span>
                 </p>
               </>
@@ -152,7 +158,7 @@ export function MakeupMaster() {
       <LocalPhotoPicker
         open={picker}
         onClose={() => setPicker(false)}
-        title="Choose a photo"
+        title={ui("chooseAPhoto")}
         referenceExamples={false}
         anchorSelector=".makeup-upload-action"
       />

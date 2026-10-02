@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("reference pages and media are unavailable without preview opt-in", async ({
+test("production keeps reference pages and assets unavailable", async ({
   request,
 }) => {
   for (const path of [
@@ -8,7 +8,12 @@ test("reference pages and media are unavailable without preview opt-in", async (
     "/search",
     "/profile",
     "/checkout",
+    "/products/shea-butter",
+    "/products/not-a-reference-product",
+    "/api/products/shea-butter/context?cart=rice-bundle&cover=rice-bundle",
     "/api/reference-media/cleo",
+    "/api/reference-font",
+    "/api/reference-font/regular",
     "/api/reference-video/kitsch-hero",
   ]) {
     const response = await request.get(path);

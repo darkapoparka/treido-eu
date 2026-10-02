@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Sheet } from "../discovery/components";
 import { AddressEditor } from "../account/forms";
@@ -10,6 +11,7 @@ export function InitialPayment({
   address?: Address;
   onContinue: () => void;
 }) {
+  const ui = useTranslations("commerceUI");
   const [pending, setPending] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -35,7 +37,7 @@ export function InitialPayment({
             new FormData(e.currentTarget).get("cardNumber") ?? "",
           ).replace(/\s/g, "");
           if (!/^\d{12,19}$/.test(number)) {
-            setError("Check your card number and try again.");
+            setError(ui("checkYourCardNumberAndTryAgain"));
             return;
           }
           setError("");
@@ -53,22 +55,24 @@ export function InitialPayment({
         <div className="initial-card-fields">
           <input
             name="cardNumber"
-            aria-label="Card number"
-            placeholder="Card number"
+            aria-label={ui("cardNumber")}
+            placeholder={ui("cardNumber")}
             inputMode="numeric"
             autoComplete="off"
             required
             pattern="[0-9 ]{12,23}"
             minLength={12}
             maxLength={23}
+            data-ui-label="cardNumber"
           />
           <div>
             <input
-              aria-label="Expiry (MM/YY)"
-              placeholder="Expiry (MM/YY)"
+              aria-label={ui("expiryMMYY")}
+              placeholder={ui("expiryMMYY")}
               autoComplete="off"
               pattern="(0[1-9]|1[0-2])/[0-9]{2}"
               required
+              data-ui-label="expiryMMYY"
             />
             <input
               aria-label="CVV"
@@ -81,9 +85,10 @@ export function InitialPayment({
             <button
               type="button"
               className="initial-card-help"
-              aria-label="About security code"
+              aria-label={ui("aboutSecurityCode")}
               aria-expanded={securityHelp}
               onClick={() => setSecurityHelp((current) => !current)}
+              data-ui-label="aboutSecurityCode"
             >
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <rect x="2" y="3.5" width="16" height="13" rx="2.5" />
@@ -94,15 +99,16 @@ export function InitialPayment({
         </div>
         {securityHelp && (
           <p className="form-note" role="status">
-            The 3 or 4 digit security code printed on your card.
+            {ui("the3Or4DigitSecurityCodePrintedOnYour")}
           </p>
         )}
         <input
           className="initial-card-name"
-          aria-label="Name on card"
-          placeholder="Name on card"
+          aria-label={ui("nameOnCard")}
+          placeholder={ui("nameOnCard")}
           autoComplete="off"
           required
+          data-ui-label="nameOnCard"
         />
         <label className="initial-billing">
           <input
@@ -114,17 +120,17 @@ export function InitialPayment({
             }}
           />
           <span>
-            Billing address same as shipping
+            {ui("billingAddressSameAsShipping")}
             <small>
               {address
                 ? `${address.street}, ${address.city}, ${address.postalCode}, US`
-                : "Add a shipping address"}
+                : ui("addAShippingAddress")}
             </small>
           </span>
         </label>
         {!same && billing && (
           <div className="initial-billing-selection">
-            <strong>Billing address</strong>
+            <strong>{ui("billingAddress")}</strong>
             <p>
               {billing.firstName} {billing.lastName}
               <br />
@@ -137,7 +143,7 @@ export function InitialPayment({
               className="checkout-link"
               onClick={() => setEditing(true)}
             >
-              Edit billing address
+              {ui("editBillingAddress")}
             </button>
           </div>
         )}
@@ -152,27 +158,28 @@ export function InitialPayment({
             className="checkout-link"
             onClick={() => setEditing(true)}
           >
-            Add billing address
+            {ui("addBillingAddress")}
           </button>
         )}
         <div className="checkout-pay">
           <button
             className="primary"
             disabled={pending}
-            aria-label="Continue to review"
+            aria-label={ui("continueToReview")}
             aria-busy={pending}
+            data-ui-label="continueToReview"
           >
             {pending ? (
               <span className="captured-button-spinner" aria-hidden="true" />
             ) : (
-              "Continue to review"
+              ui("continueToReview")
             )}
           </button>
         </div>
       </form>
       <Sheet
         open={editing}
-        title="Billing address"
+        title={ui("billingAddress")}
         onClose={() => setEditing(false)}
       >
         <AddressEditor
@@ -187,10 +194,10 @@ export function InitialPayment({
       </Sheet>
       <Sheet
         open={boundary}
-        title="Payment service is not connected"
+        title={ui("paymentServiceIsNotConnected")}
         onClose={() => setBoundary(false)}
       >
-        <p>Your card has not been saved or charged.</p>
+        <p>{ui("yourCardHasNotBeenSavedOrCharged")}</p>
         <button
           className="form-cancel"
           onClick={() => {
@@ -198,7 +205,7 @@ export function InitialPayment({
             onContinue();
           }}
         >
-          Continue with saved payment method
+          {ui("continueWithSavedPaymentMethod")}
         </button>
       </Sheet>
     </>

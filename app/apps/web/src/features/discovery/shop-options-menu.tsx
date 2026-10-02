@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Existing reference brand marks. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { IconButton, Sheet } from "./components";
@@ -36,6 +38,8 @@ export function ShopOptionsMenu({
   onHide: () => void;
   onVisit?: () => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const native = store?.referenceStyle === "android";
   const [reportReason, setReportReason] = useState("");
@@ -126,11 +130,11 @@ export function ShopOptionsMenu({
       open={open}
       title={
         stage === "reason"
-          ? "Not interested"
+          ? ui("notInterested")
           : stage === "report"
-            ? "Report shop"
+            ? ui("reportShop")
             : stage === "reported"
-              ? "Report saved"
+              ? ui("reportSaved")
               : (store?.name ?? "Shop")
       }
       headerless={stage === "menu" || native}
@@ -143,12 +147,17 @@ export function ShopOptionsMenu({
         <div className="sheet-header">
           <h2>
             {stage === "reason"
-              ? "Not interested"
+              ? ui("notInterested")
               : stage === "report"
-                ? "Report shop"
-                : "Report saved"}
+                ? ui("reportShop")
+                : ui("reportSaved")}
           </h2>
-          <IconButton icon="close" label="Close shop options" onClick={close} />
+          <IconButton
+            icon="close"
+            label={ui("closeShopOptions")}
+            onClick={close}
+            data-ui-label="closeShopOptions"
+          />
         </div>
       )}
       {stage === "menu" ? (
@@ -161,15 +170,16 @@ export function ShopOptionsMenu({
             </span>
             <IconButton
               icon="close"
-              label="Close shop options"
+              label={ui("closeShopOptions")}
               onClick={close}
+              data-ui-label="closeShopOptions"
             />
           </header>
           <div className="campaign-menu-rows">
             {onVisit ? (
               <button onClick={onVisit}>
                 <Icon name="storefront" />
-                Visit shop
+                {ui("visitShop")}
               </button>
             ) : (
               <Link
@@ -183,7 +193,7 @@ export function ShopOptionsMenu({
                 }}
               >
                 <Icon name="storefront" />
-                Visit shop
+                {ui("visitShop")}
               </Link>
             )}
             {store && (
@@ -192,12 +202,14 @@ export function ShopOptionsMenu({
                 onClick={() => state.toggleFollow(store.id)}
               >
                 <Icon name="plus-circle" />
-                {state.followed.includes(store.id) ? "Following" : "Follow"}
+                {state.followed.includes(store.id)
+                  ? ui("following")
+                  : ui("follow")}
               </button>
             )}
             <button data-menu-stage="reason" onClick={() => navigate("reason")}>
               <Icon name="thumb-down" />
-              Not interested
+              {ui("notInterested")}
             </button>
             <button
               data-menu-stage="report"
@@ -207,13 +219,13 @@ export function ShopOptionsMenu({
               }}
             >
               <Icon name="alert" />
-              Report shop
+              {ui("reportShop")}
             </button>
           </div>
         </>
       ) : stage === "reason" ? (
         <>
-          <p>Please select a reason</p>
+          <p>{ui("pleaseSelectAReason")}</p>
           <div className="campaign-reasons">
             {[
               "I just don’t like it",
@@ -222,14 +234,14 @@ export function ShopOptionsMenu({
               `Want to see less of ${store?.name ?? "this shop"}`,
             ].map((reason) => (
               <button key={reason} onClick={hide}>
-                {reason}
+                {caption(reason)}
               </button>
             ))}
           </div>
         </>
       ) : stage === "report" ? (
         <>
-          <p>Please select a reason</p>
+          <p>{ui("pleaseSelectAReason")}</p>
           <div className="filter-options">
             {[
               "Misleading",
@@ -238,7 +250,7 @@ export function ShopOptionsMenu({
               "Other",
             ].map((reason) => (
               <label key={reason}>
-                {reason}
+                {caption(reason)}
                 <input
                   type="radio"
                   name="campaign-report"
@@ -253,12 +265,12 @@ export function ShopOptionsMenu({
             disabled={!reportReason}
             onClick={() => navigate("reported")}
           >
-            Report
+            {ui("report")}
           </button>
         </>
       ) : (
         <p className="sheet-copy">
-          This report was recorded locally. No report was sent.
+          {ui("thisReportWasRecordedLocallyNoReportWasSent")}
         </p>
       )}
     </Sheet>

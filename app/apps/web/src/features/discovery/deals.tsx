@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Frozen reference-media photographs. */
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { SourceLink } from "./return-navigation";
 import { useRouter } from "next/navigation";
@@ -27,12 +29,14 @@ function DealCard({
   product: DealListing;
   onOpen: () => void;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   return (
     <article className="deal-product" data-product-id={product.id}>
       <button
         className="deal-product-photo"
-        aria-label={`View ${product.title}`}
+        aria-label={ui("viewValue1", { value1: product.title ?? "" })}
         onClick={onOpen}
       >
         <img src={product.images[0]} alt="" />
@@ -40,7 +44,7 @@ function DealCard({
       <IconButton
         className="deal-save"
         icon="heart"
-        label={`${state.saved.includes(product.id) ? "Unsave" : "Save"} ${product.title}`}
+        label={`${state.saved.includes(product.id) ? ui("unsave") : ui("save")} ${product.title}`}
         pressed={state.saved.includes(product.id)}
         onClick={() => state.toggleSaved(product.id)}
       />
@@ -49,13 +53,15 @@ function DealCard({
         <span className="deal-rating">
           <ReviewStars rating={5} /> ({product.reviews})
         </span>
-        <span>{formatMoney(product.price)}</span>
+        <span>{formatMoney(product.price, intlLocale)}</span>
       </button>
     </article>
   );
 }
 
 export function Deals({ initialStoreId }: { initialStoreId?: string }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const router = useRouter();
   const state = useDiscovery();
   const [menuId, setMenuId] = useState("");
@@ -74,9 +80,18 @@ export function Deals({ initialStoreId }: { initialStoreId?: string }) {
   }
   return (
     <ShopSurface className="shop-page deals-page">
-      <h1>Deals</h1>
-      <div className="deals-filter-rail" aria-label="Deal categories">
-        <SourceLink className="deals-search" href="/search" aria-label="Search">
+      <h1>{ui("deals")}</h1>
+      <div
+        className="deals-filter-rail"
+        aria-label={ui("dealCategories")}
+        data-ui-label="dealCategories"
+      >
+        <SourceLink
+          className="deals-search"
+          href="/search"
+          aria-label={ui("search")}
+          data-ui-label="search"
+        >
           <Icon name="search" />
         </SourceLink>
         {chips.map((chip) => (
@@ -100,37 +115,43 @@ export function Deals({ initialStoreId }: { initialStoreId?: string }) {
               <button
                 className="deal-store-identity"
                 onClick={() => setShopId(store.id)}
-                aria-label={`Visit ${store.name}`}
+                aria-label={ui("visitValue1", { value1: store.name ?? "" })}
               >
                 <img src={store.logo} alt="" />
                 <span>
                   <strong>{store.name}</strong>
                   <small>
-                    <b>Save ${store.offer}</b> on orders over ${store.threshold}
+                    <b>
+                      {ui("save_06f8f0")}
+                      {store.offer}
+                    </b>{" "}
+                    {ui("onOrdersOver")}
+                    {store.threshold}
                   </small>
                 </span>
               </button>
               <IconButton
                 icon="more"
-                label={`More options for ${store.name}`}
+                label={ui("moreOptionsForValue1", { value1: store.name ?? "" })}
                 onClick={() => {
                   lastMenuId.current = store.id;
                   setMenuId(store.id);
                   setStage("menu");
                 }}
+                data-ui-label="moreOptionsForValue1"
               />
             </header>
             {hidden.includes(store.id) ? (
               <div className="deal-hidden" role="status">
                 <Icon name="eye-off" />
-                <p>We’ll show you less like this</p>
+                <p>{ui("weLlShowYouLessLikeThis")}</p>
                 <button
                   className="pill"
                   onClick={() =>
                     setHidden((ids) => ids.filter((id) => id !== store.id))
                   }
                 >
-                  Undo
+                  {ui("undo")}
                 </button>
               </div>
             ) : (
@@ -149,7 +170,9 @@ export function Deals({ initialStoreId }: { initialStoreId?: string }) {
                 })}
                 <button
                   className="deal-source-tail"
-                  aria-label={`Additional captured products from ${store.name}`}
+                  aria-label={ui("additionalCapturedProductsFromValue1", {
+                    value1: store.name ?? "",
+                  })}
                   onClick={() => setUnidentifiedStoreId(store.id)}
                 >
                   <img src={store.trailingPhoto} alt="" />
@@ -185,20 +208,23 @@ export function Deals({ initialStoreId }: { initialStoreId?: string }) {
               <img src={shop.logo} alt="" />
               <div>
                 <p>
-                  Save ${shop.offer} on orders over ${shop.threshold}
+                  {ui("save_06f8f0")}
+                  {shop.offer} {ui("onOrdersOver")}
+                  {shop.threshold}
                 </p>
                 <button
                   className="pill"
                   aria-pressed={state.followed.includes(shop.id)}
                   onClick={() => state.toggleFollow(shop.id)}
                 >
-                  {state.followed.includes(shop.id) ? "Following" : "Follow"}
+                  {state.followed.includes(shop.id)
+                    ? ui("following")
+                    : ui("follow")}
                 </button>
               </div>
             </div>
             <p className="sheet-copy">
-              The captured deal and items are shown below. A complete storefront
-              and checkout offer were not recorded.
+              {ui("theCapturedDealAndItemsAreShownBelowAComplete")}
             </p>
             <div className="deal-product-rail">
               {shop.productIds.map((id) => (
@@ -213,14 +239,14 @@ export function Deals({ initialStoreId }: { initialStoreId?: string }) {
               className="primary form-submit"
               onClick={() => setShopId("")}
             >
-              Return to Deals
+              {ui("returnToDeals")}
             </button>
           </>
         )}
       </Sheet>
       <Sheet
         open={!!product}
-        title={product?.title ?? "Captured item"}
+        title={product?.title ?? ui("capturedItem")}
         onClose={() => setProductId("")}
         className="deal-detail-sheet"
       >
@@ -232,7 +258,7 @@ export function Deals({ initialStoreId }: { initialStoreId?: string }) {
               alt={product.title}
             />
             <p className="deal-detail-seller">{product.sellerName}</p>
-            <strong>{formatMoney(product.price)}</strong>
+            <strong>{formatMoney(product.price, intlLocale)}</strong>
             <p className="sheet-copy">{product.detailUnavailable}</p>
             <button
               className="primary form-submit"
@@ -240,29 +266,28 @@ export function Deals({ initialStoreId }: { initialStoreId?: string }) {
               onClick={() => state.toggleSaved(product.id)}
             >
               {state.saved.includes(product.id)
-                ? "Remove from Saved"
-                : "Save item"}
+                ? ui("removeFromSaved")
+                : ui("saveItem")}
             </button>
             <Link className="pill deal-view-saved" href="/saved">
-              View Saved
+              {ui("viewSaved")}
             </Link>
           </>
         )}
       </Sheet>
       <Sheet
         open={!!unidentifiedStoreId}
-        title="Additional captured products"
+        title={ui("additionalCapturedProducts")}
         onClose={() => setUnidentifiedStoreId("")}
       >
         <p className="sheet-copy">
-          Only the edge of the next product photograph appears in the capture.
-          Its full name, photograph and product details are unavailable.
+          {ui("onlyTheEdgeOfTheNextProductPhotographAppearsIn")}
         </p>
         <button
           className="primary form-submit"
           onClick={() => setUnidentifiedStoreId("")}
         >
-          Return to Deals
+          {ui("returnToDeals")}
         </button>
       </Sheet>
     </ShopSurface>

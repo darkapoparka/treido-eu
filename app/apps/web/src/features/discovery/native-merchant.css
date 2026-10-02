@@ -1,0 +1,1300 @@
+/* Installed Android merchant surfaces; frozen iOS owners are unchanged. */
+.shop-page.android-live.native-merchant {
+  background: var(--merchant-bg);
+  color: var(--merchant-ink);
+  font-family: ShopAndroidRoboto, Roboto, Arial, sans-serif;
+  padding: 0 16px 100px;
+  min-height: 100dvh;
+}
+.native-merchant h1,
+.native-merchant h2 {
+  color: inherit;
+}
+.native-merchant h2 {
+  font:
+    600 23.667px/28px ShopSellerBrand,
+    Arial,
+    sans-serif;
+  margin: 0;
+  letter-spacing: -0.65px;
+}
+.native-merchant-toolbar {
+  position: fixed;
+  z-index: 35;
+  top: 8px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  height: 40px;
+  align-items: center;
+}
+.native-merchant-toolbar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -8px -16px -16px;
+  background: linear-gradient(var(--merchant-bg) 45%, transparent);
+  pointer-events: none;
+}
+.native-merchant-toolbar .icon-button {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--merchant-controls, var(--merchant-panel));
+  color: inherit;
+  box-shadow: 0 0 0 1px #00000006;
+}
+.native-merchant-toolbar .icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+/* The search page has the same suffix; pill geometry belongs to the toolbar. */
+.native-merchant-toolbar .native-merchant-search {
+  height: 40px;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--merchant-controls, var(--merchant-panel));
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.native-merchant-toolbar .native-merchant-search svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.native-merchant-toolbar .native-merchant-search span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.native-merchant-toolbar .native-merchant-follow {
+  height: 40px;
+  min-height: 40px;
+  min-width: 88px;
+  padding: 0 20px;
+  border: 0;
+  background: var(--merchant-controls, var(--merchant-panel));
+  color: inherit;
+  font:
+    500 14px/18px ShopAndroidRoboto,
+    Arial,
+    sans-serif;
+}
+.native-merchant-toolbar.is-profile .native-merchant-follow {
+  margin-left: auto;
+}
+.native-merchant-brand {
+  padding-top: var(--merchant-mark-top, 74px);
+  text-align: center;
+  background-size: cover;
+  background-position: center;
+}
+.native-merchant-wordmark {
+  display: block;
+  width: var(--merchant-mark-width, 247.333px);
+  height: var(--merchant-mark-height, 106.667px);
+  max-width: 90%;
+  object-fit: contain;
+  margin: 0 auto;
+}
+.native-merchant-brand h1 {
+  font:
+    700 32px/38px ShopSellerBrand,
+    Arial,
+    sans-serif;
+  margin: 0 auto;
+  min-height: 106.667px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-direction: column;
+}
+.native-merchant-brand h1 img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+.native-merchant-brand > .native-merchant-rating {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+.native-merchant-categories {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+  margin: 52px -16px 0;
+  padding: 0 16px;
+  scrollbar-width: none;
+}
+.native-merchant-category {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: var(--merchant-panel);
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.native-merchant-category img,
+.native-merchant-category > svg {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.native-merchant-panel {
+  display: block;
+  border: 0;
+  border-radius: 28px;
+  background: var(--merchant-panel);
+  padding: 16px;
+  color: inherit;
+}
+.native-merchant-collections {
+  margin-top: 40px;
+  padding-bottom: 32px;
+  box-shadow: 0 2px 3px #0001;
+  overflow: hidden;
+}
+.native-merchant-collection-rail {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+  margin: 12px -16px 0 0;
+  padding-right: 16px;
+  scrollbar-width: none;
+}
+.native-merchant-collection-tile {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 150px;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.native-merchant-collection-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 20px;
+}
+.native-merchant-collection-tile span {
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.native-merchant-products {
+  margin-top: 40px;
+  scroll-margin-top: 64px;
+}
+.native-merchant .store-grid-heading {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.native-merchant .store-grid-heading h2 {
+  font:
+    500 18px/22px ShopAndroidRoboto,
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+}
+.native-merchant .store-grid-heading .icon-button {
+  height: 40px;
+  width: 40px;
+  border: 0;
+  background: #151515;
+  color: #fff;
+  border-radius: 50%;
+  padding: 10px;
+}
+.native-merchant .product-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 12px;
+}
+.native-merchant .product-media {
+  aspect-ratio: 1;
+  height: auto;
+  border-radius: 20px;
+  background: #fff2;
+}
+.native-merchant .product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.native-merchant .product-copy {
+  padding: 0;
+  margin: 8px 4px 0;
+  gap: 0;
+  font:
+    400 12px/17.667px ShopAndroidRoboto,
+    Arial,
+    sans-serif;
+}
+.native-merchant .product-copy strong {
+  font:
+    600 11.667px/17.667px ShopSellerBrand,
+    Arial,
+    sans-serif;
+}
+.native-merchant .product-copy .rating,
+.native-merchant .product-copy > span {
+  font-size: 12px;
+  line-height: 17.667px;
+}
+.native-merchant .save-button {
+  height: 32px;
+  width: 32px;
+  right: 12px;
+  bottom: 12px;
+  padding: 6px;
+  background: #0004;
+  border: 0;
+  color: white;
+}
+.native-merchant .save-button svg {
+  width: 20px;
+  height: 20px;
+}
+.native-merchant-info {
+  padding-bottom: 28px !important;
+}
+.native-merchant-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 64px;
+  min-height: 132px;
+}
+.native-merchant-identity > img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.native-merchant-identity > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+.native-merchant-identity b {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.native-merchant-identity a {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.native-merchant-description {
+  font-size: 14px;
+  line-height: 18px;
+  margin: 12px 0 36px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+.native-merchant-description[data-expanded="true"] {
+  display: block;
+}
+.native-merchant-more {
+  font-size: 14px;
+  text-decoration: none;
+  margin: -28px 0 24px;
+  display: block;
+}
+.native-merchant-profile-categories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.native-merchant-profile-categories .native-merchant-collection-tile {
+  gap: 8px;
+  line-height: 16.333px;
+}
+.native-merchant-profile-categories img {
+  border-radius: 24px;
+  border: 1px solid #0001;
+  outline: 3px solid #ffffff22;
+  outline-offset: -4px;
+}
+.native-merchant-info > .native-merchant-panel {
+  margin-top: 20px;
+}
+.native-merchant-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+}
+.native-merchant-panel-heading > svg {
+  padding: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #00000006;
+}
+.native-merchant-review-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 20px;
+  min-height: 48px;
+}
+.native-merchant-review-score b {
+  display: block;
+  font:
+    600 24px/28px ShopSellerBrand,
+    Arial,
+    sans-serif;
+}
+.native-merchant-review-score small {
+  font-size: 14px;
+  line-height: 18px;
+  opacity: 0.8;
+}
+.native-merchant-review-photos {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+  scrollbar-width: none;
+  margin: 0 -16px 0 0;
+  padding-right: 16px;
+}
+.native-merchant-review-photos > button {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.native-merchant-review-photos img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.native-merchant-review-previews {
+  display: flex;
+  gap: 16px;
+  overflow: auto;
+  scrollbar-width: none;
+  margin: 20px -16px 4px 0;
+  padding-right: 16px;
+}
+.native-merchant-review-preview {
+  display: flex;
+  flex: 0 0 95%;
+  flex-direction: column;
+  padding: 12px 16px 16px;
+  min-height: 114px;
+  border: 1px solid #0000000c;
+  background: #00000006;
+  border-radius: 20px;
+}
+.native-merchant-review-preview > span:not(.review-rating-stars) {
+  font-size: 12px;
+  line-height: 16px;
+  margin-top: 2px;
+}
+.native-merchant-review-preview small {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  padding-top: 20px;
+}
+.native-merchant-review-preview i,
+.native-merchant-review-list footer i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #bbbeb9;
+  color: #fff;
+  font-style: normal;
+  font-size: 14px;
+}
+.native-merchant-links h2 {
+  margin: 4px 0 16px;
+}
+.native-merchant-links > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 68px;
+  font-size: 16px;
+  line-height: 20px;
+}
+.native-merchant-links > a svg,
+.native-merchant-external svg {
+  height: 18px;
+  width: 18px;
+  flex: none;
+}
+.native-merchant-external {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 88px;
+  text-align: left;
+  font-size: 16px;
+}
+.native-merchant-reviews-heading {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  padding-top: 2px;
+}
+.native-merchant-reviews-heading h1 {
+  font:
+    600 23.667px/28px ShopSellerBrand,
+    Arial,
+    sans-serif;
+  letter-spacing: -0.6px;
+}
+.native-merchant-reviews-heading > a {
+  height: 44px;
+  width: 44px;
+  padding: 10px;
+  border-radius: 50%;
+  background: var(--merchant-panel);
+}
+.native-merchant-reviews-summary {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  min-height: 48px;
+  margin-bottom: 12px;
+}
+.native-merchant-reviews-summary > b {
+  font:
+    600 36px/44px ShopSellerBrand,
+    Arial,
+    sans-serif;
+  letter-spacing: -1px;
+}
+.native-merchant-reviews-summary small {
+  display: block;
+  font-size: 16px;
+  line-height: 20px;
+  opacity: 0.75;
+}
+.native-merchant-review-filters {
+  display: flex;
+  gap: 4px;
+  margin: 16px 0;
+}
+.native-merchant-review-filters > button {
+  height: 40px;
+  min-height: 40px;
+  border: 0;
+  background: white;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  border-radius: 999px;
+}
+.native-merchant-review-filters > .icon-button {
+  width: 40px;
+  padding: 10px;
+}
+.native-merchant-review-filters svg {
+  width: 16px;
+  height: 16px;
+}
+.native-merchant-review-filters .pill > svg {
+  transform: rotate(90deg);
+  width: 12px;
+  height: 12px;
+}
+.native-merchant-review-list article {
+  margin: 0 0 16px;
+  padding: 16px;
+  background: var(--merchant-review-card, #00000008);
+  border: 1px solid var(--merchant-review-border, #0000000a);
+  border-radius: 28px;
+}
+.native-merchant-review-product {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.native-merchant-review-product > img {
+  height: 64px;
+  width: 64px;
+  flex: none;
+  border-radius: 16px;
+  object-fit: cover;
+}
+.native-merchant-review-product > div {
+  min-width: 0;
+}
+.native-merchant-review-product h2 {
+  font:
+    500 16px/20px ShopAndroidRoboto,
+    Arial,
+    sans-serif;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin: 3px 0 2px;
+}
+.native-merchant-review-product small {
+  font:
+    400 12px/16px ShopAndroidRoboto,
+    Arial,
+    sans-serif;
+  opacity: 0.65;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.native-merchant-review-list article > p {
+  font-size: 16px;
+  line-height: 22px;
+  margin: 8px 0 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.native-merchant-review-list article > p[data-expanded="true"] {
+  display: block;
+}
+.native-merchant-read-more {
+  display: block;
+  text-decoration: underline;
+  font-size: 14px;
+  line-height: 20px;
+  padding: 0;
+}
+.native-merchant-review-list footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  min-height: 28px;
+  margin-top: 16px;
+  opacity: 0.8;
+}
+.native-merchant-review-list footer .icon-button {
+  margin-left: auto;
+  padding: 6px;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 0;
+}
+.native-merchant-review-filter-sheet .native-merchant-choice-list {
+  display: flex;
+  flex-direction: column;
+}
+.native-merchant-choice-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  font-size: 16px;
+}
+.native-merchant-review-empty {
+  padding: 32px 16px;
+  text-align: center;
+}
+.native-merchant-review-empty p {
+  font-size: 14px;
+  line-height: 20px;
+}
+.native-merchant-info .review-rating-stars-fill,
+.native-merchant-reviews .review-rating-stars-fill {
+  color: var(--merchant-ink);
+}
+.native-merchant-info .review-rating-stars-empty,
+.native-merchant-reviews .review-rating-stars-empty {
+  color: #0004;
+}
+.native-merchant-info .review-rating-stars,
+.native-merchant-reviews .review-rating-stars {
+  --merchant-star: 24px;
+  width: 120px;
+  height: 24px;
+}
+.native-merchant .native-merchant-review-product .review-rating-stars {
+  --merchant-star: 20px;
+  width: 100px;
+  height: 20px;
+}
+.native-merchant .native-merchant-review-preview .review-rating-stars {
+  --merchant-star: 12px;
+  width: 60px;
+  height: 12px;
+}
+.native-merchant-info .review-rating-stars svg,
+.native-merchant-reviews .review-rating-stars svg {
+  width: var(--merchant-star);
+  height: var(--merchant-star);
+  flex: none;
+  stroke: none;
+}
+.native-merchant-info .review-rating-stars-fill > span,
+.native-merchant-reviews .review-rating-stars-fill > span {
+  display: flex;
+  gap: 0;
+  width: 120px;
+}
+.native-merchant
+  .native-merchant-review-product
+  .review-rating-stars-fill
+  > span {
+  width: 100px;
+}
+.native-merchant
+  .native-merchant-review-preview
+  .review-rating-stars-fill
+  > span {
+  width: 60px;
+}
+.native-merchant-store {
+  position: relative;
+  isolation: isolate;
+}
+.native-merchant-brand {
+  position: relative;
+  height: var(--merchant-hero-height);
+}
+.native-merchant-cover {
+  position: absolute;
+  z-index: -1;
+  top: -52px;
+  left: 0;
+  right: 0;
+  height: var(--merchant-cover-height, 364px);
+  overflow: hidden;
+  pointer-events: none;
+}
+.native-merchant-cover > img,
+.native-merchant-cover video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.native-merchant-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(#0002, #0002 38%, var(--merchant-bg) 97%);
+}
+.native-merchant-store:has(.native-merchant-cover)
+  .native-merchant-toolbar::before {
+  background: linear-gradient(#0002, transparent);
+}
+.native-merchant-featured {
+  margin-top: 40px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid #fff2;
+}
+.native-merchant-featured .product-rail {
+  margin: 12px -16px 0 0;
+  padding-right: 16px;
+  gap: 8px;
+}
+.native-merchant-featured .product-card {
+  width: 150px;
+  flex: 0 0 150px;
+}
+.native-merchant-featured .product-media {
+  width: 150px;
+  height: 150px;
+}
+.native-merchant-featured .product-copy .review-rating-stars-fill {
+  color: white;
+}
+.native-merchant-profile-categories
+  .native-merchant-collection-tile[data-wide="true"] {
+  grid-column: 1 / -1;
+}
+.native-merchant-profile-categories
+  .native-merchant-collection-tile[data-wide="true"]
+  img {
+  aspect-ratio: 2;
+}
+.native-merchant-description {
+  white-space: pre-line;
+}
+.native-merchant-reply {
+  margin: 12px -4px -4px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #ffffff12;
+}
+.native-merchant-reply p {
+  font-size: 14px;
+  line-height: 20px;
+  margin: 0 0 12px;
+}
+.native-merchant-reply small {
+  opacity: 0.7;
+}
+.native-merchant-photo-expanded {
+  display: block;
+  max-width: 100%;
+  max-height: 60dvh;
+  object-fit: contain;
+  margin: 16px auto;
+}
+.native-merchant-gallery-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+}
+.native-merchant-gallery-actions button {
+  min-height: 44px;
+}
+.native-merchant-collection-heading {
+  font:
+    600 28px/34px ShopSellerBrand,
+    Arial,
+    sans-serif;
+  padding-top: 76px;
+  margin: 0 0 24px;
+}
+.native-merchant-collection-cover {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 24px;
+  margin-bottom: 24px;
+}
+.native-merchant-capture-note {
+  font-size: 14px;
+  line-height: 20px;
+}
+.native-merchant .floating-dock .dock-back {
+  color: #111;
+  background: #fff;
+}
+.native-merchant .floating-dock .dock-cart {
+  color: #111;
+}
+.shop-page.native-merchant .floating-dock {
+  bottom: 9px;
+}
+.shop-page.native-merchant .floating-nav {
+  width: 208px;
+}
+.shop-page.native-merchant .floating-nav svg {
+  transform: none;
+}
+.shop-page.native-merchant .floating-nav a:not([aria-current]) {
+  color: #707070;
+}
+@media (max-width: 359px) {
+  .shop-page.native-merchant .floating-nav {
+    width: 188px;
+  }
+}
+.native-merchant .native-merchant-reviews-heading > .icon-button {
+  color: inherit;
+}
+.native-merchant-info .native-merchant-description[data-expanded="false"] {
+  -webkit-line-clamp: 3;
+}
+@media (max-width: 350px) {
+  .native-merchant-toolbar {
+    gap: 4px;
+  }
+  .native-merchant-toolbar .native-merchant-follow {
+    min-width: 72px;
+    padding: 0 12px;
+  }
+  .native-merchant-toolbar .native-merchant-search {
+    gap: 4px;
+    padding: 0 8px;
+  }
+  .native-merchant-toolbar .native-merchant-search span {
+    font-size: 12px;
+  }
+}
+
+/* Expanded merchant bios reserve the native More control's full touch row. */
+.native-merchant-description:has(+ .native-merchant-more) {
+  margin-bottom: 7px;
+}
+.native-merchant .native-merchant-more {
+  height: 48px;
+  margin: 0 0 20px;
+  padding: 2px 0 0;
+  display: flex;
+  align-items: flex-start;
+}
+.native-merchant .product-card .review-rating-stars-fill {
+  color: var(--merchant-ink);
+}
+.native-merchant .native-merchant-brand > .sr-only {
+  min-height: 0;
+}
+
+.native-merchant-review-filter-sheet {
+  border-radius: 24px;
+  padding: 16px;
+  background: #fcfcfc;
+  color: #111;
+}
+.native-merchant-review-filter-sheet .native-merchant-choice-list > button {
+  min-height: 56px;
+  font:
+    500 16px/20px ShopAndroidRoboto,
+    Arial,
+    sans-serif;
+  text-align: left;
+}
+.native-merchant-review-filter-sheet
+  .native-merchant-choice-list
+  > button
+  > span:not(.merchant-review-checkbox):not(.merchant-review-radio) {
+  margin-left: auto;
+  padding-right: 12px;
+  font-weight: 400;
+  color: #707070;
+}
+.merchant-review-checkbox,
+.merchant-review-radio {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #c7c9ca;
+  border-radius: 4px;
+  margin-left: auto;
+}
+.merchant-review-radio {
+  border-radius: 50%;
+}
+.merchant-review-checkbox[data-selected="true"],
+.merchant-review-radio[data-selected="true"] {
+  border-color: #111;
+  background: #111;
+  color: white;
+}
+.merchant-review-radio[data-selected="true"]::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
+.merchant-review-checkbox svg {
+  width: 16px;
+  height: 16px;
+}
+.native-merchant-filter-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 24px;
+}
+.native-merchant-filter-actions > button {
+  flex: 1;
+  height: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+}
+.native-merchant-filter-actions > .primary {
+  background: #111;
+  color: white;
+}
+.native-merchant-filter-actions > .pill {
+  background: #eef0f1;
+  border: 1px solid #e2e5e7;
+}
+.native-merchant-filter-actions > .pill:disabled {
+  color: #a0a4a7;
+  opacity: 1;
+}
+
+/* Native seller menu: inset collection borders and separate profile controls. */
+.native-merchant-toolbar.is-profile {
+  height: 44px;
+}
+.native-merchant-toolbar.is-profile > .icon-button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 12px;
+}
+.native-merchant-profile-categories img {
+  border: 4px solid #ffffff40;
+  outline: none;
+}
+.native-merchant-description {
+  color: color-mix(in srgb, var(--merchant-ink) 80%, transparent);
+}
+.native-merchant-toolbar:not(.is-profile) {
+  top: 12px;
+  gap: 4px;
+}
+.native-merchant-toolbar:not(.is-profile) .native-merchant-follow {
+  margin-left: 4px;
+}
+
+.native-merchant-toolbar .native-merchant-follow[data-following="true"] {
+  width: 40px;
+  min-width: 40px;
+  padding: 10px;
+  display: grid;
+  place-items: center;
+}
+.native-merchant-follow > svg {
+  width: 20px;
+  height: 20px;
+}
+.native-merchant-store[data-merchant="Ruggable"] .native-merchant-brand {
+  height: 260px;
+  padding-top: 52px;
+}
+.native-merchant-store[data-merchant="Ruggable"] .native-merchant-wordmark {
+  height: 106.667px;
+}
+
+.native-merchant[data-merchant="Ruggable"] .native-merchant-featured {
+  padding-bottom: 19px;
+}
+.native-merchant-feature-collection {
+  position: relative;
+  display: block;
+  margin-top: 16px;
+  height: 630px;
+  border: 1px solid #ffffff40;
+  border-radius: 28px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.native-merchant-feature-collection > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+.native-merchant-feature-collection > h2 {
+  margin: 16px;
+  text-shadow: 0 1px 3px #0003;
+}
+.native-merchant-feature-collection > svg {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border-radius: 50%;
+  background: #0002;
+}
+.native-merchant[data-merchant="Ruggable"]
+  .native-merchant-featured
+  .product-media
+  img {
+  object-fit: cover;
+  filter: brightness(0.96);
+}
+
+.native-merchant-collection-hero {
+  position: relative;
+  isolation: isolate;
+  height: 264px;
+  margin: 0 -16px;
+}
+.native-merchant-collection-hero > .native-merchant-collection-cover {
+  position: absolute;
+  inset: -52px 0 0;
+  width: 100%;
+  height: calc(100% + 52px);
+  max-height: none;
+  object-fit: cover;
+  border-radius: 0;
+  margin: 0;
+  z-index: -2;
+}
+.native-merchant-collection-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(transparent 35%, var(--merchant-bg));
+}
+.native-merchant-collection-caption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+}
+.native-merchant-collection-caption > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.native-merchant-collection-caption h1 {
+  margin: 0;
+  font:
+    600 23.667px/28px ShopSellerBrand,
+    Arial,
+    sans-serif;
+  letter-spacing: -0.6px;
+}
+.native-merchant-collection-caption .icon-button {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.native-merchant-collection-caption > a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.native-merchant-collection-caption > a > img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.native-merchant-product-filters {
+  display: flex;
+  gap: 8px;
+  margin: 16px -16px 6px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.native-merchant-product-filters > button {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  background: var(--merchant-panel);
+  font-size: 14px;
+  font-weight: 500;
+}
+.native-merchant-product-filters > .icon-button,
+.native-merchant-product-filters > button[aria-pressed="true"] {
+  color: #111;
+  background: #fff;
+}
+.native-merchant-product-filters > .icon-button {
+  width: 40px;
+  padding: 12px;
+}
+.native-merchant-product-filters svg {
+  width: 16px;
+  height: 16px;
+}
+.native-merchant-product-filters > button:not(.icon-button) svg {
+  transform: rotate(-90deg);
+  width: 12px;
+}
+
+.native-merchant-toolbar[data-collapsed="true"] > :not(:first-child) {
+  display: none;
+}
+.native-merchant-toolbar[data-collapsed="true"] > .icon-button {
+  width: 72px;
+  min-width: 72px;
+  padding: 4px 10px 4px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 999px;
+}
+.native-merchant-toolbar[data-collapsed="true"] > .icon-button > img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.native-merchant-toolbar[data-collapsed="true"] > .icon-button > svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.native-merchant-store:has(.native-merchant-toolbar[data-collapsed="true"])
+  .native-merchant-categories {
+  position: sticky;
+  top: 12px;
+  z-index: 36;
+  margin-left: 78px;
+  padding-left: 0;
+}
+
+/* Dark seller themes use the native light ink tints, not white generic pills. */
+.native-merchant[data-merchant="Our Place"],
+.native-merchant[data-merchant="Ruggable"] {
+  --merchant-review-card: color-mix(in srgb, white 6%, var(--merchant-bg));
+  --merchant-review-border: #ffffff1a;
+}
+.native-merchant[data-merchant="Our Place"]
+  .native-merchant-review-filters
+  > button,
+.native-merchant[data-merchant="Ruggable"]
+  .native-merchant-review-filters
+  > button {
+  background: color-mix(in srgb, white 9%, var(--merchant-bg));
+  border: 1px solid #ffffff26;
+  color: inherit;
+  font-weight: 500;
+}
+.native-merchant-review-list footer {
+  position: relative;
+  padding-right: 32px;
+}
+.native-merchant-review-list footer .icon-button {
+  position: absolute;
+  right: 0;
+  top: -2px;
+}
+.native-merchant-reply {
+  margin: 12px 0 0;
+  background: #00000006;
+}
+.native-merchant-reply p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin: 0;
+}
+.native-merchant-reply p[data-expanded="true"] {
+  display: block;
+}
+.native-merchant-reply-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  margin-top: 12px;
+}
+.native-merchant-reply-author > img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Measured native collection listings; pretreated source crops stay untinted. */
+.native-merchant[data-catalog-layout="native-listings"] .product-grid {
+  row-gap: 17px;
+}
+.native-merchant[data-catalog-layout="native-listings"]
+  .product-card:not([data-native-photo])
+  .product-media
+  img {
+  filter: brightness(0.96);
+}
+.native-merchant[data-catalog-layout="native-listings"]
+  .native-merchant-collection-caption
+  > div {
+  transform: translateY(6px);
+}
+
+.native-merchant-recent {
+  margin-top: 40px;
+  overflow: hidden;
+  border: 1px solid #ffffff33;
+}
+.native-merchant-recent .product-rail {
+  margin: 12px -16px 0 0;
+  padding-right: 16px;
+  gap: 8px;
+}
+.native-merchant-recent .product-card {
+  flex: 0 0 112px;
+  width: 112px;
+}
+.native-merchant-recent .product-media {
+  width: 112px;
+  height: 112px;
+}
+.native-merchant-recent + .native-merchant-featured {
+  margin-top: 16px;
+}
+/* Seller-only family keeps the donor's real semibold face scoped to this shell. */
+@font-face {
+  font-family: ShopSellerBrand;
+  src: url("/api/reference-font/semibold") format("opentype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: ShopSellerBrand;
+  src: url("/api/reference-font/bold") format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}

@@ -1,11 +1,14 @@
 "use client";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useDiscovery } from "./state";
-import type { Catalog } from "../catalog/types";
+import type { SearchCatalog } from "../catalog/search-catalog";
 import { formatMoney } from "../catalog/types";
 import { Sheet, SaveButton, IconButton, commitSheetQuery } from "./components";
 import { Icon } from "./icons";
@@ -38,7 +41,7 @@ function CapturedPagination({
   );
 }
 
-export function Assistant({ catalog }: { catalog: Catalog }) {
+export function Assistant({ catalog }: { catalog: SearchCatalog }) {
   const params = useSearchParams();
   const { viewAnswer } = useDiscovery();
   const photo = params.get("example") === "photo";
@@ -57,10 +60,13 @@ export function JeansAnswer({
   onClose,
   onConsumedNavigate,
 }: {
-  catalog: Catalog;
+  catalog: SearchCatalog;
   onClose?: () => void;
   onConsumedNavigate?: (href: string) => void;
 }) {
+  const intlLocale = useIntlLocale();
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const [feedback, setFeedback] = useState(false),
     [votes, setVotes] = useState<Record<string, boolean>>({}),
     [notes, setNotes] = useState(""),
@@ -125,29 +131,28 @@ export function JeansAnswer({
       <Link
         href="/search?q=jeans"
         className="assistant-edit"
-        aria-label="Edit search"
+        aria-label={ui("editSearch")}
+        data-ui-label="editSearch"
       >
         <Icon name="edit-search" />
       </Link>
       <h1 tabIndex={-1} data-answer-heading>
-        Jeans
+        {ui("jeans")}
       </h1>
       <p>
-        From everyday straight legs to bold, vintage-inspired streetwear, the
-        right pair of jeans is all about the balance of comfort and a silhouette
-        that feels like home. I have pulled some versatile styles from{" "}
+        {ui("fromEverydayStraightLegsToBoldVintageInspiredStreetwearThe")}{" "}
         <SourceLink startAtTop href="/stores/jeans-warehouse">
           Jeans Warehouse
         </SourceLink>{" "}
-        and{" "}
+        {ui("and")}{" "}
         <SourceLink startAtTop href="/stores/city-jeans">
           City Jeans
         </SourceLink>{" "}
-        to help you find your next go-to pair.
+        {ui("toHelpYouFindYourNextGoToPair")}
       </p>
-      <h2>Classic and straight leg fits</h2>
+      <h2>{ui("classicAndStraightLegFits")}</h2>
       <p className="form-note">
-        The foundation of any wardrobe with a comfortable, timeless cut
+        {ui("theFoundationOfAnyWardrobeWithAComfortableTimelessCut")}
       </p>
       <div className="assistant-product-rail">
         {products.map((p) => (
@@ -164,12 +169,12 @@ export function JeansAnswer({
             <SourceLink startAtTop href={`/products/${p.id}`}>
               <strong>{p.title}</strong>
             </SourceLink>
-            <b>{formatMoney(p.price)}</b>
+            <b>{formatMoney(p.price, intlLocale)}</b>
           </article>
         ))}
       </div>
-      <h2>Wide leg and relaxed silhouettes</h2>
-      <p className="form-note">Modern, roomy fits with plenty of movement</p>
+      <h2>{ui("wideLegAndRelaxedSilhouettes")}</h2>
+      <p className="form-note">{ui("modernRoomyFitsWithPlentyOfMovement")}</p>
       <div className="assistant-product-rail assistant-wide-rail">
         {["assistant-wide-one", "assistant-wide-two"].map((key) => (
           <article key={key}>
@@ -177,8 +182,10 @@ export function JeansAnswer({
               <button
                 type="button"
                 className={styles.boundedWideEntry}
-                aria-label={`View captured wide leg recommendation ${key === "assistant-wide-one" ? "1" : "2"}`}
-                onClick={() => setBoundary("Product details unavailable")}
+                aria-label={ui("viewCapturedWideLegRecommendationValue1", {
+                  value1: key === "assistant-wide-one" ? "1" : "2",
+                })}
+                onClick={() => setBoundary(ui("productDetailsUnavailable"))}
               >
                 <img src={`/api/reference-media/${key}`} alt="" />
               </button>
@@ -193,7 +200,7 @@ export function JeansAnswer({
         </article>
       </div>
       <p className="assistant-wide-continuation">
-        keep you comfortable through a long day.
+        {ui("keepYouComfortableThroughALongDay")}
       </p>
       <div
         className="assistant-answer-card"
@@ -203,13 +210,13 @@ export function JeansAnswer({
           <SourceLink startAtTop href="/products/city-duaa-denim">
             <img
               src="/api/reference-media/assistant-city-square"
-              alt="Men’s Duaa Neptune Denim"
+              alt={ui("menSDuaaNeptuneDenim")}
             />
           </SourceLink>
           {cityProduct && <SaveButton product={cityProduct} />}
           <CapturedPagination count={4} centered />
           <span className={`price-badge deal ${styles.answerCardDeal}`}>
-            Save $10
+            {ui("save10")}
           </span>
         </div>
         <div>
@@ -228,14 +235,14 @@ export function JeansAnswer({
           </SourceLink>
           <strong>
             <SourceLink startAtTop href="/products/city-duaa-denim">
-              Men’s Duaa Neptune Denim…
+              {ui("menSDuaaNeptuneDenim_c8f363")}
             </SourceLink>
           </strong>
           <p>$90.00</p>
           <ul>
-            <li>Heavy knee distressing</li>
-            <li>Authentic vintage blue wash</li>
-            <li>Modern streetwear fit</li>
+            <li>{ui("heavyKneeDistressing")}</li>
+            <li>{ui("authenticVintageBlueWash")}</li>
+            <li>{ui("modernStreetwearFit")}</li>
           </ul>
         </div>
       </div>
@@ -247,7 +254,7 @@ export function JeansAnswer({
           <SourceLink startAtTop href="/products/assistant-signature-straight">
             <img
               src="/api/reference-media/assistant-signature-square"
-              alt="Signature straight jeans"
+              alt={ui("signatureStraightJeans")}
             />
           </SourceLink>
           {signatureProduct && <SaveButton product={signatureProduct} />}
@@ -277,66 +284,78 @@ export function JeansAnswer({
           </strong>
           <p>$29.99</p>
           <ul>
-            <li>Clean straight leg cut</li>
-            <li>Comfortable stretch blend</li>
-            <li>Versatile daily wash</li>
+            <li>{ui("cleanStraightLegCut")}</li>
+            <li>{ui("comfortableStretchBlend")}</li>
+            <li>{ui("versatileDailyWash")}</li>
           </ul>
         </div>
       </div>
       <div className="assistant-preferences">
-        <p>Are you shopping for yourself today, or looking for someone else?</p>
+        <p>{ui("areYouShoppingForYourselfTodayOrLookingForSomeone")}</p>
         <button
           className="pill"
-          onClick={() => setBoundary("Shopping preferences")}
+          onClick={() => setBoundary(ui("shoppingPreferences"))}
         >
-          For myself
+          {ui("forMyself")}
         </button>
-        <button className="pill" onClick={() => setBoundary("Add someone")}>
-          Add someone…
+        <button
+          className="pill"
+          onClick={() => setBoundary(ui("addSomeone_d3d464"))}
+        >
+          {ui("addSomeone")}
         </button>
       </div>
       <div className="assistant-feedback-actions">
         <IconButton
           icon="thumb-up"
-          label="Give positive feedback"
+          label={ui("givePositiveFeedback")}
           pressed={sentiment === "positive"}
           filled={false}
           onClick={() => {
             setFeedbackSentiment("positive");
             setFeedback(true);
           }}
+          data-ui-label="givePositiveFeedback"
         />
         <IconButton
           icon="thumb-down"
-          label="Give negative feedback"
+          label={ui("giveNegativeFeedback")}
           pressed={sentiment === "negative"}
           filled={false}
           onClick={() => {
             setFeedbackSentiment("negative");
             setFeedback(true);
           }}
+          data-ui-label="giveNegativeFeedback"
         />
       </div>
       <form
         className="assistant-composer"
         onSubmit={(e) => {
           e.preventDefault();
-          if (query.trim()) setBoundary("Follow-up");
+          if (query.trim()) setBoundary(ui("followUp"));
         }}
       >
         <input
-          aria-label="Ask a follow-up"
-          placeholder="Ask a follow-up"
+          aria-label={ui("askAFollowUp")}
+          placeholder={ui("askAFollowUp")}
           value={query}
           onChange={(e) => updateQuery({ draft: e.target.value })}
+          data-ui-label="askAFollowUp"
         />
         {onClose ? (
-          <IconButton icon="close" label="Close assistant" onClick={onClose} />
+          <IconButton
+            icon="close"
+            label={ui("closeAssistant")}
+            onClick={onClose}
+            data-ui-label="closeAssistant"
+          />
         ) : (
           <ContextualCloseLink
             href="/search"
             className="icon-button"
-            aria-label="Close assistant"
+            aria-label={ui("closeAssistant")}
+            data-ui-label="closeAssistant"
           >
             <Icon name="close" />
           </ContextualCloseLink>
@@ -344,11 +363,11 @@ export function JeansAnswer({
       </form>
       <Sheet
         open={feedback}
-        title="Feedback"
+        title={ui("feedback")}
         className={`assistant-feedback-sheet ${styles.feedbackSheet}`}
         onClose={() => setFeedback(false)}
       >
-        <p>Let us know which products you preferred</p>
+        <p>{ui("letUsKnowWhichProductsYouPreferred")}</p>
         <div className="feedback-products">
           {products
             .filter((p) => p.id !== "assistant-blue-skinny")
@@ -356,14 +375,14 @@ export function JeansAnswer({
               <div key={p.id}>
                 <img src={p.feedbackImage} alt={p.title} />
                 <button
-                  aria-label={`Like ${p.title}`}
+                  aria-label={ui("likeValue1", { value1: p.title ?? "" })}
                   aria-pressed={votes[p.id] === true}
                   onClick={() => setVotes((v) => ({ ...v, [p.id]: true }))}
                 >
                   <Icon name="thumb-up" />
                 </button>
                 <button
-                  aria-label={`Dislike ${p.title}`}
+                  aria-label={ui("dislikeValue1", { value1: p.title ?? "" })}
                   aria-pressed={votes[p.id] === false}
                   onClick={() => setVotes((v) => ({ ...v, [p.id]: false }))}
                 >
@@ -379,12 +398,12 @@ export function JeansAnswer({
           </div>
         </div>
         <label>
-          Share any thoughts about the entire response
+          {ui("shareAnyThoughtsAboutTheEntireResponse")}
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
         <div className="sheet-actions">
           <button className="pill" onClick={() => setFeedback(false)}>
-            Cancel
+            {ui("cancel")}
           </button>
           <button
             className="primary"
@@ -394,31 +413,42 @@ export function JeansAnswer({
               setSentiment(feedbackSentiment);
             }}
           >
-            Submit
+            {ui("submit")}
           </button>
         </div>
       </Sheet>
-      <Sheet open={!!boundary} title={boundary} onClose={() => setBoundary("")}>
+      <Sheet
+        open={!!boundary}
+        title={caption(boundary)}
+        onClose={() => setBoundary("")}
+      >
         <p className="sheet-copy">
           {boundary === "Product details unavailable"
-            ? "This recommendation appears in the captured answer. Its complete product details are unavailable, so it has not been opened, saved, or added to a cart."
-            : "This recorded answer is available locally. New assistant responses and shared shopping profiles are not connected."}
+            ? ui(
+                "thisRecommendationAppearsInTheCapturedAnswerItsCompleteProduct",
+              )
+            : ui(
+                "thisRecordedAnswerIsAvailableLocallyNewAssistantResponsesAnd",
+              )}
         </p>
       </Sheet>
       {submitted && (
         <button
           className={`local-toast ${styles.feedbackToast}`}
-          aria-label="Thanks for your feedback — saved in this local example"
+          aria-label={ui("thanksForYourFeedbackSavedInThisLocalExample")}
           onClick={() => setSubmitted(false)}
+          data-ui-label="thanksForYourFeedbackSavedInThisLocalExample"
         >
-          Thanks for your feedback
+          {ui("thanksForYourFeedback")}
         </button>
       )}
     </section>
   );
 }
 
-function PhotoAssistant({ catalog }: { catalog: Catalog }) {
+function PhotoAssistant({ catalog }: { catalog: SearchCatalog }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const params = useSearchParams();
   const steps = params.get("steps") === "1";
   function toggleSteps() {
@@ -493,8 +523,8 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
           <button
             type="button"
             className={styles.photoProduct}
-            aria-label={`View ${card.title}`}
-            onClick={() => setBoundary("Product details unavailable")}
+            aria-label={ui("viewValue1", { value1: card.title ?? "" })}
+            onClick={() => setBoundary(ui("productDetailsUnavailable"))}
           >
             {photograph}
           </button>
@@ -504,9 +534,10 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
         ) : (
           <IconButton
             icon="heart"
-            label={`Save ${card.title}`}
+            label={ui("saveValue1", { value1: card.title ?? "" })}
             className="save-button"
-            onClick={() => setBoundary("Product details unavailable")}
+            onClick={() => setBoundary(ui("productDetailsUnavailable"))}
+            data-ui-label="saveValue1"
           />
         )}
       </div>
@@ -527,11 +558,11 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
           role="button"
           tabIndex={0}
           className={styles.photoProductLink}
-          onClick={() => setBoundary("Product details unavailable")}
+          onClick={() => setBoundary(ui("productDetailsUnavailable"))}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
-              setBoundary("Product details unavailable");
+              setBoundary(ui("productDetailsUnavailable"));
             }
           }}
         >
@@ -550,7 +581,7 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
       <button
         type="button"
         className={styles.photoProductLink}
-        onClick={() => setBoundary("Product details unavailable")}
+        onClick={() => setBoundary(ui("productDetailsUnavailable"))}
       >
         {children}
       </button>
@@ -571,25 +602,26 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
       <Link
         href="/search?edit=photo"
         className="assistant-edit"
-        aria-label="Edit search"
+        aria-label={ui("editSearch")}
+        data-ui-label="editSearch"
       >
         <Icon name="edit-search" />
       </Link>
       <h1>{capturedCapQuestion}</h1>
       <span className="photo-tag">
         <img src="/api/reference-media/assistant-uploaded-cap" alt="" />
-        <span className={styles.photoTagText}>Photo</span>
+        <span className={styles.photoTagText}>{ui("photo")}</span>
       </span>
       <button
         className="assistant-steps"
         onClick={toggleSteps}
         aria-expanded={steps}
       >
-        Assistant steps <Icon name="chevron" />
+        {ui("assistantSteps")} <Icon name="chevron" />
       </button>
       {steps && (
         <div className="assistant-step-list">
-          <small>Search for products</small>
+          <small>{ui("searchForProducts")}</small>
           {[
             "Mobbin black baseball cap",
             "Mobbin hat black",
@@ -604,26 +636,21 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
           <button
             type="button"
             onClick={() =>
-              setBoundary("Additional assistant steps unavailable")
+              setBoundary(ui("additionalAssistantStepsUnavailable"))
             }
           >
-            + 2 more
+            {ui("text2More")}
           </button>
         </div>
       )}
       <p>
-        The cap in your photo is the classic <strong>Mobbin</strong> dad hat—a
-        relaxed, low-profile staple that prioritizes that broken-in,
-        &quot;lived-in&quot; feel right out of the box.
+        {ui("theCapInYourPhotoIsTheClassic")} <strong>Mobbin</strong>{" "}
+        {ui("dadHatARelaxedLowProfileStapleThatPrioritizesThat")}
       </p>
-      <p>
-        I found the exact match you&apos;re looking for, along with a few
-        structured alternatives if you&apos;re looking to upgrade the silhouette
-        while keeping that same urban aesthetic.
-      </p>
-      <h2>The Mobbin signature collection</h2>
+      <p>{ui("iFoundTheExactMatchYouReLookingForAlong")}</p>
+      <h2>{ui("theMobbinSignatureCollection")}</h2>
       <p className="form-note">
-        The exact relaxed fit and branding from your photo
+        {ui("theExactRelaxedFitAndBrandingFromYourPhoto")}
       </p>
       <div className="assistant-product-rail">
         {recommendations.map((card) => (
@@ -648,12 +675,13 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
             ref={boundedTrigger}
             type="button"
             className={`product-media ${styles.photoCardMedia} ${photoStyles.boundedMedia}`}
-            aria-label="View source-bounded recommendation"
-            onClick={() => setBoundary("Source-bounded recommendation")}
+            aria-label={ui("viewSourceBoundedRecommendation")}
+            onClick={() => setBoundary(ui("sourceBoundedRecommendation"))}
+            data-ui-label="viewSourceBoundedRecommendation"
           >
             <img
               src="/api/reference-media/assistant-bounded-third-photo"
-              alt="Source-bounded cap recommendation"
+              alt={ui("sourceBoundedCapRecommendation")}
             />
           </button>
           <span>Venice Ru…</span>
@@ -661,9 +689,9 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
           <b>$25.00</b>
         </article>
       </div>
-      <h2>Structured and snapback alternatives</h2>
+      <h2>{ui("structuredAndSnapbackAlternatives")}</h2>
       <p className={`form-note ${photoStyles.structuredNote}`}>
-        Higher-profile options with similar monochrome branding
+        {ui("higherProfileOptionsWithSimilarMonochromeBranding")}
       </p>
       <div className={`assistant-product-rail ${photoStyles.structuredRail}`}>
         {["first", "second", "third"].map((position) => (
@@ -671,7 +699,10 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
             key={position}
             className={photoStyles.structuredFragment}
             data-source-boundary={`structured-${position}`}
-            aria-label="Partially captured recommendation; product details unavailable"
+            aria-label={ui(
+              "partiallyCapturedRecommendationProductDetailsUnavailable",
+            )}
+            data-ui-label="partiallyCapturedRecommendationProductDetailsUnavailable"
           >
             <img
               src={`/api/reference-media/assistant-structured-${position}-fragment`}
@@ -681,13 +712,10 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
         ))}
       </div>
       <p className={styles.photoComparisonCopy}>
-        The {productLink(cards[0], "Mobbin Dad Hat", true)} is the hero here at
-        just under $20. It&apos;s built from bio-washed chino twill, which gives
-        it that soft, unstructured crown that sits close to the head for a
-        cleaner, more casual profile. If you want something with a bit more
-        &quot;teeth,&quot; the{" "}
-        {productLink(cards[1], "Mob Armor Snapback", true)} offers a structured
-        crown and a more rigid visor that keeps its shape even after heavy use.
+        {ui("the")} {productLink(cards[0], "Mobbin Dad Hat", true)}{" "}
+        {ui("isTheHeroHereAtJustUnder20ItS")}{" "}
+        {productLink(cards[1], "Mob Armor Snapback", true)}{" "}
+        {ui("offersAStructuredCrownAndAMoreRigidVisorThat")}
       </p>
       {cards.map((card) => (
         <article
@@ -728,16 +756,8 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
           </div>
         </article>
       ))}
-      <p>
-        Mobbin is a brand rooted in car culture and urban movement, often
-        releasing limited &quot;drops&quot; that sell out quickly. Their gear is
-        designed to be tough enough for a garage setting but clean enough for a
-        weekend out.
-      </p>
-      <p>
-        Do you prefer this relaxed &quot;dad hat&quot; fit, or are you looking
-        for a more structured snapback style?
-      </p>
+      <p>{ui("mobbinIsABrandRootedInCarCultureAndUrban")}</p>
+      <p>{ui("doYouPreferThisRelaxedDadHatFitOrAre")}</p>
       <div className="assistant-preferences">
         {["Relaxed dad hats", "Structured snapbacks", "Other Mobbin gear"].map(
           (option) => (
@@ -747,10 +767,10 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
               aria-pressed={choice === option}
               onClick={() => {
                 setChoice(option);
-                setBoundary("Assistant is not connected");
+                setBoundary(ui("assistantIsNotConnected"));
               }}
             >
-              {option}
+              {caption(option)}
             </button>
           ),
         )}
@@ -758,45 +778,53 @@ function PhotoAssistant({ catalog }: { catalog: Catalog }) {
       <div className="assistant-feedback-actions">
         <IconButton
           icon="thumb-up"
-          label="Give positive feedback"
-          onClick={() => setBoundary("Photo answer feedback unavailable")}
+          label={ui("givePositiveFeedback")}
+          onClick={() => setBoundary(ui("photoAnswerFeedbackUnavailable"))}
+          data-ui-label="givePositiveFeedback"
         />
         <IconButton
           icon="thumb-down"
-          label="Give negative feedback"
-          onClick={() => setBoundary("Photo answer feedback unavailable")}
+          label={ui("giveNegativeFeedback")}
+          onClick={() => setBoundary(ui("photoAnswerFeedbackUnavailable"))}
+          data-ui-label="giveNegativeFeedback"
         />
       </div>
       <form
         className="assistant-composer"
         onSubmit={(event) => {
           event.preventDefault();
-          if (draft.trim()) setBoundary("Assistant is not connected");
+          if (draft.trim()) setBoundary(ui("assistantIsNotConnected"));
         }}
       >
         <input
-          placeholder="Ask a follow-up"
-          aria-label="Ask a follow-up"
+          placeholder={ui("askAFollowUp")}
+          aria-label={ui("askAFollowUp")}
           value={draft}
           onChange={(event) => updateDraft({ draft: event.target.value })}
+          data-ui-label="askAFollowUp"
         />
         <ContextualCloseLink
           href="/search"
           className="icon-button"
-          aria-label="Close assistant"
+          aria-label={ui("closeAssistant")}
+          data-ui-label="closeAssistant"
         >
           <Icon name="close" />
         </ContextualCloseLink>
       </form>
-      <Sheet open={!!boundary} title={boundary} onClose={closeBoundary}>
+      <Sheet
+        open={!!boundary}
+        title={caption(boundary)}
+        onClose={closeBoundary}
+      >
         <p className="sheet-copy">
           {boundary === "Source-bounded recommendation"
-            ? "The source exposes only this bounded fragment. Its complete seller, title, destination, variants, and inventory are unavailable, so no unseen product details or destination were invented."
+            ? ui("theSourceExposesOnlyThisBoundedFragmentItsCompleteSeller")
             : boundary === "Product details unavailable"
-              ? "This product was shown in the captured answer. Its complete product details are not available here, so it has not been opened, saved, or added to a cart."
+              ? ui("thisProductWasShownInTheCapturedAnswerItsComplete")
               : boundary === "Additional assistant steps unavailable"
-                ? "The capture shows two more search steps without their text. No additional search has been run."
-                : "Your selection stays local. No photo or message was sent; this is the captured example answer."}
+                ? ui("theCaptureShowsTwoMoreSearchStepsWithoutTheirText")
+                : ui("yourSelectionStaysLocalNoPhotoOrMessageWasSent")}
         </p>
       </Sheet>
     </ShopSurface>

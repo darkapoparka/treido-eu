@@ -1,10 +1,12 @@
 "use client";
+import { useTranslations } from "next-intl";
 import type { Catalog } from "../catalog/types";
 import { CurationCollection } from "./curation-collection";
 export function StaudCuration({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <CurationCollection
-      title="Brand Spotlight: Staud"
+      title={ui("brandSpotlightStaud")}
       description="Timeless pieces with a contemporary touch."
       category="Womenswear"
       categoryHref="/explore/Women"

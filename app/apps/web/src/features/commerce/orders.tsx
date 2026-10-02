@@ -1,5 +1,8 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useLocale as useIntlLocale } from "next-intl";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -48,6 +51,8 @@ export function OrdersPage({
   archive?: boolean;
   history?: boolean;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const { orders, deletedOrder, restoreOrder, profile } = useAccount();
   const native = !!catalog.liveHomeStoreIds;
   const guest = native && !profile.email;
@@ -94,25 +99,33 @@ export function OrdersPage({
         !history &&
         (forcedView === "empty" || !orders.some((order) => !order.archived))
       }
-      title={history ? "Order history" : archive ? "Archived" : "Orders"}
+      title={
+        history
+          ? ui("orderHistory_928f4f")
+          : archive
+            ? ui("archived")
+            : ui("orders")
+      }
       className={`${archive ? "archive-page" : "source-orders-page"} ${forcedView === "manual" ? "manual-order-result" : ""} ${styles.list} ${native ? "android-orders" : ""}`}
       action={
         !archive && (
           <div className="order-actions">
             {!history && (
               <button
-                aria-label="Search orders"
+                aria-label={ui("searchOrders")}
                 onClick={() => setSearch(!search)}
+                data-ui-label="searchOrders"
               >
                 <Icon name="search" />
               </button>
             )}
             <button
-              aria-label="More order options"
+              aria-label={ui("moreOrderOptions")}
               onClick={() => {
-                rememberSourcePosition('[aria-label="More order options"]');
+                rememberSourcePosition('[data-ui-label="moreOrderOptions"]');
                 setMenu(true);
               }}
+              data-ui-label="moreOrderOptions"
             >
               <Icon name="more" />
             </button>
@@ -122,18 +135,18 @@ export function OrdersPage({
     >
       {deletedOrder && (
         <div className={styles.deletedOrderNotice} role="status">
-          <span>Order deleted from this preview.</span>
-          <button onClick={restoreOrder}>Undo</button>
+          <span>{ui("orderDeletedFromThisPreview")}</span>
+          <button onClick={restoreOrder}>{ui("undo")}</button>
         </div>
       )}
       {search && (
         <label className="form-field">
-          Search orders
+          {ui("searchOrders")}
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search your orders"
+            placeholder={ui("searchYourOrders")}
           />
         </label>
       )}
@@ -141,12 +154,13 @@ export function OrdersPage({
         <div className="history-connect-banner">
           <img src="/api/reference-media/onboarding-package" alt="" />
           <SourceLink href="/account/connections">
-            <strong>Connect email to see more deliveries</strong>
-            <small>Track more of your packages with Shop</small>
+            <strong>{ui("connectEmailToSeeMoreDeliveries")}</strong>
+            <small>{ui("trackMoreOfYourPackagesWithShop")}</small>
           </SourceLink>
           <button
-            aria-label="Dismiss email connection"
+            aria-label={ui("dismissEmailConnection")}
             onClick={() => setHistoryConnect(false)}
+            data-ui-label="dismissEmailConnection"
           >
             ×
           </button>
@@ -172,11 +186,11 @@ export function OrdersPage({
             >
               {sourceProduct && <img src={sourceProduct.images[0]} alt="" />}
               <span>
-                <strong>{receipt ? "Ordered Jul 27" : o.name}</strong>
+                <strong>{receipt ? ui("orderedJul27") : o.name}</strong>
                 <small>
                   {seller?.name ?? o.carrier}
                   {receipt
-                    ? ` · 1 item · ${formatMoney({ amount: receipt.total, currency: "USD" })}`
+                    ? ` · 1 item · ${formatMoney({ amount: receipt.total, currency: "USD" }, intlLocale)}`
                     : ""}
                 </small>
               </span>
@@ -200,7 +214,7 @@ export function OrdersPage({
               )}
               <span>
                 <strong>{kitsch ? "KITSCH" : o.name}</strong>
-                <small>{kitsch ? "Order placed" : "On the way"}</small>
+                <small>{kitsch ? ui("orderPlaced") : ui("onTheWay")}</small>
               </span>
               {kitsch && p && (
                 <img
@@ -209,8 +223,8 @@ export function OrdersPage({
                   alt=""
                 />
               )}
-              {kitsch && <b>1 item · $10.82</b>}
-              <small className="history-order-date">Jul 27</small>
+              {kitsch && <b>{ui("text1Item1082")}</b>}
+              <small className="history-order-date">{ui("jul27")}</small>
             </SourceLink>
           );
         }
@@ -236,15 +250,15 @@ export function OrdersPage({
               <h2>
                 {o.status === "Delivered"
                   ? p
-                    ? "Review your order"
-                    : "Delivered today"
+                    ? ui("reviewYourOrder")
+                    : ui("deliveredToday")
                   : sourceWaiting
-                    ? "Expected by Aug 3"
+                    ? ui("expectedByAug3")
                     : o.status === "Ordered"
                       ? p
-                        ? "Order placed"
-                        : "Label created"
-                      : "Arrives Jul 31–Aug 1"}
+                        ? ui("orderPlaced")
+                        : ui("labelCreated")
+                      : ui("arrivesJul31Aug1")}
               </h2>
               {o.status === "Delivered" && p ? (
                 <span className="review-stars" aria-hidden="true">
@@ -267,7 +281,7 @@ export function OrdersPage({
             </div>
             <img
               src={p ? p.images[0] : "/api/reference-media/order-manual-parcel"}
-              alt={p ? o.name : "Tracked package"}
+              alt={p ? o.name : ui("trackedPackage")}
             />
           </SourceLink>
         );
@@ -311,19 +325,21 @@ export function OrdersPage({
           )}
           <h2>
             {query
-              ? "No orders found"
+              ? ui("noOrdersFound")
               : archive
-                ? "No archived orders yet"
-                : "Track all your orders here"}
+                ? ui("noArchivedOrdersYet")
+                : ui("trackAllYourOrdersHere")}
           </h2>
           <p>
             {query
-              ? "Try another name or order number."
+              ? ui("tryAnotherNameOrOrderNumber")
               : archive
-                ? "Clean up your orders tab, by moving your past orders to the archive."
+                ? ui("cleanUpYourOrdersTabByMovingYourPastOrders")
                 : guest
-                  ? "Sign in to connect your account and Shop will automatically track your orders."
-                  : "Connect your account, and Shop will automatically track your orders."}
+                  ? ui("signInToConnectYourAccountAndShopWillAutomatically")
+                  : ui(
+                      "connectYourAccountAndShopWillAutomaticallyTrackYourOrders",
+                    )}
           </p>
           {!archive && !query && (
             <>
@@ -335,11 +351,11 @@ export function OrdersPage({
                     : "/account/connections"
                 }
               >
-                {guest ? "Sign in" : "Connect account"}
+                {guest ? ui("signIn") : ui("connectAccount")}
               </SourceLink>
               {!guest && (
                 <SourceLink className="form-cancel" href="/orders/new">
-                  Add a package manually
+                  {ui("addAPackageManually")}
                 </SourceLink>
               )}
             </>
@@ -353,12 +369,12 @@ export function OrdersPage({
         visible.some((o) => o.status !== "Ordered") && (
           <>
             <section className="orders-deals">
-              <OrderSectionHeading label="Deals based on your orders" />
+              <OrderSectionHeading label={ui("dealsBasedOnYourOrders")} />
               <div className="orders-deal-grid">
                 {deals.map((entry, i) => (
                   <button
                     key={i}
-                    aria-label={`View deal ${i + 1}`}
+                    aria-label={ui("viewDealValue1", { value1: i + 1 })}
                     onClick={() => setDeal(i)}
                   >
                     <img src={`/api/reference-media/${entry.photo}`} alt="" />
@@ -371,7 +387,7 @@ export function OrdersPage({
               </div>
             </section>
             <section className="orders-past">
-              <OrderSectionHeading label="Past orders" />
+              <OrderSectionHeading label={ui("pastOrders")} />
               {orders
                 .filter((o) => o.archived)
                 .map((o) => (
@@ -387,8 +403,8 @@ export function OrdersPage({
                     />
                     <span>
                       {labelCreated
-                        ? "Delivered yesterday"
-                        : "Delivered Jul 28"}
+                        ? ui("deliveredYesterday")
+                        : ui("deliveredJul28")}
                       <small>{o.name}</small>
                     </span>
                   </SourceLink>
@@ -403,18 +419,18 @@ export function OrdersPage({
       />
       <Sheet
         open={deal !== null}
-        title="Your deal"
+        title={ui("yourDeal")}
         onClose={() => setDeal(null)}
       >
         {deal !== null && (
           <img
             className="deal-preview-image"
             src={`/api/reference-media/${deals[deal].photo}`}
-            alt="Selected deal"
+            alt={ui("selectedDeal")}
           />
         )}
         <Link className="primary form-submit" href="/search">
-          Shop products
+          {ui("shopProducts")}
         </Link>
       </Sheet>
       {!archive &&
@@ -426,14 +442,17 @@ export function OrdersPage({
           <>
             {forcedView === "manual" && (
               <section className="orders-buy-again">
-                <OrderSectionHeading label="Buy again" />
+                <OrderSectionHeading label={ui("buyAgain")} />
                 {(() => {
                   const product = catalog.products.find(
                     (entry) => entry.id === "shampoo-bag",
                   );
                   return product ? (
                     <SourceLink href={`/products/${product.id}`}>
-                      <img src={product.images[0]} alt="Shampoo Bar Bag" />
+                      <img
+                        src={product.images[0]}
+                        alt={ui("shampooBarBag_b19810")}
+                      />
                       <span>
                         <Icon name="bag-add" />
                       </span>
@@ -446,27 +465,29 @@ export function OrdersPage({
               className="form-cancel order-archive-link"
               href="/orders/archived"
             >
-              View archived orders
+              {ui("viewArchivedOrders")}
             </SourceLink>
           </>
         )}
       <Sheet
         open={menu}
-        title="More options"
+        title={ui("moreOptions")}
         className={styles.orderMenu}
         onClose={() => setMenu(false)}
       >
-        <OrderAction label="View order archive" href="/orders/archived" />
+        <OrderAction label={ui("viewOrderArchive")} href="/orders/archived" />
         <OrderAction
-          label="Connect email accounts"
+          label={ui("connectEmailAccounts")}
           href="/account/connections"
         />
-        <OrderAction label="Add order manually" href="/orders/new" />
+        <OrderAction label={ui("addOrderManually")} href="/orders/new" />
       </Sheet>
     </AccountPage>
   );
 }
 export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const { orders, saveOrder, deleteOrder } = useAccount();
   const order = orders.find((o) => o.id === id);
   const [menu, setMenu] = useState(false);
@@ -489,9 +510,9 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
   const [toast, setToast] = useState("");
   if (!order)
     return (
-      <AccountPage title="Order not found">
-        <p>This reference order is not available in this page session.</p>
-        <Link href="/orders">Back to orders</Link>
+      <AccountPage title={ui("orderNotFound")}>
+        <p>{ui("thisReferenceOrderIsNotAvailableInThisPageSession")}</p>
+        <Link href="/orders">{ui("backToOrders")}</Link>
       </AccountPage>
     );
   const product = catalog.products.find((p) => p.id === order.productId);
@@ -529,7 +550,7 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
         )}
         <Sheet
           open={edit}
-          title="Edit tracking details"
+          title={ui("editTrackingDetails")}
           className={`tracking-edit-sheet ${styles.trackingEditor}`}
           onClose={() => setEdit(false)}
         >
@@ -564,7 +585,8 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
         <button
           className="order-more"
           onClick={() => setMenu(true)}
-          aria-label="Order options"
+          aria-label={ui("orderOptions")}
+          data-ui-label="orderOptions"
         >
           <Icon name="more" />
         </button>
@@ -576,8 +598,8 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
           href={`/orders/${id}/review`}
         >
           <span>
-            <strong>Review your order</strong>
-            <small>Tell us about your purchase</small>
+            <strong>{ui("reviewYourOrder")}</strong>
+            <small>{ui("tellUsAboutYourPurchase")}</small>
           </span>
           <span className="review-stars" aria-hidden="true">
             <ReviewStars rating={0} />
@@ -592,17 +614,17 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
         <span>
           <strong>
             {displayOrder.status === "Delivered"
-              ? "Delivered Aug 1"
+              ? ui("deliveredAug1")
               : displayOrder.status === "In transit"
-                ? "Arrives Jul 31–Aug 1"
-                : "Expected by Aug 3"}
+                ? ui("arrivesJul31Aug1")
+                : ui("expectedByAug3")}
           </strong>
           <small>
             {displayOrder.status === "Delivered"
-              ? "Arrived at 8:04 AM"
+              ? ui("arrivedAt804AM")
               : displayOrder.status === "In transit"
-                ? "In transit"
-                : "Waiting for details"}
+                ? ui("inTransit")
+                : ui("waitingForDetails")}
           </small>
         </span>
         {product && <img src={product.images[0]} alt="" />}
@@ -620,35 +642,38 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
             <strong>{order.name}</strong>
             <p>
               {product
-                ? formatMoney({ amount: itemAmount, currency: "USD" })
-                : "Tracked package"}
+                ? formatMoney(
+                    { amount: itemAmount, currency: "USD" },
+                    intlLocale,
+                  )
+                : ui("trackedPackage")}
             </p>
           </div>
           {product && displayOrder.status === "Delivered" && (
             <SourceLink className="pill" href={`/products/${product.id}`}>
-              Buy again
+              {ui("buyAgain")}
             </SourceLink>
           )}
         </div>
         <button className="muted-button" onClick={() => setBoundary(true)}>
-          <ManageOrderIcon /> Manage your order
+          <ManageOrderIcon /> {ui("manageYourOrder")}
         </button>
         <SourceLink className="muted-button" href={`/orders/${id}/receipt`}>
-          View receipt
+          {ui("viewReceipt")}
         </SourceLink>
       </div>
       <OrderRecommendations catalog={catalog} />
       <Sheet
         open={menu}
-        title="Your order"
+        title={ui("yourOrder")}
         className={`source-order-menu ${styles.orderMenu}`}
         onClose={() => setMenu(false)}
       >
         <OrderAction
           label={
             displayOrder.status === "Delivered"
-              ? "Unmark as delivered"
-              : "Mark order as delivered"
+              ? ui("unmarkAsDelivered")
+              : ui("markOrderAsDelivered")
           }
           onClick={() => {
             const next =
@@ -667,14 +692,14 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
           }}
         />
         <OrderAction
-          label="Contact merchant"
+          label={ui("contactMerchant")}
           onClick={() => {
             setMenu(false);
             setBoundary(true);
           }}
         />
         <OrderAction
-          label="Copy order number"
+          label={ui("copyOrderNumber")}
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(displayOrderNumber);
@@ -687,28 +712,28 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
           }}
         />
         <OrderAction
-          label={order.archived ? "Unarchive order" : "Archive order"}
+          label={order.archived ? ui("unarchiveOrder") : ui("archiveOrder")}
           onClick={() => {
             saveOrder({ ...order, archived: !order.archived });
             setMenu(false);
           }}
         />
         <OrderAction
-          label="Report an issue with this order"
+          label={ui("reportAnIssueWithThisOrder")}
           onClick={() => {
             setMenu(false);
             setBoundary(true);
           }}
         />
         <OrderAction
-          label="Report this order as fraudulent"
+          label={ui("reportThisOrderAsFraudulent")}
           onClick={() => {
             setMenu(false);
             setBoundary(true);
           }}
         />
         <OrderAction
-          label="Delete"
+          label={ui("delete")}
           onClick={() => {
             setMenu(false);
             setDeleteConfirm(true);
@@ -717,7 +742,7 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
       </Sheet>
       <Sheet
         open={edit}
-        title="Edit tracking details"
+        title={ui("editTrackingDetails")}
         className={`tracking-edit-sheet ${styles.trackingEditor}`}
         onClose={() => setEdit(false)}
       >
@@ -735,12 +760,11 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
       </Sheet>
       <Sheet
         open={deleteConfirm}
-        title="Delete this order?"
+        title={ui("deleteThisOrder")}
         onClose={() => setDeleteConfirm(false)}
       >
         <p className="form-note">
-          Remove this order from your local preview. You can undo this from
-          Orders. This does not cancel a purchase or contact the merchant.
+          {ui("removeThisOrderFromYourLocalPreviewYouCanUndo")}
         </p>
         <button
           className="primary form-submit"
@@ -751,10 +775,10 @@ export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {
             router.replace("/orders");
           }}
         >
-          Delete order
+          {ui("deleteOrder")}
         </button>
         <button className="form-cancel" onClick={() => setDeleteConfirm(false)}>
-          Keep order
+          {ui("keepOrder")}
         </button>
       </Sheet>
       <Boundary
@@ -789,6 +813,8 @@ function ManualOrderForm({
   initial: ReferenceOrder;
   onSave: (o: ReferenceOrder) => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("commerceUI");
   const [editValue, setEditValue] = useState(initial);
   const draft = useManualOrderDraft(!editing);
   const value = editing ? editValue : { ...initial, ...draft.value };
@@ -841,35 +867,37 @@ function ManualOrderForm({
           onSave(value);
         }}
       >
-        {!editing && <h2>Manually add order</h2>}
+        {!editing && <h2>{ui("manuallyAddOrder")}</h2>}
         <label className="form-field">
-          <span>Tracking number</span>
+          <span>{ui("trackingNumber")}</span>
           <input
-            placeholder="Tracking number"
-            aria-label="Tracking number"
+            placeholder={ui("trackingNumber")}
+            aria-label={ui("trackingNumber")}
             required
             maxLength={80}
             value={value.tracking}
             onChange={(e) => setValue({ tracking: e.target.value })}
+            data-ui-label="trackingNumber"
           />
         </label>
         <label className="form-field">
-          <span>Package name</span>
+          <span>{ui("packageName")}</span>
           <input
-            placeholder="Package name"
-            aria-label="Package name"
+            placeholder={ui("packageName")}
+            aria-label={ui("packageName")}
             required
             maxLength={100}
             value={value.name}
             onChange={(e) => setValue({ name: e.target.value })}
+            data-ui-label="packageName"
           />
         </label>
         <label className="form-field carrier-selector">
-          <span>Carrier</span>
+          <span>{ui("carrier")}</span>
           <input
-            placeholder="Carrier"
+            placeholder={ui("carrier")}
             ref={carrierInput}
-            aria-label="Carrier"
+            aria-label={ui("carrier")}
             aria-controls={carrierOpen ? carrierListId : undefined}
             autoComplete="off"
             value={carrierOpen ? carrierQuery : value.carrier}
@@ -881,11 +909,12 @@ function ManualOrderForm({
               setCarrierQuery(e.target.value);
               setCarrierOpen(true);
             }}
+            data-ui-label="carrier"
           />
         </label>
         {carrierOpen && (
           <div className="carrier-search" id={carrierListId}>
-            <h3>Recommended carriers</h3>
+            <h3>{ui("recommendedCarriers")}</h3>
             {matchingCarriers.map(([c, logo]) => (
               <button
                 type="button"
@@ -897,7 +926,7 @@ function ManualOrderForm({
                   carrierInput.current?.blur();
                 }}
               >
-                {c}
+                {caption(c)}
                 {logo ? (
                   <img
                     aria-hidden="true"
@@ -912,7 +941,7 @@ function ManualOrderForm({
             ))}
             {matchingCarriers.length === 0 && (
               <div className={styles.carrierEmpty}>
-                <p role="status">No matching carriers</p>
+                <p role="status">{ui("noMatchingCarriers")}</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -920,7 +949,7 @@ function ManualOrderForm({
                     carrierInput.current?.focus();
                   }}
                 >
-                  Show all carriers
+                  {ui("showAllCarriers")}
                 </button>
               </div>
             )}
@@ -939,12 +968,12 @@ function ManualOrderForm({
               value.carrier === initial.carrier)
           }
         >
-          {editing ? "Update tracking details" : "Add order"}
+          {editing ? ui("updateTrackingDetails") : ui("addOrder")}
         </button>
         {!editing && !carrierOpen && (
           <div className="forward-orders">
-            <p>or</p>
-            <h2>Forward shipping emails</h2>
+            <p>{ui("or")}</p>
+            <h2>{ui("forwardShippingEmails")}</h2>
             <button
               type="button"
               className={styles.forwardAddress}
@@ -969,19 +998,18 @@ function ManualOrderForm({
               </p>
             )}
             <p>
-              Copy your unique address to forward shipping emails and Shop will
-              track your orders.{" "}
-              <SourceLink href="/support/help">Learn more</SourceLink>
+              {ui("copyYourUniqueAddressToForwardShippingEmailsAndShop")}{" "}
+              <SourceLink href="/support/help">{ui("learnMore")}</SourceLink>
             </p>
             <button
               type="button"
               className="primary form-submit"
               onClick={() => setEmailBoundary(true)}
             >
-              Open email app
+              {ui("openEmailApp")}
             </button>
             <SourceLink href="/account/connections">
-              Track orders automatically instead
+              {ui("trackOrdersAutomaticallyInstead")}
             </SourceLink>
           </div>
         )}
@@ -995,12 +1023,13 @@ function ManualOrderForm({
   );
 }
 export function NewOrder() {
+  const ui = useTranslations("commerceUI");
   const { orders, saveOrder } = useAccount();
   const router = useRouter();
   const pending = useRef<{ key: string; id: string } | null>(null);
   return (
     <AccountPage
-      title="Add order manually"
+      title={ui("addOrderManually")}
       dock={false}
       className={styles.newOrder}
     >
@@ -1040,6 +1069,8 @@ export function NewOrder() {
   );
 }
 export function OrderReview({ id, catalog }: { id: string; catalog: Catalog }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const { orders, saveOrder } = useAccount();
   const order = orders.find((o) => o.id === id);
   const product = catalog.products.find((p) => p.id === order?.productId);
@@ -1056,21 +1087,23 @@ export function OrderReview({ id, catalog }: { id: string; catalog: Catalog }) {
       <ContextualCloseLink
         className="review-close"
         href={`/orders/${id}`}
-        aria-label="Close review"
+        aria-label={ui("closeReview")}
+        data-ui-label="closeReview"
       >
         <Icon name="close" />
       </ContextualCloseLink>
       {editing && (
         <button
           className={styles.reviewMore}
-          aria-label="Review options"
+          aria-label={ui("reviewOptions")}
           onClick={() => setReviewMenu(true)}
+          data-ui-label="reviewOptions"
         >
           <Icon name="more" />
         </button>
       )}
-      <h1>{editing ? "Edit your review" : "Review your order"}</h1>
-      {!editing && <p className="review-count">1 of 1 products</p>}
+      <h1>{editing ? ui("editYourReview") : ui("reviewYourOrder")}</h1>
+      {!editing && <p className="review-count">{ui("text1Of1Products")}</p>}
       {order && product ? (
         <form
           onSubmit={(e) => {
@@ -1085,17 +1118,20 @@ export function OrderReview({ id, catalog }: { id: string; catalog: Catalog }) {
               <small>KITSCH</small>
               <p>{order.name}</p>
               <span>
-                {formatMoney({
-                  amount:
-                    capturedReceipts[id]?.itemAmount ?? product.price.amount,
-                  currency: "USD",
-                })}
+                {formatMoney(
+                  {
+                    amount:
+                      capturedReceipts[id]?.itemAmount ?? product.price.amount,
+                    currency: "USD",
+                  },
+                  intlLocale,
+                )}
               </span>
               <div className="rating-picker">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     type="button"
-                    aria-label={`${n} stars`}
+                    aria-label={ui("value1Stars", { value1: n ?? "" })}
                     aria-pressed={rating >= n}
                     className={rating >= n ? "selected" : ""}
                     onClick={() => setRating(n)}
@@ -1108,54 +1144,55 @@ export function OrderReview({ id, catalog }: { id: string; catalog: Catalog }) {
             </div>
           </div>
           <label className="review-text">
-            <strong>Tell us about the product</strong>
+            <strong>{ui("tellUsAboutTheProduct")}</strong>
             <textarea
-              aria-label="Tell us about the product"
-              placeholder="What did you like or dislike?"
+              aria-label={ui("tellUsAboutTheProduct")}
+              placeholder={ui("whatDidYouLikeOrDislike")}
               value={review}
               onChange={(e) => setReview(e.target.value)}
               maxLength={2000}
+              data-ui-label="tellUsAboutTheProduct"
             />
           </label>
           <p className="review-identity">
-            Reviewing as {shopSourceBuyer.firstName}{" "}
+            {ui("reviewingAs")} {shopSourceBuyer.firstName}{" "}
             <button
               type="button"
-              aria-label="About your review name"
+              aria-label={ui("aboutYourReviewName")}
               onClick={() => setIdentityHelp(true)}
+              data-ui-label="aboutYourReviewName"
             >
               ?
             </button>
           </p>
           <button className="primary review-submit" disabled={!rating}>
-            {editing ? "Update review" : "Submit"}
+            {editing ? ui("updateReview") : ui("submit")}
           </button>
           {saved && (
             <p role="status" className={styles.reviewStatus}>
-              Review saved locally. It has not been published.
+              {ui("reviewSavedLocallyItHasNotBeenPublished")}
             </p>
           )}
         </form>
       ) : (
-        <p>Order not found.</p>
+        <p>{ui("orderNotFound_9204be")}</p>
       )}
       <Sheet
         open={identityHelp}
-        title="Your review name"
+        title={ui("yourReviewName")}
         onClose={() => setIdentityHelp(false)}
       >
         <p className="form-note">
-          Your review uses the first name in your profile. This preview saves
-          reviews locally and does not publish them.
+          {ui("yourReviewUsesTheFirstNameInYourProfileThis")}
         </p>
       </Sheet>
       <Sheet
         open={reviewMenu}
-        title="Your review"
+        title={ui("yourReview")}
         onClose={() => setReviewMenu(false)}
       >
         <OrderAction
-          label="Delete"
+          label={ui("delete")}
           onClick={() => {
             if (order) saveOrder({ ...order, rating: 0, review: "" });
             setRating(0);
@@ -1169,29 +1206,33 @@ export function OrderReview({ id, catalog }: { id: string; catalog: Catalog }) {
   );
 }
 export function Receipt({ catalog, id }: { catalog: Catalog; id: string }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const { orders } = useAccount();
   const order = orders.find((o) => o.id === id),
     data = capturedReceipts[id];
   const product = catalog.products.find((p) => p.id === order?.productId);
-  const money = (amount: number) => formatMoney({ amount, currency: "USD" });
+  const money = (amount: number) =>
+    formatMoney({ amount, currency: "USD" }, intlLocale);
   const [shareMessage, setShareMessage] = useState("");
   const [paymentInfo, setPaymentInfo] = useState(false);
   return (
     <AccountPage
-      title="Receipt"
+      title={ui("receipt")}
       className="receipt-page"
       action={
         <button
           className="receipt-share"
-          aria-label="Share receipt"
+          aria-label={ui("shareReceipt")}
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(window.location.href);
-              setShareMessage("Receipt link copied");
+              setShareMessage(ui("receiptLinkCopied"));
             } catch {
-              setShareMessage("Sharing is not available in this browser.");
+              setShareMessage(ui("sharingIsNotAvailableInThisBrowser"));
             }
           }}
+          data-ui-label="shareReceipt"
         >
           <Icon name="share" />
         </button>
@@ -1200,7 +1241,10 @@ export function Receipt({ catalog, id }: { catalog: Catalog; id: string }) {
       {order && data ? (
         <>
           <div className="receipt-order-meta">
-            <strong>Order #{data.displayOrderNumber}</strong>
+            <strong>
+              {ui("order")}
+              {data.displayOrderNumber}
+            </strong>
             <p>{data.date}</p>
           </div>
           {shareMessage && <p role="status">{shareMessage}</p>}
@@ -1220,31 +1264,31 @@ export function Receipt({ catalog, id }: { catalog: Catalog; id: string }) {
           </div>
           <div className="receipt-totals">
             <p>
-              <span>Subtotal</span>
+              <span>{ui("subtotal")}</span>
               <span>{money(data.itemAmount)}</span>
             </p>
             <p>
-              <span>Discount</span>
+              <span>{ui("discount")}</span>
               <span>
                 {data.discount ? "-" : ""}
                 {money(data.discount)}
               </span>
             </p>
             <p>
-              <span>Shipping</span>
+              <span>{ui("shipping")}</span>
               <span>{money(data.shipping)}</span>
             </p>
             <p>
-              <span>Tax</span>
+              <span>{ui("tax")}</span>
               <span>{money(data.tax)}</span>
             </p>
             <p className="receipt-total">
-              <strong>Total</strong>
+              <strong>{ui("total")}</strong>
               <strong>{money(data.total)}</strong>
             </p>
           </div>
           <section className="receipt-section receipt-method">
-            <h2>Payment method</h2>
+            <h2>{ui("paymentMethod")}</h2>
             <p className="receipt-payment">
               <strong>Shop Pay</strong>
               <span>{money(data.total)}</span>
@@ -1253,27 +1297,29 @@ export function Receipt({ catalog, id }: { catalog: Catalog; id: string }) {
               <b>VISA</b>
               <span className="receipt-card-number">
                 <span aria-hidden="true">···· ···· ···· </span>
-                <span className="sr-only">Visa ending </span>
+                <span className="sr-only">{ui("visaEnding")} </span>
                 {data.cardLast4}
               </span>
               <button
                 type="button"
                 className="receipt-payment-info"
-                aria-label="About this payment method"
+                aria-label={ui("aboutThisPaymentMethod")}
                 onClick={() => setPaymentInfo(true)}
+                data-ui-label="aboutThisPaymentMethod"
               >
                 <Icon name="info" />
               </button>
             </p>
           </section>
           <section className="receipt-section">
-            <h2>Shipping address</h2>
+            <h2>{ui("shippingAddress")}</h2>
             <p>
               {data.name}
               <br />
               {data.street}
               <br />
-              {data.city}, {data.region === "CA" ? "California" : data.region}{" "}
+              {data.city},{" "}
+              {data.region === "CA" ? ui("california") : data.region}{" "}
               {data.postalCode}
               <br />
               {data.country}
@@ -1282,15 +1328,15 @@ export function Receipt({ catalog, id }: { catalog: Catalog; id: string }) {
             </p>
           </section>
           <section className="receipt-section">
-            <h2>Billing address</h2>
-            <p>Same as shipping address</p>
+            <h2>{ui("billingAddress")}</h2>
+            <p>{ui("sameAsShippingAddress")}</p>
           </section>
           <section className="receipt-section">
-            <h2>Shipping method</h2>
+            <h2>{ui("shippingMethod")}</h2>
             <p>{data.shippingMethod}</p>
           </section>
           <section className="receipt-section">
-            <h2>Email address</h2>
+            <h2>{ui("emailAddress")}</h2>
             <p>{data.email}</p>
           </section>
           <section className="receipt-section">
@@ -1306,20 +1352,22 @@ export function Receipt({ catalog, id }: { catalog: Catalog; id: string }) {
           </section>
           <Sheet
             open={paymentInfo}
-            title="Payment method"
+            title={ui("paymentMethod")}
             onClose={() => setPaymentInfo(false)}
           >
-            <p className="form-note">Shop Pay · Visa ending {data.cardLast4}</p>
             <p className="form-note">
-              Captured payment total: {money(data.total)}
+              {ui("shopPayVisaEnding")} {data.cardLast4}
             </p>
             <p className="form-note">
-              No additional payment details were recorded for this receipt.
+              {ui("capturedPaymentTotal")} {money(data.total)}
+            </p>
+            <p className="form-note">
+              {ui("noAdditionalPaymentDetailsWereRecordedForThisReceipt")}
             </p>
           </Sheet>
         </>
       ) : (
-        <p>No receipt is available for this tracked order.</p>
+        <p>{ui("noReceiptIsAvailableForThisTrackedOrder")}</p>
       )}
     </AccountPage>
   );
@@ -1331,6 +1379,8 @@ export function OrderConfirmation({
   id: string;
   catalog: Catalog;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const confirmationStage = useCapturedConfirmation(id);
   const detailsPending = confirmationStage === 1;
   const recommendationsPending = confirmationStage !== 0;
@@ -1338,7 +1388,8 @@ export function OrderConfirmation({
   const order = orders.find((o) => o.id === id),
     data = capturedReceipts[id];
   const product = catalog.products.find((p) => p.id === order?.productId);
-  const money = (amount: number) => formatMoney({ amount, currency: "USD" });
+  const money = (amount: number) =>
+    formatMoney({ amount, currency: "USD" }, intlLocale);
   return (
     <AccountPage
       className={`order-confirmation-page ${detailsPending ? "is-confirmation-loading" : ""}`}
@@ -1348,7 +1399,8 @@ export function OrderConfirmation({
       <Link
         className="review-close"
         href={`/orders/${id}`}
-        aria-label="Close confirmation"
+        aria-label={ui("closeConfirmation")}
+        data-ui-label="closeConfirmation"
       >
         <Icon name="close" />
       </Link>
@@ -1359,9 +1411,12 @@ export function OrderConfirmation({
             data-confirmation-stage={confirmationStage}
           >
             <div>
-              <h1>Order confirmed</h1>
+              <h1>{ui("orderConfirmed")}</h1>
               {!detailsPending && (
-                <small>Order No. #{data.displayOrderNumber}</small>
+                <small>
+                  {ui("orderNo")}
+                  {data.displayOrderNumber}
+                </small>
               )}
             </div>
             {detailsPending ? (
@@ -1379,38 +1434,39 @@ export function OrderConfirmation({
             <div
               className="confirmation-details-skeleton"
               role="status"
-              aria-label="Loading captured order details"
+              aria-label={ui("loadingCapturedOrderDetails")}
+              data-ui-label="loadingCapturedOrderDetails"
             >
               <div className="confirmation-address-skeleton" aria-hidden="true">
                 <i />
                 <i />
                 <b />
               </div>
-              <p>Total</p>
+              <p>{ui("total")}</p>
               <i aria-hidden="true" />
               <button className="muted-button" disabled>
-                View order receipt
+                {ui("viewOrderReceipt")}
               </button>
             </div>
           ) : (
             <>
               <section className="confirmation-destination">
-                <small>Ships to</small>
+                <small>{ui("shipsTo")}</small>
                 <div>
                   <strong>
-                    {data.street} {data.city}, {data.region}, {data.postalCode},
-                    US
+                    {data.street} {data.city}, {data.region}, {data.postalCode}
+                    {ui("uS")}
                   </strong>
                   {product && <img src={product.images[0]} alt="" />}
                 </div>
               </section>
               <section className="confirmation-delivery">
-                <small>Estimated delivery</small>
-                <strong>Expected by Aug 3</strong>
+                <small>{ui("estimatedDelivery")}</small>
+                <strong>{ui("expectedByAug3")}</strong>
               </section>
               <div className="confirmation-total">
                 <p>
-                  <span>Total</span>
+                  <span>{ui("total")}</span>
                   <span>{money(data.total)}</span>
                 </p>
                 <p>
@@ -1423,7 +1479,7 @@ export function OrderConfirmation({
                 href={`/orders/${id}/receipt`}
                 startAtTop
               >
-                View order receipt
+                {ui("viewOrderReceipt")}
               </SourceLink>
             </>
           )}
@@ -1431,7 +1487,8 @@ export function OrderConfirmation({
             <div
               className="confirmation-shelves-skeleton"
               role="status"
-              aria-label="Loading captured recommendations"
+              aria-label={ui("loadingCapturedRecommendations")}
+              data-ui-label="loadingCapturedRecommendations"
             >
               {[0, 1].map((shelf) => (
                 <div key={shelf} aria-hidden="true">
@@ -1448,7 +1505,7 @@ export function OrderConfirmation({
             <>
               <h2>
                 <SourceLink href="/stores/kitsch" startAtTop>
-                  Popular at KITSCH <span aria-hidden="true">›</span>
+                  {ui("popularAtKITSCH")} <span aria-hidden="true">›</span>
                 </SourceLink>
               </h2>
               <div className="product-rail">
@@ -1492,13 +1549,13 @@ export function OrderConfirmation({
                 className="confirmation-deals"
                 startAtTop
               >
-                Your deals <span aria-hidden="true">›</span>
+                {ui("yourDeals")} <span aria-hidden="true">›</span>
               </SourceLink>
             </>
           )}
         </>
       ) : (
-        <p>No confirmation is available for this tracked order.</p>
+        <p>{ui("noConfirmationIsAvailableForThisTrackedOrder")}</p>
       )}
     </AccountPage>
   );

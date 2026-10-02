@@ -1,0 +1,17 @@
+.git/
+.agents/
+docs/
+**/.qa/**
+**/node_modules/**
+**/.next/**
+**/.turbo/**
+**/.env*
+**/test-results/**
+**/playwright-report/**
+app/references/**
+app/mobbin-shop/**
+app/reference-assets/**
+app/private-evidence/**
+app/.local/**
+app/shopify/raw/**
+app/shopify/downloads/**

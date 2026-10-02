@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
 /* eslint-disable @next/next/no-img-element -- Reuses the chosen product photographs. */
@@ -23,6 +24,7 @@ export function SavedSelectionPreview({
   transition: SavedPreviewTransition | null;
   onComplete: (id: number) => void;
 }) {
+  const ui = useTranslations("discoveryUI");
   const completionTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export function SavedSelectionPreview({
         key={transition?.id ?? "settled"}
         className={transition ? "saved-preview-incoming" : undefined}
         src={image}
-        alt={`${count} selected items`}
+        alt={ui("value1SelectedItems", { value1: count ?? "" })}
         onAnimationEnd={(event) => {
           if (!transition || event.animationName !== "saved-preview-rise")
             return;

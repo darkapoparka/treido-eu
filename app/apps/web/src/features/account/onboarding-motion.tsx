@@ -1,27 +1,10 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Inherited decorative artwork. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { useState, type CSSProperties } from "react";
 import { useOnboardingClock } from "./onboarding-clock";
 import { DecorativeVideo } from "../discovery/decorative-video";
-
-const headlines = [
-  null,
-  <>
-    Track your orders
-    <br />
-    every step of the way
-  </>,
-  <>
-    Discover your next
-    <br />
-    favorite brand
-  </>,
-  <>
-    Supercharge your
-    <br />
-    online shopping
-  </>,
-];
 
 export type IntroPhase = 0 | 1 | 2 | 3;
 
@@ -32,6 +15,25 @@ export function IntroHeadline({
   motion: boolean;
   onPhaseChange?: (phase: IntroPhase) => void;
 }) {
+  const ui = useTranslations("accountUI");
+  const headlines = [
+    null,
+    <>
+      {ui("trackYourOrders")}
+      <br />
+      {ui("everyStepOfTheWay")}
+    </>,
+    <>
+      {ui("discoverYourNext")}
+      <br />
+      {ui("favoriteBrand")}
+    </>,
+    <>
+      {ui("superchargeYour")}
+      <br />
+      {ui("onlineShopping")}
+    </>,
+  ];
   const index = useOnboardingClock(motion, 2000, true, (phase) =>
     onPhaseChange?.(phase as IntroPhase),
   );
@@ -69,10 +71,13 @@ export function TrackingIllustration({
   motion: boolean;
   native?: boolean;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const [recordedIndex, setRecordedIndex] = useState(0);
   const nativeIndex = useOnboardingClock(native && motion, 4000, false);
   const index = native ? nativeIndex : recordedIndex;
-  const [title, caption, art, progress] = trackingStages[motion ? index : 3];
+  const [title, stageCaption, art, progress] =
+    trackingStages[motion ? index : 3];
   return (
     <div
       className="tracking-onboarding-card"
@@ -90,10 +95,10 @@ export function TrackingIllustration({
         alt=""
       />
       <span>
-        <small>Online store</small>
-        <strong>{title}</strong>
+        <small>{ui("onlineStore")}</small>
+        <strong>{caption(title)}</strong>
         <i style={{ "--tracking-progress": progress } as CSSProperties} />
-        <small>{caption}</small>
+        <small>{caption(stageCaption)}</small>
       </span>
       <img
         key={art}

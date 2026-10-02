@@ -834,10 +834,10 @@
 .product-page {
   background: #fdfdfd;
 }
-.product-page .store-row > .icon-button[aria-label="More options"] {
+.product-page .store-row > .icon-button[data-ui-label="moreOptions"] {
   background: transparent;
 }
-.product-page .store-row > .icon-button[aria-label="More options"] svg {
+.product-page .store-row > .icon-button[data-ui-label="moreOptions"] svg {
   stroke-width: 4;
   transform: translateX(-5px);
 }
@@ -878,7 +878,7 @@
   width: 20px;
   height: 20px;
 }
-.product-page .product-heading > .icon-button[aria-label="Save product"] svg {
+.product-page .product-heading > .icon-button[data-ui-label="saveProduct"] svg {
   width: 18px;
   height: 18px;
 }

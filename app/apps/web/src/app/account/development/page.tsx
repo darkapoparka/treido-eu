@@ -1,11 +1,13 @@
+import { getTranslations } from "next-intl/server";
 import { readCatalog } from "@/features/catalog/queries.server";
 import { AccountPage } from "@/features/account/forms";
 
 export default async function Page() {
+  const ui = await getTranslations("accountUI");
   await readCatalog();
   return (
     <AccountPage android className="android-development">
-      <h1 className="sr-only">Development mode</h1>
+      <h1 className="sr-only">{ui("developmentMode")}</h1>
       <button
         type="button"
         className="native-development-toggle"
@@ -15,7 +17,7 @@ export default async function Page() {
         disabled
       >
         <span>
-          Shop Minis<small>Build your own Shop Mini.</small>
+          Shop Minis<small>{ui("buildYourOwnShopMini")}</small>
         </span>
         <span className="native-disabled-switch" aria-hidden="true" />
       </button>

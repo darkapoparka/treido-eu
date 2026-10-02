@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AccountPage, Boundary } from "../account/forms";
@@ -44,6 +45,7 @@ export function TrackingDetail({
   order: ReferenceOrder;
   onEdit: () => void;
 }) {
+  const ui = useTranslations("commerceUI");
   const { saveOrder } = useAccount(),
     router = useRouter(),
     params = useSearchParams();
@@ -116,7 +118,9 @@ export function TrackingDetail({
         <div
           className={`tracking-map ${styles.sourceMap}`}
           role="img"
-          aria-label={`Recorded delivery map in ${delivered ? "Milpitas" : "Jurupa Valley"}`}
+          aria-label={ui("recordedDeliveryMapInValue1", {
+            value1: delivered ? "Milpitas" : "Jurupa Valley",
+          })}
         >
           <img
             className={styles.mapGeography}
@@ -145,8 +149,9 @@ export function TrackingDetail({
       <div className="tracking-body">
         <button
           className={styles.trackingMore}
-          aria-label="Tracking options"
+          aria-label={ui("trackingOptions")}
           onClick={() => setMenu(true)}
+          data-ui-label="trackingOptions"
         >
           <Icon name="more" />
         </button>
@@ -172,27 +177,27 @@ export function TrackingDetail({
           <h1>
             {delivered
               ? product
-                ? "Delivered Aug 1"
-                : "Delivered today"
+                ? ui("deliveredAug1")
+                : ui("deliveredToday")
               : waiting
-                ? "Expected by Aug 3"
+                ? ui("expectedByAug3")
                 : manualLabel
-                  ? "Label created"
-                  : "Arrives Jul 31–Aug 1"}
+                  ? ui("labelCreated")
+                  : ui("arrivesJul31Aug1")}
           </h1>
           {!manualLabel && (
             <p>
               {delivered
                 ? product
-                  ? "Arrived at 8:04 AM"
+                  ? ui("arrivedAt804AM")
                   : laterManualHistory
-                    ? "Arrived at 5:09 PM"
-                    : "Arrived at 7:34 PM"
+                    ? ui("arrivedAt509PM")
+                    : ui("arrivedAt734PM")
                 : waiting
-                  ? "Waiting for details"
+                  ? ui("waitingForDetails")
                   : labelCreated
-                    ? "Label created"
-                    : "In transit"}
+                    ? ui("labelCreated")
+                    : ui("inTransit")}
             </p>
           )}
           <OrderProgress
@@ -223,19 +228,20 @@ export function TrackingDetail({
             </div>
             <div className={styles.trackingNumber}>
               <span>
-                <small>Tracking no.</small>
+                <small>{ui("trackingNo")}</small>
                 <span>{sourceTracking}</span>
               </span>
               <button
-                aria-label="Copy tracking number"
+                aria-label={ui("copyTrackingNumber")}
                 onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(sourceTracking);
                     setCopied(true);
                   } catch {
-                    setBoundary("Clipboard");
+                    setBoundary(ui("clipboard"));
                   }
                 }}
+                data-ui-label="copyTrackingNumber"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -251,24 +257,22 @@ export function TrackingDetail({
                 </svg>
               </button>
               <button
-                aria-label="Open carrier tracking"
-                onClick={() => setBoundary("Carrier tracking")}
+                aria-label={ui("openCarrierTracking")}
+                onClick={() => setBoundary(ui("carrierTracking"))}
+                data-ui-label="openCarrierTracking"
               >
                 <ManageOrderIcon />
               </button>
             </div>
-            {copied && <p role="status">Tracking number copied</p>}
+            {copied && <p role="status">{ui("trackingNumberCopied")}</p>}
           </section>
         )}
         {manualLabel && (
           <section className="tracking-empty">
-            <h2>No delivery updates</h2>
-            <p>
-              We’re waiting to receive delivery updates from the carrier. Check
-              tracking details are correct.
-            </p>
+            <h2>{ui("noDeliveryUpdates")}</h2>
+            <p>{ui("weReWaitingToReceiveDeliveryUpdatesFromTheCarrier")}</p>
             <button className="muted-button" onClick={onEdit}>
-              Edit tracking details
+              {ui("editTrackingDetails")}
             </button>
           </section>
         )}
@@ -288,32 +292,32 @@ export function TrackingDetail({
             </div>
             <button
               className="muted-button"
-              onClick={() => setBoundary("Order management")}
+              onClick={() => setBoundary(ui("orderManagement"))}
             >
-              <ManageOrderIcon /> Manage your order
+              <ManageOrderIcon /> {ui("manageYourOrder")}
             </button>
             <SourceLink
               className="muted-button"
               href="/stores/kitsch"
               startAtTop
             >
-              Visit store
+              {ui("visitStore")}
             </SourceLink>
             <SourceLink
               className="muted-button"
               href={`/orders/${order.id}`}
               startAtTop
             >
-              View order details
+              {ui("viewOrderDetails")}
             </SourceLink>
           </section>
         )}
         {product && !manualLabel && (
           <section className="delivery-preview" data-waiting={waiting}>
-            <h2>Delivery progress</h2>
+            <h2>{ui("deliveryProgress")}</h2>
             {!delivered && (
               <div className="delivery-destination">
-                <small>Delivery to</small>
+                <small>{ui("deliveryTo")}</small>
                 <strong>
                   {shopSourceAddress.street}, {shopSourceAddress.city},{" "}
                   {shopSourceAddress.postalCode}
@@ -328,7 +332,7 @@ export function TrackingDetail({
                 className="muted-button"
                 onClick={() => setActivity(true)}
               >
-                View all activity
+                {ui("viewAllActivity")}
               </button>
             )}
           </section>
@@ -336,16 +340,18 @@ export function TrackingDetail({
         <div className="tracking-action-panel">
           {!waiting && (
             <OrderAction
-              label={delivered ? "Unmark as delivered" : "Mark as delivered"}
+              label={
+                delivered ? ui("unmarkAsDelivered") : ui("markAsDelivered")
+              }
               onClick={mark}
             />
           )}
           {!waiting && !manualLabel && !delivered && (
-            <OrderAction label="Edit tracking details" onClick={onEdit} />
+            <OrderAction label={ui("editTrackingDetails")} onClick={onEdit} />
           )}
           <OrderAction
-            label="Report incorrect information"
-            onClick={() => setBoundary("Tracking report")}
+            label={ui("reportIncorrectInformation")}
+            onClick={() => setBoundary(ui("trackingReport"))}
           />
         </div>
         {!product && (
@@ -355,7 +361,7 @@ export function TrackingDetail({
               className={styles.manualRecommendationLabel}
               startAtTop
             >
-              Your deals
+              {ui("yourDeals")}
               <Icon name="chevron" />
             </SourceLink>
           </h2>
@@ -399,7 +405,9 @@ export function TrackingDetail({
         )}
         {product && (
           <>
-            <h2 className={styles.inspiredHeading}>Inspired by your order</h2>
+            <h2 className={styles.inspiredHeading}>
+              {ui("inspiredByYourOrder")}
+            </h2>
             <OrderInspiredPartial />
           </>
         )}
@@ -407,7 +415,7 @@ export function TrackingDetail({
           <>
             <h2 className={styles.manualPicked}>
               <span className={styles.manualRecommendationLabel}>
-                Picked for you
+                {ui("pickedForYou")}
                 <Icon name="chevron" />
               </span>
             </h2>
@@ -422,7 +430,7 @@ export function TrackingDetail({
       </div>
       <Sheet
         open={activity}
-        title="Delivery progress"
+        title={ui("deliveryProgress")}
         className={`full-activity-sheet ${styles.activitySheet}`}
         onClose={() => setActivity(false)}
       >
@@ -430,36 +438,36 @@ export function TrackingDetail({
       </Sheet>
       <Sheet
         open={menu}
-        title="Your order"
+        title={ui("yourOrder")}
         className={styles.orderMenu}
         onClose={() => setMenu(false)}
       >
         <OrderAction
-          label={delivered ? "Unmark as delivered" : "Mark as delivered"}
+          label={delivered ? ui("unmarkAsDelivered") : ui("markAsDelivered")}
           onClick={() => {
             mark();
             setMenu(false);
           }}
         />
         <OrderAction
-          label="Edit tracking details"
+          label={ui("editTrackingDetails")}
           onClick={() => {
             setMenu(false);
             onEdit();
           }}
         />
         <OrderAction
-          label={order.archived ? "Unarchive order" : "Archive order"}
+          label={order.archived ? ui("unarchiveOrder") : ui("archiveOrder")}
           onClick={() => {
             saveOrder({ ...order, archived: !order.archived });
             setMenu(false);
           }}
         />
         <OrderAction
-          label="Report incorrect information"
+          label={ui("reportIncorrectInformation")}
           onClick={() => {
             setMenu(false);
-            setBoundary("Tracking report");
+            setBoundary(ui("trackingReport"));
           }}
         />
       </Sheet>

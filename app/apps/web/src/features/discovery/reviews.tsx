@@ -1,4 +1,6 @@
 "use client";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -104,6 +106,8 @@ export function Reviews({
   available?: boolean;
   productId?: string;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const params = useSearchParams();
   const q = params.get("q") ?? "";
   const sort =
@@ -133,23 +137,23 @@ export function Reviews({
     return (
       <ShopSurface className="shop-page reviews-page">
         <header className="section-heading">
-          <h1>Reviews</h1>
+          <h1>{ui("reviews")}</h1>
         </header>
         <p className="empty-state">
-          Review records for this item are not available in this reference
-          preview.
+          {ui("reviewRecordsForThisItemAreNotAvailableInThis")}
         </p>
-        <Link href="/">Back to Shop</Link>
+        <Link href="/">{ui("backToShop")}</Link>
       </ShopSurface>
     );
   return (
     <ShopSurface className="shop-page reviews-page" data-product-id={productId}>
       <header className="section-heading">
-        <h1>Reviews</h1>
+        <h1>{ui("reviews")}</h1>
         <ContextualCloseLink
           href={`/products/${productId}`}
           className="icon-button"
-          aria-label="Close reviews"
+          aria-label={ui("closeReviews")}
+          data-ui-label="closeReviews"
         >
           <Icon name="close" />
         </ContextualCloseLink>
@@ -157,12 +161,16 @@ export function Reviews({
       <div className="review-summary">
         <div>
           <strong>4.6</strong>
-          <ReviewStars rating={4.5} label="4.6 out of 5 stars" />
+          <ReviewStars rating={4.5} label={ui("text46OutOf5Stars")} />
           <p>
-            3.3K ratings <RatingInformation />
+            {ui("text33KRatings")} <RatingInformation />
           </p>
         </div>
-        <div className="rating-bars" aria-label="Captured rating distribution">
+        <div
+          className="rating-bars"
+          aria-label={ui("capturedRatingDistribution")}
+          data-ui-label="capturedRatingDistribution"
+        >
           {[5, 4, 3, 2, 1].map((n, i) => (
             <div key={n}>
               <span>{n}</span>
@@ -183,16 +191,17 @@ export function Reviews({
       >
         <IconButton
           icon="filter-circles"
-          label="Filter reviews"
+          label={ui("filterReviews")}
           onClick={() => setFilter(true)}
+          data-ui-label="filterReviews"
         />
         <div className="review-search-field">
           <Icon name="search" />
           <input
             ref={searchRef}
             type="search"
-            aria-label="Search reviews"
-            placeholder="Search"
+            aria-label={ui("searchReviews")}
+            placeholder={ui("search")}
             enterKeyHint="search"
             value={q}
             onChange={(event) => updateCriteria({ q: event.target.value })}
@@ -202,13 +211,14 @@ export function Reviews({
                 updateCriteria({ q: "" });
               }
             }}
+            data-ui-label="searchReviews"
           />
         </div>
       </form>
       {!visible.length && (
         <div className="review-empty" role="status">
-          <h2>No matching reviews</h2>
-          <p>No captured reviews match this search.</p>
+          <h2>{ui("noMatchingReviews")}</h2>
+          <p>{ui("noCapturedReviewsMatchThisSearch")}</p>
           <button
             className="pill"
             onClick={() => {
@@ -216,7 +226,7 @@ export function Reviews({
               searchRef.current?.focus();
             }}
           >
-            Clear search
+            {ui("clearSearch")}
           </button>
         </div>
       )}
@@ -225,7 +235,7 @@ export function Reviews({
           className={`review-card ${reported[review.id] ? "review-reported" : ""}`}
           key={review.id}
           data-review-id={review.id}
-          aria-label={`Review by ${review.author}`}
+          aria-label={ui("reviewByValue1", { value1: review.author ?? "" })}
         >
           <ReviewStars rating={review.stars} />
           {review.variant && (
@@ -251,16 +261,19 @@ export function Reviews({
             />
             <IconButton
               icon="more"
-              label={`More options for ${review.author}'s review`}
+              label={ui("moreOptionsForValue1SReview", {
+                value1: review.author ?? "",
+              })}
               onClick={() => {
                 lastReport.current = review.id;
                 setReport(review.id);
               }}
+              data-ui-label="moreOptionsForValue1SReview"
             />
           </footer>
           {reported[review.id] && (
             <small className="review-reported-label">
-              You reported this review
+              {ui("youReportedThisReview")}
             </small>
           )}
         </article>
@@ -273,7 +286,7 @@ export function Reviews({
       />
       <Sheet
         open={filter}
-        title="Filter reviews"
+        title={ui("filterReviews")}
         onClose={() => setFilter(false)}
       >
         <div className="filter-options">
@@ -286,7 +299,7 @@ export function Reviews({
                 setFilter(false);
               }}
             >
-              {value}
+              {caption(value)}
               <span
                 className={`radio-outline ${sort === value ? "selected" : ""}`}
               />
@@ -294,8 +307,7 @@ export function Reviews({
           ))}
         </div>
         <p className="form-note">
-          This preview contains a limited captured sample. Relative dates cannot
-          be ordered against calendar dates.
+          {ui("thisPreviewContainsALimitedCapturedSampleRelativeDatesCannot")}
         </p>
       </Sheet>
     </ShopSurface>
@@ -316,6 +328,8 @@ export function ProductOptions({
   onReopen: () => void;
   onReportNotesChange?: (open: boolean) => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const router = useRouter(),
     state = useDiscovery();
   const [reason, setReason] = useState("");
@@ -385,7 +399,7 @@ export function ProductOptions({
   return (
     <Sheet
       open={open}
-      title={title}
+      title={caption(title)}
       className={`product-options-sheet product-options-${view}`}
       onClose={close}
       manageHistory={false}
@@ -398,7 +412,7 @@ export function ProductOptions({
               onClick={() => flow.navigate("contact")}
             >
               <Icon name="chat-round" />
-              Contact KITSCH
+              {ui("contactKITSCH")}
             </button>
           )}
           <button
@@ -407,7 +421,7 @@ export function ProductOptions({
             onClick={() => flow.navigate("reason")}
           >
             <Icon name="alert" />
-            Report
+            {ui("report")}
           </button>
         </div>
       ) : view === "contact" ? (
@@ -415,7 +429,7 @@ export function ProductOptions({
           <div className="product-option-list">
             <a href="https://www.mykitsch.com" target="_blank" rel="noreferrer">
               <Icon name="website" />
-              Website
+              {ui("website")}
             </a>
             <button
               onClick={async () => {
@@ -431,7 +445,8 @@ export function ProductOptions({
                     setCopyState("unavailable");
                 }
               }}
-              aria-label="Copy kitsch@mykitsch.com"
+              aria-label={ui("copyKitschMykitschCom")}
+              data-ui-label="copyKitschMykitschCom"
             >
               <Icon name="mail" />
               kitsch@mykitsch.com
@@ -462,12 +477,12 @@ export function ProductOptions({
           </div>
           {copyState === "copied" && (
             <span className="sr-only" role="status">
-              Email address copied
+              {ui("emailAddressCopied")}
             </span>
           )}
           {copyState === "unavailable" && (
             <label className="contact-copy-fallback">
-              Clipboard unavailable. Select and copy the email address.
+              {ui("clipboardUnavailableSelectAndCopyTheEmailAddress")}
               <input
                 readOnly
                 value="kitsch@mykitsch.com"
@@ -488,9 +503,9 @@ export function ProductOptions({
             if (reason) flow.navigate("notes");
           }}
         >
-          <p className="product-report-subtitle">Please select a reason</p>
+          <p className="product-report-subtitle">{ui("pleaseSelectAReason")}</p>
           <fieldset className="product-report-reasons">
-            <legend className="sr-only">Please select a reason</legend>
+            <legend className="sr-only">{ui("pleaseSelectAReason")}</legend>
             {[
               "Misleading",
               "Inappropriate content",
@@ -498,7 +513,7 @@ export function ProductOptions({
               "Other",
             ].map((value) => (
               <label key={value}>
-                {value}
+                {caption(value)}
                 <input
                   type="radio"
                   name="product-reason"
@@ -516,10 +531,10 @@ export function ProductOptions({
           </fieldset>
           <div className="sheet-actions">
             <button type="button" className="pill" onClick={close}>
-              Cancel
+              {ui("cancel")}
             </button>
             <button type="submit" className="primary" disabled={!reason}>
-              Next
+              {ui("next")}
             </button>
           </div>
         </form>
@@ -531,41 +546,41 @@ export function ProductOptions({
             markProduct();
           }}
         >
-          <p className="product-report-subtitle">Please select a reason</p>
+          <p className="product-report-subtitle">{ui("pleaseSelectAReason")}</p>
           <label className="selected-report-reason">
-            {reason}
+            {caption(reason)}
             <input
               ref={selectedReason}
               type="radio"
               checked
               readOnly
-              aria-label={reason}
+              aria-label={caption(reason)}
             />
           </label>
           <textarea
-            aria-label="Tell us more"
-            placeholder="Tell us more"
+            aria-label={ui("tellUsMore")}
+            placeholder={ui("tellUsMore")}
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
+            data-ui-label="tellUsMore"
           />
-          <p className="product-report-optional">Optional</p>
+          <p className="product-report-optional">{ui("optional")}</p>
           <div className="sheet-actions">
             <button type="button" className="pill" onClick={flow.back}>
-              Back
+              {ui("back")}
             </button>
             <button
               type="submit"
               className="primary"
-              title="Local preview only; no report will be sent"
+              title={ui("localPreviewOnlyNoReportWillBeSent")}
             >
-              Report
+              {ui("report")}
             </button>
           </div>
         </form>
       ) : (
         <p className="sheet-copy" role="status">
-          This selection is marked in the local preview only. No report was
-          sent.
+          {ui("thisSelectionIsMarkedInTheLocalPreviewOnlyNo")}
         </p>
       )}
     </Sheet>

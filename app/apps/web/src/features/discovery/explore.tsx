@@ -1,4 +1,6 @@
 "use client";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useRef, useState } from "react";
@@ -77,6 +79,8 @@ export function Explore({
   catalog: Catalog;
   category?: string;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const [cart, setCart] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
   const [categoriesPassed, setCategoriesPassed] = useState(false);
@@ -178,7 +182,7 @@ export function Explore({
         (androidLive && (!category || nativeHomeCategory)) || undefined
       }
     >
-      <h1>{category ?? "Explore"}</h1>
+      <h1>{category ?? ui("explore")}</h1>
       {nativeHomeCategory && <HomeCategoryIntro />}
       {category && !nativeHomeCategory && (
         <div className="category-rail">
@@ -198,7 +202,7 @@ export function Explore({
                   alt=""
                 />
               )}
-              {label}
+              {caption(label)}
             </SourceLink>
           ))}
         </div>
@@ -217,29 +221,31 @@ export function Explore({
               src={`/api/reference-media/${beauty ? "beauty-curls-photo" : androidLive ? "live-explore-cozy-room" : "explore-summer-upper"}`}
               alt={
                 beauty
-                  ? "Wavy hair"
+                  ? ui("wavyHair")
                   : androidLive
-                    ? "Warm living room photographed by Chris Mottalini"
-                    : "Summer dress"
+                    ? ui("warmLivingRoomPhotographedByChrisMottalini")
+                    : ui("summerDress")
               }
             />
             {androidLive && !category && (
-              <small className="editorial-guest-badge">Guest editor</small>
+              <small className="editorial-guest-badge">
+                {ui("guestEditor")}
+              </small>
             )}
             <div>
               <strong>
                 {beauty
-                  ? "Summer curl routine"
+                  ? ui("summerCurlRoutine")
                   : androidLive
-                    ? "Architectural Digest's cozy edit"
-                    : "High-rotation summer dresses"}
+                    ? ui("architecturalDigestSCozyEdit_3e1527")
+                    : ui("highRotationSummerDresses")}
               </strong>
               <p>
                 {beauty
-                  ? "Masks, leave-ins, and shine oils."
+                  ? ui("masksLeaveInsAndShineOils")
                   : androidLive
-                    ? "Make your home feel like a sanctuary this fall."
-                    : "Slip dresses, shirt dresses, and linen midis."}
+                    ? ui("makeYourHomeFeelLikeASanctuaryThisFall")
+                    : ui("slipDressesShirtDressesAndLinenMidis")}
               </p>
               <Icon name="arrow" />
             </div>
@@ -252,12 +258,12 @@ export function Explore({
             >
               <img
                 src="/api/reference-media/live-explore-staud-hero"
-                alt="Staud fall campaign"
+                alt={ui("staudFallCampaign")}
                 data-media-state="verified-campaign-alternative"
               />
               <div>
-                <strong>Brand Spotlight: Staud</strong>
-                <p>Timeless pieces with a contemporary touch.</p>
+                <strong>{ui("brandSpotlightStaud")}</strong>
+                <p>{ui("timelessPiecesWithAContemporaryTouch")}</p>
                 <Icon name="arrow" />
               </div>
             </SourceLink>
@@ -266,7 +272,8 @@ export function Explore({
             <SourceLink
               className={styles.heroContinuation}
               href="/search?category=Womenswear"
-              aria-label="More summer styles"
+              aria-label={ui("moreSummerStyles")}
+              data-ui-label="moreSummerStyles"
             >
               <img
                 src="/api/reference-media/explore-summer-continuation"
@@ -278,7 +285,7 @@ export function Explore({
       )}
       {!category && (
         <>
-          <h2>Browse categories</h2>
+          <h2>{ui("browseCategories")}</h2>
           <div
             className="explore-categories"
             id="explore-categories"
@@ -297,7 +304,7 @@ export function Explore({
                     : `/explore/${encodeURIComponent(name)}`
                 }
               >
-                <h3>{name}</h3>
+                <h3>{caption(name)}</h3>
                 <div>
                   <img src={`/api/reference-media/${first}`} alt="" />
                   {second && (
@@ -329,15 +336,15 @@ export function Explore({
                 );
               }}
             >
-              {expandedCategories ? "Less" : "More"}
+              {expandedCategories ? ui("less") : ui("more_d47d7c")}
             </button>
           )}
           <section className="explore-minis">
             <SourceLink className={styles.miniHeading} href="/minis">
-              <h2>Try something new</h2>
+              <h2>{ui("trySomethingNew")}</h2>
               <Icon name="chevron" />
             </SourceLink>
-            <p>Discover more ways to shop with Minis</p>
+            <p>{ui("discoverMoreWaysToShopWithMinis")}</p>
             {(androidLive
               ? liveExploreMiniIds
               : (["sol", "skin", "look"] as const)
@@ -359,10 +366,10 @@ export function Explore({
         </>
       )}
       {shelves.map(({ title, href, products }) => (
-        <section className="explore-shelf" key={title}>
+        <section className="explore-shelf" key={caption(title)}>
           <SourceLink href={href}>
             <h2>
-              {title}{" "}
+              {caption(title)}{" "}
               <span className={styles.shelfChevron} aria-hidden="true">
                 ›
               </span>
@@ -394,7 +401,9 @@ export function Explore({
                   <SourceLink
                     className={styles.photoContinuation}
                     href={href}
-                    aria-label={`More ${title.toLowerCase()} products`}
+                    aria-label={ui("moreValue1Products", {
+                      value1: title.toLowerCase(),
+                    })}
                   >
                     <img
                       src={`/api/reference-media/${title === "Top rated in home" ? "explore-home-continuation" : "explore-menswear-continuation"}`}
@@ -407,7 +416,8 @@ export function Explore({
                   <SourceLink
                     className={styles.photoContinuation}
                     href={href}
-                    aria-label="More new beauty products"
+                    aria-label={ui("moreNewBeautyProducts")}
+                    data-ui-label="moreNewBeautyProducts"
                   >
                     <img
                       src={`/api/reference-media/${beauty ? "beauty-new-continuation" : "explore-beauty-continuation"}`}
@@ -418,7 +428,7 @@ export function Explore({
             </div>
           ) : (
             <p className="empty-state" role="status">
-              No products in this reference sample.
+              {ui("noProductsInThisReferenceSample")}
             </p>
           )}
         </section>
@@ -429,7 +439,7 @@ export function Explore({
         <section className="explore-shelf">
           <SourceLink href="/search?category=Womenswear&ratings=4.5%20stars%20and%20up">
             <h2>
-              Top rated in womenswear{" "}
+              {ui("topRatedInWomenswear")}{" "}
               <span className={styles.shelfChevron}>›</span>
             </h2>
           </SourceLink>
@@ -438,7 +448,7 @@ export function Explore({
             <div>
               <img
                 src="/api/reference-media/explore-womenswear-partial"
-                alt="Captured womenswear photograph detail"
+                alt={ui("capturedWomenswearPhotographDetail")}
               />
             </div>
           </div>

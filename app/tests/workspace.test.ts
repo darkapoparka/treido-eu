@@ -1,6 +1,6 @@
 import { readFileSync, existsSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
-import { resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = resolve(import.meta.dirname, "..");
@@ -41,25 +41,31 @@ describe("workspace resolution", () => {
   });
 });
 
-it("keeps the owning documents' relative file links resolvable", () => {
+it("keeps the product documents' relative file links inside the repository and resolvable", () => {
+  const productRoot = resolve(root, "..");
   for (const file of [
     "README.md",
     "AGENTS.md",
     "tasks.md",
-    "product.md",
-    "design.md",
+    "prd.md",
+    "styling.md",
     "techstack.md",
     "architecture.md",
-    "verification.md",
+    "docs/testing.md",
   ]) {
-    const contents = readFileSync(resolve(root, file), "utf8");
+    const owner = resolve(productRoot, file);
+    const contents = readFileSync(owner, "utf8");
     for (const match of contents.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
       const target = match[1];
-      if (/^(https?:|#)/.test(target)) continue;
+      if (/^(?:[a-z][a-z\d+.-]*:|#)/i.test(target)) continue;
+      const destination = resolve(dirname(owner), target.split("#")[0]);
+      const path = relative(productRoot, destination);
+      expect(isAbsolute(path), `${file}: ${target}`).toBe(false);
       expect(
-        existsSync(resolve(root, target.split("#")[0])),
+        path === ".." || path.startsWith(`..${sep}`),
         `${file}: ${target}`,
-      ).toBe(true);
+      ).toBe(false);
+      expect(existsSync(destination), `${file}: ${target}`).toBe(true);
     }
   }
 });

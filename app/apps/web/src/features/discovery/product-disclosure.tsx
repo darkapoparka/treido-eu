@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- Verified decorative native brand mark. */
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Icon } from "./icons";
 
@@ -42,6 +43,7 @@ export function ProductDisclosure({
 }
 
 export function ProductSummaryCredit() {
+  const ui = useTranslations("discoveryUI");
   return (
     <small className="native-summary-credit">
       <img
@@ -50,7 +52,7 @@ export function ProductSummaryCredit() {
         width={16}
         height={16}
       />
-      Summarized by Shop
+      {ui("summarizedByShop")}
     </small>
   );
 }

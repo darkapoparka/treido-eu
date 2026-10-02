@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { discoveryDestination } from "./browse-scope-route";
+import { localeDestination, parseLocale } from "../locale/locale";
 import {
+  Suspense,
   useEffect,
   useRef,
   useSyncExternalStore,
@@ -247,13 +250,50 @@ export function sourceReturnState(
   };
 }
 
+type SourceLinkProps = Props & {
+  sourceKey?: string;
+  startAtTop?: boolean;
+  preserveDiscoveryContext?: boolean;
+};
 export function SourceLink({
+  preserveDiscoveryContext,
+  ...props
+}: SourceLinkProps) {
+  return (
+    <Suspense fallback={<SourceLinkContent {...props} />}>
+      <ScopedSourceLink
+        {...props}
+        preserveDiscoveryContext={preserveDiscoveryContext}
+      />
+    </Suspense>
+  );
+}
+function ScopedSourceLink({
   href,
+  preserveDiscoveryContext = true,
+  ...props
+}: SourceLinkProps) {
+  const params = useSearchParams();
+  return (
+    <SourceLinkContent
+      {...props}
+      href={localeDestination(
+        preserveDiscoveryContext
+          ? discoveryDestination(href, new URLSearchParams(params))
+          : href,
+        parseLocale(params.get("lang")),
+      )}
+    />
+  );
+}
+function SourceLinkContent({
+  href: baseHref,
   onNavigate,
   sourceKey,
   startAtTop = false,
   ...props
-}: Props & { sourceKey?: string; startAtTop?: boolean }) {
+}: Omit<SourceLinkProps, "preserveDiscoveryContext">) {
+  const href = baseHref;
   const element = useRef<HTMLAnchorElement>(null);
   const id =
     sourceKey ??

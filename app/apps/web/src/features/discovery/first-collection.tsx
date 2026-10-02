@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Catalog } from "../catalog/types";
@@ -13,6 +14,7 @@ import "./first-collection.css";
 /** This is triggered by a real first save, never by a screenshot/frame parameter.
  * Dismissing the suggestion does not undo the save or create a collection. */
 export function FirstCollectionPrompt({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const router = useRouter();
   const [startedEmpty] = useState(() => state.saved.length === 0);
@@ -54,7 +56,7 @@ export function FirstCollectionPrompt({ catalog }: { catalog: Catalog }) {
     <Sheet
       open={flow.active && suggest}
       manageHistory={false}
-      title={editing ? "Create collection" : "Start your first collection"}
+      title={editing ? ui("createCollection") : ui("startYourFirstCollection")}
       headerless
       className={
         editing ? "saved-sheet collection-editor" : "first-collection-sheet"
@@ -106,15 +108,13 @@ export function FirstCollectionPrompt({ catalog }: { catalog: Catalog }) {
               </i>
             </div>
           </div>
-          <h2>Start your first collection</h2>
-          <p>
-            Organize your saved items to revisit later or share with others.
-          </p>
+          <h2>{ui("startYourFirstCollection")}</h2>
+          <p>{ui("organizeYourSavedItemsToRevisitLaterOrShareWith")}</p>
           <button
             className="primary first-collection-create"
             onClick={() => flow.navigate("editor")}
           >
-            Create collection
+            {ui("createCollection")}
           </button>
         </>
       )}

@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Verified native option photographs. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { Product, ProductVariant } from "../catalog/types";
 import { Sheet } from "./components";
@@ -16,10 +18,12 @@ export function ProductVariantOptions({
   selected,
   onChange,
 }: {
-  product: Product;
+  product: Pick<Product, "variants" | "detail">;
   selected: ProductVariant;
   onChange: (id: string) => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const [expanded, setExpanded] = useState<string | null>(null);
   return (
     <>
@@ -33,7 +37,7 @@ export function ProductVariantOptions({
           return (
             <ProductColorOptions
               key={group.name}
-              label={group.name}
+              label={caption(group.name)}
               variants={choices.map((choice) => ({
                 ...choice.variant,
                 label: choice.label,
@@ -68,7 +72,7 @@ export function ProductVariantOptions({
             <legend>
               {group.showSelection ? (
                 <>
-                  <strong>{group.name}:</strong>{" "}
+                  <strong>{caption(group.name)}:</strong>{" "}
                   {selected.referenceOptions?.[group.name]}
                 </>
               ) : (
@@ -96,15 +100,18 @@ export function ProductVariantOptions({
               {shown.length < choices.length && (
                 <button
                   type="button"
-                  aria-label={`View ${choices.length - shown.length} more ${group.name} options`}
+                  aria-label={ui("viewValue1MoreValue2Options", {
+                    value1: choices.length - shown.length,
+                    value2: group.name ?? "",
+                  })}
                   onClick={() => setExpanded(group.name)}
                 >
-                  View {choices.length - shown.length} more
+                  {ui("view")} {choices.length - shown.length} {ui("more")}
                 </button>
               )}
             </div>
             <Sheet
-              title={group.name}
+              title={caption(group.name)}
               open={expanded === group.name}
               onClose={() => setExpanded(null)}
               headerless
@@ -112,7 +119,7 @@ export function ProductVariantOptions({
               initialFocus='button[aria-pressed="true"]'
               className="native-color-sheet native-option-sheet"
             >
-              <h2 aria-hidden="true">{group.name}</h2>
+              <h2 aria-hidden="true">{caption(group.name)}</h2>
               <div className="native-color-list">
                 {choices.map((choice) => (
                   <button
@@ -140,7 +147,7 @@ export function ProductVariantOptions({
                     <span>{choice.label}</span>
                     {choice.soldOut || !choice.selectable ? (
                       <small>
-                        {choice.soldOut ? "Sold out" : "Unavailable"}
+                        {choice.soldOut ? ui("soldOut") : ui("unavailable")}
                       </small>
                     ) : selected.referenceOptions?.[group.name] ===
                       choice.label ? (
@@ -150,7 +157,7 @@ export function ProductVariantOptions({
                 ))}
               </div>
               <button className="sr-only" onClick={() => setExpanded(null)}>
-                Close {group.name}
+                {ui("close")} {caption(group.name)}
               </button>
             </Sheet>
           </fieldset>

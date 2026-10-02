@@ -1,0 +1,59 @@
+/* New marketplace facts/action region; shared gallery, type and dock retain their owners. */
+.page {
+  padding-bottom: 140px;
+}
+.page .heading {
+  padding-right: 52px;
+}
+.page .heading > :global(.icon-button) {
+  right: 0;
+}
+.muted {
+  display: block;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.facts {
+  margin-top: 16px;
+}
+.facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+.facts dt {
+  color: var(--color-muted);
+}
+.facts dd {
+  margin: 0;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+.contact {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+.contact > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 20px;
+  text-align: center;
+  text-decoration: none;
+}
+.preserve {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.report {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 24px;
+  color: inherit;
+}

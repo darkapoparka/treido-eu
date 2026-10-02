@@ -1,0 +1,334 @@
+.root {
+  padding: 20px 16px;
+  margin-inline: auto;
+  max-width: 1280px;
+  color: inherit;
+}
+.root[data-merchant] {
+  max-width: none;
+  padding: 20px;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.header h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 650;
+  margin: 0;
+}
+.root[data-merchant] .header h1 {
+  font-size: 20px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 22px;
+  background: #f1f1f1;
+  color: #101010;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.primary {
+  background: linear-gradient(#343434, #191919);
+  color: white;
+  box-shadow:
+    inset 0 1px 1px #fff3,
+    0 1px 2px #0002;
+}
+.button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.root :is(button, a, input, textarea, select):focus-visible,
+.dialog :is(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid #458fff;
+  outline-offset: 3px;
+}
+.frame {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  min-height: 620px;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+}
+.threads {
+  min-width: 0;
+  border-right: 1px solid #eee;
+  background: #fafafa;
+}
+.filters {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  border-bottom: 1px solid #eee;
+}
+.filters select,
+.filters input,
+.composer textarea,
+.dialog :is(textarea, select) {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  color: inherit;
+  padding: 12px;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+}
+.thread {
+  display: block;
+  padding: 18px;
+  border-bottom: 1px solid #eee;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.thread[aria-current="page"] {
+  background: #eee;
+}
+.thread strong {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.thread p {
+  margin: 4px 0 0;
+}
+.preview {
+  color: #707070;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.unread {
+  border-radius: 12px;
+  background: #101010;
+  color: white;
+  min-width: 22px;
+  padding: 1px 6px;
+  font-size: 12px;
+  text-align: center;
+}
+.conversation {
+  min-width: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.conversation h2 {
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 600;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.conversationHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+.muted {
+  color: #707070;
+  font-size: 0.925em;
+  line-height: 1.5;
+}
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  padding: 24px 0;
+  list-style: none;
+  margin: 0;
+}
+.bubble {
+  max-width: 80%;
+  background: #f0f0f0;
+  padding: 12px 16px;
+  border-radius: 16px;
+  align-self: flex-start;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.bubble[data-self="true"] {
+  align-self: flex-end;
+  background: #e8f4ec;
+}
+.bubble p {
+  margin: 4px 0;
+  white-space: pre-wrap;
+}
+.bubble header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.report {
+  border: 0;
+  padding: 4px;
+  background: none;
+  font: inherit;
+  color: #707070;
+  cursor: pointer;
+}
+.composer {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+}
+.composer textarea {
+  min-height: 96px;
+  max-height: 240px;
+  resize: vertical;
+}
+.composerFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.notice {
+  padding: 14px;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  margin: 12px 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.error {
+  color: #a32620;
+}
+.empty {
+  padding: 40px 20px;
+  text-align: center;
+  margin: auto;
+}
+.empty h2 {
+  margin-bottom: 12px;
+}
+.pagination {
+  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  border: 0;
+  border-radius: 24px;
+  color: #101010;
+  background: white;
+  overflow: auto;
+}
+.dialog::backdrop {
+  background: #0006;
+}
+.dialog h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+  line-height: 1.3;
+}
+.dialog p {
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.dialog footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dialog label {
+  display: grid;
+  gap: 8px;
+  margin-block: 12px;
+}
+.mobileBack {
+  display: none;
+}
+@media (max-width: 767px) {
+  .root[data-merchant] {
+    padding: 16px;
+  }
+  .frame {
+    grid-template-columns: 1fr;
+    min-height: 520px;
+  }
+  .threads {
+    border: 0;
+  }
+  .frame[data-selected="true"] > .threads {
+    display: none;
+  }
+  .frame:not([data-selected="true"]) > .conversation {
+    display: none;
+  }
+  .conversation {
+    padding: 16px;
+  }
+  .bubble {
+    max-width: 92%;
+  }
+  .mobileBack {
+    display: inline-flex;
+  }
+  .button {
+    min-height: 44px;
+  }
+}
+.reviewForm {
+  display: grid;
+  gap: 12px;
+}
+.reviewForm label {
+  display: grid;
+  gap: 8px;
+}
+.reviewForm :is(textarea, select) {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  color: inherit;
+  font: inherit;
+}
+
+.filters .actions select {
+  width: auto;
+  max-width: 100%;
+  padding: 8px 12px;
+  min-height: 36px;
+}

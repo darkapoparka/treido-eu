@@ -1,19 +1,15 @@
-# Treido Global application source
+# Treido application workspace
 
-This is the verified copied frontend inside `L:/CODEX/platforms/treido/app`. The product/docs/future Git root is its parent, `L:/CODEX/platforms/treido`.
+The Git/product root is one directory above this workspace. Read [root AGENTS](../AGENTS.md), [tasks](../tasks.md) and the named task's documents. This is the general-goods Treido project, not Foods and not another Shop clone queue.
 
-Read [product README](../README.md), [product AGENTS](../AGENTS.md), [current task](../tasks.md), then the relevant [PRD](../prd.md), [design](../design.md) and component files. Do not follow donor-specific product, source-path, branch, payment or deployment instructions retained elsewhere in this copy.
+Run package commands here using the pinned toolchain. Web lives in `apps/web`, retained native in `apps/mobile`, safe shared contracts in `packages/contracts`. Do not flatten the workspace, create another server app or copy donor environment files. The final audit verified `origin` as `darkapoparka/treido-eu`; recheck the target before any future authorized Git synchronization.
 
-A general-goods marketplace: people and businesses publish listings, maintain seller profiles/storefronts, and buyers discover products, follow sellers, save items, message and buy. This is not the Bulgarian food-producer product.
+Preserve [styling](../styling.md). Copied app-level product/design/backend docs are historical evidence; product-root documents own current requirements. Never follow an old donor path, port6412, food rule or full-parity gate as an active task. Do not run legacy patch/import scripts blindly.
 
-Use the copied Shop frontend as the visual/code baseline. Keep its actual typography, spacing, components, overlays and navigation; adapt home shelves to seller profiles with products. Do not import another styling system or replace the UI with generic marketplace cards.
+Use [testing](../docs/testing.md) for actual command scope. `dev:web` now owns loopback port 6418 and `.qa/treido-preview`, with an explicit `TREIDO_PREVIEW_PORT` override. Do not start extra processes without free disk/memory; T01 qualification is still tracked at the root. Use only owned preview outputs/processes and specifically assigned emulator5560. Production cannot expose reference fixtures, captured identities, simulated payments or reference assets merely by removing guards.
 
-Donor reference remains read-only for this product: `L:\CODEX\treido-bg`, checkpoint `7ab4dd99c535f88806b63ef2457e203021253cc9`. This application is not the donor's live service. The parent docs define all branding/domain changes; do not change another project to fulfill this one.
+Repository skills are at `../.agents/skills/`; use the workflow relevant to the task. Update only the root `tasks.md` for status. Nested scope rules supplement, not duplicate, the root contract.
 
-Preserve the actual framework, components, typography, CSS/StyleX ownership, state handling, assets and lockfile. Keep native/browser-only/server boundaries. Generated framework guidance in nested AGENTS remains useful; consult installed-version docs when implementing.
+## Design and documentation checks
 
-6414 is a proposed separate preview port, not started or reserved; inspect listeners first. The inherited web dev script names donor port 6412 and must not be run unchanged. No server or emulator is owned simply because an inherited document names it. Never reuse donor credentials, account state, deployment bindings or remote. Source-specific .agents/.github/.codex automation was not activated in this copy.
-
-Do not rerun historical one-shot patch/import scripts. Use actual maintained code and focused checks. A copied source baseline is not installed, boot-tested, visually accepted, authenticated or production-qualified. The organization pass changes documents only after copying, not application logic.
-
-A later explicit build/continue request runs the parent tasks here without re-copying or another planning cycle. No destructive operations, broad process termination, new worktree, production/shared-data change or deployment without a specific authorized task.
+[UI patterns](../docs/ui-patterns.md) separates Shop buyer and Shopify-derived Studio ownership. [UI verification](../docs/ui-verification.md) distinguishes source parity, local behavior and integration evidence. Keep private `/app` and fictional `/admin-preview` data boundaries intact. For documentation changes run `node scripts/check-product-docs.mjs` and `node --test scripts/check-product-docs.test.mjs` here; these do not replace application checks or authorize type generation on the active preview.

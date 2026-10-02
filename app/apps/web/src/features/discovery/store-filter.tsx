@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
 import { Sheet } from "./components";
@@ -50,7 +51,10 @@ function ownedEntry(): { depth: number; path: string } | undefined {
 
 /** Filter pages own URL history; the shared Sheet must not add more entries.
  * Draft criteria stay separate from committed results until Done is pressed. */
-export function openStoreFilter(stage: Stage = "all") {
+export function openStoreFilter(
+  stage: Stage = "all",
+  defaultInStockOnly = true,
+) {
   const params = new URLSearchParams(location.search);
   const parent = params.get("filter") === "all" ? ownedEntry() : undefined;
   if (!parent) {
@@ -62,7 +66,9 @@ export function openStoreFilter(stage: Stage = "all") {
           ? document.activeElement
           : null,
     };
-    for (const [key, value] of Object.entries(values(readStoreFilters(params))))
+    for (const [key, value] of Object.entries(
+      values(readStoreFilters(params, defaultInStockOnly)),
+    ))
       params.set(draftKey(key), value);
   }
   params.set("filter", stage);
@@ -73,7 +79,10 @@ export function openStoreFilter(stage: Stage = "all") {
   );
 }
 
-export function StoreFilter() {
+export function StoreFilter({
+  defaultInStockOnly = true,
+}: { defaultInStockOnly?: boolean } = {}) {
+  const ui = useTranslations("discoveryUI");
   const params = useSearchParams();
   const stage = params.get("filter");
   const open = stage === "all" || stage === "price" || stage === "sort";
@@ -100,7 +109,7 @@ export function StoreFilter() {
     const draft = params.get(draftKey(key));
     if (draft !== null) draftParams.set(key, draft);
   }
-  const filters = readStoreFilters(draftParams);
+  const filters = readStoreFilters(draftParams, defaultInStockOnly);
   const { min, max, sale, stock, sort } = filters;
   function update(patch: Partial<StoreFilters>) {
     const next = new URLSearchParams(params.toString());
@@ -126,7 +135,9 @@ export function StoreFilter() {
     committing.current = true;
     const next = clean(new URLSearchParams(params.toString()));
     const serialized = values(filters);
-    const defaults = values(readStoreFilters(new URLSearchParams()));
+    const defaults = values(
+      readStoreFilters(new URLSearchParams(), defaultInStockOnly),
+    );
     for (const key of keys) {
       if (serialized[key] === defaults[key]) next.delete(key);
       else next.set(key, serialized[key]);
@@ -148,13 +159,17 @@ export function StoreFilter() {
     <Sheet
       open={open}
       title={
-        stage === "price" ? "Price" : stage === "sort" ? "Sort by" : "Filter"
+        stage === "price"
+          ? ui("price")
+          : stage === "sort"
+            ? ui("sortBy")
+            : ui("filter")
       }
       className={`${styles.filter} ${stage === "price" ? "store-price-sheet" : "store-filter-sheet"}`}
       manageHistory={false}
       initialFocus={
         stage === "price"
-          ? '[aria-label="Maximum price"]'
+          ? '[data-ui-label="maximumPrice"]'
           : stage === "sort"
             ? '.store-sort-options button[aria-pressed="true"]'
             : ".store-filter-price"
@@ -177,7 +192,7 @@ export function StoreFilter() {
           >
             <span className="store-price-track" aria-hidden="true" />
             <input
-              aria-label="Minimum price"
+              aria-label={ui("minimumPrice")}
               aria-valuetext={`$${min}`}
               type="range"
               min="0"
@@ -187,9 +202,10 @@ export function StoreFilter() {
               onChange={(event) =>
                 update({ min: Math.min(Number(event.target.value), max) })
               }
+              data-ui-label="minimumPrice"
             />
             <input
-              aria-label="Maximum price"
+              aria-label={ui("maximumPrice")}
               aria-valuetext={`$${max}${max === STORE_PRICE_CEILING ? " or more" : ""}`}
               type="range"
               min="0"
@@ -199,6 +215,7 @@ export function StoreFilter() {
               onChange={(event) =>
                 update({ max: Math.max(Number(event.target.value), min) })
               }
+              data-ui-label="maximumPrice"
             />
           </div>
         </div>
@@ -223,14 +240,14 @@ export function StoreFilter() {
             aria-label={sale ? `Sort by, currently ${sort}` : undefined}
             onClick={() => openStoreFilter("sort")}
           >
-            Sort by
+            {ui("sortBy")}
             <span>
               {!sale && sort}
               <Icon name="back" />
             </span>
           </button>
           <button aria-pressed={sale} onClick={() => update({ sale: !sale })}>
-            On sale
+            {ui("onSale")}
             <span
               aria-hidden="true"
               className={`store-checkbox ${sale ? "checked" : ""}`}
@@ -242,7 +259,7 @@ export function StoreFilter() {
             aria-pressed={stock}
             onClick={() => update({ stock: !stock })}
           >
-            In-stock
+            {ui("inStock")}
             <span
               aria-hidden="true"
               className={`store-checkbox ${stock ? "checked" : ""}`}
@@ -254,7 +271,7 @@ export function StoreFilter() {
             className="store-filter-price"
             onClick={() => openStoreFilter("price")}
           >
-            Price
+            {ui("price")}
             <span>
               <Icon name="back" />
             </span>
@@ -270,14 +287,14 @@ export function StoreFilter() {
                 ? { min: 0, max: STORE_PRICE_CEILING }
                 : stage === "sort"
                   ? { sort: "Best selling" }
-                  : readStoreFilters(new URLSearchParams()),
+                  : readStoreFilters(new URLSearchParams(), defaultInStockOnly),
             )
           }
         >
-          {stage === "all" ? "Clear all" : "Reset"}
+          {stage === "all" ? ui("clearAll") : ui("reset")}
         </button>
         <button className="primary" onClick={done}>
-          Done
+          {ui("done")}
         </button>
       </div>
     </Sheet>

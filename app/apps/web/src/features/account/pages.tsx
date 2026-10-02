@@ -1,8 +1,12 @@
 "use client";
+
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { navigateAccountStage } from "./stage-history";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ProfileFooter } from "./profile-footer";
+import { LanguagePickerButton } from "../locale/language-picker";
 import { SourceLink } from "../discovery/return-navigation";
 import { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -12,6 +16,8 @@ import { AccountIcon } from "./icons";
 import { Preferences } from "./preferences";
 import { ProfileRecent } from "./profile-recent";
 import { GuestProfile } from "./guest-profile";
+import { LanguagePreferenceRow } from "../locale/preference-row";
+import { MessagesEntry } from "../messaging/entry";
 import {
   ProfileAvatar,
   ProfileChoice,
@@ -44,6 +50,8 @@ import {
   type Person,
 } from "./state";
 export function ProfilePage({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("accountUI");
+  const t = useTranslations("account");
   const {
     profile,
     paymentAvailable,
@@ -86,20 +94,24 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
         </span>
         <b>›</b>
       </SourceLink>
+      {starterProfile && (
+        <div className="account-panel profile-settings-panel">
+          <LanguagePreferenceRow />
+          <MessagesEntry />
+          <Row label="Sell an item" href="/sell" />
+        </div>
+      )}
       {starterProfile ? (
         <div className="account-panel checkout-faster-card">
-          <strong>Check out faster</strong>
-          <p>
-            Enter and verify a phone number for faster checkout at millions of
-            stores
-          </p>
+          <strong>{ui("checkOutFaster")}</strong>
+          <p>{ui("enterAndVerifyAPhoneNumberForFasterCheckoutAt")}</p>
           <img
             className="checkout-faster-art"
             src="/api/reference-media/auth-phone"
             alt=""
           />
           <Link className="primary" href="/account?edit=phone">
-            Add phone
+            {ui("addPhone")}
           </Link>
         </div>
       ) : (
@@ -110,9 +122,7 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
           <span className="profile-passkey-mark" aria-hidden="true">
             <AccountIcon name="passkey" />
           </span>
-          <strong>
-            Add a passkey for fast and secure sign-in on millions of stores
-          </strong>
+          <strong>{ui("addAPasskeyForFastAndSecureSignInOn")}</strong>
           <b>›</b>
         </SourceLink>
       )}
@@ -134,7 +144,7 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
                 .map((p) => <img key={p.id} src={p.images[0]} alt="" />)
             )}
           </div>
-          <strong>Saved</strong>
+          <strong>{t("saved")}</strong>
         </SourceLink>
         <SourceLink
           className="account-panel"
@@ -162,15 +172,19 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
                 )
             )}
           </div>
-          <strong>Following</strong>
+          <strong>{t("following")}</strong>
         </SourceLink>
       </div>
       <h2 className="profile-order-heading">
         {!hasOrders ? (
-          "Order history"
+          ui("orderHistory_928f4f")
         ) : (
-          <SourceLink href="/orders/history" aria-label="Order history ›">
-            Order history
+          <SourceLink
+            href="/orders/history"
+            aria-label={ui("orderHistory")}
+            data-ui-label="orderHistory"
+          >
+            {t("orderHistory")}
             <span aria-hidden="true">
               <Icon name="back" />
             </span>
@@ -186,14 +200,11 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
               alt=""
             />
             <span>
-              <strong>No orders yet</strong>
-              <small>
-                Orders you place in Shop or sync from your emails will show up
-                here
-              </small>
+              <strong>{t("noOrdersYet")}</strong>
+              <small>{t("orderHistoryNote")}</small>
             </span>
             <SourceLink className="pill" href="/account/connections">
-              Connect accounts
+              {ui("connectAccounts")}
             </SourceLink>
           </div>
         ) : (
@@ -224,14 +235,14 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
                     </strong>
                     <small>
                       {order.status === "In transit"
-                        ? "On the way"
+                        ? ui("onTheWay")
                         : order.status === "Ordered"
-                          ? "Order placed"
-                          : "Delivered"}
+                          ? ui("orderPlaced")
+                          : ui("delivered")}
                     </small>
                   </span>
                   {!product ? (
-                    <time>Jul 27</time>
+                    <time>{ui("jul27")}</time>
                   ) : (
                     product && (
                       <img
@@ -249,20 +260,27 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
         )}
       </div>
       {starterProfile ? (
-        <h2 className="starter-family-heading">Family</h2>
+        <>
+          <h2 className="starter-family-heading">{ui("family")}</h2>
+          <footer className="profile-footer">
+            <div>
+              <LanguagePickerButton />
+            </div>
+          </footer>
+        </>
       ) : (
         <>
           <ProfileRecent catalog={catalog} />
           {hasPaymentProfile && (
             <>
               <div className="profile-payment-heading">
-                <h2>Payment methods</h2>
+                <h2>{t("paymentMethods")}</h2>
                 <Link
                   className="pill"
                   href="/account/payments?view=add&return=profile"
                   scroll={false}
                 >
-                  Add card
+                  {t("addCard")}
                 </Link>
               </div>
               {paymentAvailable && (
@@ -287,6 +305,9 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
             </>
           )}
           <div className="account-panel profile-settings-panel">
+            <LanguagePreferenceRow />
+            <MessagesEntry />
+            <Row label="Sell an item" href="/sell" />
             {hasPaymentProfile && (
               <Row label="Addresses" href="/account/addresses" />
             )}
@@ -300,31 +321,30 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
             className="form-cancel profile-signout"
             onClick={() => setLogout(true)}
           >
-            <AccountIcon name="logout" /> Sign out
+            <AccountIcon name="logout" /> {ui("signOut")}
           </button>
           <ProfileFooter />
         </>
       )}
       <Sheet
         open={logout}
-        title="Sign out?"
+        title={ui("signOut_c1c084")}
         className="signout-confirm"
         onClose={() => setLogout(false)}
       >
         <p className="form-note">
-          You’ll have to enter your email to access your delivery information
-          again.
+          {ui("youLlHaveToEnterYourEmailToAccessYour")}
         </p>
         <div className="editor-actions">
           <button className="form-cancel" onClick={() => setLogout(false)}>
-            Cancel
+            {t("cancel")}
           </button>
           <Link
             href="/onboarding?step=signout"
             onClick={reset}
             className="danger-button form-submit"
           >
-            Sign out
+            {ui("signOut")}
           </Link>
         </div>
       </Sheet>
@@ -332,18 +352,19 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
   );
 }
 export function EmailConnection() {
+  const ui = useTranslations("accountUI");
   const [dismissed, setDismissed] = useState(false);
   return (
     !dismissed && (
       <div className="email-connect">
-        <strong>Connect email to see more deliveries</strong>
-        <p>Track more of your packages with Shop</p>
+        <strong>{ui("connectEmailToSeeMoreDeliveries")}</strong>
+        <p>{ui("trackMoreOfYourPackagesWithShop")}</p>
         <div>
           <button className="pill" onClick={() => setDismissed(true)}>
-            Dismiss
+            {ui("dismiss")}
           </button>
           <SourceLink className="black-button" href="/account/connections">
-            Connect
+            {ui("connect")}
           </SourceLink>
         </div>
       </div>
@@ -351,6 +372,9 @@ export function EmailConnection() {
   );
 }
 export function AccountDetails() {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
+  const t = useTranslations("account");
   const { profile, updateProfile, people } = useAccount();
   const requestedEdit = useSearchParams().get("edit");
   const [field, setField] = useState<keyof Profile | null>(() =>
@@ -405,9 +429,7 @@ export function AccountDetails() {
             className="profile-save"
             onClick={() => {
               if (field === "birthday" && !validBirthday(draft.birthday)) {
-                setDraftError(
-                  "Enter a valid birthday that is not in the future.",
-                );
+                setDraftError(ui("enterAValidBirthdayThatIsNotInTheFuture"));
                 return;
               }
               setDraftError("");
@@ -420,7 +442,7 @@ export function AccountDetails() {
               setField(null);
             }}
           >
-            Save
+            {t("save")}
           </button>
         ) : undefined
       }
@@ -433,13 +455,14 @@ export function AccountDetails() {
         />
         <button
           className="avatar-edit"
-          aria-label="Edit profile picture"
+          aria-label={ui("editProfilePicture")}
           onClick={() => setPhoto(true)}
+          data-ui-label="editProfilePicture"
         >
           <Icon name="edit" />
         </button>
         <SourceLink className="pill" href="/account/public">
-          View public profile
+          {ui("viewPublicProfile")}
         </SourceLink>
       </div>
       <div
@@ -448,13 +471,13 @@ export function AccountDetails() {
       >
         {fields.map(([key, label]) => (
           <div className="profile-field" data-account-field={key} key={key}>
-            <span>{label}</span>
+            <span>{caption(label)}</span>
             {((editingName && (key === "firstName" || key === "lastName")) ||
               field === key) &&
             key !== "phone" ? (
               key === "gender" ? (
                 <button type="button" onClick={() => setField("gender")}>
-                  {draft.gender || "Select gender"}
+                  {draft.gender ? caption(draft.gender) : ui("selectGender")}
                 </button>
               ) : key === "birthday" ? (
                 <DateFields
@@ -464,7 +487,7 @@ export function AccountDetails() {
               ) : (
                 <input
                   autoFocus={field === key}
-                  aria-label={label}
+                  aria-label={caption(label)}
                   type="text"
                   value={draft[key]}
                   onChange={(e) =>
@@ -486,12 +509,14 @@ export function AccountDetails() {
                     ? displayBirthday(draft.birthday)
                     : draft[key]) ||
                   (key === "gender"
-                    ? "Select gender"
+                    ? ui("selectGender")
                     : key === "birthday"
-                      ? "MM/DD/YYYY"
+                      ? ui("mMDDYYYY")
                       : key === "firstName" || key === "lastName"
-                        ? label
-                        : `Add ${label.toLowerCase()}`)}
+                        ? caption(label)
+                        : ui("addLabel", {
+                            label: caption(label).toLowerCase(),
+                          }))}
               </button>
             )}
             {key === "email" ? (
@@ -521,7 +546,7 @@ export function AccountDetails() {
       )}
       <Preferences />
       <div className="account-panel people-preview">
-        <h2>Others you shop for</h2>
+        <h2>{ui("othersYouShopFor")}</h2>
         {people.map((p) => (
           <SourceLink
             className="person-chip"
@@ -540,12 +565,14 @@ export function AccountDetails() {
           sourceKey="account-add-person"
         >
           <span>+</span>
-          {people.length ? "Add someone new" : "Add someone"}
+          {people.length ? ui("addSomeoneNew_474327") : ui("addSomeone_d3d464")}
         </SourceLink>
       </div>
       <Sheet
         open={field === "phone"}
-        title={phoneStage === "code" ? "Confirm it’s you" : "Add phone number"}
+        title={
+          phoneStage === "code" ? ui("confirmItSYou") : ui("addPhoneNumber")
+        }
         onClose={() => setField(null)}
       >
         <PhoneEditor
@@ -563,7 +590,7 @@ export function AccountDetails() {
       </Sheet>
       <ProfileChoice
         open={field === "gender"}
-        title="Select gender"
+        title={ui("selectGender")}
         top={259}
         value={draft.gender}
         options={[
@@ -587,6 +614,7 @@ export function AccountDetails() {
   );
 }
 export function PublicProfile({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("accountUI");
   const router = useRouter();
   const { profile } = useAccount();
   const { collections, createCollection, updateCollection } = useDiscovery();
@@ -603,8 +631,9 @@ export function PublicProfile({ catalog }: { catalog: Catalog }) {
       {!!publicCollections.length && (
         <button
           className="icon-button public-profile-share"
-          aria-label="Share profile"
+          aria-label={ui("shareProfile")}
           onClick={() => setSharing(true)}
+          data-ui-label="shareProfile"
         >
           <Icon name="share" />
         </button>
@@ -617,7 +646,7 @@ export function PublicProfile({ catalog }: { catalog: Catalog }) {
           href="/account"
           sourceKey="public-edit-profile"
         >
-          Edit profile
+          {ui("editProfile")}
         </SourceLink>
         {!publicCollections.length && (
           <div className="public-hidden">
@@ -631,10 +660,7 @@ export function PublicProfile({ catalog }: { catalog: Catalog }) {
             >
               <path d="m3 3 18 18M9 5c6-1 10 4 12 7l-3 4M6 6l-5 6c4 6 8 9 15 6M9 9l6 6" />
             </svg>
-            <p>
-              Your profile is hidden until you create your first public
-              collection.
-            </p>
+            <p>{ui("yourProfileIsHiddenUntilYouCreateYourFirstPublic")}</p>
             <button
               className="primary"
               onClick={() => {
@@ -644,9 +670,9 @@ export function PublicProfile({ catalog }: { catalog: Catalog }) {
                 setCreating(true);
               }}
             >
-              Create public collection
+              {ui("createPublicCollection")}
             </button>
-            <SourceLink href="/support/help">Learn more</SourceLink>
+            <SourceLink href="/support/help">{ui("learnMore")}</SourceLink>
           </div>
         )}
       </div>
@@ -677,7 +703,7 @@ export function PublicProfile({ catalog }: { catalog: Catalog }) {
       />
       <Sheet
         open={creating}
-        title="Create collection"
+        title={ui("createCollection")}
         headerless
         initialFocus=".collection-name-input"
         className="saved-sheet collection-editor"
@@ -704,6 +730,8 @@ export function PublicProfile({ catalog }: { catalog: Catalog }) {
   );
 }
 export function PeoplePage() {
+  const ui = useTranslations("accountUI");
+  const t = useTranslations("account");
   const { people, savePerson, deletePerson } = useAccount();
   const route = useAccountStage();
   const params = useSearchParams();
@@ -769,7 +797,7 @@ export function PeoplePage() {
     if (person) {
       const next = { ...person, birthday: skipBirthday ? "" : person.birthday };
       if (!validBirthday(next.birthday)) {
-        setBirthdayError("Enter a valid birthday that is not in the future.");
+        setBirthdayError(ui("enterAValidBirthdayThatIsNotInTheFuture"));
         return;
       }
       setBirthdayError("");
@@ -783,7 +811,7 @@ export function PeoplePage() {
     <AccountPage
       className={stage === "profile" ? "person-profile-page" : ""}
       onBack={stage !== "list" ? () => setStage("list") : undefined}
-      title={stage === "profile" ? undefined : "Others you shop for"}
+      title={stage === "profile" ? undefined : ui("othersYouShopFor")}
     >
       {stage === "profile" && person ? (
         <>
@@ -798,21 +826,23 @@ export function PeoplePage() {
               <button
                 type="button"
                 className="avatar-edit"
-                aria-label="Edit person profile picture"
+                aria-label={ui("editPersonProfilePicture")}
                 onClick={() => setPersonPhoto(true)}
+                data-ui-label="editPersonProfilePicture"
               >
                 <Icon name="edit" />
               </button>
             </div>
             <input
               ref={profileNickname}
-              aria-label="Nickname"
+              aria-label={ui("nickname")}
               value={person.name}
               onChange={(e) => {
                 const next = { ...person, name: e.target.value };
                 setPerson(next);
                 savePerson(next);
               }}
+              data-ui-label="nickname"
             />
           </div>
           <div className="account-panel field-panel person-core-fields">
@@ -820,8 +850,8 @@ export function PeoplePage() {
               className="profile-field"
               onClick={() => setPersonChoice("relation")}
             >
-              <span>Relation</span>
-              <span>{person.relation || "Select relation"}</span>
+              <span>{ui("relation")}</span>
+              <span>{person.relation || ui("selectRelation")}</span>
               <svg
                 data-select-arrows
                 aria-hidden="true"
@@ -836,11 +866,11 @@ export function PeoplePage() {
               className="profile-field"
               onClick={() => setPersonChoice("gender")}
             >
-              <span>Gender</span>
+              <span>{ui("gender")}</span>
               <span
                 className={!person.gender ? "profile-placeholder" : undefined}
               >
-                {person.gender || "Select gender"}
+                {person.gender || ui("selectGender")}
               </span>
               <svg
                 data-select-arrows
@@ -853,13 +883,13 @@ export function PeoplePage() {
               </svg>
             </button>
             <div className="profile-field person-birthday-row">
-              <span>Birthday</span>
+              <span>{ui("birthday")}</span>
               <span
                 className={!person.birthday ? "profile-placeholder" : undefined}
               >
                 {person.birthday
                   ? displayBirthday(person.birthday)
-                  : "MM/DD/YYYY"}
+                  : ui("mMDDYYYY")}
               </span>
               <span aria-hidden="true" />
             </div>
@@ -877,7 +907,7 @@ export function PeoplePage() {
               setStage("list");
             }}
           >
-            <Icon name="trash" /> Delete {person.name}
+            <Icon name="trash" /> {ui("delete")} {person.name}
           </button>
         </>
       ) : (
@@ -909,7 +939,7 @@ export function PeoplePage() {
               setStage("nickname");
             }}
           >
-            + Add someone new
+            {ui("addSomeoneNew")}
           </button>
         </div>
       )}
@@ -926,7 +956,7 @@ export function PeoplePage() {
           />
           <ProfileChoice
             open={personChoice === "relation"}
-            title="Select relation"
+            title={ui("selectRelation")}
             top={304}
             value={person.relation}
             options={relations.map((value) => ({ value, label: value }))}
@@ -939,7 +969,7 @@ export function PeoplePage() {
           />
           <ProfileChoice
             open={personChoice === "gender"}
-            title="Select gender"
+            title={ui("selectGender")}
             top={356}
             value={person.gender}
             options={[
@@ -969,12 +999,12 @@ export function PeoplePage() {
         headerless={stage === "nickname"}
         className={`person-editor-sheet person-editor-${stage}`}
         initialFocus={
-          stage === "nickname" ? ".nickname-input" : '[aria-label="Month"]'
+          stage === "nickname" ? ".nickname-input" : '[data-date-part="month"]'
         }
         title={
           stage === "birthday"
             ? `Add ${person?.name ?? ""}'s birthday`
-            : "Add a nickname"
+            : ui("addANickname")
         }
         onClose={() => setStage("list")}
       >
@@ -991,13 +1021,14 @@ export function PeoplePage() {
               <>
                 <input
                   className="nickname-input"
-                  aria-label="Nickname"
-                  placeholder="Add a nickname"
+                  aria-label={ui("nickname")}
+                  placeholder={ui("addANickname")}
                   required
                   value={person.name}
                   onChange={(e) =>
                     setPerson({ ...person, name: e.target.value })
                   }
+                  data-ui-label="nickname"
                 />
                 <div className="relationship-chips">
                   {relations.map((r) => (
@@ -1013,8 +1044,9 @@ export function PeoplePage() {
                   ))}
                 </div>
                 <p className="form-note">
-                  Shop will remember sizing and other preferences when you
-                  mention their name.
+                  {ui(
+                    "shopWillRememberSizingAndOtherPreferencesWhenYouMention",
+                  )}
                 </p>
               </>
             ) : (
@@ -1039,7 +1071,7 @@ export function PeoplePage() {
                 }
               >
                 <span className="account-control-text">
-                  {stage === "birthday" ? "Skip" : "Cancel"}
+                  {stage === "birthday" ? ui("skip") : ui("cancel")}
                 </span>
               </button>
               <button
@@ -1050,7 +1082,7 @@ export function PeoplePage() {
                     (!person.birthday || !validBirthday(person.birthday)))
                 }
               >
-                <span className="account-control-text">Save</span>
+                <span className="account-control-text">{t("save")}</span>
               </button>
             </div>
           </form>
@@ -1060,6 +1092,8 @@ export function PeoplePage() {
   );
 }
 export function AddressesPage() {
+  const ui = useTranslations("accountUI");
+  const t = useTranslations("account");
   const { addresses, saveAddress, deleteAddress } = useAccount();
   const route = useAccountStage();
   const [addressDraft, setAddressDraft] = useState<Address>(
@@ -1076,14 +1110,15 @@ export function AddressesPage() {
   return (
     <AccountPage
       className={editing ? "address-detail-page" : "addresses-overview"}
-      title={editing ? "Shipping address" : "Manage addresses"}
+      title={editing ? ui("shippingAddress") : ui("manageAddresses")}
       onBack={editing ? () => setEditing(null) : undefined}
       action={
         editing && addresses.some((address) => address.id === editing.id) ? (
           <button
             className="address-delete-action"
-            aria-label="Delete address"
+            aria-label={ui("deleteAddress")}
             onClick={() => setDeleting(true)}
+            data-ui-label="deleteAddress"
           >
             <Icon name="trash" />
           </button>
@@ -1119,38 +1154,34 @@ export function AddressesPage() {
                         : `${a.city}, ${a.region}, ${a.country}`}
                   </span>
                 </span>
-                {a.isDefault && <small>Default</small>}
+                {a.isDefault && <small>{ui("default")}</small>}
                 <b>›</b>
               </button>
             ))}
           </div>
           <p className="address-help">
-            Your default address determines the currency and products you see in
-            the app
+            {ui("yourDefaultAddressDeterminesTheCurrencyAndProductsYouSee")}
           </p>
           <div className="account-bottom-action">
             <button
               className="primary"
               onClick={() => setEditing(blankAddress())}
             >
-              Add address
+              {ui("addAddress")}
             </button>
           </div>
         </>
       )}
       <Sheet
         open={deleting}
-        title="Delete address"
+        title={ui("deleteAddress")}
         className="delete-address-confirm"
         onClose={() => setDeleting(false)}
       >
-        <p>
-          Are you sure you want to remove this address from your Shop Pay
-          account?
-        </p>
+        <p>{ui("areYouSureYouWantToRemoveThisAddressFrom")}</p>
         <div className="editor-actions">
           <button className="form-cancel" onClick={() => setDeleting(false)}>
-            Cancel
+            {t("cancel")}
           </button>
           <button
             className="danger-button form-submit"
@@ -1161,7 +1192,7 @@ export function AddressesPage() {
               route.overview();
             }}
           >
-            Delete
+            {ui("delete")}
           </button>
         </div>
       </Sheet>
@@ -1169,6 +1200,8 @@ export function AddressesPage() {
   );
 }
 export function PaymentsPage() {
+  const ui = useTranslations("accountUI");
+  const t = useTranslations("account");
   const route = useAccountStage();
   const router = useRouter();
   const returnToProfile = useSearchParams().get("return") === "profile";
@@ -1211,15 +1244,15 @@ export function PaymentsPage() {
       dockFade={view === "add"}
       title={
         view === "add"
-          ? "Add card"
+          ? ui("addCard")
           : view === "detail"
             ? `Visa •••• ${card?.last4 ?? ""}`
-            : "Payment methods"
+            : ui("paymentMethods")
       }
     >
       {view === "list" && (
         <button className="payment-add-action" onClick={() => setView("add")}>
-          Add card
+          {t("addCard")}
         </button>
       )}
       {view === "add" ? (
@@ -1252,13 +1285,13 @@ export function PaymentsPage() {
           {view === "detail" && card ? (
             <>
               <PaymentCard last4={card?.last4} />
-              <h2>Card details</h2>
+              <h2>{ui("cardDetails")}</h2>
               <div className="account-row">
-                <span>Expiry date</span>
+                <span>{ui("expiryDate")}</span>
                 <strong>{card?.expiry}</strong>
               </div>
               <div className="billing-details">
-                <h3>Billing address</h3>
+                <h3>{ui("billingAddress")}</h3>
                 {billing ? (
                   <p>
                     {billing.firstName} {billing.lastName}
@@ -1266,7 +1299,9 @@ export function PaymentsPage() {
                     {billing.street}
                     <br />
                     {billing.city},{" "}
-                    {billing.region === "CA" ? "California" : billing.region}{" "}
+                    {billing.region === "CA"
+                      ? ui("california")
+                      : billing.region}{" "}
                     {billing.postalCode}
                     <br />
                     {billing.country}
@@ -1278,15 +1313,16 @@ export function PaymentsPage() {
                     )}
                   </p>
                 ) : (
-                  <Link href="/account/addresses">Add billing address</Link>
+                  <Link href="/account/addresses">
+                    {ui("addBillingAddress")}
+                  </Link>
                 )}
               </div>
               <label className="account-row">
                 <span>
-                  In-store receipts
+                  {ui("inStoreReceipts")}
                   <small>
-                    Get receipts in the Shop app when shopping in store using
-                    this card.
+                    {ui("getReceiptsInTheShopAppWhenShoppingInStore")}
                   </small>
                 </span>
                 <input
@@ -1302,7 +1338,7 @@ export function PaymentsPage() {
                 className="danger-text form-cancel"
                 onClick={() => setRemove(true)}
               >
-                Delete
+                {ui("delete")}
               </button>
             </>
           ) : null}
@@ -1310,14 +1346,14 @@ export function PaymentsPage() {
       )}
       <Sheet
         open={remove}
-        title="Are you sure you want to delete this card?"
+        title={ui("areYouSureYouWantToDeleteThisCard")}
         className="delete-card-confirm"
         onClose={() => setRemove(false)}
       >
-        <p>This card will be removed from your Shop account.</p>
+        <p>{ui("thisCardWillBeRemovedFromYourShopAccount")}</p>
         <div className="editor-actions">
           <button className="form-cancel" onClick={() => setRemove(false)}>
-            Cancel
+            {t("cancel")}
           </button>
           <button
             className="danger-button form-submit"
@@ -1329,7 +1365,7 @@ export function PaymentsPage() {
               finish();
             }}
           >
-            Delete
+            {ui("delete")}
           </button>
         </div>
       </Sheet>
@@ -1337,6 +1373,7 @@ export function PaymentsPage() {
   );
 }
 export function SecurityPage() {
+  const ui = useTranslations("accountUI");
   const { profile } = useAccount();
   const [open, setOpen] = useState(false);
   const route = useAccountStage();
@@ -1347,19 +1384,19 @@ export function SecurityPage() {
   return (
     <AccountPage
       className={`account-settings-page ${account ? "account-login-page" : "account-security-page"}`}
-      title={account ? "Account & login" : "Sign in & security"}
+      title={account ? ui("accountLogin") : ui("signInSecurity")}
       onBack={account ? () => setAccount(false) : undefined}
     >
       {account ? (
         <div className="account-panel">
           <div className="security-email">
-            <small>Email</small>
+            <small>{ui("email")}</small>
             <strong>{profile.email}</strong>
           </div>
           <Link className="security-detail-row" href="/account?edit=phone">
             <span>
-              <small>Phone</small>
-              <strong>{profile.phone || "Add phone"}</strong>
+              <small>{ui("phone")}</small>
+              <strong>{profile.phone || ui("addPhone")}</strong>
             </span>
             <span aria-hidden="true">›</span>
           </Link>
@@ -1369,7 +1406,7 @@ export function SecurityPage() {
             sourceKey="security-profile-name"
           >
             <span>
-              <small>Name</small>
+              <small>{ui("name")}</small>
               <strong>
                 {profile.firstName} {profile.lastName}
               </strong>
@@ -1380,35 +1417,35 @@ export function SecurityPage() {
       ) : (
         <>
           <div className="account-panel">
-            <h3>How you sign in</h3>
+            <h3>{ui("howYouSignIn")}</h3>
             <button className="account-row" onClick={() => setAccount(true)}>
-              <span>Text me a code</span>
+              <span>{ui("textMeACode")}</span>
               <small>{profile.phone || "+1 (650) 213-7552"}</small>
             </button>
             <button className="account-row" onClick={() => setAccount(true)}>
-              <span>Email me a code</span>
+              <span>{ui("emailMeACode")}</span>
               <small>{profile.email}</small>
             </button>
           </div>
           <div className="account-panel passkey-panel">
-            <h3>Sign in faster with a passkey</h3>
+            <h3>{ui("signInFasterWithAPasskey")}</h3>
             <p>
               <AccountIcon name="bolt" />
-              Fast and secure sign-in on millions of stores
+              {ui("fastAndSecureSignInOnMillionsOfStores")}
             </p>
             <p>
               <AccountIcon name="cloud" />
-              Syncs seamlessly on compatible devices
+              {ui("syncsSeamlesslyOnCompatibleDevices")}
             </p>
             <button className="form-cancel" onClick={() => setOpen(true)}>
-              <AccountIcon name="passkey" /> Add passkey
+              <AccountIcon name="passkey" /> {ui("addPasskey")}
             </button>
           </div>
           <button
             className="danger-text form-submit"
             onClick={() => setSignout(true)}
           >
-            <AccountIcon name="logout" /> Sign out of all devices
+            <AccountIcon name="logout" /> {ui("signOutOfAllDevices")}
           </button>
         </>
       )}
@@ -1443,18 +1480,20 @@ const notificationOptions = [
   ],
 ];
 export function NotificationSettings() {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const { notifications, toggleNotification } = useAccount();
   return (
     <AccountPage
-      title="Notifications"
+      title={ui("notifications")}
       dockFade
       className="account-settings-page notification-settings-page"
     >
       {notificationOptions.map(([title, copy]) => (
-        <label className="notification-setting" key={title}>
+        <label className="notification-setting" key={caption(title)}>
           <span>
-            {title}
-            <small>{copy}</small>
+            {caption(title)}
+            <small>{caption(copy)}</small>
           </span>
           <input
             role="switch"

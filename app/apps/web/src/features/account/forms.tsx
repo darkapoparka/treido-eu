@@ -1,4 +1,8 @@
 "use client";
+
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
+import { accountMessageKeys } from "./message-keys";
 import { ShopSurface } from "../discovery/hydration-boundary";
 import Link from "next/link";
 import { AccountIcon } from "./icons";
@@ -72,6 +76,9 @@ export function Row({
   onClick?: () => void;
   native?: boolean;
 }) {
+  const t = useTranslations("account");
+  const captionKey =
+    accountMessageKeys[label as keyof typeof accountMessageKeys];
   const glyph = (
     {
       Addresses: "location",
@@ -87,7 +94,7 @@ export function Row({
     <>
       {glyph && <AccountIcon name={glyph} filled />}
       <span>
-        {label}
+        {captionKey ? t(captionKey) : label}
         {value && <small>{value}</small>}
       </span>
       {native ? (
@@ -118,15 +125,19 @@ export function Boundary({
   onClose: () => void;
   kind: string;
 }) {
+  const ui = useTranslations("accountUI");
   return (
-    <Sheet open={open} title={`${kind} unavailable`} onClose={onClose}>
+    <Sheet
+      open={open}
+      title={ui("value1Unavailable", { value1: kind ?? "" })}
+      onClose={onClose}
+    >
       <p className="form-note">
-        This isolated reference preview has no connected {kind.toLowerCase()}{" "}
-        service. No request was sent and no live account, payment or order was
-        changed.
+        {ui("thisIsolatedReferencePreviewHasNoConnected")} {kind.toLowerCase()}{" "}
+        {ui("serviceNoRequestWasSentAndNoLiveAccountPayment")}
       </p>
       <button className="primary form-submit" onClick={onClose}>
-        Back to preview
+        {ui("backToPreview")}
       </button>
     </Sheet>
   );
@@ -146,6 +157,8 @@ export function AddressEditor({
   variant?: "account" | "checkout" | "initial";
   onChange?: (value: Address) => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const [value, setValue] = useState(initialValue);
   const change = (next: Address) => {
     setValue(next);
@@ -185,14 +198,16 @@ export function AddressEditor({
         : baseFields;
   const countryField = (
     <label className="form-field">
-      Country/region
+      {ui("countryRegion")}
       <select
         value={value.country}
         onChange={(e) => change({ ...value, country: e.target.value })}
       >
         {["United States", "Bulgaria", "United Kingdom", "Singapore"].map(
           (c) => (
-            <option key={c}>{c}</option>
+            <option key={c} value={c}>
+              {caption(c)}
+            </option>
           ),
         )}
       </select>
@@ -227,20 +242,21 @@ export function AddressEditor({
             value.country === "Singapore"
               ? null
               : key === "postalCode" && value.country !== "United States"
-                ? "Postal code"
-                : label}
+                ? ui("postalCode")
+                : caption(label)}
             {key === "phone" &&
             variant === "account" &&
             value.country === "Singapore" ? (
               <span className="address-phone-input">
                 <b>+65</b>
                 <input
-                  aria-label="Phone (optional)"
+                  aria-label={ui("phoneOptional")}
                   type="tel"
                   value={value.phone}
                   maxLength={160}
-                  placeholder="Phone (optional)"
+                  placeholder={ui("phoneOptional")}
                   onChange={(e) => change({ ...value, phone: e.target.value })}
+                  data-ui-label="phoneOptional"
                 />
                 <i
                   className="address-phone-flag singapore"
@@ -252,11 +268,12 @@ export function AddressEditor({
               </span>
             ) : key === "region" && value.country === "United States" ? (
               <select
-                aria-label="State"
+                aria-label={ui("state")}
                 value={value.region}
                 onChange={(e) => change({ ...value, region: e.target.value })}
+                data-ui-label="state"
               >
-                <option value="">State</option>
+                <option value="">{ui("state")}</option>
                 {[
                   "AL",
                   "AK",
@@ -317,7 +334,7 @@ export function AddressEditor({
               <input
                 aria-label={
                   key === "postalCode" && value.country !== "United States"
-                    ? "Postal code"
+                    ? ui("postalCode")
                     : label
                 }
                 required={
@@ -337,7 +354,7 @@ export function AddressEditor({
         <>
           {variant === "checkout" && (
             <p className="address-phone-help">
-              In case we need to contact you about your order
+              {ui("inCaseWeNeedToContactYouAboutYourOrder")}
             </p>
           )}
           <label className="check-row">
@@ -348,18 +365,18 @@ export function AddressEditor({
                 change({ ...value, isDefault: e.target.checked })
               }
             />
-            Set as default address
+            {ui("setAsDefaultAddress")}
           </label>
         </>
       )}
       <div className="editor-actions">
         {variant === "checkout" && (
           <button className="form-cancel" type="button" onClick={onCancel}>
-            Cancel
+            {ui("cancel")}
           </button>
         )}
         <button className="primary form-submit" type="submit">
-          {variant === "initial" ? "Continue to payment details" : "Save"}
+          {variant === "initial" ? ui("continueToPaymentDetails") : ui("save")}
         </button>
       </div>
       {onDelete && (
@@ -368,7 +385,7 @@ export function AddressEditor({
           type="button"
           onClick={onDelete}
         >
-          Delete address
+          {ui("deleteAddress")}
         </button>
       )}
     </form>
@@ -387,6 +404,8 @@ export function PhoneEditor({
   initialPhone?: string;
   onPhoneChange?: (phone: string) => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const initialCountry = ["+359", "+44", "+49", "+33", "+1"].find((prefix) =>
     initialPhone.startsWith(prefix),
   );
@@ -413,9 +432,7 @@ export function PhoneEditor({
           setStage("code");
           onStageChange?.("code");
         } else {
-          setMessage(
-            "Phone verification is not connected. This number has not been verified.",
-          );
+          setMessage(ui("phoneVerificationIsNotConnectedThisNumberHasNotBeen"));
         }
       }}
     >
@@ -427,20 +444,20 @@ export function PhoneEditor({
       </div>
       {stage === "phone" ? (
         <>
-          <p>
-            Check out faster and safer. Your mobile number will be used to
-            secure your payment information with Shop Pay.
-          </p>
+          <p>{ui("checkOutFasterAndSaferYourMobileNumberWillBe")}</p>
           <label className="form-field">
-            Phone number
+            {ui("phoneNumber")}
             <div className="phone-input">
               <select
-                aria-label="Country calling code"
+                aria-label={ui("countryCallingCode")}
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
+                data-ui-label="countryCallingCode"
               >
                 {["+1", "+44", "+359", "+49", "+33"].map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {caption(c)}
+                  </option>
                 ))}
               </select>
               <input
@@ -452,15 +469,14 @@ export function PhoneEditor({
                   setPhone(e.target.value);
                   onPhoneChange?.(e.target.value);
                 }}
-                placeholder="Phone number"
+                placeholder={ui("phoneNumber")}
               />
             </div>
           </label>
           <p className="form-note">
-            Reference preview: continue to preview the code screen. No code is
-            sent.
+            {ui("referencePreviewContinueToPreviewTheCodeScreenNoCode")}
           </p>
-          <button className="primary form-submit">Continue</button>
+          <button className="primary form-submit">{ui("continue")}</button>
         </>
       ) : (
         <>
@@ -472,36 +488,34 @@ export function PhoneEditor({
               onStageChange?.("phone");
             }}
           >
-            {"\u2039"} Back
+            {"\u2039"} {ui("back")}
           </button>
 
           <p>
-            Enter the 6-digit code for {country} {phone}.
+            {ui("enterThe6DigitCodeFor")} {country} {phone}.
           </p>
           <label className="form-field">
-            Security code
+            {ui("securityCode")}
             <CodeInput
               value={code}
               onChange={(value) => {
                 setCode(value);
                 if (value.length === 6)
                   setMessage(
-                    "Phone verification is not connected. This number has not been verified.",
+                    ui("phoneVerificationIsNotConnectedThisNumberHasNotBeen"),
                   );
               }}
-              label="Security code"
+              label={ui("securityCode")}
             />
           </label>
           <button
             type="button"
             className="checkout-link"
             onClick={() =>
-              setMessage(
-                "No code was sent. Verification service is not connected.",
-              )
+              setMessage(ui("noCodeWasSentVerificationServiceIsNotConnected"))
             }
           >
-            Resend code
+            {ui("resendCode")}
           </button>
 
           {message && (
@@ -510,7 +524,7 @@ export function PhoneEditor({
               className="form-cancel"
               onClick={() => onDone(`${country} ${phone}`)}
             >
-              Use as unverified reference number
+              {ui("useAsUnverifiedReferenceNumber")}
             </button>
           )}
           {message && (
@@ -536,6 +550,7 @@ export function PaymentEditor({
   addresses?: Address[];
   onEdited?: (card: ReferencePaymentCard) => void;
 }) {
+  const ui = useTranslations("accountUI");
   const [error, setError] = useState("");
   const [cardDigits, setCardDigits] = useState("");
   const [cardTail, setCardTail] = useState("");
@@ -576,9 +591,7 @@ export function PaymentEditor({
         onSubmit={(e) => {
           e.preventDefault();
           if (method === "apple") {
-            setError(
-              "Apple Pay is not connected. No payment method was added.",
-            );
+            setError(ui("applePayIsNotConnectedNoPaymentMethodWasAdded"));
             return;
           }
           const data = new FormData(e.currentTarget);
@@ -590,11 +603,11 @@ export function PaymentEditor({
           const cvc = String(data.get("cvc") ?? "");
           if (initialCard) {
             if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(expiry)) {
-              setError("Check the expiry date.");
+              setError(ui("checkTheExpiryDate"));
               return;
             }
             if (!selectedBilling) {
-              setError("Add a billing address to save this card.");
+              setError(ui("addABillingAddressToSaveThisCard"));
               return;
             }
             const updated = {
@@ -608,20 +621,18 @@ export function PaymentEditor({
             return;
           }
           if (number.length < 12 || number.length > 19) {
-            setError("Check your card number and try again.");
+            setError(ui("checkYourCardNumberAndTryAgain"));
             return;
           }
           if (
             !/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(expiry) ||
             !/^\d{3,4}$/.test(cvc)
           ) {
-            setError("Check the expiry date and security code.");
+            setError(ui("checkTheExpiryDateAndSecurityCode"));
             return;
           }
           if (checkout) {
-            setError(
-              "Payment service is not connected. Your card was not added.",
-            );
+            setError(ui("paymentServiceIsNotConnectedYourCardWasNotAdded"));
             return;
           }
           const id = `card-preview-${crypto.randomUUID()}`;
@@ -652,7 +663,7 @@ export function PaymentEditor({
         )}
         {!checkout && !initialCard && (
           <p className="form-note centered">
-            Add a card to save for all future checkouts
+            {ui("addACardToSaveForAllFutureCheckouts")}
           </p>
         )}
         {checkout && (
@@ -663,18 +674,18 @@ export function PaymentEditor({
               checked={method === "card"}
               onChange={() => setMethod("card")}
             />
-            Credit card <span className="visa-mark">VISA</span>
+            {ui("creditCard")} <span className="visa-mark">VISA</span>
           </label>
         )}
         <div className="card-inputs">
           {initialCard ? (
             <p className="form-note">
-              Visa ···· {initialCard.last4}. Only the masked card and local
-              billing details are available. Changes stay in this preview.
+              Visa ···· {initialCard.last4}
+              {ui("onlyTheMaskedCardAndLocalBillingDetailsAreAvailable")}
             </p>
           ) : (
             <label>
-              Card number
+              {ui("cardNumber")}
               <input
                 disabled={method === "apple"}
                 name="cardNumber"
@@ -687,29 +698,31 @@ export function PaymentEditor({
                 onBlur={(e) => {
                   const digits = e.target.value.replace(/\D/g, "");
                   if (digits && (digits.length < 12 || digits.length > 19))
-                    setError("Check your card number and try again.");
+                    setError(ui("checkYourCardNumberAndTryAgain"));
                 }}
-                aria-label="Card number"
+                aria-label={ui("cardNumber")}
                 inputMode="numeric"
-                placeholder="Card number"
+                placeholder={ui("cardNumber")}
                 maxLength={19}
                 required
                 autoComplete="off"
+                data-ui-label="cardNumber"
               />
             </label>
           )}
           <label>
-            Expiry
+            {ui("expiry")}
             <input
               disabled={method === "apple"}
               name="expiry"
-              aria-label="Expiry"
-              placeholder="MM/YY"
+              aria-label={ui("expiry")}
+              placeholder={ui("mMYY")}
               maxLength={5}
               required
               autoComplete="off"
               value={expiryValue}
               onChange={(e) => setExpiryValue(e.target.value)}
+              data-ui-label="expiry"
             />
           </label>
           {!initialCard && (
@@ -737,12 +750,12 @@ export function PaymentEditor({
         )}
         {!initialCard && (
           <label className="form-field">
-            Name on card
+            {ui("nameOnCard")}
             <input
               disabled={method === "apple"}
               required
               autoComplete="off"
-              placeholder="Name on card"
+              placeholder={ui("nameOnCard")}
               value={cardName}
               onChange={(e) => setCardName(e.target.value)}
             />
@@ -751,7 +764,7 @@ export function PaymentEditor({
         {checkout && (
           <>
             <label className="form-field">
-              Nickname (optional)
+              {ui("nicknameOptional")}
               <input autoComplete="off" />
             </label>
             <label className="shipping-option">
@@ -767,7 +780,7 @@ export function PaymentEditor({
         )}
         {checkout ? (
           <details open>
-            <summary>Bill to</summary>
+            <summary>{ui("billTo")}</summary>
             {billingAddresses.map((a) => (
               <label className="shipping-option" key={a.id}>
                 <input
@@ -790,12 +803,12 @@ export function PaymentEditor({
               className="checkout-link"
               onClick={() => setEditBilling(true)}
             >
-              + Use a different address
+              {ui("useADifferentAddress")}
             </button>
           </details>
         ) : cardName.trim() || initialCard ? (
           <section className="profile-billing">
-            <h2>Billing address</h2>
+            <h2>{ui("billingAddress")}</h2>
             {selectedBilling && (
               <label className="profile-billing-address">
                 <input
@@ -803,7 +816,10 @@ export function PaymentEditor({
                   name="billing"
                   checked
                   readOnly
-                  aria-label={`Billing address ${selectedBilling.firstName} ${selectedBilling.lastName}`}
+                  aria-label={ui("billingAddressValue1Value2", {
+                    value1: selectedBilling.firstName ?? "",
+                    value2: selectedBilling.lastName ?? "",
+                  })}
                 />
                 <span>
                   {selectedBilling.firstName} {selectedBilling.lastName}
@@ -812,7 +828,7 @@ export function PaymentEditor({
                   <br />
                   {selectedBilling.city},{" "}
                   {selectedBilling.region === "CA"
-                    ? "California"
+                    ? ui("california")
                     : selectedBilling.region}{" "}
                   {selectedBilling.postalCode}
                   <br />
@@ -831,7 +847,7 @@ export function PaymentEditor({
               className="checkout-link"
               onClick={() => setEditBilling(true)}
             >
-              + Use a different address
+              {ui("useADifferentAddress")}
             </button>
           </section>
         ) : null}
@@ -842,12 +858,12 @@ export function PaymentEditor({
           </p>
         )}
         <button className="primary form-submit">
-          {checkout ? "Save" : "Save card"}
+          {checkout ? ui("save") : ui("saveCard")}
         </button>
       </form>
       <Sheet
         open={editBilling}
-        title="Billing address"
+        title={ui("billingAddress")}
         onClose={() => setEditBilling(false)}
       >
         <AddressEditor
@@ -903,6 +919,7 @@ export function DateFields({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const caption = useCaption();
   const [year, setYear] = useState(value.split("-")[0] ?? "");
   const [month, setMonth] = useState(value.split("-")[1] ?? "");
   const [day, setDay] = useState(value.split("-")[2] ?? "");
@@ -915,9 +932,10 @@ export function DateFields({
       ].map(([label, current, placeholder], i) => (
         <input
           key={label}
-          aria-label={label}
+          data-date-part={label.toLowerCase()}
+          aria-label={caption(label)}
           inputMode="numeric"
-          placeholder={placeholder}
+          placeholder={caption(placeholder)}
           maxLength={i === 2 ? 4 : 2}
           value={current}
           onChange={(e) => {
@@ -947,6 +965,8 @@ export function AddressLookup({
   onSelect: (address: Address) => void;
   onManual: () => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const { addresses } = useAccount();
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("United States");
@@ -955,11 +975,13 @@ export function AddressLookup({
     <div className="address-lookup">
       {!search && (
         <label className="form-field">
-          Country/region
+          {ui("countryRegion")}
           <select value={country} onChange={(e) => setCountry(e.target.value)}>
             {["United States", "Bulgaria", "United Kingdom", "Singapore"].map(
               (c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>
+                  {caption(c)}
+                </option>
               ),
             )}
           </select>
@@ -967,17 +989,18 @@ export function AddressLookup({
       )}
       <label className="form-field">
         <input
-          aria-label="Search address"
-          placeholder="Start typing address..."
+          aria-label={ui("searchAddress")}
+          placeholder={ui("startTypingAddress")}
           value={query}
           onFocus={() => setSearch(true)}
           onChange={(e) => setQuery(e.target.value)}
+          data-ui-label="searchAddress"
         />
       </label>
       {search && (
         <>
           <button className="checkout-link" onClick={onManual}>
-            Enter address manually
+            {ui("enterAddressManually")}
           </button>
           {addresses
             .filter((a) =>
@@ -1005,7 +1028,7 @@ export function AddressLookup({
         </>
       )}
       <button className="primary address-lookup-continue" onClick={onManual}>
-        Continue to payment details
+        {ui("continueToPaymentDetails")}
       </button>
     </div>
   );

@@ -109,6 +109,28 @@ describe("store reference search and filters", () => {
       "none",
     ]);
   });
+  it("keeps unknown inventory visible by default in the new live seller shell", () => {
+    const filters = readStoreFilters(new URLSearchParams(), false);
+    const unknown = item("unknown", {
+      variants: [{ id: "unknown-sku", label: "One", availableQuantity: null }],
+    });
+    expect(filters.stock).toBe(false);
+    expect(hasStoreFilters(filters, false)).toBe(false);
+    expect(ids(selectStoreProducts([unknown], filters))).toEqual(["unknown"]);
+    const inStock = readStoreFilters(new URLSearchParams("stock=1"), false);
+    expect(hasStoreFilters(inStock, false)).toBe(true);
+    expect(selectStoreProducts([unknown], inStock)).toEqual([]);
+  });
+  it("uses captured listing eligibility without manufacturing inventory", () => {
+    const unknown = item("unknown", {
+      variants: [{ id: "unknown-sku", label: "One", availableQuantity: null }],
+    });
+    expect(ids(selectStoreProducts([unknown], parse(), ["unknown"]))).toEqual([
+      "unknown",
+    ]);
+    expect(unknown.variants[0].availableQuantity).toBeNull();
+    expect(selectStoreProducts([unknown], parse(), [])).toEqual([]);
+  });
   it("normalizes whitespace, case and full-width search input", () => {
     expect(
       normalizeStoreQuery(

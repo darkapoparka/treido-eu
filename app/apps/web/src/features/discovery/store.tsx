@@ -1,4 +1,15 @@
 "use client";
+import { displayRating, displayCount } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
+import {
+  NativeStorefront,
+  NativeStoreInfo,
+  NativeStoreCollection,
+} from "./native-merchant";
+import { NativeMerchantSearch } from "./native-merchant-search";
+import { hasMerchantPresentation } from "../catalog/seller-presentation";
 import { ShopSurface } from "./hydration-boundary";
 import { DecorativeVideo } from "./decorative-video";
 /* eslint-disable @next/next/no-img-element */
@@ -28,6 +39,7 @@ import { useSearchDraft } from "./search-draft";
 import { Cart } from "./product";
 import { useDiscovery } from "./state";
 import styles from "./store.module.css";
+import { BrowseScopeUnavailable } from "./browse-scope";
 import {
   readStoreFilters,
   selectStoreProducts,
@@ -64,6 +76,7 @@ function StoreActions({
   close?: boolean;
   compact?: boolean;
 }) {
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const [notice, setNotice] = useState("");
   return (
@@ -73,7 +86,8 @@ function StoreActions({
           <ContextualCloseLink
             className="icon-button"
             href={`/stores/${store.id}`}
-            aria-label="Close store information"
+            aria-label={ui("closeStoreInformation")}
+            data-ui-label="closeStoreInformation"
           >
             <Icon name="close" />
           </ContextualCloseLink>
@@ -81,7 +95,8 @@ function StoreActions({
           <SourceLink
             className="icon-button"
             href={`/stores/${store.id}/info`}
-            aria-label="Store information"
+            aria-label={ui("storeInformation")}
+            data-ui-label="storeInformation"
           >
             <Icon name="menu" />
           </SourceLink>
@@ -94,11 +109,12 @@ function StoreActions({
                 : "icon-button"
             }
             href={`/stores/${store.id}/search`}
-            aria-label="Search store"
+            aria-label={ui("searchStore")}
+            data-ui-label="searchStore"
           >
             <Icon name="search" />
             {store.referenceStyle === "android" && (
-              <span>Search this store</span>
+              <span>{ui("searchThisStore")}</span>
             )}
           </SourceLink>
         )}
@@ -108,23 +124,24 @@ function StoreActions({
             aria-pressed={state.followed.includes(store.id)}
             onClick={() => state.toggleFollow(store.id)}
           >
-            {state.followed.includes(store.id) ? "Following" : "Follow"}
+            {state.followed.includes(store.id) ? ui("following") : ui("follow")}
           </button>
         )}
         {!compact && store.referenceStyle !== "android" && (
           <IconButton
             icon="share"
-            label="Share store"
+            label={ui("shareStore")}
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(
                   new URL(`/stores/${store.id}`, window.location.origin).href,
                 );
-                setNotice("Local preview link copied");
+                setNotice(ui("localPreviewLinkCopied"));
               } catch {
-                setNotice("Clipboard unavailable");
+                setNotice(ui("clipboardUnavailable"));
               }
             }}
+            data-ui-label="shareStore"
           />
         )}
       </div>
@@ -137,6 +154,7 @@ function StoreActions({
   );
 }
 function StoreNavigation({ store }: { store: Store }) {
+  const ui = useTranslations("discoveryUI");
   const anchor = useRef<HTMLDivElement>(null);
   const [pinned, setPinned] = useState(false);
   const [offers, setOffers] = useState(false);
@@ -176,7 +194,7 @@ function StoreNavigation({ store }: { store: Store }) {
             className="store-compact-promotion"
             onClick={() => setOffers(true)}
           >
-            20% off your order <span>spring20orde…</span>
+            {ui("text20OffYourOrder")} <span>spring20orde…</span>
             <span aria-hidden="true">⌄</span>
           </button>
         )}
@@ -186,7 +204,8 @@ function StoreNavigation({ store }: { store: Store }) {
               <SourceLink
                 href={`/stores/${store.id}/info`}
                 className="store-compact-menu"
-                aria-label="Store information"
+                aria-label={ui("storeInformation")}
+                data-ui-label="storeInformation"
               >
                 <img src={store.logo} alt="" />
                 <Icon name="menu" />
@@ -194,7 +213,8 @@ function StoreNavigation({ store }: { store: Store }) {
               <SourceLink
                 href={`/stores/${store.id}/search`}
                 className="icon-button"
-                aria-label="Search store"
+                aria-label={ui("searchStore")}
+                data-ui-label="searchStore"
               >
                 <Icon name="search" />
               </SourceLink>
@@ -221,15 +241,14 @@ function StoreNavigation({ store }: { store: Store }) {
       </div>
       <Sheet
         open={offers}
-        title="Offer details"
+        title={ui("offerDetails")}
         onClose={() => setOffers(false)}
       >
         <p className="sheet-copy">
-          20% off your order — the label shown in the captured storefront.
+          {ui("text20OffYourOrderTheLabelShownInTheCaptured")}
         </p>
         <p className="form-note">
-          The captured coupon label is truncated. This preview cannot validate a
-          coupon or apply a live discount.
+          {ui("theCapturedCouponLabelIsTruncatedThisPreviewCannotValidate")}
         </p>
       </Sheet>
     </div>
@@ -257,6 +276,7 @@ function StorePromotion({
   savings?: number;
   compact?: boolean;
 }) {
+  const ui = useTranslations("discoveryUI");
   const expanded = useSyncExternalStore(
     subscribePromotion,
     promotionExpanded,
@@ -286,24 +306,28 @@ function StorePromotion({
         onClick={toggle}
       >
         <span>
-          <b>Save ${expanded ? 15 : savings}</b> on orders over $50
+          <b>
+            {ui("save_06f8f0")}
+            {expanded ? 15 : savings}
+          </b>{" "}
+          {ui("onOrdersOver50")}
           <Icon
             name="chevron"
             style={{ transform: `rotate(${expanded ? -90 : 90}deg)` }}
           />
         </span>
-        {!expanded && !compact && <small>+ 1 more promotion</small>}
+        {!expanded && !compact && <small>{ui("text1MorePromotion")}</small>}
       </button>
       {expanded && (
         <div className="promotion-offers">
           <div>
-            <b>Save $15</b>
-            <p>On orders over $50. Eligible products only.</p>
+            <b>{ui("save15")}</b>
+            <p>{ui("onOrdersOver50EligibleProductsOnly")}</p>
           </div>
           <div>
-            <b>20% off your order</b>
+            <b>{ui("text20OffYourOrder")}</b>
             <span> spring20orderdis…</span>
-            <p>Automatically applied at checkout</p>
+            <p>{ui("automaticallyAppliedAtCheckout")}</p>
           </div>
         </div>
       )}
@@ -317,15 +341,15 @@ function ordered(catalog: Catalog, ids: string[]) {
   });
 }
 function UnidentifiedStorePhoto({ source }: { source: string }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <figure
       className={styles.unidentifiedGridPhoto}
       data-source-boundary="unidentified-store-product"
     >
-      <img src={source} alt="Partially captured product photograph" />
+      <img src={source} alt={ui("partiallyCapturedProductPhotograph")} />
       <figcaption className="sr-only">
-        The product identity and remaining photograph were not captured. No
-        price, inventory or product link is inferred.
+        {ui("theProductIdentityAndRemainingPhotographWereNotCapturedNo")}
       </figcaption>
     </figure>
   );
@@ -343,6 +367,7 @@ function StoreGrid({
   sourceTail?: boolean;
   unidentifiedPhotos?: readonly string[];
 }) {
+  const ui = useTranslations("discoveryUI");
   const params = useSearchParams();
   const filters = readStoreFilters(params);
   const filtered = selectStoreProducts(products, filters);
@@ -357,11 +382,12 @@ function StoreGrid({
     <>
       {heading && (
         <div className="store-grid-heading">
-          <h2>All products</h2>
+          <h2>{ui("allProducts")}</h2>
           <IconButton
             icon="filter-circles"
-            label="Filter store products"
+            label={ui("filterStoreProducts")}
             onClick={() => openStoreFilter()}
+            data-ui-label="filterStoreProducts"
           />
         </div>
       )}
@@ -396,7 +422,7 @@ function StoreGrid({
       </div>
       {!filtered.length && (
         <div className="empty-state" role="status">
-          <p>No matching products in this reference.</p>
+          <p>{ui("noMatchingProductsInThisReference")}</p>
           {hasStoreFilters(filters) && (
             <button
               className="pill store-search-recovery"
@@ -407,7 +433,7 @@ function StoreGrid({
                 commitSheetQuery(next);
               }}
             >
-              Clear filters
+              {ui("clearFilters")}
             </button>
           )}
         </div>
@@ -453,6 +479,7 @@ function StoreCategoryRail({ store }: { store: Store }) {
   );
 }
 function ChemicalMediaShelves() {
+  const ui = useTranslations("discoveryUI");
   const [notice, setNotice] = useState(false);
   const videoClipNames = ["one", "two", "three", "four-partial"];
   const featuredClipNames = ["one", "two", "three"];
@@ -466,7 +493,9 @@ function ChemicalMediaShelves() {
                 src={`/api/reference-media/chemical-store-clip-${name}`}
                 alt=""
               />
-              <span>{index === 0 ? "3d" : "4d"} ago</span>
+              <span>
+                {index === 0 ? "3d" : "4d"} {ui("ago")}
+              </span>
             </>
           );
           return index === 0 ? (
@@ -474,14 +503,17 @@ function ChemicalMediaShelves() {
               startAtTop
               key={name}
               href="/stores/chemical-guys/video"
-              aria-label="Open Tire and Trim video"
+              aria-label={ui("openTireAndTrimVideo")}
+              data-ui-label="openTireAndTrimVideo"
             >
               {contents}
             </SourceLink>
           ) : (
             <button
               key={name}
-              aria-label={`Open Chemical Guys clip ${index + 1}`}
+              aria-label={ui("openChemicalGuysClipValue1", {
+                value1: index + 1,
+              })}
               onClick={() => setNotice(true)}
             >
               {contents}
@@ -490,12 +522,14 @@ function ChemicalMediaShelves() {
         })}
       </div>
       <section className={`store-recommendations ${styles.chemicalFeatured}`}>
-        <h2>Featured</h2>
+        <h2>{ui("featured")}</h2>
         <div className="product-rail">
           {featuredClipNames.map((name, index) => (
             <button
               key={name}
-              aria-label={`Open Chemical Guys featured video ${index + 1}`}
+              aria-label={ui("openChemicalGuysFeaturedVideoValue1", {
+                value1: index + 1,
+              })}
               onClick={() => setNotice(true)}
             >
               <img
@@ -508,25 +542,33 @@ function ChemicalMediaShelves() {
       </section>
       <Sheet
         open={notice}
-        title="Video preview"
+        title={ui("videoPreview")}
         onClose={() => setNotice(false)}
       >
         <p className="sheet-copy">
-          Only this video thumbnail was captured. Its full video and audio are
-          unavailable.
+          {ui("onlyThisVideoThumbnailWasCapturedItsFullVideoAnd")}
         </p>
       </Sheet>
     </>
   );
 }
 
-export function Storefront({
+export function Storefront(props: { store: Store; catalog: Catalog }) {
+  return hasMerchantPresentation(props.store) ? (
+    <NativeStorefront {...props} />
+  ) : (
+    <ReferenceStorefront {...props} />
+  );
+}
+function ReferenceStorefront({
   store,
   catalog,
 }: {
   store: Store;
   catalog: Catalog;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const [cart, setCart] = useState(false);
   const expandedPromotion = useSyncExternalStore(
     subscribePromotion,
@@ -673,6 +715,7 @@ export function Storefront({
     <ShopSurface
       className={`shop-page store-page ${styles.page} ${styles.store} ${chemical ? "chemical-store" : ""} ${store.referenceStyle === "android" ? "android-live android-store" : ""}`}
     >
+      <BrowseScopeUnavailable storefront />
       {isKitsch && <StorePromotion savings={store.promotionSavings} />}
       {chemical && chemicalPinned && (
         <div className={styles.chemicalPinned}>
@@ -705,7 +748,8 @@ export function Storefront({
             </span>
             {store.rating && (
               <SourceLink href={`/stores/${store.id}/reviews`}>
-                {store.rating} ★ ({store.ratingCount})
+                {displayRating(store.rating, intlLocale)} ★ (
+                {displayCount(store.ratingCount, intlLocale)})
               </SourceLink>
             )}
           </div>
@@ -720,7 +764,7 @@ export function Storefront({
             className="store-recommendations"
             ref={recommendationsAnchor}
           >
-            <h1>For you</h1>
+            <h1>{ui("forYou")}</h1>
             <div className="product-rail">
               {products.map((product) => (
                 <ProductCard
@@ -745,7 +789,7 @@ export function Storefront({
         {chemical && <ChemicalMediaShelves />}
         {isKitsch && (
           <section className="store-recommendations">
-            <h2>Collections</h2>
+            <h2>{ui("collections")}</h2>
             <div className="store-collection-rail" ref={collectionRail}>
               {collectionMedia.map((c) => (
                 <Link
@@ -793,7 +837,7 @@ export function Storefront({
           role="status"
           onClick={() => setDismissedReport(reported)}
         >
-          This item has been reported
+          {ui("thisItemHasBeenReported")}
         </button>
       )}
       <FloatingNav
@@ -813,6 +857,7 @@ export function Storefront({
   );
 }
 function StoreCriteria() {
+  const ui = useTranslations("discoveryUI");
   const params = useSearchParams();
   const filters = readStoreFilters(params);
   function toggle(key: "sale" | "stock") {
@@ -824,33 +869,45 @@ function StoreCriteria() {
     <div className="category-rail store-criteria">
       <IconButton
         icon="filter-circles"
-        label="Filter collection"
+        label={ui("filterCollection")}
         onClick={() => openStoreFilter()}
+        data-ui-label="filterCollection"
       />
       <button className="pill" onClick={() => openStoreFilter("sort")}>
-        Sort by <Icon name="chevron" />
+        {ui("sortBy")} <Icon name="chevron" />
       </button>
       <button
         className={`pill ${filters.sale ? "selected" : ""}`}
         aria-pressed={filters.sale}
         onClick={() => toggle("sale")}
       >
-        On sale
+        {ui("onSale")}
       </button>
       <button
         className={`pill ${filters.stock ? "selected" : ""}`}
         aria-pressed={filters.stock}
         onClick={() => toggle("stock")}
       >
-        In-stock
+        {ui("inStock")}
       </button>
       <button className="pill" onClick={() => openStoreFilter("price")}>
-        Price <Icon name="chevron" />
+        {ui("price")} <Icon name="chevron" />
       </button>
     </div>
   );
 }
-export function StoreCollection({
+export function StoreCollection(props: {
+  store: Store;
+  catalog: Catalog;
+  slug: string;
+}) {
+  return hasMerchantPresentation(props.store) ? (
+    <NativeStoreCollection {...props} />
+  ) : (
+    <ReferenceStoreCollection {...props} />
+  );
+}
+function ReferenceStoreCollection({
   store,
   catalog,
   slug,
@@ -859,6 +916,7 @@ export function StoreCollection({
   catalog: Catalog;
   slug: string;
 }) {
+  const ui = useTranslations("discoveryUI");
   const collection = collectionMedia.find((c) => c.slug === slug);
   const title = collection?.name ?? slug.replaceAll("-", " ");
   const products =
@@ -898,6 +956,7 @@ export function StoreCollection({
       className={`shop-page store-collection-page ${styles.page} ${styles.collection}`}
       data-collection={slug}
     >
+      <BrowseScopeUnavailable storefront />
       {slug !== "best-sellers" && <StorePromotion savings={15} compact />}
       <div className="store-collection-hero">
         {collection && (
@@ -919,15 +978,16 @@ export function StoreCollection({
         </div>
         <IconButton
           icon="share"
-          label="Share collection"
+          label={ui("shareCollection")}
           onClick={async () => {
             try {
               await navigator.clipboard.writeText(window.location.href);
-              setNotice("Local preview link copied");
+              setNotice(ui("localPreviewLinkCopied"));
             } catch {
-              setNotice("Clipboard unavailable");
+              setNotice(ui("clipboardUnavailable"));
             }
           }}
+          data-ui-label="shareCollection"
         />
       </div>
       <StoreCriteria />
@@ -935,13 +995,14 @@ export function StoreCollection({
       {slug === "whats-new" && (
         <div
           className="collection-partial-products"
-          aria-label="Additional captured products; details not recorded"
+          aria-label={ui("additionalCapturedProductsDetailsNotRecorded")}
+          data-ui-label="additionalCapturedProductsDetailsNotRecorded"
         >
           {["yellow", "coffee"].map((key) => (
             <img
               key={key}
               src={`/api/reference-media/collection-${key}-partial`}
-              alt="Additional product, partially captured"
+              alt={ui("additionalProductPartiallyCaptured")}
             />
           ))}
         </div>
@@ -965,7 +1026,17 @@ const storeCategories = [
     slug: "shower-caps",
   },
 ];
-export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
+export function StoreInfo(props: { store: Store; catalog: Catalog }) {
+  return hasMerchantPresentation(props.store) ? (
+    <NativeStoreInfo {...props} />
+  ) : (
+    <ReferenceStoreInfo {...props} />
+  );
+}
+function ReferenceStoreInfo({ store }: { store: Store; catalog: Catalog }) {
+  const intlLocale = useIntlLocale();
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const [detail, setDetail] = useState("");
   const [more, setMore] = useState(false);
   const kitsch = store.id === "kitsch";
@@ -981,6 +1052,7 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
     <ShopSurface
       className={`shop-page store-info-page ${styles.page} ${styles.information}`}
     >
+      <BrowseScopeUnavailable storefront />
       <StoreActions store={store} close />
       <div className="store-info-brand">
         {store.logo && <img src={store.logo} alt="" />}
@@ -988,22 +1060,22 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
           <b>{store.name}</b>
           {store.rating && (
             <small>
-              {store.rating} ★ ({store.ratingCount})
+              {displayRating(store.rating, intlLocale)} ★ (
+              {displayCount(store.ratingCount, intlLocale)})
             </small>
           )}
         </div>
       </div>
       <p className="store-description">
         {kitsch
-          ? "Evolving your everyday essentials, KITSCH is a US designed brand worn & loved by your favorite celebrities. Shop online for free shipping on orders"
-          : store.description ||
-            "No additional brand description was captured."}
+          ? ui("evolvingYourEverydayEssentialsKITSCHIsAUSDesignedBrand")
+          : store.description || ui("noAdditionalBrandDescriptionWasCaptured")}
         {more && (
           <span>
             {" "}
             —{" "}
             <a href="https://www.mykitsch.com" target="_blank" rel="noreferrer">
-              Read the full brand description online
+              {ui("readTheFullBrandDescriptionOnline")}
             </a>
           </span>
         )}
@@ -1014,7 +1086,7 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
           aria-expanded={more}
           onClick={() => setMore(!more)}
         >
-          {more ? "Less" : "More"}
+          {more ? ui("less") : ui("more_d47d7c")}
         </button>
       )}
       {kitsch && (
@@ -1036,16 +1108,16 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
             >
               <img
                 src="/api/reference-media/category-combo-partial"
-                alt="Shampoo and conditioner combo packs, partially captured"
+                alt={ui("shampooAndConditionerComboPacksPartiallyCaptured")}
               />
-              <span>Shampoo &amp; Conditioner Combo Packs</span>
+              <span>{ui("shampooConditionerComboPacks")}</span>
             </SourceLink>
             <div>
               <img
                 src="/api/reference-media/category-hair-partial"
-                alt="Hair category, partially captured"
+                alt={ui("hairCategoryPartiallyCaptured")}
               />
-              <span>Hair…</span>
+              <span>{ui("hair")}</span>
             </div>
           </div>
           <SourceLink
@@ -1053,22 +1125,24 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
             href={`/stores/${store.id}#all-products`}
           >
             <img src="/api/reference-media/store-shop-all" alt="" />
-            <span>Shop all</span>
+            <span>{ui("shopAll")}</span>
           </SourceLink>
         </>
       )}
       <section className="store-info-panel store-info-reviews">
         <SourceLink className="detail-row" href={`/stores/${store.id}/reviews`}>
-          <h2>Reviews</h2>
+          <h2>{ui("reviews")}</h2>
           <Icon name="arrow" />
         </SourceLink>
         {store.rating && (
           <>
             <div className="store-info-rating">
-              <b>{store.rating}</b>
+              <b>{displayRating(store.rating, intlLocale)}</b>
               <ReviewStars rating={store.rating} />
             </div>
-            <p>{store.ratingCount} ratings</p>
+            <p>
+              {displayCount(store.ratingCount, intlLocale)} {ui("ratings")}
+            </p>
           </>
         )}
         {kitsch && (
@@ -1087,7 +1161,7 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
                 <b>{title}</b>
                 <small>
                   <i>{name[0]}</i>
-                  {name} · Yesterday
+                  {name} {ui("yesterday")}
                 </small>
               </SourceLink>
             ))}
@@ -1095,7 +1169,7 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
         )}
       </section>
       <section className="store-info-panel store-info-links">
-        <h2>Policies</h2>
+        <h2>{ui("policies")}</h2>
         {kitsch ? (
           policies.map(([label, href, icon]) => (
             <a
@@ -1110,11 +1184,11 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
             </a>
           ))
         ) : (
-          <p>No policies were captured.</p>
+          <p>{ui("noPoliciesWereCaptured")}</p>
         )}
       </section>
       <section className="store-info-panel store-info-links">
-        <h2>Contact</h2>
+        <h2>{ui("contact")}</h2>
         {kitsch ? (
           contacts.map(([label, href, icon]) => (
             <a
@@ -1129,7 +1203,7 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
             </a>
           ))
         ) : (
-          <p>No contact information was captured.</p>
+          <p>{ui("noContactInformationWasCaptured")}</p>
         )}
       </section>
       {kitsch && (
@@ -1139,32 +1213,49 @@ export function StoreInfo({ store }: { store: Store; catalog: Catalog }) {
           target="_blank"
           rel="noreferrer"
         >
-          Visit Online Store <Icon name="external-link" />
+          {ui("visitOnlineStore")} <Icon name="external-link" />
         </a>
       )}
       <button
         className="store-info-panel detail-row"
         onClick={() => setDetail("Report")}
       >
-        Report <Icon name="alert" />
+        {ui("report")} <Icon name="alert" />
       </button>
-      <Sheet open={!!detail} title={detail} onClose={() => setDetail("")}>
+      <Sheet
+        open={!!detail}
+        title={caption(detail)}
+        onClose={() => setDetail("")}
+      >
         <p className="sheet-copy">
-          Reporting a store requires a connected service. No report will be sent
-          from this local preview.
+          {ui("reportingAStoreRequiresAConnectedServiceNoReportWill")}
         </p>
-        <textarea aria-label="Report details" placeholder="Tell us more" />
+        <textarea
+          aria-label={ui("reportDetails")}
+          placeholder={ui("tellUsMore")}
+          data-ui-label="reportDetails"
+        />
       </Sheet>
     </ShopSurface>
   );
 }
-export function StoreSearch({
+export function StoreSearch(props: { store: Store; catalog: Catalog }) {
+  return hasMerchantPresentation(props.store) ? (
+    <NativeMerchantSearch {...props} />
+  ) : (
+    <ReferenceStoreSearch {...props} />
+  );
+}
+function ReferenceStoreSearch({
   store,
   catalog,
 }: {
   store: Store;
   catalog: Catalog;
 }) {
+  const intlLocale = useIntlLocale();
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const closeToSource = useContextualClose();
   const params = useSearchParams(),
     router = useRouter(),
@@ -1286,12 +1377,13 @@ export function StoreSearch({
     <ShopSurface
       className={`shop-page store-search-page ${styles.page} ${styles.search} ${editing ? "store-search-editing" : "store-search-results"}`}
     >
+      <BrowseScopeUnavailable storefront />
       <div className="store-search-toolbar">
         <form
           ref={searchForm}
           className="search-form"
           role="search"
-          aria-label={`Search ${store.name}`}
+          aria-label={ui("searchValue1", { value1: store.name ?? "" })}
           tabIndex={-1}
           onSubmit={(event) => {
             event.preventDefault();
@@ -1302,8 +1394,10 @@ export function StoreSearch({
           <input
             ref={input}
             name="q"
-            aria-label={`Search ${store.name}`}
-            placeholder={`Search ${store.name}...`}
+            aria-label={ui("searchValue1", { value1: store.name ?? "" })}
+            placeholder={ui("searchValue1_0dcaad", {
+              value1: store.name ?? "",
+            })}
             value={value}
             enterKeyHint="search"
             onFocus={() => setDraft((current) => current ?? q)}
@@ -1322,10 +1416,11 @@ export function StoreSearch({
             <button
               type="button"
               className="sr-only"
-              aria-label="Clear search"
+              aria-label={ui("clearSearch")}
               onClick={clear}
+              data-ui-label="clearSearch"
             >
-              Clear search
+              {ui("clearSearch")}
             </button>
           )}
         </form>
@@ -1335,7 +1430,7 @@ export function StoreSearch({
             className="store-search-cancel"
             onClick={cancel}
           >
-            Cancel
+            {ui("cancel")}
           </button>
         )}
       </div>
@@ -1344,7 +1439,7 @@ export function StoreSearch({
           <div className="store-search-suggestions">
             <button type="button" onClick={() => submit(value)}>
               <Icon name="search" />
-              <span>{value}</span>
+              <span>{caption(value)}</span>
             </button>
             {suggestions.map((product) => (
               <SourceLink
@@ -1357,7 +1452,7 @@ export function StoreSearch({
                 <img src={product.images[0]} alt="" />
                 <span>
                   {product.title}
-                  <small>{formatMoney(product.price)}</small>
+                  <small>{formatMoney(product.price, intlLocale)}</small>
                 </span>
               </SourceLink>
             ))}
@@ -1382,7 +1477,7 @@ export function StoreSearch({
           <>
             {categories.length > 0 && (
               <>
-                <h2>Shop by</h2>
+                <h2>{ui("shopBy")}</h2>
                 <div className="store-search-categories">
                   {categories.map((category) => (
                     <Link
@@ -1401,7 +1496,7 @@ export function StoreSearch({
             )}
             {recent.length > 0 && (
               <>
-                <h2>Recently viewed</h2>
+                <h2>{ui("recentlyViewed")}</h2>
                 <div className="store-search-products">
                   {recent.map((product) => (
                     <ProductCard key={product.id} product={product} mediaOnly />
@@ -1409,7 +1504,7 @@ export function StoreSearch({
                 </div>
               </>
             )}
-            <h2>{kitsch ? "Best sellers" : "Products"}</h2>
+            <h2>{kitsch ? ui("bestSellers") : ui("products")}</h2>
             <div className="store-search-products">
               {best.map((product) => (
                 <ProductCard key={product.id} product={product} mediaOnly />
@@ -1424,12 +1519,14 @@ export function StoreSearch({
             className="store-search-count"
             title={
               capturedResults && !hasStoreFilters(filters)
-                ? "Captured count; only the four identified reference products are available in this preview."
-                : "Matching products in the local reference sample"
+                ? ui(
+                    "capturedCountOnlyTheFourIdentifiedReferenceProductsAreAvailable",
+                  )
+                : ui("matchingProductsInTheLocalReferenceSample")
             }
           >
             {capturedResults && !hasStoreFilters(filters) ? "270" : count}{" "}
-            results from {store.name}
+            {ui("resultsFrom")} {store.name}
           </p>
           <StoreGrid products={products} heading={false} />
           {capturedResults && !hasStoreFilters(filters) && (
@@ -1446,7 +1543,7 @@ export function StoreSearch({
           )}
           {!products.length && (
             <button className="pill store-search-recovery" onClick={clear}>
-              Clear search
+              {ui("clearSearch")}
             </button>
           )}
         </>
@@ -1464,32 +1561,36 @@ export function StoreSearch({
 }
 
 export function StoreVideo() {
+  const ui = useTranslations("discoveryUI");
   const [notice, setNotice] = useState(false);
   return (
     <ShopSurface className={`store-video-page ${styles.page} ${styles.video}`}>
       <img
         className="video-poster"
         src="/api/reference-media/chemical-video-photo"
-        alt="Chemical Guys Tire and Trim Gel in front of a GMC tailgate"
+        alt={ui("chemicalGuysTireAndTrimGelInFrontOfA")}
       />
       <div className="video-top">
         <ContextualCloseLink
           className="icon-button"
           href="/stores/chemical-guys"
-          aria-label="Close video"
+          aria-label={ui("closeVideo")}
+          data-ui-label="closeVideo"
         >
           <Icon name="close" />
         </ContextualCloseLink>
         <IconButton
           icon="more"
-          label="Video options"
+          label={ui("videoOptions")}
           onClick={() => setNotice(true)}
+          data-ui-label="videoOptions"
         />
       </div>
       <button
         className={`icon-button ${styles.videoAudio}`}
-        aria-label="Video audio unavailable"
+        aria-label={ui("videoAudioUnavailable")}
         onClick={() => setNotice(true)}
+        data-ui-label="videoAudioUnavailable"
       >
         <svg
           viewBox="0 0 24 24"
@@ -1516,7 +1617,7 @@ export function StoreVideo() {
           </span>
           <span>
             <b>Chemical Guys</b>
-            <small>3d ago</small>
+            <small>{ui("text3dAgo")}</small>
           </span>
         </SourceLink>
         <SourceLink
@@ -1528,7 +1629,7 @@ export function StoreVideo() {
             <img src="/api/reference-media/chemical-video-item-photo" alt="" />
           </span>
           <span>
-            <b>Tire+Trim Gel Plastic and Rubber High-Glo…</b>
+            <b>{ui("tireTrimGelPlasticAndRubberHighGlo")}</b>
             <small>$24.99</small>
           </span>
           <Icon name="chevron" />
@@ -1536,8 +1637,9 @@ export function StoreVideo() {
         <div className={styles.videoTimeline}>
           <button
             className="icon-button"
-            aria-label="Video playback unavailable"
+            aria-label={ui("videoPlaybackUnavailable")}
             onClick={() => setNotice(true)}
+            data-ui-label="videoPlaybackUnavailable"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <rect x="4" y="3" width="6" height="18" rx=".5" />
@@ -1549,12 +1651,11 @@ export function StoreVideo() {
       </div>
       <Sheet
         open={notice}
-        title="Video preview"
+        title={ui("videoPreview")}
         onClose={() => setNotice(false)}
       >
         <p className="sheet-copy">
-          This captured video frame is available. The matching motion and audio
-          asset is not available.
+          {ui("thisCapturedVideoFrameIsAvailableTheMatchingMotionAnd")}
         </p>
       </Sheet>
     </ShopSurface>

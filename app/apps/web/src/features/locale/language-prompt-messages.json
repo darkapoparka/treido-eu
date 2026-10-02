@@ -1,0 +1,26 @@
+{
+  "en": {
+    "title": "Language",
+    "prompt": "Shop in your language",
+    "open": "Choose your language",
+    "dismiss": "Dismiss language suggestion",
+    "note": "Choose the language used across Treido. Your location and account stay the same.",
+    "selected": "Selected",
+    "save": "Apply language",
+    "saving": "Saving…",
+    "failure": "Could not save your language. Please try again.",
+    "preferences": "Country and location settings"
+  },
+  "bg": {
+    "title": "Език",
+    "prompt": "Пазарувай на твоя език",
+    "open": "Избери език",
+    "dismiss": "Скрий предложението за език",
+    "note": "Избери езика на Treido. Местоположението и акаунтът ти не се променят.",
+    "selected": "Избран",
+    "save": "Приложи езика",
+    "saving": "Запазване…",
+    "failure": "Езикът не беше запазен. Опитай отново.",
+    "preferences": "Държава и местоположение"
+  }
+}

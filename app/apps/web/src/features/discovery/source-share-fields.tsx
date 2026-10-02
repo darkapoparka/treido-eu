@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import "./source-share.css";
 
 /** Browser fallback for a native sharing surface. Copy happens only on request. */
@@ -15,6 +16,7 @@ export function SourceShareFields({
   status: string;
   onStatus: (status: string) => void;
 }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <>
       <label htmlFor={id}>{label}</label>
@@ -36,7 +38,7 @@ export function SourceShareFields({
           }
         }}
       >
-        Copy link
+        {ui("copyLink")}
       </button>
       <p role="status">{status}</p>
     </>

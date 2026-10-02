@@ -5,6 +5,24 @@ export async function GET(
 ) {
   if (!referencePreviewEnabled()) return new Response(null, { status: 404 });
   const { key } = await params;
+  // Compile-time separation keeps private reference archives out of production.
+  const readers =
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : await Promise.all([
+          import("@/features/catalog/reference/media.server"),
+          import("@/features/catalog/reference/following-media.server"),
+          import("@/features/catalog/reference/saved-media.server"),
+          import("@/features/catalog/reference/store-media.server"),
+          import("@/features/catalog/reference/sol-media.server"),
+          import("@/features/catalog/reference/order-media.server"),
+          import("@/features/catalog/reference/search-media.server"),
+          import("@/features/catalog/reference/live-onboarding-media.server"),
+          import("@/features/catalog/reference/live-shop-media.server"),
+          import("@/features/catalog/reference/live-explore-media.server"),
+          import("@/features/catalog/reference/merchant-media.server"),
+        ]);
+  if (!readers) return new Response(null, { status: 404 });
   const [
     { readReferenceMedia },
     { readFollowingMedia },
@@ -16,19 +34,10 @@ export async function GET(
     { readLiveOnboardingMedia },
     { readLiveShopMedia },
     { readLiveExploreMedia },
-  ] = await Promise.all([
-    import("@/features/catalog/reference/media.server"),
-    import("@/features/catalog/reference/following-media.server"),
-    import("@/features/catalog/reference/saved-media.server"),
-    import("@/features/catalog/reference/store-media.server"),
-    import("@/features/catalog/reference/sol-media.server"),
-    import("@/features/catalog/reference/order-media.server"),
-    import("@/features/catalog/reference/search-media.server"),
-    import("@/features/catalog/reference/live-onboarding-media.server"),
-    import("@/features/catalog/reference/live-shop-media.server"),
-    import("@/features/catalog/reference/live-explore-media.server"),
-  ]);
+    { readMerchantMedia },
+  ] = readers;
   const media =
+    readMerchantMedia(key) ??
     readLiveExploreMedia(key) ??
     readLiveShopMedia(key) ??
     readLiveOnboardingMedia(key) ??

@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- User-selected in-memory avatar, never uploaded. */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Sheet } from "../discovery/components";
 import { Icon } from "../discovery/icons";
@@ -15,12 +17,13 @@ export function ProfileAvatar({
   large?: boolean;
   initial?: boolean;
 }) {
+  const ui = useTranslations("accountUI");
   return (
     <span
       className={`profile-avatar source-profile-avatar ${large ? "large" : ""} ${name ? "named" : ""} ${initial ? "person-initial" : ""}`}
     >
       {src ? (
-        <img src={src} alt="Selected profile picture" />
+        <img src={src} alt={ui("selectedProfilePicture")} />
       ) : initial ? (
         name.charAt(0)
       ) : name ? (
@@ -54,17 +57,18 @@ export function ProfileChoice({
   onSelect: (value: string) => void;
   onClose: () => void;
 }) {
+  const caption = useCaption();
   return (
     <div style={{ "--profile-menu-top": `${top}px` } as CSSProperties}>
       <Sheet
         open={open}
         headerless
-        title={title}
+        title={caption(title)}
         className="profile-choice"
         initialFocus='[aria-checked="true"]'
         onClose={onClose}
       >
-        <div role="radiogroup" aria-label={title}>
+        <div role="radiogroup" aria-label={caption(title)}>
           {options.map((option) => (
             <button
               key={option.value}
@@ -78,7 +82,7 @@ export function ProfileChoice({
               <span aria-hidden="true">
                 {value === option.value && <Icon name="check" />}
               </span>
-              {option.label}
+              {caption(option.label)}
             </button>
           ))}
         </div>
@@ -95,6 +99,7 @@ export function ProfilePhotoMenu({
   onClose: () => void;
   onSelect: (source: string) => void;
 }) {
+  const ui = useTranslations("accountUI");
   const library = useRef<HTMLInputElement>(null),
     camera = useRef<HTMLInputElement>(null);
   const reader = useRef<FileReader | null>(null),
@@ -110,11 +115,11 @@ export function ProfilePhotoMenu({
   function choose(file: File | undefined) {
     if (!file) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("Choose a JPEG, PNG or WebP image.");
+      setError(ui("chooseAJPEGPNGOrWebPImage"));
       return;
     }
     if (file.size > 3_000_000) {
-      setError("Choose an image smaller than 3 MB.");
+      setError(ui("chooseAnImageSmallerThan3MB"));
       return;
     }
     const ticket = ++generation.current;
@@ -124,7 +129,7 @@ export function ProfilePhotoMenu({
     reader.current = next;
     next.onerror = () => {
       if (generation.current === ticket)
-        setError("This image could not be read. Try another photo.");
+        setError(ui("thisImageCouldNotBeReadTryAnotherPhoto"));
     };
     next.onload = () => {
       if (generation.current !== ticket || typeof next.result !== "string")
@@ -133,7 +138,7 @@ export function ProfilePhotoMenu({
         image = new Image();
       image.onerror = () => {
         if (generation.current === ticket)
-          setError("This file is not a usable image. Try another photo.");
+          setError(ui("thisFileIsNotAUsableImageTryAnotherPhoto"));
       };
       image.onload = () => {
         if (generation.current !== ticket) return;
@@ -142,7 +147,7 @@ export function ProfilePhotoMenu({
           !image.height ||
           image.width * image.height > 32_000_000
         ) {
-          setError("Choose an image under 32 megapixels.");
+          setError(ui("chooseAnImageUnder32Megapixels"));
           return;
         }
         onSelect(source);
@@ -162,7 +167,7 @@ export function ProfilePhotoMenu({
     <Sheet
       open={open}
       headerless
-      title="Profile picture"
+      title={ui("profilePicture")}
       className="profile-photo-menu"
       onClose={close}
     >
@@ -171,30 +176,31 @@ export function ProfilePhotoMenu({
         onClick={() => library.current?.click()}
       >
         <Icon name="photo-library" />
-        Choose from library
+        {ui("chooseFromLibrary")}
       </button>
       <button
         className="profile-photo-option"
         onClick={() => camera.current?.click()}
       >
         <Icon name="camera" />
-        Take a photo
+        {ui("takeAPhoto")}
       </button>
       <input
         ref={library}
         hidden
-        aria-label="Choose profile photo"
+        aria-label={ui("chooseProfilePhoto")}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         onChange={(event) => {
           choose(event.target.files?.[0]);
           event.target.value = "";
         }}
+        data-ui-label="chooseProfilePhoto"
       />
       <input
         ref={camera}
         hidden
-        aria-label="Take profile photo"
+        aria-label={ui("takeProfilePhoto")}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         capture="user"
@@ -202,9 +208,10 @@ export function ProfilePhotoMenu({
           choose(event.target.files?.[0]);
           event.target.value = "";
         }}
+        data-ui-label="takeProfilePhoto"
       />
       <p className="sr-only">
-        The image stays in this browser session and is not uploaded.
+        {ui("theImageStaysInThisBrowserSessionAndIsNot")}
       </p>
       {error && (
         <p className="form-error" role="alert">

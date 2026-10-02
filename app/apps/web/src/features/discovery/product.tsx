@@ -1,52 +1,54 @@
 "use client";
+import { displayCount } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { ProductOptions } from "./reviews";
 import { ProductColorOptions } from "./product-color-options";
 import { ProductUnavailable } from "./product-unavailable";
-import { SourceShareFields } from "./source-share-fields";
 import { ProductVariantOptions } from "./product-variant-options";
-import { useSheetStages } from "./sheet-stages";
 import { ReviewStars } from "./review-feedback";
-import { moveProductPhoto, productPhotoSwipe } from "./product-gallery";
 import { ProductAdditionFlight, useProductAddition } from "./product-addition";
-import { ProductReviewPreview } from "./product-review-preview";
-import { ProductDisclosure, ProductSummaryCredit } from "./product-disclosure";
-import { ProductDescriptionContent } from "./product-description-content";
-import { rememberSourceReturn, SourceLink } from "./return-navigation";
-import {
-  formatMoney,
-  variantSelectionLimit,
-  type Catalog,
-  type Product as ProductType,
-} from "../catalog/types";
+import { rememberSourceReturn } from "./return-navigation";
+import { formatMoney, variantSelectionLimit } from "../catalog/types";
 import {
   FloatingNav,
   IconButton,
-  Sheet,
   StoreRow,
-  ProductCard,
   consumeSheetHistory,
   commitSheetQuery,
 } from "./components";
 import { Icon } from "./icons";
 import { CartOverlay as Cart, CartOffer } from "../commerce/checkout";
 import { useDiscovery } from "./state";
-import { COLLECTION_NAME_MAX_LENGTH } from "./saved-model";
 import { useAccount } from "../account/state";
 import styles from "./product-detail.module.css";
 import "./product.css";
+import { ProductInformationSheet } from "./product-information-sheet";
+import { ProductSellerRecommendations } from "./product-seller-recommendations";
+import type { ProductDetailPageView } from "../catalog/product-context-model";
+import { useProductContext, ProductContextStatus } from "./product-context";
+import { useProductGallery } from "./use-product-gallery";
+import { ProductGalleryRail, ProductLightbox } from "./product-gallery-view";
+import { useProductSaving } from "./use-product-saving";
+import { ProductSavePicker } from "./product-save-picker";
+import { ProductPriceSummary } from "./product-price-summary";
+import { ProductContentSections } from "./product-content-sections";
+import { ProductDelivery } from "./product-delivery";
 export { CartOverlay as Cart } from "../commerce/checkout";
-export function ProductDetail({
-  product,
-  catalog,
-}: {
-  product: ProductType;
-  catalog: Catalog;
-}) {
+export function ProductDetail({ data }: { data: ProductDetailPageView }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
+  const { product, seller: store, related } = data.view;
+  const context = useProductContext(product, data.context);
+  const catalog = context.value.cart;
+  const contextStatus =
+    context.pending || context.error ? (
+      <ProductContextStatus context={context} />
+    ) : undefined;
   const state = useDiscovery(),
     router = useRouter();
   const { hasPaymentProfile } = useAccount();
@@ -84,17 +86,15 @@ export function ProductDetail({
     : localVariant;
   const [shareUrl, setShareUrl] = useState("");
   const [shareStatus, setShareStatus] = useState("");
-  const [gallery, setGallery] = useState<number | null>(null),
-    [cart, setCart] = useState(false),
+  const [cart, setCart] = useState(false),
     [offer, setOffer] = useState(false),
     [offerPending, setOfferPending] = useState(false),
     [added, setAdded] = useState(false),
     [detail, setDetail] = useState(""),
     [options, setOptions] = useState(false),
-    [picker, setPicker] = useState(false),
-    [name, setName] = useState(""),
-    [toast, setToast] = useState(false),
     [subscription, setSubscription] = useState(false);
+  const saving = useProductSaving(product.id);
+  const { setPicker, setToast } = saving;
   const [reportNotesOpen, setReportNotesOpen] = useState(false);
   const reportMerchant = reportNotesOpen
     ? product.detail?.reportNotesMerchant
@@ -103,24 +103,6 @@ export function ProductDetail({
     reportMerchant?.ratingCount ?? product.detail?.merchantRatingCount;
   const merchantLogoOutline =
     reportMerchant?.logoOutline ?? product.detail?.merchantLogoOutline;
-  const pickerSubmitting = useRef(false);
-  const pickerFlow = useSheetStages<"picker" | "create">({
-    open: picker,
-    initial: "picker",
-    onClose: () => {
-      setPicker(false);
-      if (picker && state.saved.includes(product.id)) setToast(true);
-    },
-    onReopen: () => {
-      pickerSubmitting.current = false;
-      setPicker(true);
-    },
-    onStart: () => {
-      setName("");
-      pickerSubmitting.current = false;
-    },
-  });
-  const creating = pickerFlow.stage === "create";
   const [postalCode, setPostalCode] = useState(
     product.detail?.delivery?.postalCode ?? "94025",
   );
@@ -141,14 +123,6 @@ export function ProductDetail({
     return () => clearTimeout(timer);
   }, [priceAlertTip]);
   const addition = useProductAddition();
-  const galleryRail = useRef<HTMLDivElement>(null);
-  const gallerySnapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (gallerySnapTimer.current) clearTimeout(gallerySnapTimer.current);
-    },
-    [],
-  );
   const productUnderlay = useRef<HTMLDivElement>(null);
   const [cartPresentation, setCartPresentation] = useState<{
     scrollY: number;
@@ -171,16 +145,12 @@ export function ProductDetail({
       });
     };
   }, [cart, cartPresentation]);
-  const photoGesture = useRef<{ pointer: number; x: number; y: number } | null>(
-    null,
-  );
   const viewProduct = state.viewProduct;
   useEffect(() => {
     viewProduct(product.id);
   }, [product.id, viewProduct]);
-  const store = catalog.stores.find((s) => s.id === product.storeId),
-    selected =
-      product.variants.find((v) => v.id === variant) ?? product.variants[0];
+  const selected =
+    product.variants.find((v) => v.id === variant) ?? product.variants[0];
   const quantityLimit = variantSelectionLimit(selected);
   const android = product.referenceStyle === "android";
   const nativeSoldOut =
@@ -190,7 +160,16 @@ export function ProductDetail({
     );
   const shea = product.id === "shea-butter",
     bag = product.id === "shampoo-bag";
-  const capturedSpendOffer = `Save $${store?.promotionSavings ?? 20} when you spend $50`;
+  const offerAmount = new Intl.NumberFormat(intlLocale, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+  const capturedSpendOffer = ui("saveSavingsWhenYouSpendMinimum", {
+    savings: offerAmount.format(store?.promotionSavings ?? 20),
+    minimum: offerAmount.format(50),
+  });
   const photos = shea
     ? [
         "/api/reference-media/shea-gallery-hero",
@@ -209,6 +188,8 @@ export function ProductDetail({
           ),
         ]
       : product.images;
+  const galleryController = useProductGallery(photos, android);
+  const { galleryRail } = galleryController;
   function selectColor(id: string) {
     const next = product.variants.find((option) => option.id === id);
     if (!next || (!next.referenceColor && !next.referenceOptions)) return;
@@ -221,47 +202,6 @@ export function ProductDetail({
     requestAnimationFrame(() =>
       galleryRail.current?.scrollTo({ left: 0, behavior: "instant" }),
     );
-  }
-  const dotStart =
-    android && gallery !== null
-      ? Math.max(0, Math.min(gallery - 2, photos.length - 5))
-      : 0;
-  const dotEnd = android
-    ? Math.min(photos.length, dotStart + 5)
-    : photos.length;
-  function queueCapturedGalleryLead(rail: HTMLDivElement) {
-    if (android) return;
-    if (gallerySnapTimer.current) clearTimeout(gallerySnapTimer.current);
-    gallerySnapTimer.current = setTimeout(() => {
-      if (!window.matchMedia("(max-width: 700px)").matches) return;
-      const slides = Array.from(rail.children).filter(
-        (node): node is HTMLElement => node instanceof HTMLElement,
-      );
-      if (!slides.length) return;
-      const inset = parseFloat(getComputedStyle(rail).paddingLeft) || 16;
-      let target = 0;
-      let nearestDistance = Number.POSITIVE_INFINITY;
-      for (const [index, slide] of slides.entries()) {
-        const candidate = Math.max(
-          0,
-          slide.offsetLeft - inset - (index === 0 ? 0 : 8),
-        );
-        const distance = Math.abs(rail.scrollLeft - candidate);
-        if (distance < nearestDistance) {
-          target = candidate;
-          nearestDistance = distance;
-        }
-      }
-      if (Math.abs(rail.scrollLeft - target) > 0.5) {
-        const inlineSnap = rail.style.scrollSnapType;
-        rail.style.scrollSnapType = "none";
-        rail.scrollLeft = target;
-        requestAnimationFrame(() => {
-          if (inlineSnap) rail.style.scrollSnapType = inlineSnap;
-          else rail.style.removeProperty("scroll-snap-type");
-        });
-      }
-    }, 40);
   }
   const price =
     subscription && shea
@@ -329,70 +269,6 @@ export function ProductDetail({
       `/checkout?store=${encodeURIComponent(store.id)}${hasPaymentProfile ? "" : "&stage=phone"}`,
     );
   }
-  function closeGallery() {
-    const rail = galleryRail.current;
-    const photo = gallery === null ? null : rail?.children[gallery];
-    photoGesture.current = null;
-    setGallery(null);
-    // Align after Sheet has returned focus. Selecting a photo must not move
-    // the document vertically; focus returns to that gallery control.
-    requestAnimationFrame(() => {
-      if (
-        !rail?.isConnected ||
-        !(photo instanceof HTMLElement) ||
-        !photo.isConnected
-      )
-        return;
-      photo.focus({ preventScroll: true });
-      rail.scrollTo({
-        left:
-          rail.scrollLeft +
-          photo.getBoundingClientRect().left -
-          rail.getBoundingClientRect().left -
-          (parseFloat(getComputedStyle(rail).scrollPaddingLeft) || 0),
-        behavior: "auto",
-      });
-    });
-  }
-  function stepGallery(direction: number) {
-    setGallery((index) =>
-      index === null ? null : moveProductPhoto(index, direction, photos.length),
-    );
-  }
-  function saveTo(id?: string, newName?: string) {
-    if (pickerSubmitting.current) return;
-    pickerSubmitting.current = true;
-    pickerFlow.close(() => {
-      if (!state.saved.includes(product.id)) state.toggleSaved(product.id);
-      if (newName) state.createCollection(newName, [product.id]);
-      else if (id) {
-        const collection = state.collections.find((item) => item.id === id);
-        if (collection && !collection.productIds.includes(product.id))
-          state.updateCollection(id, {
-            productIds: [...collection.productIds, product.id],
-          });
-      }
-      setToast(true);
-    });
-  }
-  const previousPickerStage = useRef(creating);
-  useEffect(() => {
-    const fromEditor = previousPickerStage.current;
-    previousPickerStage.current = creating;
-    if (!pickerFlow.active) return;
-    const frame = requestAnimationFrame(() => {
-      document
-        .querySelector<HTMLElement>(
-          creating
-            ? '.product-save-picker[open] input[aria-label="Collection name"]'
-            : fromEditor
-              ? ".product-save-picker[open] [data-picker-create]"
-              : ".product-save-picker[open] .picker-row",
-        )
-        ?.focus({ preventScroll: true });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [creating, pickerFlow.active]);
   const description = shea
     ? "Super-hydrating formula moisturizes your skin (you won’t even need body lotion post-shower!) Small plant-derived exfoliants gently exfoliate to reveal softer skin."
     : bag
@@ -412,40 +288,6 @@ export function ProductDetail({
           "Our patented design preserves the life...",
         ]
       : [description];
-  const relatedIds = shea
-    ? [
-        "chocolate-body-bag",
-        "sugar-body-scrub",
-        "solid-shave-butter",
-        "charcoal-body-wash",
-      ]
-    : bag
-      ? ["black-conditioner-bag", "chocolate-body-bag"]
-      : undefined;
-  const related = relatedIds
-    ? relatedIds.flatMap((id) => {
-        const item = catalog.products.find((p) => p.id === id);
-        if (!item) return [];
-        return [
-          {
-            ...item,
-            ...(bag
-              ? {
-                  images: [`/api/reference-media/pdp-bag-${id}-recommendation`],
-                }
-              : {}),
-            ...(shea ? { promotion: "$20 off order" } : {}),
-            ...(shea && id === "chocolate-body-bag"
-              ? { title: "Chocolate Body Wash Bar Bag", ratingCount: "748" }
-              : {}),
-          },
-        ];
-      })
-    : store
-      ? catalog.products
-          .filter((p) => p.storeId === product.storeId && p.id !== product.id)
-          .slice(0, 4)
-      : [];
   return (
     <ShopSurface
       className={`shop-page product-page ${cart ? "cart-visible" : ""} ${photos.length ? "" : styles.detailsOnly} ${product.referenceStyle === "android" ? "android-live android-product" : ""}`}
@@ -484,40 +326,11 @@ export function ProductDetail({
             onMore={() => setOptions(true)}
           />
         )}
-        {photos.length > 0 && (
-          <div
-            className="product-gallery"
-            ref={galleryRail}
-            onScroll={(event) => queueCapturedGalleryLead(event.currentTarget)}
-          >
-            {photos.map((src, i) => (
-              <button
-                key={src}
-                onClick={() => setGallery(i)}
-                aria-label={`View product image ${i + 1}`}
-                style={
-                  product.referenceStyle === "android"
-                    ? { aspectRatio: product.referenceImageRatio }
-                    : undefined
-                }
-              >
-                <img
-                  src={src}
-                  loading={
-                    product.detail?.colorGallery && i > 1 ? "lazy" : undefined
-                  }
-                  decoding={product.detail?.colorGallery ? "async" : undefined}
-                  srcSet={
-                    product.referenceStyle === "android"
-                      ? `${src} 1x, ${src}-3x 3x`
-                      : undefined
-                  }
-                  alt={`${product.title}, image ${i + 1}`}
-                />
-              </button>
-            ))}
-          </div>
-        )}
+        <ProductGalleryRail
+          product={product}
+          photos={photos}
+          controller={galleryController}
+        />
         <section className="product-details">
           <div className="product-heading">
             <h1>
@@ -539,7 +352,7 @@ export function ProductDetail({
             </h1>
             <IconButton
               icon="heart"
-              label="Save product"
+              label={ui("saveProduct")}
               pressed={state.saved.includes(product.id)}
               onClick={() => {
                 setPriceAlertTip(false);
@@ -552,10 +365,11 @@ export function ProductDetail({
                 setToast(false);
                 setPicker(true);
               }}
+              data-ui-label="saveProduct"
             />
             <IconButton
               icon="share"
-              label="Share product"
+              label={ui("shareProduct")}
               onClick={async () => {
                 if (android) {
                   setShareUrl(window.location.href);
@@ -570,12 +384,13 @@ export function ProductDetail({
                   setDetail("Share product");
                 }
               }}
+              data-ui-label="shareProduct"
             />
             {priceAlertTip && (
               <p className="product-price-alert-tip" role="note">
-                Get alerts for price drops
+                {ui("getAlertsForPriceDrops")}
                 <br />
-                on saved items
+                {ui("onSavedItems")}
               </p>
             )}
           </div>
@@ -594,87 +409,22 @@ export function ProductDetail({
                 rating={
                   android ? product.rating : Math.round(product.rating * 2) / 2
                 }
-                label={`${product.rating} out of 5 stars`}
+                label={ui("value1OutOf5Stars", {
+                  value1: product.rating ?? "",
+                })}
               />{" "}
-              {product.ratingCount} ratings ›
+              {displayCount(product.ratingCount, intlLocale)}{" "}
+              {ui("ratings_2e5d92")}
             </button>
           )}
-          {product.detail?.lowStock && (
-            <p className={styles.stockNotice}>
-              <strong>Almost gone.</strong> This item is low in stock.
-            </p>
-          )}
-          {android &&
-            product.detail?.referenceBadge &&
-            (!product.detail.referenceBadgeVariantId ||
-              product.detail.referenceBadgeVariantId === variant) && (
-              <p
-                className="native-product-badge"
-                data-tone={product.detail.referenceBadgeTone}
-              >
-                {product.detail.referenceBadge}
-                {product.detail.referenceStockBadge?.variantId === variant && (
-                  <span className="native-stock-badge">
-                    {product.detail.referenceStockBadge.label}
-                  </span>
-                )}
-              </p>
-            )}
-          <p
-            className="product-price"
-            data-native-sold-out={nativeSoldOut || undefined}
-          >
-            {nativeSoldOut ? (
-              <>
-                <del>{formatMoney(price)}</del> <strong>Sold out</strong>
-              </>
-            ) : (
-              <>
-                {formatMoney(price)}{" "}
-                {(selected?.referenceCompareAt ?? product.compareAt) && (
-                  <del>
-                    {formatMoney(
-                      (selected?.referenceCompareAt ?? product.compareAt)!,
-                    )}
-                  </del>
-                )}
-              </>
-            )}
-            {product.detail?.markdownLabel && (
-              <>
-                {" "}
-                <span className={styles.markdown}>
-                  {product.detail.markdownLabel}
-                </span>
-              </>
-            )}
-          </p>
-          {product.detail?.arrivalLabel && (
-            <p className={styles.arrival}>{product.detail.arrivalLabel}</p>
-          )}
-          {(shea || bag || product.promotion) && (
-            <button
-              className="product-deal"
-              onClick={() => setDetail("Offer details")}
-            >
-              <img
-                src={`/api/reference-media/${product.detail?.promotionIcon === "plain-bag" ? "dress-deal-tag" : "deal-tag"}`}
-                alt=""
-              />
-              <span>
-                <strong
-                  className={
-                    product.promotion ? styles.promotionTitle : undefined
-                  }
-                >
-                  {product.promotion ?? capturedSpendOffer}
-                </strong>
-                <span>
-                  {product.detail?.promotionTerms ?? "Exclusive to Shop"}
-                </span>
-              </span>
-            </button>
-          )}
+          <ProductPriceSummary
+            product={product}
+            selected={selected}
+            variant={variant}
+            price={price}
+            capturedSpendOffer={capturedSpendOffer}
+            onDetails={setDetail}
+          />
           {android && product.detail?.optionGroups && selected && (
             <ProductVariantOptions
               product={product}
@@ -697,7 +447,7 @@ export function ProductDetail({
             product.detail?.colorSwatch && (
               <fieldset className="pdp-color-choice">
                 <legend>
-                  <strong>Color:</strong> {product.color}
+                  <strong>{ui("color")}</strong> {product.color}
                 </legend>
                 <button
                   type="button"
@@ -713,7 +463,7 @@ export function ProductDetail({
             !selected?.referenceColor &&
             !product.detail?.optionGroups && (
               <fieldset className="variants">
-                <legend>Size</legend>
+                <legend>{ui("size")}</legend>
                 {product.variants.map((v) => (
                   <button
                     key={v.id}
@@ -735,26 +485,28 @@ export function ProductDetail({
             className="quantity"
             data-native-sold-out={nativeSoldOut || undefined}
           >
-            <label>Quantity</label>
+            <label>{ui("quantity")}</label>
             <div className="stepper">
               <IconButton
                 icon="minus"
-                label="Decrease quantity"
+                label={ui("decreaseQuantity")}
                 disabled={quantity <= 1}
                 onClick={() => {
                   setQuantity((q) => Math.max(1, q - 1));
                   setAdded(false);
                 }}
+                data-ui-label="decreaseQuantity"
               />
               <output>{quantity}</output>
               <IconButton
                 icon="plus"
-                label="Increase quantity"
+                label={ui("increaseQuantity")}
                 disabled={quantity >= quantityLimit}
                 onClick={() => {
                   setQuantity((q) => Math.min(quantityLimit, q + 1));
                   setAdded(false);
                 }}
+                data-ui-label="increaseQuantity"
               />
             </div>
           </div>
@@ -768,9 +520,9 @@ export function ProductDetail({
               <div>
                 <label>
                   <span>
-                    <strong>One time purchase</strong>
+                    <strong>{ui("oneTimePurchase")}</strong>
                     <span className="purchase-mode-price">
-                      {formatMoney(product.price)}
+                      {formatMoney(product.price, intlLocale)}
                     </span>
                   </span>
                   <input
@@ -783,14 +535,14 @@ export function ProductDetail({
                 {!subscription && (
                   <div className="purchase-actions">
                     <button onClick={buy} disabled={!quantityLimit}>
-                      Buy now
+                      {ui("buyNow")}
                     </button>
                     <button
                       className="primary"
                       disabled={!quantityLimit}
                       onClick={() => add()}
                     >
-                      {added ? "Added to cart" : "Add to cart"}
+                      {added ? ui("addedToCart") : ui("addToCart")}
                     </button>
                   </div>
                 )}
@@ -799,7 +551,7 @@ export function ProductDetail({
                 <label>
                   <span>
                     <strong>
-                      Subscribe & save <small>Save 25%</small>
+                      {ui("subscribeSave")} <small>{ui("save25")}</small>
                     </strong>
                     <span className="purchase-mode-price">
                       $10.50 <del>$14.00</del>
@@ -815,13 +567,13 @@ export function ProductDetail({
                 {subscription && (
                   <div className="purchase-actions">
                     <button onClick={() => setDetail("Subscription")}>
-                      Buy now
+                      {ui("buyNow")}
                     </button>
                     <button
                       className="primary"
                       onClick={() => setDetail("Subscription")}
                     >
-                      Add to cart
+                      {ui("addToCart")}
                     </button>
                   </div>
                 )}
@@ -841,12 +593,12 @@ export function ProductDetail({
               >
                 {bag && addition.phase === "confirmed" ? (
                   <>
-                    <Icon name="check" /> Added to cart
+                    <Icon name="check" /> {ui("addedToCart")}
                   </>
                 ) : added && !bag ? (
-                  "Added to cart"
+                  ui("addedToCart")
                 ) : (
-                  "Add to cart"
+                  ui("addToCart")
                 )}
               </button>
               <button
@@ -862,273 +614,36 @@ export function ProductDetail({
                     ))
                 }
               >
-                Buy now {android && <Icon name="open-in-browser" />}
+                {ui("buyNow")} {android && <Icon name="open-in-browser" />}
               </button>
             </div>
           )}
           {added && !bag && product.storeId === "kitsch" && (
             <button className="pdp-offer-link" onClick={() => setOffer(true)}>
-              Add items to save $20 with your exclusive offer ›
+              {ui("addItemsToSave20WithYourExclusiveOffer")}
             </button>
           )}
-          {android && product.detail?.highlights && (
-            <ProductDisclosure
-              title="Highlights"
-              collapsible
-              className="native-product-highlights"
-            >
-              <ul>
-                {product.detail.highlights.map((text) => (
-                  <li key={text}>{text}</li>
-                ))}
-              </ul>
-              <ProductSummaryCredit />
-            </ProductDisclosure>
-          )}
-          <ProductDisclosure
-            title="Description"
-            initiallyOpen={!product.detail?.descriptionInitiallyCollapsed}
-            collapsible={android}
-            className={`pdp-description${bag ? " pdp-description-bag" : shea ? " pdp-description-shea" : ""}`}
-          >
-            {android && product.detail?.descriptionSpecs ? (
-              <>
-                <ProductDescriptionContent product={product} preview />
-                <button
-                  className="native-description-more"
-                  onClick={() => setDetail("Description")}
-                >
-                  Read more
-                </button>
-              </>
-            ) : (
-              descriptionPreview.map((paragraph, index) => (
-                <p key={paragraph}>
-                  {paragraph}
-                  {!product.detail?.completeDescription &&
-                    index === descriptionPreview.length - 1 && (
-                      <button onClick={() => setDetail("Description")}>
-                        Read more
-                      </button>
-                    )}
-                </p>
-              ))
-            )}
-          </ProductDisclosure>
-          {android && product.detail?.specifications && (
-            <ProductDisclosure
-              title="Specifications"
-              collapsible
-              initiallyOpen={false}
-              className="native-product-specifications"
-            >
-              <dl>
-                {product.detail.specifications.map(({ label, value }) => (
-                  <div key={label}>
-                    <dt>{label}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <ProductSummaryCredit />
-            </ProductDisclosure>
-          )}
-          {android &&
-            product.detail?.reviewPreview &&
-            product.rating !== undefined && (
-              <ProductReviewPreview
-                productId={product.id}
-                rating={product.rating}
-                ratingCount={product.ratingCount}
-                cardWidth={product.detail.reviewPreview.cardWidth}
-                distribution={product.detail.reviewPreview.distribution}
-                reviews={product.detail.reviewPreview.reviews}
-                collapsible
-              />
-            )}
-          {(shea || bag) && (
-            <ProductReviewPreview
-              productId={product.id}
-              rating={product.rating ?? 4.6}
-              ratingCount={shea ? "3.3K" : "3.8K"}
-              distribution={shea ? [80, 9, 5, 3, 3] : [80, 9, 5, 3, 5]}
-              reviews={
-                shea
-                  ? [
-                      {
-                        title: "Girlfriend loves it and I can breathe .",
-                        rating: 5,
-                        author: "Wes",
-                        date: "13 days ago",
-                      },
-                      {
-                        title: "How much I love your product",
-                        rating: 5,
-                        author: "Juanita",
-                        date: "18 days ago",
-                      },
-                    ]
-                  : [
-                      {
-                        title: "Curly Hair Shampoo Bar",
-                        rating: 4,
-                        author: "Jessica",
-                        date: "Jun 22, 2026",
-                      },
-                      {
-                        title: "Great…",
-                        rating: 5,
-                        initial: "S",
-                        partial: true,
-                      },
-                    ]
-              }
-            />
-          )}
-          {!store && product.rating !== undefined && (
-            <section className={styles.unrecordedReviews}>
-              <h2>Reviews</h2>
-              <p>
-                This reference includes {product.ratingCount} ratings.
-                Individual review text was not captured for this product.
-              </p>
-            </section>
-          )}
-          {store && (
-            <ProductDisclosure
-              className="pdp-delivery"
-              title="Delivery & Returns"
-              collapsible={android}
-            >
-              <button
-                onClick={() => {
-                  setPostalDraft(postalCode);
-                  setDetail("Ship to");
-                }}
-              >
-                <Icon name="location" />
-                <span>
-                  Ship to <b>{postalCode}</b>
-                </span>
-                <Icon name="chevron" style={{ transform: "rotate(90deg)" }} />
-              </button>
-              <p>
-                <Icon name="truck" />
-                {product.detail?.delivery
-                  ? postalCode === product.detail.delivery.postalCode
-                    ? product.detail.delivery.message
-                    : "Shipping availability has not been checked for this address"
-                  : "Shipping calculated at checkout"}
-              </p>
-              {(shea || bag) && (
-                <p>
-                  <Icon name="calendar" />
-                  Arrives as soon as Sun, Aug 2
-                </p>
-              )}
-              {product.detail?.delivery?.returns && (
-                <p className="native-return-note">
-                  <Icon name="return-package" />
-                  <span>
-                    {product.detail.delivery.returns.message}
-                    <small>{product.detail.delivery.returns.disclaimer}</small>
-                  </span>
-                </p>
-              )}
-              <div
-                data-policy-count={
-                  product.detail?.delivery?.shippingPolicy === false ? 1 : 2
-                }
-              >
-                {store.referencePolicies?.refund ? (
-                  <SourceLink
-                    startAtTop
-                    href={`/stores/${store.id}/policies/refund`}
-                  >
-                    Return policy
-                  </SourceLink>
-                ) : (
-                  <button onClick={() => setDetail("Return policy")}>
-                    Return policy
-                  </button>
-                )}
-                {product.detail?.delivery?.shippingPolicy !== false &&
-                  (store.referencePolicies?.shipping ? (
-                    <SourceLink
-                      startAtTop
-                      href={`/stores/${store.id}/policies/shipping`}
-                    >
-                      Shipping policy
-                    </SourceLink>
-                  ) : (
-                    <button onClick={() => setDetail("Shipping policy")}>
-                      Shipping policy
-                    </button>
-                  ))}
-              </div>
-              {store.referenceWebsite ? (
-                <a
-                  href={store.referenceWebsite}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Icon name="link" /> Visit {store.name}
-                </a>
-              ) : (
-                <SourceLink startAtTop href={`/stores/${product.storeId}`}>
-                  <Icon name="link" /> Visit {store.name}
-                </SourceLink>
-              )}
-            </ProductDisclosure>
-          )}
-          {store && !android && (
-            <article
-              className={`pdp-store-card ${shea || bag ? "pdp-kitsch-card" : ""}`}
-            >
-              <SourceLink
-                startAtTop
-                href={`/stores/${store.id}`}
-                aria-label={`Visit ${store.name}`}
-              >
-                <img
-                  src={
-                    shea || bag
-                      ? "/api/reference-media/pdp-kitsch-art"
-                      : product.images[0]
-                  }
-                  alt=""
-                />
-                <span className="pdp-store-identity">
-                  <strong>{store.name}</strong>
-                  <span>
-                    {store.rating} ★ (
-                    {shea ? "195K" : bag ? "195.2K" : store.ratingCount})
-                  </span>
-                </span>
-              </SourceLink>
-              <button
-                aria-pressed={state.followed.includes(store.id)}
-                onClick={() => state.toggleFollow(store.id)}
-              >
-                {state.followed.includes(store.id) ? "Following" : "Follow"}
-              </button>
-            </article>
-          )}
-          {related.length > 0 && (
-            <>
-              <h2 className="pdp-related-heading">You might also like</h2>
-              <div className="product-grid">
-                {related.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    showPromotion={shea}
-                    storeName={store?.name}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+          <ProductContentSections
+            product={product}
+            descriptionPreview={descriptionPreview}
+            hasSeller={Boolean(store)}
+            onDetails={setDetail}
+          />
+          <ProductDelivery
+            product={product}
+            store={store}
+            postalCode={postalCode}
+            onShipTo={() => {
+              setPostalDraft(postalCode);
+              setDetail("Ship to");
+            }}
+            onDetails={setDetail}
+          />
+          <ProductSellerRecommendations
+            product={product}
+            store={store}
+            related={related}
+          />
         </section>
       </div>
       <FloatingNav
@@ -1136,10 +651,16 @@ export function ProductDetail({
         back
         cart={state.cart.length ? openCart : undefined}
       />
-      <Cart catalog={catalog} open={cart} onClose={() => setCart(false)} />
+      <Cart
+        catalog={catalog}
+        content={contextStatus}
+        open={cart}
+        onClose={() => setCart(false)}
+      />
       {store && (
         <CartOffer
           catalog={catalog}
+          content={contextStatus}
           storeId={product.storeId}
           open={offer}
           onClose={() => setOffer(false)}
@@ -1153,317 +674,37 @@ export function ProductDetail({
         onReopen={() => setOptions(true)}
         onReportNotesChange={setReportNotesOpen}
       />
-      <Sheet
-        open={gallery !== null}
-        title="Product photos"
-        headerless
-        className={`product-lightbox${android ? " android-product-lightbox" : ""}`}
-        initialFocus=".lightbox-swipe"
-        onClose={closeGallery}
-      >
-        {gallery !== null && (
-          <>
-            <IconButton
-              icon="close"
-              label="Close product photos"
-              onClick={closeGallery}
-            />
-            <div
-              className="lightbox-swipe"
-              tabIndex={0}
-              role="group"
-              aria-roledescription="carousel"
-              aria-label="Product photos. Use Left and Right arrow keys to change photo."
-              onPointerDown={(event) => {
-                if (!event.isPrimary || event.button !== 0) return;
-                photoGesture.current = {
-                  pointer: event.pointerId,
-                  x: event.clientX,
-                  y: event.clientY,
-                };
-                event.currentTarget.setPointerCapture(event.pointerId);
-              }}
-              onPointerUp={(event) => {
-                const gesture = photoGesture.current;
-                photoGesture.current = null;
-                if (!gesture || gesture.pointer !== event.pointerId) return;
-                const direction = productPhotoSwipe(gesture, {
-                  x: event.clientX,
-                  y: event.clientY,
-                });
-                if (direction) stepGallery(direction);
-              }}
-              onPointerCancel={() => {
-                photoGesture.current = null;
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-                  event.preventDefault();
-                  stepGallery(event.key === "ArrowRight" ? 1 : -1);
-                } else if (event.key === "Home" || event.key === "End") {
-                  event.preventDefault();
-                  setGallery(event.key === "Home" ? 0 : photos.length - 1);
-                }
-              }}
-            >
-              <img
-                src={photos[gallery]}
-                srcSet={
-                  android
-                    ? `${photos[gallery]} 1x, ${photos[gallery]}-3x 3x`
-                    : undefined
-                }
-                draggable={false}
-                onDragStart={(event) => event.preventDefault()}
-                alt={`${product.title}, image ${gallery + 1}`}
-              />
-            </div>
-            <div className="photo-dots">
-              {photos.map((_, i) =>
-                i < dotStart || i >= dotEnd ? null : (
-                  <button
-                    key={i}
-                    aria-label={`Show photo ${i + 1}`}
-                    data-edge={
-                      android &&
-                      ((i === dotStart && dotStart > 0) ||
-                        (i === dotEnd - 1 && dotEnd < photos.length))
-                        ? "small"
-                        : undefined
-                    }
-                    aria-pressed={gallery === i}
-                    onClick={() => setGallery(i)}
-                  />
-                ),
-              )}
-            </div>
-          </>
-        )}
-      </Sheet>
-      <Sheet
-        open={picker && pickerFlow.active}
-        manageHistory={false}
-        title={creating ? "Create collection" : "Save to collection"}
-        headerless={!creating}
-        className={`product-save-picker ${creating ? "picker-creating" : ""}`}
-        onClose={() => pickerFlow.close()}
-      >
-        {creating ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!name.trim()) return;
-              saveTo(undefined, name.trim());
-            }}
-          >
-            <input
-              aria-label="Collection name"
-              maxLength={COLLECTION_NAME_MAX_LENGTH}
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <div className="sheet-actions">
-              <button
-                type="button"
-                className="pill"
-                onClick={() => pickerFlow.back()}
-              >
-                Back
-              </button>
-              <button className="primary" disabled={!name.trim()}>
-                Create collection
-              </button>
-            </div>
-          </form>
-        ) : (
-          <>
-            <button className="picker-row" onClick={() => saveTo()}>
-              {photos[0] ? (
-                <img src={photos[0]} alt="" />
-              ) : (
-                <div className="picker-collection-preview" aria-hidden="true" />
-              )}
-              <span>
-                Saved <Icon name="lock" />
-              </span>
-              <span className="picker-saved-icon">
-                <Icon name="heart" filled />
-              </span>
-            </button>
-            {state.collections.map((c) => (
-              <button
-                className="picker-row"
-                key={c.id}
-                onClick={() => saveTo(c.id)}
-              >
-                <div className="picker-collection-preview" aria-hidden="true">
-                  {c.productIds.slice(0, 4).flatMap((id) => {
-                    const item = catalog.products.find((p) => p.id === id);
-                    return item?.images[0]
-                      ? [<img key={id} src={item.images[0]} alt="" />]
-                      : [];
-                  })}
-                </div>
-                <span>
-                  {c.name} {c.visibility === "Private" && <Icon name="lock" />}
-                </span>
-                <Icon
-                  name={c.productIds.includes(product.id) ? "check" : "plus"}
-                />
-              </button>
-            ))}
-            <button
-              className="picker-row"
-              data-picker-create
-              onClick={() => pickerFlow.navigate("create")}
-            >
-              <b aria-hidden="true">+</b>Create collection
-            </button>
-          </>
-        )}
-      </Sheet>
-      {toast && (
-        <div className="product-saved-toast" role="status">
-          {photos[0] && <img src={photos[0]} alt="" />}
-          <span>
-            <strong>Item saved</strong>
-            <small>{product.title}</small>
-          </span>
-          <button
-            onClick={() => {
-              setToast(false);
-              router.push("/saved");
-            }}
-          >
-            View
-          </button>
-        </div>
-      )}
-      <Sheet
-        open={!!detail}
-        title={detail}
-        className={
-          detail === "Description"
-            ? `product-description-sheet${shea ? " shea-description-sheet" : ""}${android ? " android-description-sheet" : ""}`
-            : detail === "Sharing link"
-              ? "native-source-share"
-              : undefined
-        }
-        onClose={() => setDetail("")}
-      >
-        <div className="sheet-copy">
-          {detail === "Sharing link" ? (
-            <SourceShareFields
-              id="product-share-url"
-              label="Link to this product"
-              url={shareUrl}
-              status={shareStatus}
-              onStatus={setShareStatus}
-            />
-          ) : detail === "Description" ? (
-            <>
-              {shea ? (
-                <>
-                  <ul role="list">
-                    <li>
-                      Super-hydrating formula moisturizes your skin (you
-                      won&apos;t even need body lotion post-shower!)
-                    </li>
-                    <li>
-                      Small plant-derived exfoliants gently exfoliate to reveal
-                      softer skin.
-                    </li>
-                    <li>
-                      Free of parabens, phthalates, silicones, & sulfates.
-                    </li>
-                    <li>
-                      Made in the USA from Globally Sourced Ingredients, Vegan,
-                      Cruelty Free, Leaping Bunny Certified
-                    </li>
-                  </ul>
-                  <p>Ingredients:</p>
-                  <p>
-                    Sodium Sunflowerate, Sodium Cocoate, Fragrance (Parfum),
-                    Butyrospermum Parkii (Shea) Butter, Sodium Chloride (Sea
-                    Salt), Prunus Armeniaca (Apricot) Seed Powder, Natural
-                    Tocopherol (Vitamin E), Benzaldehyde, Limonene, Citrus
-                    Aurantium Amara Peel Oil, Cinnamal, Citrus Limon (Lemon)
-                    Peel Oil, Linalool, Linalyl Acetate, Mentha Viridis
-                    (Spearmint) Leaf Oil, Carvone, Cananga Odorata Oil/Extract,
-                    Pinene, Iron Oxides (CI 77491, 77492, CI 77499).
-                  </p>
-                  <p>Natural Color</p>
-                  <p>Free of parabens, phthalates, silicones, &amp; sulfates</p>
-                  <p>Fragrance: Almond & Cherry</p>
-                </>
-              ) : android && product.detail?.descriptionSpecs ? (
-                <ProductDescriptionContent
-                  product={product}
-                  onExternal={() => setDetail("")}
-                />
-              ) : (
-                <p>{description}</p>
-              )}
-            </>
-          ) : detail === "Offer details" ? (
-            <p>
-              {shea || bag
-                ? `${product.promotion ?? capturedSpendOffer}. ${product.detail?.promotionTerms ?? "Exclusive to Shop"}. This is a reference offer.`
-                : `${product.promotion ?? "No offer was captured."} ${product.detail?.promotionTerms ?? ""}`}
-            </p>
-          ) : detail === "Checkout preview" ? (
-            <>
-              <p>
-                No seller or checkout details were included for this item.
-                Nothing will be charged. Your selected size and quantity are
-                available in the local cart.
-              </p>
-              <button
-                className="primary"
-                onClick={() => {
-                  setDetail("");
-                  setCart(true);
-                }}
-              >
-                View cart
-              </button>
-            </>
-          ) : detail === "Ship to" ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!postalDraft.trim()) return;
-                setPostalCode(postalDraft.trim());
-                setDetail("");
-              }}
-            >
-              <label>
-                Postal code
-                <input
-                  aria-label="Postal code"
-                  value={postalDraft}
-                  onChange={(e) => setPostalDraft(e.target.value)}
-                  required
-                />
-              </label>
-              <button className="primary">Done</button>
-            </form>
-          ) : detail === "Subscription" ? (
-            <p>
-              Subscription selection is available in this preview. Recurring
-              checkout is not connected.
-            </p>
-          ) : detail.includes("policy") && store ? (
-            <Link href={`/stores/${product.storeId}/info`}>
-              View {store.name} policies
-            </Link>
-          ) : (
-            <p>{`/products/${product.id}`}</p>
-          )}
-        </div>
-      </Sheet>
+      <ProductLightbox
+        product={product}
+        photos={photos}
+        controller={galleryController}
+      />
+      <ProductSavePicker
+        product={product}
+        photos={photos}
+        saving={saving}
+        covers={context.value.covers}
+        status={contextStatus}
+      />
+      <ProductInformationSheet
+        product={product}
+        store={store}
+        detail={detail}
+        onDetails={setDetail}
+        description={description}
+        capturedSpendOffer={capturedSpendOffer}
+        sharing={{
+          url: shareUrl,
+          status: shareStatus,
+          onStatus: setShareStatus,
+        }}
+        delivery={{
+          draft: postalDraft,
+          onDraft: setPostalDraft,
+          onCommit: setPostalCode,
+        }}
+        onViewCart={() => setCart(true)}
+      />
     </ShopSurface>
   );
 }

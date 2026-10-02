@@ -1,13 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
+import { useTranslations } from "next-intl";
 import styles from "./orders-parity.module.css";
 
 export function OrderInspiredPartial() {
+  const ui = useTranslations("commerceUI");
   return (
     <div
-      aria-label="Inspired by your order recommendations"
+      aria-label={ui("inspiredByYourOrderRecommendations")}
       className={styles.inspiredPartialRail}
       data-order-inspired-rail
       role="group"
+      data-ui-label="inspiredByYourOrderRecommendations"
     >
       <div className={styles.inspiredPartialCard} data-order-inspired-card>
         <img

@@ -1,0 +1,170 @@
+{
+  "checked_on": "2026-09-28",
+  "method": "Local package manifests and live npm registry /latest requests via authorized local Node fetch; planning fields retained.",
+  "installed_versions_checked": {
+    "next": "16.3.4",
+    "react": "19.2.3",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0",
+    "@playwright/test": "1.63.0"
+  },
+  "runtime": {
+    "node_pin": "24.20.0",
+    "pnpm_pin": "12.3.4",
+    "default_shell_node": "22.20.0",
+    "default_shell_pnpm": "10.32.1",
+    "checks_used_node": "24.20.0"
+  },
+  "limitations": [
+    "No dependency updates performed",
+    "No vulnerability audit performed",
+    "Latest distribution tag does not prove compatibility or security",
+    "Expo SDK compatibility must be checked before React Native changes",
+    "Candidate backend packages are not installed or configured"
+  ],
+  "packages": [
+    {
+      "package": "next",
+      "current_manifest_pin": "16.3.4",
+      "registry_latest": "16.3.6",
+      "source": "https://registry.npmjs.org/next/latest"
+    },
+    {
+      "package": "eslint-config-next",
+      "current_manifest_pin": "16.3.4",
+      "registry_latest": "16.3.6",
+      "source": "https://registry.npmjs.org/eslint-config-next/latest"
+    },
+    {
+      "package": "react",
+      "current_manifest_pin": "19.2.3",
+      "registry_latest": "19.3.0",
+      "source": "https://registry.npmjs.org/react/latest"
+    },
+    {
+      "package": "react-dom",
+      "current_manifest_pin": "19.2.3",
+      "registry_latest": "19.3.0",
+      "source": "https://registry.npmjs.org/react-dom/latest",
+      "relevant_latest_peers": {
+        "react": "^19.3.0"
+      }
+    },
+    {
+      "package": "tailwindcss",
+      "current_manifest_pin": "4.3.3",
+      "registry_latest": "4.3.3",
+      "source": "https://registry.npmjs.org/tailwindcss/latest"
+    },
+    {
+      "package": "@tailwindcss/postcss",
+      "current_manifest_pin": "4.3.3",
+      "registry_latest": "4.3.3",
+      "source": "https://registry.npmjs.org/@tailwindcss%2Fpostcss/latest"
+    },
+    {
+      "package": "typescript",
+      "current_manifest_pin": "6.0.3",
+      "registry_latest": "7.0.2",
+      "source": "https://registry.npmjs.org/typescript/latest"
+    },
+    {
+      "package": "eslint",
+      "current_manifest_pin": "9.39.5",
+      "registry_latest": "10.11.0",
+      "source": "https://registry.npmjs.org/eslint/latest"
+    },
+    {
+      "package": "typescript-eslint",
+      "current_manifest_pin": "8.70.0",
+      "registry_latest": "8.70.1",
+      "source": "https://registry.npmjs.org/typescript-eslint/latest",
+      "relevant_latest_peers": {
+        "typescript": ">=4.8.4 <6.1.0",
+        "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0"
+      }
+    },
+    {
+      "package": "prettier",
+      "current_manifest_pin": "3.9.6",
+      "registry_latest": "3.9.9",
+      "source": "https://registry.npmjs.org/prettier/latest"
+    },
+    {
+      "package": "@playwright/test",
+      "current_manifest_pin": "1.63.0",
+      "registry_latest": "1.63.0",
+      "source": "https://registry.npmjs.org/@playwright%2Ftest/latest"
+    },
+    {
+      "package": "vitest",
+      "current_manifest_pin": "5.0.0",
+      "registry_latest": "5.0.2",
+      "source": "https://registry.npmjs.org/vitest/latest"
+    },
+    {
+      "package": "turbo",
+      "current_manifest_pin": "2.10.12",
+      "registry_latest": "2.11.5",
+      "source": "https://registry.npmjs.org/turbo/latest"
+    },
+    {
+      "package": "pnpm",
+      "current_manifest_pin": "12.3.4",
+      "registry_latest": "12.6.0",
+      "source": "https://registry.npmjs.org/pnpm/latest"
+    },
+    {
+      "package": "zod",
+      "current_manifest_pin": "4.5.4",
+      "registry_latest": "4.6.5",
+      "source": "https://registry.npmjs.org/zod/latest"
+    },
+    {
+      "package": "sharp",
+      "current_manifest_pin": "0.35.4",
+      "registry_latest": "0.35.5",
+      "source": "https://registry.npmjs.org/sharp/latest"
+    },
+    {
+      "package": "expo",
+      "current_manifest_pin": "57.0.21",
+      "registry_latest": "57.0.25",
+      "source": "https://registry.npmjs.org/expo/latest"
+    },
+    {
+      "package": "react-native",
+      "current_manifest_pin": "0.86.3",
+      "registry_latest": "0.87.1",
+      "source": "https://registry.npmjs.org/react-native/latest",
+      "relevant_latest_peers": {
+        "react": "^19.2.3",
+        "@types/react": "^19.1.1"
+      }
+    },
+    {
+      "package": "drizzle-orm",
+      "current_manifest_pin": null,
+      "registry_latest": "0.45.3",
+      "source": "https://registry.npmjs.org/drizzle-orm/latest"
+    },
+    {
+      "package": "drizzle-kit",
+      "current_manifest_pin": null,
+      "registry_latest": "0.31.11",
+      "source": "https://registry.npmjs.org/drizzle-kit/latest"
+    },
+    {
+      "package": "pg",
+      "current_manifest_pin": null,
+      "registry_latest": "8.23.0",
+      "source": "https://registry.npmjs.org/pg/latest"
+    },
+    {
+      "package": "@clerk/nextjs",
+      "current_manifest_pin": null,
+      "registry_latest": "7.9.7",
+      "source": "https://registry.npmjs.org/@clerk%2Fnextjs/latest"
+    }
+  ]
+}

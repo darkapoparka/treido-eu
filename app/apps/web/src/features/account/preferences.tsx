@@ -1,4 +1,6 @@
 "use client";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useAccount } from "./state";
 import { Icon } from "../discovery/icons";
@@ -38,6 +40,8 @@ const skinTypes = [
   "With redness",
 ];
 export function Preferences({ personId }: { personId?: string }) {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const {
     profile,
     updateProfile,
@@ -95,7 +99,7 @@ export function Preferences({ personId }: { personId?: string }) {
         <button
           className="profile-field"
           aria-expanded={expanded === key}
-          aria-label={`${label}${selected.length ? ` ${selected.join(" ")}` : ""}`}
+          aria-label={`${caption(label)}${selected.length ? ` ${selected.map(caption).join(" ")}` : ""}`}
           onClick={() => {
             const bottom = skinPanel.current?.getBoundingClientRect().bottom;
             setExpanded(expanded === key ? "" : key);
@@ -112,7 +116,7 @@ export function Preferences({ personId }: { personId?: string }) {
             }
           }}
         >
-          <span>{label}</span>
+          <span>{caption(label)}</span>
           <span className="selected-preferences">
             {expanded !== key && selected.length
               ? selected.map((value) => {
@@ -126,13 +130,15 @@ export function Preferences({ personId }: { personId?: string }) {
                       {swatch && (
                         <i aria-hidden="true" style={{ background: swatch }} />
                       )}
-                      <span className="account-control-text">{value}</span>
+                      <span className="account-control-text">
+                        {caption(value)}
+                      </span>
                     </b>
                   );
                 })
               : expanded === key
                 ? null
-                : `Add ${label.toLowerCase()}`}
+                : ui("addLabel", { label: caption(label).toLowerCase() })}
           </span>
           <Icon name="chevron" />
         </button>
@@ -141,7 +147,7 @@ export function Preferences({ personId }: { personId?: string }) {
             {options.map((option, i) => (
               <button
                 key={option}
-                aria-label={option}
+                aria-label={caption(option)}
                 aria-pressed={selected.includes(option)}
                 className={selected.includes(option) ? "selected" : ""}
                 style={colors ? { background: colors[i] } : undefined}
@@ -159,7 +165,9 @@ export function Preferences({ personId }: { personId?: string }) {
                 {colors ? (
                   ""
                 ) : (
-                  <span className="account-control-text">{option}</span>
+                  <span className="account-control-text">
+                    {caption(option)}
+                  </span>
                 )}
               </button>
             ))}
@@ -184,14 +192,14 @@ export function Preferences({ personId }: { personId?: string }) {
               <button
                 className="profile-field"
                 aria-expanded={expanded === key}
-                aria-label={`${label} ${personId ? (choices[choiceKey(field)]?.[0] ?? "") : profile[field]}`.trim()}
+                aria-label={`${caption(label)} ${personId ? (choices[choiceKey(field)]?.[0] ?? "") : profile[field]}`.trim()}
                 onClick={() => {
                   const next = expanded === key ? "" : key;
                   setExpanded(next);
                   if (next) alignPanel(sizePanel, 155);
                 }}
               >
-                <span>{label}</span>
+                <span>{caption(label)}</span>
                 <span className="selected-preferences">
                   {expanded !== key &&
                   (personId
@@ -205,7 +213,7 @@ export function Preferences({ personId }: { personId?: string }) {
                       </span>
                     </b>
                   ) : expanded === key ? null : (
-                    `Add ${label.toLowerCase()}`
+                    ui("addLabel", { label: caption(label).toLowerCase() })
                   )}
                 </span>
                 <Icon name="chevron" />
@@ -236,7 +244,9 @@ export function Preferences({ personId }: { personId?: string }) {
                           : updateProfile({ [field]: option })
                       }
                     >
-                      <span className="account-control-text">{option}</span>
+                      <span className="account-control-text">
+                        {caption(option)}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -322,7 +332,7 @@ export function Preferences({ personId }: { personId?: string }) {
             alignPanel(skinPanel, 114);
           }}
         >
-          + Skin care
+          {ui("skinCare")}
         </button>
       )}
       {hair ? (
@@ -354,7 +364,7 @@ export function Preferences({ personId }: { personId?: string }) {
         </div>
       ) : (
         <button className="preference-add" onClick={() => setHair(true)}>
-          + Hair care
+          {ui("hairCare")}
         </button>
       )}
     </>

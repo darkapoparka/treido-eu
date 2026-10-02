@@ -1,0 +1,282 @@
+.page {
+  padding-top: 12px;
+  padding-bottom: 32px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.textButton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-align: start;
+  color: #5433eb;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.languages {
+  display: flex;
+  gap: 4px;
+}
+.languages button {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  font-size: 14px;
+}
+.languages button[aria-pressed="true"] {
+  background: #f1eeff;
+  color: #5433eb;
+  font-weight: 600;
+}
+.heading {
+  margin-bottom: 20px;
+}
+.heading h1:focus {
+  outline: none;
+}
+.steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 0;
+  margin: 0 0 24px;
+}
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #5f5f5f;
+}
+.steps li > span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ededed;
+  border-radius: 50%;
+  flex: none;
+}
+.steps li[aria-current="step"] {
+  color: #111;
+  font-weight: 600;
+}
+.steps li[aria-current="step"] > span {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+.intro {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 20px;
+  overflow-wrap: anywhere;
+}
+.search {
+  margin-bottom: 20px;
+}
+.search input {
+  min-height: 36px;
+}
+.categoryHeading h2 {
+  margin: 12px 0 16px;
+}
+.categoryList {
+  padding: 0 16px;
+}
+.categoryList > p {
+  padding-top: 16px;
+}
+.categoryList button > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.categoryList strong {
+  font-weight: 500;
+}
+.categoryList button > span:last-child {
+  color: #767676;
+  font-size: 25px;
+  flex: none;
+}
+.selection small {
+  color: #5f5f5f;
+  font-size: 13px;
+}
+.selection h2 {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.fieldGroup {
+  min-width: 0;
+}
+.fieldGroup :global(.form-note),
+.fieldGroup :global(.form-error) {
+  margin: 6px 8px 0;
+}
+.fieldGroup :global(.form-field) {
+  min-width: 0;
+}
+.fieldGroup input,
+.fieldGroup select {
+  min-height: 36px;
+}
+.fieldGroup :global([aria-invalid="true"]) {
+  outline: 2px solid #ba381c;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.composite {
+  margin: 0;
+}
+.composite legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+.composite label {
+  min-width: 0;
+}
+.dimensions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7em), 1fr));
+  gap: 12px;
+}
+.dimensions input {
+  margin-top: 4px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+}
+.additional {
+  margin: 0;
+}
+.additional summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 17px;
+  font-weight: 500;
+}
+.additional summary::-webkit-details-marker {
+  display: none;
+}
+.additional summary > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.disclosureArrow {
+  color: #767676;
+  font-size: 25px;
+  flex: none;
+}
+.additional[open] .disclosureArrow {
+  transform: rotate(90deg);
+}
+.optionalFields {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+.measure {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.measure span {
+  flex: none;
+  font-size: 17px;
+  color: #111;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.checkChoice {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 10px;
+  font-size: 16px;
+  color: #111;
+}
+.checkChoice input {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: #5433eb;
+}
+.reviewHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.reviewList {
+  margin: 16px 0 0;
+}
+.reviewList > div {
+  padding: 12px 0;
+  border-top: 1px solid #ededed;
+}
+.reviewList dt {
+  font-size: 13px;
+  color: #5f5f5f;
+  margin-bottom: 5px;
+}
+.reviewList dd {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.primary {
+  height: auto;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.primary:disabled {
+  background: #ededed;
+  color: #5f5f5f;
+  cursor: not-allowed;
+}
+.notice p,
+.publication p {
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 8px;
+}
+.publication {
+  margin-top: 24px;
+}
+@media (max-width: 359px) {
+  .dimensions {
+    grid-template-columns: 1fr;
+  }
+  .steps {
+    gap: 10px;
+  }
+}

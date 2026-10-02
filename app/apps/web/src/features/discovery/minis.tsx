@@ -1,4 +1,8 @@
 "use client";
+import { displayCount } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import { useRouter, useSearchParams } from "next/navigation";
@@ -36,6 +40,7 @@ import "./live-minis.css";
 import { useMiniRoute } from "./mini-navigation";
 export { Sol } from "./sol";
 export function Minis({ android = false }: { android?: boolean }) {
+  const ui = useTranslations("discoveryUI");
   const minis = (android ? liveFeaturedMiniIds : featuredMiniIds).map((id) => ({
     id,
     ...miniCatalog[id],
@@ -67,10 +72,12 @@ export function Minis({ android = false }: { android?: boolean }) {
     } else if (wasNativeSearch.current) {
       wasNativeSearch.current = false;
       if (searchOrigin.current)
-        restoreSourcePosition('button[aria-label="Search Minis"]');
+        restoreSourcePosition('button[data-ui-label="searchMinis"]');
       else
         document
-          .querySelector<HTMLButtonElement>('button[aria-label="Search Minis"]')
+          .querySelector<HTMLButtonElement>(
+            'button[data-ui-label="searchMinis"]',
+          )
           ?.focus({ preventScroll: true });
     }
   }, [nativeSearch]);
@@ -177,8 +184,8 @@ export function Minis({ android = false }: { android?: boolean }) {
               <input
                 id="native-mini-search"
                 type="search"
-                aria-label="Search Minis"
-                placeholder="Search"
+                aria-label={ui("searchMinis")}
+                placeholder={ui("search")}
                 value={nativeQuery}
                 onChange={(event) =>
                   editNativeQuery(event.target.value || null)
@@ -189,26 +196,28 @@ export function Minis({ android = false }: { android?: boolean }) {
                     cancelNativeSearch();
                   }
                 }}
+                data-ui-label="searchMinis"
               />
               {nativeQuery && (
                 <button
                   type="button"
-                  aria-label="Clear search"
+                  aria-label={ui("clearSearch")}
                   onClick={() => {
                     editNativeQuery(null);
                     document.getElementById("native-mini-search")?.focus();
                   }}
+                  data-ui-label="clearSearch"
                 >
                   <Icon name="close" />
                 </button>
               )}
             </label>
             <button type="button" onClick={cancelNativeSearch}>
-              Cancel
+              {ui("cancel")}
             </button>
           </header>
           {!normalizedQuery && nativeResults.length > 0 && (
-            <h2>Recently viewed</h2>
+            <h2>{ui("recentlyViewed")}</h2>
           )}
           <div className="mini-list native-mini-search-results">
             {nativeResults.map(row)}
@@ -220,10 +229,10 @@ export function Minis({ android = false }: { android?: boolean }) {
             <h1>Minis</h1>
             <IconButton
               icon="search"
-              label="Search Minis"
+              label={ui("searchMinis")}
               onClick={() => {
                 searchOrigin.current = rememberSourcePosition(
-                  'button[aria-label="Search Minis"]',
+                  'button[data-ui-label="searchMinis"]',
                 );
                 if (android)
                   change({ search: "1", q: null }, false, {
@@ -231,12 +240,14 @@ export function Minis({ android = false }: { android?: boolean }) {
                   });
                 else setSearching(true);
               }}
+              data-ui-label="searchMinis"
             />
           </header>
           <div
             className="mini-carousel"
-            aria-label="Featured Minis"
+            aria-label={ui("featuredMinis")}
             tabIndex={0}
+            data-ui-label="featuredMinis"
           >
             {minis.map((m) => (
               <SourceLink
@@ -262,7 +273,7 @@ export function Minis({ android = false }: { android?: boolean }) {
           </div>
           {state.visitedMinis.length > 0 && (
             <>
-              <h2>Recently viewed</h2>
+              <h2>{ui("recentlyViewed")}</h2>
               <div className="mini-recent">
                 {state.visitedMinis.map((id) => {
                   const mini = findMini(id);
@@ -321,7 +332,8 @@ export function Minis({ android = false }: { android?: boolean }) {
                 <div className="mini-list">{snapItems.map(row)}</div>
                 <div
                   className={`mini-list ${styles.catalogFragments}`}
-                  aria-label="Captured Snap and Shop continuation"
+                  aria-label={ui("capturedSnapAndShopContinuation")}
+                  data-ui-label="capturedSnapAndShopContinuation"
                 >
                   {fragment(
                     "minis-snap-gem-icon-fragment",
@@ -361,13 +373,14 @@ export function Minis({ android = false }: { android?: boolean }) {
                     />
                     <span>
                       <strong>Homescape AI</strong>
-                      <p>Home décor ideas with arts, plants & renovation</p>
+                      <p>{ui("homeDCorIdeasWithArtsPlantsRenovation")}</p>
                     </span>
                   </button>
                 </div>
                 <div
                   className={`mini-list ${styles.catalogFragments}`}
-                  aria-label="Captured Design Your Space continuation"
+                  aria-label={ui("capturedDesignYourSpaceContinuation")}
+                  data-ui-label="capturedDesignYourSpaceContinuation"
                 >
                   {fragment(
                     "minis-space-script-icon-fragment",
@@ -385,17 +398,18 @@ export function Minis({ android = false }: { android?: boolean }) {
       )}
       <Sheet
         open={searching}
-        title="Search Minis"
+        title={ui("searchMinis")}
         initialFocus="#mini-search"
         onClose={() => setSearching(false)}
       >
         <input
           id="mini-search"
           className="mini-search"
-          aria-label="Search Minis"
-          placeholder="Search Minis"
+          aria-label={ui("searchMinis")}
+          placeholder={ui("searchMinis")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          data-ui-label="searchMinis"
         />
         <div className="mini-list">
           {minis
@@ -409,8 +423,7 @@ export function Minis({ android = false }: { android?: boolean }) {
         onClose={() => setUnavailable("")}
       >
         <p className="sheet-copy">
-          This Mini has no captured detail flow and is unavailable in this
-          reference preview.
+          {ui("thisMiniHasNoCapturedDetailFlowAndIsUnavailable")}
         </p>
       </Sheet>
       <FloatingNav android={android} back fade />
@@ -434,6 +447,7 @@ export function LocalPhotoPicker({
   outfit?: boolean;
   referenceExamples?: boolean;
 }) {
+  const ui = useTranslations("discoveryUI");
   const [localImage, setLocalImage] = useState("");
   const [error, setError] = useState("");
   const currentImage = useRef("");
@@ -457,7 +471,7 @@ export function LocalPhotoPicker({
     event.currentTarget.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Choose an image file.");
+      setError(ui("chooseAnImageFile"));
       return;
     }
     if (currentImage.current) URL.revokeObjectURL(currentImage.current);
@@ -517,7 +531,7 @@ export function LocalPhotoPicker({
   return (
     <Sheet
       open={open}
-      title={localImage ? "Photo preview" : title}
+      title={localImage ? ui("photoPreview") : title}
       onClose={close}
       headerless={!localImage}
       className={
@@ -531,30 +545,27 @@ export function LocalPhotoPicker({
           <div className={styles.localPhoto}>
             <img
               src={localImage}
-              alt="Selected local image"
+              alt={ui("selectedLocalImage")}
               onError={() =>
-                setError(
-                  "This image could not be opened. Choose another photo.",
-                )
+                setError(ui("thisImageCouldNotBeOpenedChooseAnotherPhoto"))
               }
             />
             <p role="status">
-              Image selected locally. Image recognition is not connected. No
-              photo is uploaded or analyzed.
+              {ui("imageSelectedLocallyImageRecognitionIsNotConnectedNoPhoto")}
             </p>
             <button className="muted-button" onClick={clearImage}>
-              Choose another photo
+              {ui("chooseAnotherPhoto")}
             </button>
             <button className="primary" data-local-photo-done onClick={close}>
-              Done
+              {ui("done")}
             </button>
           </div>
         ) : (
           <>
             <p id={noteId} className="sr-only">
-              No photo is uploaded or analyzed.
+              {ui("noPhotoIsUploadedOrAnalyzed")}
               {referenceExamples &&
-                " Captured examples are available in the Mini preview controls."}
+                ui("capturedExamplesAreAvailableInTheMiniPreviewControls")}
             </p>
             <button
               type="button"
@@ -564,7 +575,7 @@ export function LocalPhotoPicker({
               onClick={() => libraryInput.current?.click()}
             >
               <Icon name="photo-library" />
-              Photo Library
+              {ui("photoLibrary")}
             </button>
             <button
               type="button"
@@ -573,7 +584,7 @@ export function LocalPhotoPicker({
               onClick={() => cameraInput.current?.click()}
             >
               <Icon name="camera" />
-              Take Photo
+              {ui("takePhoto")}
             </button>
             <button
               type="button"
@@ -594,15 +605,16 @@ export function LocalPhotoPicker({
                 <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v11H3Z" />
                 <path d="M3 9h18" />
               </svg>
-              Choose File
+              {ui("chooseFile")}
             </button>
             <input
               hidden
               ref={libraryInput}
               type="file"
               accept="image/*"
-              aria-label="Choose image from photo library"
+              aria-label={ui("chooseImageFromPhotoLibrary")}
               onChange={selected}
+              data-ui-label="chooseImageFromPhotoLibrary"
             />
             <input
               hidden
@@ -610,16 +622,18 @@ export function LocalPhotoPicker({
               type="file"
               accept="image/*"
               capture="user"
-              aria-label="Take a local photo"
+              aria-label={ui("takeALocalPhoto")}
               onChange={selected}
+              data-ui-label="takeALocalPhoto"
             />
             <input
               hidden
               ref={fileInput}
               type="file"
               accept="image/*"
-              aria-label="Choose local image"
+              aria-label={ui("chooseLocalImage")}
               onChange={selected}
+              data-ui-label="chooseLocalImage"
             />
           </>
         )}
@@ -641,6 +655,7 @@ const skinResultMedia: Record<string, string> = {
 };
 
 export function Skin({ catalog }: { catalog: Catalog }) {
+  const ui = useTranslations("discoveryUI");
   const router = useRouter();
   const { params, change } = useMiniRoute("/minis/skin");
   const requested = params.get("skin");
@@ -683,9 +698,9 @@ export function Skin({ catalog }: { catalog: Catalog }) {
             <div className="skin-heading">
               <img src="/api/reference-media/skin-symbol" alt="" />
               <h1>
-                AI Powered
+                {ui("aIPowered")}
                 <br />
-                Skincare
+                {ui("skincare")}
               </h1>
             </div>
             <button
@@ -694,23 +709,25 @@ export function Skin({ catalog }: { catalog: Catalog }) {
               onClick={() => setCameraAccess(true)}
             >
               <Icon name={phase === "analyzing" ? "star" : "camera"} />
-              {phase === "analyzing" ? "AI is analyzing..." : "Analyze My Skin"}
+              {phase === "analyzing"
+                ? ui("aIIsAnalyzing")
+                : ui("analyzeMySkin")}
             </button>
             <p role={phase === "analyzing" ? "status" : undefined}>
               {phase === "analyzing" ? (
-                "Please wait, this may take a moment..."
+                ui("pleaseWaitThisMayTakeAMoment")
               ) : (
                 <>
-                  Please upload a clear photo of your
+                  {ui("pleaseUploadAClearPhotoOfYour")}
                   <br />
-                  face to get better results.
+                  {ui("faceToGetBetterResults")}
                 </>
               )}
             </p>
             <small>
-              AI may make mistakes. Please review
+              {ui("aIMayMakeMistakesPleaseReview")}
               <br />
-              recommendations carefully.
+              {ui("recommendationsCarefully")}
             </small>
           </>
         ) : (
@@ -720,34 +737,28 @@ export function Skin({ catalog }: { catalog: Catalog }) {
                 <img src="/api/reference-media/skin-symbol" alt="" />
                 Skincare AI
               </h1>
-              <small>Powered by Coalition Technologies</small>
+              <small>{ui("poweredByCoalitionTechnologies")}</small>
             </div>
             <p className={styles.previewLabel}>
-              Recorded example · no skin analysis performed
+              {ui("recordedExampleNoSkinAnalysisPerformed")}
             </p>
             <section className="skin-summary">
               <h2>
                 <Icon name="face-scan" />
-                Overall Skin Summary
+                {ui("overallSkinSummary")}
               </h2>
-              <p>
-                Your skin appears well-hydrated, smooth, and radiant with an
-                even tone, indicating excellent overall health.
-              </p>
+              <p>{ui("yourSkinAppearsWellHydratedSmoothAndRadiantWithAn")}</p>
             </section>
             <section className="skin-summary">
               <h2>
                 <Icon name="shopping-bag" />
-                Recommended Products
+                {ui("recommendedProducts")}
               </h2>
               <p>
-                To maintain your beautiful skin, we recommend a gentle hydrating
-                cleanser, a vitamin C serum for brightness, and a daily
-                moisturizer with SPF 30. For nightly care, a simple hydrating
-                moisturizer is sufficient.
+                {ui("toMaintainYourBeautifulSkinWeRecommendAGentleHydrating")}
               </p>
             </section>
-            <h2 className={styles.cleanserHeading}>Cleanser</h2>
+            <h2 className={styles.cleanserHeading}>{ui("cleanser")}</h2>
             <div className="product-grid">
               {["skin-anua", "skin-mimi", "skin-loretta", "skin-harry"].flatMap(
                 (id) => {
@@ -782,24 +793,26 @@ export function Skin({ catalog }: { catalog: Catalog }) {
                 <div key={key} className={styles.skinPartialCard}>
                   <button
                     className={styles.skinPartialPhoto}
-                    aria-label={`View ${title}`}
+                    aria-label={ui("viewValue1", { value1: title ?? "" })}
                     onClick={() => setUnavailableProduct(title)}
                   >
                     <img src={`/api/reference-media/${key}`} alt="" />
                   </button>
                   <IconButton
                     icon="heart"
-                    label={`Save ${title}`}
+                    label={ui("saveValue1", { value1: title ?? "" })}
                     className="save-button"
                     onClick={() => setUnavailableProduct(title)}
+                    data-ui-label="saveValue1"
                   />
                 </div>
               ))}
             </div>
             <button
               className={styles.skinHome}
-              aria-label="Start skin example again"
+              aria-label={ui("startSkinExampleAgain")}
               onClick={reset}
+              data-ui-label="startSkinExampleAgain"
             >
               <Icon name="home" />
             </button>
@@ -808,13 +821,13 @@ export function Skin({ catalog }: { catalog: Catalog }) {
       </section>
       <Sheet
         open={cameraAccess}
-        title="Allow access to your camera?"
+        title={ui("allowAccessToYourCamera")}
         headerless
         className={styles.permission}
         onClose={() => setCameraAccess(false)}
       >
         <div className={styles.permissionHeading}>
-          <h2 aria-hidden="true">Allow access to your camera?</h2>
+          <h2 aria-hidden="true">{ui("allowAccessToYourCamera")}</h2>
           <span className={styles.permissionMark} aria-hidden="true">
             <img
               className={styles.permissionIcon}
@@ -828,42 +841,40 @@ export function Skin({ catalog }: { catalog: Catalog }) {
             />
           </span>
         </div>
-        <p>
-          No camera access is requested. Choose a photo locally or use your
-          device picker.
-        </p>
+        <p>{ui("noCameraAccessIsRequestedChooseAPhotoLocallyOr")}</p>
         <div className={styles.permissionActions}>
-          <button onClick={() => setCameraAccess(false)}>Cancel</button>
+          <button onClick={() => setCameraAccess(false)}>{ui("cancel")}</button>
           <button
             onClick={() => {
               setCameraAccess(false);
               setUpload(true);
             }}
           >
-            Share
+            {ui("share")}
           </button>
         </div>
       </Sheet>
       <LocalPhotoPicker
         open={upload}
-        title="Choose a photo"
+        title={ui("chooseAPhoto")}
         anchorSelector=".skin-analyze"
         onClose={() => setUpload(false)}
       />
       <Sheet
         open={!!unavailableProduct}
-        title="Product details unavailable"
+        title={ui("productDetailsUnavailable")}
         onClose={() => setUnavailableProduct("")}
       >
         <p className="sheet-copy">
-          {unavailableProduct} appears in the captured example. Complete product
-          details are unavailable, so it has not been opened, saved, or added to
-          a cart.
+          {unavailableProduct}{" "}
+          {ui(
+            "appearsInTheCapturedExampleCompleteProductDetailsAreUnavailable",
+          )}
         </p>
       </Sheet>
       <Sheet
         open={menu}
-        title="Skincare AI preview"
+        title={ui("skincareAIPreview")}
         onClose={() => setMenu(false)}
       >
         <button
@@ -874,12 +885,10 @@ export function Skin({ catalog }: { catalog: Catalog }) {
           }}
         >
           <Icon name="photo-library" />
-          View reference example
+          {ui("viewReferenceExample")}
         </button>
         <p className="sheet-copy">
-          This is a recorded Shop reference example. Skin analysis is not
-          connected; the captured advice is not an assessment of your skin.
-          Photos selected with your device picker stay on this device.
+          {ui("thisIsARecordedShopReferenceExampleSkinAnalysisIs")}
         </p>
         <button
           className="account-row"
@@ -888,7 +897,7 @@ export function Skin({ catalog }: { catalog: Catalog }) {
             reset();
           }}
         >
-          Start again
+          {ui("startAgain")}
         </button>
       </Sheet>
     </MiniShell>
@@ -948,6 +957,8 @@ const boundedContinuationCopy: Partial<
 };
 
 export function GetLook({ catalog }: { catalog: Catalog }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const android = Boolean(catalog.liveHomeStoreIds);
   const [photoAccess, setPhotoAccess] = useState(false);
   const { params, change } = useMiniRoute("/minis/look");
@@ -1004,8 +1015,7 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
     if (piece.id === "sandals")
       return (
         <p className={styles.missingProducts}>
-          The recording identifies sandals but does not include their product
-          recommendations.
+          {ui("theRecordingIdentifiesSandalsButDoesNotIncludeTheirProduct")}
         </p>
       );
     return (
@@ -1037,7 +1047,7 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
             <div className="look-partial-card" key={key}>
               <img
                 src={`/api/reference-media/${key}`}
-                alt="Captured gingham skirt recommendation"
+                alt={ui("capturedGinghamSkirtRecommendation")}
               />
             </div>
           ))}
@@ -1076,8 +1086,9 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
         {phase === "results" && (
           <button
             className={styles.lookBack}
-            aria-label="Choose another outfit photo"
+            aria-label={ui("chooseAnotherOutfitPhoto")}
             onClick={reset}
+            data-ui-label="chooseAnotherOutfitPhoto"
           >
             <Icon name="back" />
           </button>
@@ -1088,14 +1099,14 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
         {phase === "welcome" ? (
           <>
             <h1>
-              Find every piece
+              {ui("findEveryPiece")}
               <br />
-              from any outfit
+              {ui("fromAnyOutfit")}
             </h1>
             <p>
-              Upload an outfit photo and discover
+              {ui("uploadAnOutfitPhotoAndDiscover")}
               <br />
-              matching pieces from Shopify stores
+              {ui("matchingPiecesFromShopifyStores")}
             </p>
             <button
               ref={choosePhotoButton}
@@ -1107,7 +1118,7 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
               }}
             >
               <Icon name="camera" />
-              Choose Photo
+              {ui("choosePhoto")}
             </button>
           </>
         ) : phase === "scanning" ? (
@@ -1115,15 +1126,15 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
             <div className="look-photo">
               <img
                 src="/api/reference-media/look-outfit-inner"
-                alt="Captured outfit"
+                alt={ui("capturedOutfit")}
               />
             </div>
-            <p role="status">Scanning outfit...</p>
+            <p role="status">{ui("scanningOutfit")}</p>
             <button
               className={styles.playback}
               onClick={() => change({ look: "results" }, true)}
             >
-              View captured matches
+              {ui("viewCapturedMatches")}
             </button>
           </>
         ) : (
@@ -1131,7 +1142,9 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
             <div className="look-photo">
               <img
                 src="/api/reference-media/look-outfit-results"
-                alt="Reference outfit: white blazer, black shirt and patterned skirt"
+                alt={ui(
+                  "referenceOutfitWhiteBlazerBlackShirtAndPatternedSkirt",
+                )}
               />
               {selected?.id === "shirt" && (
                 <span
@@ -1162,9 +1175,10 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
               {selected && (
                 <section
                   className={styles.selectedOutfit}
-                  aria-label="Selected outfit piece"
+                  aria-label={ui("selectedOutfitPiece")}
+                  data-ui-label="selectedOutfitPiece"
                 >
-                  <small>Selected</small>
+                  <small>{ui("selected")}</small>
                   <h2>{selected.label}</h2>
                   {results(selected)}
                   <button
@@ -1174,7 +1188,7 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
                       change({ piece: null, matches: selected.id });
                     }}
                   >
-                    View all matching pieces
+                    {ui("viewAllMatchingPieces")}
                   </button>
                 </section>
               )}
@@ -1188,29 +1202,34 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
                 ))}
             </div>
             <button className={styles.playback} onClick={reset}>
-              Choose another photo
+              {ui("chooseAnotherPhoto")}
             </button>
           </>
         )}
         {terms && phase === "welcome" && (
           <aside
             className={styles.termsNotice}
-            aria-label="Get the Look terms notice"
+            aria-label={ui("getTheLookTermsNotice")}
+            data-ui-label="getTheLookTermsNotice"
           >
             <p>
-              By continuing to use this Mini, you agree to the{" "}
-              <button onClick={() => setInformation("Terms")}>terms</button> and{" "}
-              <button onClick={() => setInformation("Privacy policy")}>
-                privacy policy
+              {ui("byContinuingToUseThisMiniYouAgreeToThe")}{" "}
+              <button onClick={() => setInformation("Terms")}>
+                {ui("terms")}
               </button>{" "}
-              of Lit Dog Labs.
+              {ui("and")}{" "}
+              <button onClick={() => setInformation("Privacy policy")}>
+                {ui("privacyPolicy_2b7281")}
+              </button>{" "}
+              {ui("ofLitDogLabs")}
             </p>
             <button
-              aria-label="Dismiss Get the Look terms notice"
+              aria-label={ui("dismissGetTheLookTermsNotice")}
               onClick={() => {
                 setTerms(false);
                 choosePhotoButton.current?.focus({ preventScroll: true });
               }}
+              data-ui-label="dismissGetTheLookTermsNotice"
             >
               <Icon name="close" />
             </button>
@@ -1228,7 +1247,7 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
       />
       <LocalPhotoPicker
         open={choose}
-        title="Choose Photo"
+        title={ui("choosePhoto")}
         anchorSelector=".look-upload"
         referenceExamples={!android}
         outfit
@@ -1236,7 +1255,7 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
       />
       <Sheet
         open={menu}
-        title="Get the Look preview"
+        title={ui("getTheLookPreview")}
         onClose={() => setMenu(false)}
       >
         <button
@@ -1248,12 +1267,10 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
           }}
         >
           <Icon name="photo-library" />
-          Use reference outfit
+          {ui("useReferenceOutfit")}
         </button>
         <p className="sheet-copy">
-          This is a recorded outfit example. Image recognition is not connected.
-          Hotspots select the recorded pieces; a local file remains on this
-          device.
+          {ui("thisIsARecordedOutfitExampleImageRecognitionIsNot")}
         </p>
         <button
           className="account-row"
@@ -1262,18 +1279,16 @@ export function GetLook({ catalog }: { catalog: Catalog }) {
             reset();
           }}
         >
-          Choose another photo
+          {ui("chooseAnotherPhoto")}
         </button>
       </Sheet>
       <Sheet
         open={!!information}
-        title={information}
+        title={caption(information)}
         onClose={() => setInformation("")}
       >
         <p className="sheet-copy">
-          The captured Get the Look Mini was provided by Lit Dog Labs. Its
-          external terms and privacy services are not connected in this local
-          preview.
+          {ui("theCapturedGetTheLookMiniWasProvidedByLit")}
         </p>
       </Sheet>
     </MiniShell>
@@ -1393,6 +1408,9 @@ function readGiftAnswers(historyState: unknown): GiftAnswers | undefined {
 }
 
 export function GiftSense({ catalog }: { catalog: Catalog }) {
+  const intlLocale = useIntlLocale();
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const { params, change } = useMiniRoute("/minis/gift");
   const phaseIndex = giftPhases.indexOf(params.get("gift") ?? "welcome");
@@ -1521,28 +1539,27 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
       >
         <div className="gift-progress">
           <Icon name="gift" />
-          <div aria-label={`Gift questions ${progress} of 10`}>
+          <div
+            aria-label={ui("giftQuestionsValue1Of10", {
+              value1: progress ?? "",
+            })}
+          >
             {Array.from({ length: 10 }, (_, i) => (
               <i key={i} className={i < progress ? "active" : ""} />
             ))}
           </div>
           <IconButton
             icon="reset"
-            label="Restart gift questions"
+            label={ui("restartGiftQuestions")}
             onClick={restart}
+            data-ui-label="restartGiftQuestions"
           />
         </div>
         <div className="gift-conversation" ref={conversation}>
           <div className={step > 0 ? "gift-history" : ""}>
             <div className={`gift-message ${styles.giftWelcome}`}>
-              <p>
-                Welcome to Gift Sense, your smart guide to finding gifts that
-                truly fit.
-              </p>
-              <p>
-                Tell us about the person, answer a few questions, and discover
-                gifts tailored perfectly to who they are.
-              </p>
+              <p>{ui("welcomeToGiftSenseYourSmartGuideToFindingGifts")}</p>
+              <p>{ui("tellUsAboutThePersonAnswerAFewQuestionsAnd")}</p>
             </div>
           </div>
           {step === 0 && (
@@ -1550,7 +1567,7 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
               className={`gift-action ${styles.giftWelcomeAction}`}
               onClick={() => advance(1)}
             >
-              Let’s Begin <Icon name="sparkles" />
+              {ui("letSBegin")} <Icon name="sparkles" />
             </button>
           )}
           {step >= 1 && (
@@ -1560,10 +1577,10 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                 data-gift-step="1"
               >
                 <div className="gift-message">
-                  Let’s start simple, who are you buying a gift for?
+                  {ui("letSStartSimpleWhoAreYouBuyingAGift")}
                 </div>
                 <p>
-                  <em>Choose one or type your own.</em>
+                  <em>{ui("chooseOneOrTypeYourOwn")}</em>
                 </p>
                 <div className="gift-options">
                   {["Partner", "Family", "Friend", "Colleague", "Child"].map(
@@ -1586,10 +1603,10 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                   <div className="gift-answer">{recipient}</div>
                   <div className={step > 2 ? "gift-history" : ""}>
                     <div className="gift-message">
-                      How would you describe their personality?
+                      {ui("howWouldYouDescribeTheirPersonality")}
                     </div>
                     <p>
-                      <em>Select all that sound like them.</em>
+                      <em>{ui("selectAllThatSoundLikeThem")}</em>
                     </p>
                     <div className="gift-options">
                       {traits.map((trait) => (
@@ -1617,7 +1634,7 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                         className={`gift-action ${selected.length ? "" : styles.skip}`}
                         onClick={() => advance(3)}
                       >
-                        {selected.length ? "Continue" : "Skip"}
+                        {selected.length ? ui("continue") : ui("skip")}
                       </button>
                     )}
                   </div>
@@ -1633,10 +1650,10 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                     className={step > 3 ? "gift-history" : ""}
                   >
                     <div className="gift-message">
-                      What’s your budget for this gift?
+                      {ui("whatSYourBudgetForThisGift")}
                     </div>
                     <p>
-                      <em>Choose the range that fits.</em>
+                      <em>{ui("chooseTheRangeThatFits")}</em>
                     </p>
                     <div className="gift-options">
                       {[
@@ -1653,8 +1670,8 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                           aria-pressed={budget === value}
                           onClick={() => advance(4, { budget: value })}
                         >
-                          <GiftGlyph label={value} />
-                          {value}
+                          <GiftGlyph label={caption(value)} />
+                          {caption(value)}
                         </button>
                       ))}
                     </div>
@@ -1669,17 +1686,17 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                     className={completed ? "gift-history" : ""}
                   >
                     <div className="gift-message">
-                      Anything else that might help us find the perfect gift?
+                      {ui("anythingElseThatMightHelpUsFindThePerfectGift")}
                     </div>
                     <p>
-                      <em>Optional, type any extra details.</em>
+                      <em>{ui("optionalTypeAnyExtraDetails")}</em>
                     </p>
                     {step === 4 && !access && (
                       <button
                         className={`gift-action ${styles.skip}`}
                         onClick={requestIdeas}
                       >
-                        Skip
+                        {ui("skip")}
                       </button>
                     )}
                   </section>
@@ -1694,22 +1711,20 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                 <div className="gift-message" data-gift-step="6">
                   <div className={styles.finding} role="status">
                     <span className={styles.spinner} />
-                    Finding gifts that match your answers...
+                    {ui("findingGiftsThatMatchYourAnswers")}
                   </div>
                   <button
                     className={styles.giftPlayback}
                     onClick={() => advance(5, {}, true)}
                   >
-                    View captured gift ideas
+                    {ui("viewCapturedGiftIdeas")}
                   </button>
                 </div>
               )}
               {step === 5 && (
                 <section data-gift-step="5">
                   <div className="gift-message">
-                    He’s a thoughtful, tech-loving guy who enjoys quiet
-                    creativity and outdoor fun, so these picks balance his
-                    passions and offer comfort and inspiration.
+                    {ui("heSAThoughtfulTechLovingGuyWhoEnjoysQuiet")}
                   </div>
                   <div className="gift-results">
                     {products.map((product) => (
@@ -1722,7 +1737,8 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                           {loadingResults ? (
                             <span
                               className={styles.giftImagePlaceholder}
-                              aria-label="Loading captured product image"
+                              aria-label={ui("loadingCapturedProductImage")}
+                              data-ui-label="loadingCapturedProductImage"
                             />
                           ) : (
                             <img src={product.images[0]} alt={product.title} />
@@ -1730,7 +1746,8 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                           <span>
                             {product.title}
                             <span className="gift-product-rating">
-                              ★★★★★ ({product.ratingCount})
+                              ★★★★★ (
+                              {displayCount(product.ratingCount, intlLocale)})
                             </span>
                             <strong
                               className={
@@ -1747,7 +1764,7 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                           </span>
                         </SourceLink>
                         <button
-                          aria-label={`${state.saved.includes(product.id) ? "Unsave" : "Save"} ${product.title}`}
+                          aria-label={`${state.saved.includes(product.id) ? ui("unsave") : ui("save")} ${product.title}`}
                           aria-pressed={state.saved.includes(product.id)}
                           onClick={() => state.toggleSaved(product.id)}
                         >
@@ -1761,7 +1778,7 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                   </div>
                   <div className="gift-result-actions">
                     <button onClick={() => setSimilar(true)}>
-                      Show Similar Gifts
+                      {ui("showSimilarGifts")}
                     </button>
                     <button
                       onClick={() => {
@@ -1774,7 +1791,7 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                         }
                       }}
                     >
-                      {saved ? "Saved as Collection" : "Save as Collection"}
+                      {saved ? ui("savedAsCollection") : ui("saveAsCollection")}
                     </button>
                   </div>
                   <button
@@ -1783,7 +1800,7 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
                       advance(1, { collectionId: "" });
                     }}
                   >
-                    Show Me Different Ideas
+                    {ui("showMeDifferentIdeas")}
                   </button>
                 </section>
               )}
@@ -1812,14 +1829,14 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
             disabled={!canType}
             placeholder={
               !canType
-                ? "Please select an option above."
+                ? ui("pleaseSelectAnOptionAbove")
                 : step === 4
-                  ? "Add any special notes..."
+                  ? ui("addAnySpecialNotes")
                   : step === 1
-                    ? "Type here..."
-                    : "Type your answer..."
+                    ? ui("typeHere")
+                    : ui("typeYourAnswer")
             }
-            aria-label={step === 4 ? "Optional gift notes" : "Gift answer"}
+            aria-label={step === 4 ? ui("optionalGiftNotes") : ui("giftAnswer")}
             value={canType ? draft : ""}
             onChange={(event) =>
               remember({
@@ -1831,8 +1848,9 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
           <button
             className="icon-button"
             type="submit"
-            aria-label="Continue gift questions"
+            aria-label={ui("continueGiftQuestions")}
             disabled={!canType || !draft.trim()}
+            data-ui-label="continueGiftQuestions"
           >
             <svg
               aria-hidden="true"
@@ -1868,34 +1886,29 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
       </section>
       <Sheet
         open={menu}
-        title="Gift Sense preview"
+        title={ui("giftSensePreview")}
         onClose={() => setMenu(false)}
       >
         <p className="sheet-copy">
-          This preview plays the captured gift questions and product examples
-          locally. It does not generate or send a personalized gift request.
-          Saved products and collections use this browser’s existing preview
-          state.
+          {ui("thisPreviewPlaysTheCapturedGiftQuestionsAndProductExamples")}
         </p>
         <button className="account-row" onClick={restart}>
-          Restart gift questions
+          {ui("restartGiftQuestions")}
         </button>
       </Sheet>
       <Sheet
         open={similar}
-        title="Recorded gift ideas"
+        title={ui("recordedGiftIdeas")}
         onClose={() => setSimilar(false)}
       >
         <p className="sheet-copy">
-          These are the three product ideas included in the recording. More
-          recommendations are not connected. You can keep these ideas or answer
-          the questions again.
+          {ui("theseAreTheThreeProductIdeasIncludedInTheRecording")}
         </p>
         <button
           className="primary form-submit"
           onClick={() => setSimilar(false)}
         >
-          Keep these ideas
+          {ui("keepTheseIdeas")}
         </button>
         <button
           className="account-row"
@@ -1904,7 +1917,7 @@ export function GiftSense({ catalog }: { catalog: Catalog }) {
             advance(1);
           }}
         >
-          Answer again
+          {ui("answerAgain")}
         </button>
       </Sheet>
     </MiniShell>

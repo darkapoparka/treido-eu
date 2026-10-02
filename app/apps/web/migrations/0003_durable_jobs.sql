@@ -1,0 +1,57 @@
+CREATE TABLE treido.outbox_jobs (
+  id uuid PRIMARY KEY,
+  kind text NOT NULL CHECK (kind IN ('media.process', 'system.probe')),
+  schema_version integer NOT NULL DEFAULT 1 CHECK (schema_version = 1),
+  seller_id uuid NOT NULL REFERENCES treido.seller_accounts(id),
+  resource_id uuid NOT NULL,
+  operation_key uuid NOT NULL,
+  intent_hash varchar(64) NOT NULL CHECK (intent_hash ~ '^[0-9a-f]{64}$'),
+  actor_id uuid REFERENCES treido.users(id),
+  authority text NOT NULL CHECK (authority IN ('member', 'service')),
+  state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'accepted', 'completed', 'cancelled', 'dead')),
+  generation integer NOT NULL DEFAULT 1 CHECK (generation > 0),
+  attempts integer NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+  available_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  dispatch_token uuid,
+  dispatch_until timestamptz,
+  executor_event_id varchar(160),
+  accepted_at timestamptz,
+  progress_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  completed_at timestamptz,
+  last_error text CHECK (last_error IN ('dispatch_unavailable','executor_unavailable','effect_unavailable','authority_removed','attempts_exhausted')),
+  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  UNIQUE (kind, operation_key),
+  UNIQUE (id, kind, operation_key),
+  UNIQUE (seller_id, id),
+  CHECK ((authority = 'member' AND actor_id IS NOT NULL) OR (authority = 'service' AND actor_id IS NULL)),
+  CHECK (kind <> 'media.process' OR authority = 'member'),
+  CHECK ((dispatch_token IS NULL) = (dispatch_until IS NULL)),
+  CHECK ((state = 'completed') = (completed_at IS NOT NULL))
+);
+CREATE INDEX outbox_dispatch ON treido.outbox_jobs(available_at, id) WHERE state IN ('pending','accepted');
+CREATE TABLE treido.job_effects (
+  job_id uuid PRIMARY KEY REFERENCES treido.outbox_jobs(id),
+  kind text NOT NULL,
+  operation_key uuid NOT NULL,
+  state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending','running','completed','cancelled')),
+  execution_token uuid,
+  execution_until timestamptz,
+  executor_run_id varchar(160),
+  provider_object_id varchar(160),
+  result_id uuid,
+  completed_at timestamptz,
+  UNIQUE (kind, operation_key),
+  FOREIGN KEY (job_id, kind, operation_key) REFERENCES treido.outbox_jobs(id, kind, operation_key),
+  CHECK ((execution_token IS NULL) = (execution_until IS NULL)),
+  CHECK ((state = 'completed') = (completed_at IS NOT NULL))
+);
+CREATE TABLE treido.job_redrives (
+  id uuid PRIMARY KEY,
+  job_id uuid NOT NULL REFERENCES treido.outbox_jobs(id),
+  service_id varchar(80) NOT NULL,
+  reason varchar(500) NOT NULL CHECK (length(reason) BETWEEN 10 AND 500),
+  from_generation integer NOT NULL CHECK (from_generation > 0),
+  to_generation integer NOT NULL CHECK (to_generation = from_generation + 1),
+  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  UNIQUE(job_id, to_generation)
+);

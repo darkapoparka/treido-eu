@@ -3,19 +3,19 @@ packages:
   - packages/*
 
 minimumReleaseAgeExclude:
-  - "@expo/cli@57.0.23"
-  - "@expo/metro-file-map@57.0.3"
-  - "@expo/ui@57.0.17"
-  - "@typescript-eslint/eslint-plugin@8.70.0"
-  - "@typescript-eslint/parser@8.70.0"
-  - "@typescript-eslint/project-service@8.70.0"
-  - "@typescript-eslint/scope-manager@8.70.0"
-  - "@typescript-eslint/tsconfig-utils@8.70.0"
-  - "@typescript-eslint/type-utils@8.70.0"
-  - "@typescript-eslint/types@8.70.0"
-  - "@typescript-eslint/typescript-estree@8.70.0"
-  - "@typescript-eslint/utils@8.70.0"
-  - "@typescript-eslint/visitor-keys@8.70.0"
+  - '@expo/cli@57.0.23'
+  - '@expo/metro-file-map@57.0.3'
+  - '@expo/ui@57.0.17'
+  - '@typescript-eslint/eslint-plugin@8.70.0'
+  - '@typescript-eslint/parser@8.70.0'
+  - '@typescript-eslint/project-service@8.70.0'
+  - '@typescript-eslint/scope-manager@8.70.0'
+  - '@typescript-eslint/tsconfig-utils@8.70.0'
+  - '@typescript-eslint/type-utils@8.70.0'
+  - '@typescript-eslint/types@8.70.0'
+  - '@typescript-eslint/typescript-estree@8.70.0'
+  - '@typescript-eslint/utils@8.70.0'
+  - '@typescript-eslint/visitor-keys@8.70.0'
   - babel-preset-expo@57.0.11
   - expo-glass-effect@57.0.2
   - expo-modules-core@57.0.17
@@ -23,7 +23,24 @@ minimumReleaseAgeExclude:
   - expo-router@57.0.20
   - expo@57.0.21
   - typescript-eslint@8.70.0
+  - '@clerk/backend@3.21.1'
+  - '@clerk/nextjs@7.9.9'
+  - '@clerk/react@6.17.4'
+  - '@clerk/shared@4.37.1 || 4.38.0'
+  - pg-cloudflare@1.4.1
+  - pg-connection-string@2.14.1
+  - pg-protocol@1.16.1
+  - pg@8.23.1
+  - icu-minify@4.14.9
+  - next-intl-swc-plugin-extractor@4.14.9
+  - next-intl@4.14.9
+  - use-intl@4.14.9
+  - '@clerk/localizations@4.21.2'
 saveExact: true
 strictPeerDependencies: true
 allowBuilds:
+  "@embedded-postgres/windows-x64": true
+  '@parcel/watcher': false
+  '@swc/core': false
+  protobufjs: false
   unrs-resolver: true

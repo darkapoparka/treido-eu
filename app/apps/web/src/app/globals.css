@@ -238,29 +238,29 @@ h2 {
   height: 25px;
 }
 /* Dock-only optical fitting; the shared action glyphs retain their own size. */
-.floating-nav a[aria-label="Home"] svg {
+.floating-nav a[data-nav-kind="home"] svg {
   width: 24px;
   height: 24px;
   transform: translate(1px, -1.5px);
 }
 .floating-nav
-  a:is([aria-label="Search"], [aria-label="Explore"]):not([aria-current]) {
+  a:is([data-nav-kind="search"], [data-nav-kind="explore"]):not([aria-current]) {
   color: #767676;
 }
-.floating-nav a[aria-label="Orders"]:not([aria-current]) {
+.floating-nav a[data-nav-kind="orders"]:not([aria-current]) {
   color: #858585;
 }
-.floating-nav a[aria-label="Search"] svg {
+.floating-nav a[data-nav-kind="search"] svg {
   width: 23px;
   height: 23px;
   stroke-width: 3.25;
   transform: translate(1.5px, -0.5px);
 }
-.floating-nav a[aria-label="Explore"] svg {
+.floating-nav a[data-nav-kind="explore"] svg {
   width: 24px;
   transform: translate(-0.25px, -0.5px);
 }
-.floating-nav a[aria-label="Orders"] svg {
+.floating-nav a[data-nav-kind="orders"] svg {
   width: 24px;
   height: 24px;
   transform: translate(-1px, -0.75px);

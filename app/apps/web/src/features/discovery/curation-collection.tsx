@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Private verified source photographs. */
+import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import type { Catalog, Product } from "../catalog/types";
 import { ShopSurface } from "./hydration-boundary";
@@ -29,6 +30,7 @@ export function CurationCollection({
   catalog: Catalog;
   children?: ReactNode;
 }) {
+  const ui = useTranslations("discoveryUI");
   const [sharing, setSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
@@ -40,13 +42,14 @@ export function CurationCollection({
       </header>
       <IconButton
         icon="share-android"
-        label={`Share ${title}`}
+        label={ui("shareValue1", { value1: title ?? "" })}
         className="native-curation-share"
         onClick={() => {
           setShareUrl(window.location.href);
           setCopyStatus("");
           setSharing(true);
         }}
+        data-ui-label="shareValue1"
       />
       <SourceLink
         className="native-curation-category"
@@ -72,13 +75,13 @@ export function CurationCollection({
       <FloatingNav android back fade />
       <Sheet
         open={sharing}
-        title="Sharing link"
+        title={ui("sharingLink")}
         className="curation-share-sheet"
         onClose={() => setSharing(false)}
       >
         <SourceShareFields
           id={shareId}
-          label="Link to this collection"
+          label={ui("linkToThisCollection")}
           url={shareUrl}
           status={copyStatus}
           onStatus={setCopyStatus}

@@ -1,5 +1,8 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Frozen source photography. */
+import { displayCount } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { formatMoney } from "../catalog/types";
@@ -12,11 +15,13 @@ import { useDiscovery } from "./state";
 import styles from "./search-entry.module.css";
 
 export function CapturedJeansContinuation() {
+  const ui = useTranslations("discoveryUI");
   return (
     <div
       className={`search-results ${styles.capturedContinuation}`}
       data-search-continuation="jeans"
-      aria-label="More jeans results"
+      aria-label={ui("moreJeansResults")}
+      data-ui-label="moreJeansResults"
     >
       {capturedJeansContinuation.map((listing) => (
         <CapturedSearchResult key={listing.id} listing={listing} />
@@ -26,6 +31,8 @@ export function CapturedJeansContinuation() {
 }
 
 function CapturedSearchResult({ listing }: { listing: CapturedSearchListing }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const saved = state.saved.includes(listing.id);
@@ -41,7 +48,9 @@ function CapturedSearchResult({ listing }: { listing: CapturedSearchListing }) {
           <button
             type="button"
             className={styles.capturedResultMedia}
-            aria-label={`View captured ${listing.title}`}
+            aria-label={ui("viewCapturedValue1", {
+              value1: listing.title ?? "",
+            })}
             onClick={openDetails}
           >
             <img src={listing.images[0]} alt={listing.title} />
@@ -49,7 +58,7 @@ function CapturedSearchResult({ listing }: { listing: CapturedSearchListing }) {
           <IconButton
             className="save-button"
             icon="heart"
-            label={`${saved ? "Unsave" : "Save"} ${listing.title}`}
+            label={`${saved ? ui("unsave") : ui("save")} ${listing.title}`}
             pressed={saved}
             onClick={() => state.toggleSaved(listing.id)}
           />
@@ -63,12 +72,16 @@ function CapturedSearchResult({ listing }: { listing: CapturedSearchListing }) {
             <strong>{listing.title}</strong>
           </button>
           <p className="rating">
-            <span aria-label={`${listing.rating} out of 5 stars`}>
+            <span
+              aria-label={ui("value1OutOf5Stars", {
+                value1: listing.rating ?? "",
+              })}
+            >
               {"\u2605\u2605\u2605\u2605\u2605"}
             </span>{" "}
-            ({listing.ratingCount})
+            ({displayCount(listing.ratingCount, intlLocale)})
           </p>
-          <p>{formatMoney(listing.price)}</p>
+          <p>{formatMoney(listing.price, intlLocale)}</p>
           <div className={styles.resultMerchant}>
             {listing.sellerHref ? (
               <Link className="result-store" href={listing.sellerHref}>
@@ -79,7 +92,9 @@ function CapturedSearchResult({ listing }: { listing: CapturedSearchListing }) {
               <button
                 type="button"
                 className={`result-store ${styles.capturedSeller}`}
-                aria-label={`View captured seller ${listing.sellerName}`}
+                aria-label={ui("viewCapturedSellerValue1", {
+                  value1: listing.sellerName ?? "",
+                })}
                 onClick={openDetails}
               >
                 <img
@@ -106,7 +121,7 @@ function CapturedSearchResult({ listing }: { listing: CapturedSearchListing }) {
       </article>
       <Sheet
         open={detailsOpen}
-        title="Captured result details"
+        title={ui("capturedResultDetails")}
         onClose={() => setDetailsOpen(false)}
       >
         <p className="sheet-copy">{listing.detailUnavailable}</p>
@@ -115,7 +130,7 @@ function CapturedSearchResult({ listing }: { listing: CapturedSearchListing }) {
           className="primary form-submit"
           onClick={() => setDetailsOpen(false)}
         >
-          Back to search
+          {ui("backToSearch")}
         </button>
       </Sheet>
     </>

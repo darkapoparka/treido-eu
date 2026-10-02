@@ -1,4 +1,8 @@
-import type { Catalog, Product, Store } from "../catalog/types";
+import type {
+  SearchCatalog,
+  SearchProduct,
+  SearchStore,
+} from "../catalog/search-catalog";
 
 export type SearchFilters = {
   deals: boolean;
@@ -130,7 +134,7 @@ export function hasSearchFilters(filters: SearchFilters): boolean {
   );
 }
 
-function matchesCategory(product: Product, selection: string): boolean {
+function matchesCategory(product: SearchProduct, selection: string): boolean {
   const category = text(categoryValue(selection));
   const ownCategory = text(product.category);
   if (!category || category === ownCategory) return true;
@@ -146,7 +150,7 @@ function matchesCategory(product: Product, selection: string): boolean {
   return false;
 }
 
-function matchesPrice(product: Product, selection: string): boolean {
+function matchesPrice(product: SearchProduct, selection: string): boolean {
   if (!selection) return true;
   // Dollar facets must not silently treat another currency as USD.
   if (product.price.currency !== "USD") return false;
@@ -173,11 +177,11 @@ function matchesQuery(query: string, value: string): boolean {
 }
 
 export function searchProducts(
-  catalog: Catalog,
+  catalog: SearchCatalog,
   query: string,
   filters: SearchFilters,
   followed: readonly string[],
-): Product[] {
+): SearchProduct[] {
   const stores = new Map(catalog.stores.map((store) => [store.id, store]));
   const followedIds = new Set(followed);
   const products = catalog.products.filter((product) => {
@@ -232,11 +236,11 @@ export function searchProducts(
 }
 
 export function searchStores(
-  catalog: Catalog,
+  catalog: SearchCatalog,
   query: string,
   filters: SearchFilters,
-  products: readonly Product[],
-): Store[] {
+  products: readonly SearchProduct[],
+): SearchStore[] {
   if (isCapturedFilteredJeans(query, filters)) {
     return ["arrow-twenty-two", "american-blues"].flatMap((id) => {
       const store = catalog.stores.find((candidate) => candidate.id === id);

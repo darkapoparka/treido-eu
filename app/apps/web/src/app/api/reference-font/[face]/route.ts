@@ -37,13 +37,18 @@ export async function GET(
   if (!Object.hasOwn(faces, face)) return new Response(null, { status: 404 });
   const [name, hash] = faces[face as keyof typeof faces];
   try {
-    const input = await readFile(
-      resolve(
-        process.cwd(),
-        "../../.local/shop-reference/live/android-typefaces-20260926",
-        `${name}.otf`,
-      ),
-    );
+    // Reference font files must not enter the production asset graph.
+    const input =
+      process.env.NODE_ENV === "production"
+        ? undefined
+        : await readFile(
+            resolve(
+              process.cwd(),
+              "../../.local/shop-reference/live/android-typefaces-20260926",
+              `${name}.otf`,
+            ),
+          );
+    if (!input) return new Response(null, { status: 404 });
     if (createHash("sha256").update(input).digest("hex") !== hash)
       return new Response(null, { status: 503 });
     return new Response(new Uint8Array(input), {

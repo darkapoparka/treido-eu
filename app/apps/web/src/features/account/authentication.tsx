@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Allowlisted reference artwork. */
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,6 +35,7 @@ function authHref(
 }
 
 export function LoginPage() {
+  const ui = useTranslations("accountUI");
   const params = useSearchParams(),
     router = useRouter();
   const { updateProfile } = useAccount();
@@ -125,13 +127,13 @@ export function LoginPage() {
               : "/onboarding?step=tracking"
           }
         >
-          Skip
+          {ui("skip")}
         </Link>
-        <h1>Let’s track your recent order</h1>
+        <h1>{ui("letSTrackYourRecentOrder")}</h1>
         <p>
           {currentTrackIntro
-            ? "Select 'Allow paste' to check for order information"
-            : "Select ‘Allow paste’ to check for order information"}
+            ? ui("selectAllowPasteToCheckForOrderInformation")
+            : ui("selectAllowPasteToCheckForOrderInformation_a8eb30")}
         </p>
         <img
           src={
@@ -145,7 +147,7 @@ export function LoginPage() {
           className="primary form-submit"
           onClick={() => go("phone-code")}
         >
-          Track my order
+          {ui("trackMyOrder")}
         </button>
       </AccountPage>
     );
@@ -176,7 +178,12 @@ export function LoginPage() {
         journey
       }
     >
-      <Link className="auth-close" href={returnHref} aria-label="Close sign in">
+      <Link
+        className="auth-close"
+        href={returnHref}
+        aria-label={ui("closeSignIn")}
+        data-ui-label="closeSignIn"
+      >
         <Icon name="close" />
       </Link>
       <div className="auth-content">
@@ -185,7 +192,7 @@ export function LoginPage() {
             <img
               className="auth-signing-avatar"
               src="/api/reference-media/auth-reference-avatar"
-              alt="Reference profile"
+              alt={ui("referenceProfile")}
             />
           ) : (
             <span className="auth-signing-avatar initial" aria-hidden="true">
@@ -212,18 +219,19 @@ export function LoginPage() {
         )}
         <h1>
           {showingSignIn ? (
-            "Signing you in..."
+            ui("signingYouIn")
           ) : passkey ? (
             <>
-              Sign in faster with
-              <br />a passkey
+              {ui("signInFasterWith")}
+              <br />
+              {ui("aPasskey")}
             </>
           ) : screen === "email" ? (
-            "Sign in to Shop"
+            ui("signInToShop")
           ) : emailCode ? (
-            "Verify your email"
+            ui("verifyYourEmail")
           ) : (
-            "Confirm it’s you"
+            ui("confirmItSYou")
           )}
         </h1>
         <p>
@@ -231,21 +239,21 @@ export function LoginPage() {
             sourceEmail
           ) : passkey ? (
             <>
-              Fast and secure login. At millions of stores.
+              {ui("fastAndSecureLoginAtMillionsOfStores")}
               <br />
-              Across all your devices.
+              {ui("acrossAllYourDevices")}
             </>
           ) : screen === "email" ? (
-            "Or create an account"
+            ui("orCreateAnAccount")
           ) : emailCode ? (
             <>
-              Enter code sent to
+              {ui("enterCodeSentTo")}
               <br />
               <strong>{email || sourceEmail}</strong>
             </>
           ) : (
             <>
-              Enter code sent to <strong>+1 ••• ••• •552</strong>
+              {ui("enterCodeSentTo")} <strong>+1 ••• ••• •552</strong>
             </>
           )}
         </p>
@@ -262,19 +270,22 @@ export function LoginPage() {
               <>
                 <input
                   className="auth-email-input"
-                  aria-label="Email"
+                  aria-label={ui("email")}
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={ui("enterYourEmail")}
                   autoComplete="email"
+                  data-ui-label="email"
                 />
-                <button className="primary auth-continue">Continue</button>
+                <button className="primary auth-continue">
+                  {ui("continue")}
+                </button>
               </>
             ) : (
               <CodeInput
-                label="Verification code"
+                label={ui("verificationCode")}
                 value={displayedCode}
                 onChange={(value) => {
                   if (phase !== "idle") return;
@@ -300,16 +311,18 @@ export function LoginPage() {
                   go("email");
                 }}
               >
-                Change email address
+                {ui("changeEmailAddress")}
               </button>
             )
           ) : (
             <div className="auth-phone-alternatives">
               {phase !== "idle" ? (
                 <p>
-                  Didn’t receive a code?{" "}
-                  <button onClick={() => setBoundary(true)}>Resend</button>, or
-                  try another option ↓
+                  {ui("didnTReceiveACode")}{" "}
+                  <button onClick={() => setBoundary(true)}>
+                    {ui("resend")}
+                  </button>
+                  {ui("orTryAnotherOption")}
                 </p>
               ) : (
                 <>
@@ -320,7 +333,7 @@ export function LoginPage() {
                     }}
                   >
                     <Icon name="mail" />
-                    Email me code instead
+                    {ui("emailMeCodeInstead")}
                   </button>
                   <button
                     onClick={() => {
@@ -329,7 +342,7 @@ export function LoginPage() {
                     }}
                   >
                     <Icon name="arrow" />
-                    Use a different account
+                    {ui("useADifferentAccount")}
                   </button>
                 </>
               )}
@@ -337,11 +350,11 @@ export function LoginPage() {
           ))}
         {screen === "email" && (
           <p className="auth-terms">
-            By continuing, you agree to the{" "}
-            <Link href="https://shop.app/terms-of-service">terms</Link> and
-            acknowledge the{" "}
+            {ui("byContinuingYouAgreeToThe")}{" "}
+            <Link href="https://shop.app/terms-of-service">{ui("terms")}</Link>{" "}
+            {ui("andAcknowledgeThe")}{" "}
             <Link href="https://www.shopify.com/legal/privacy/consumers">
-              privacy policy
+              {ui("privacyPolicy_2b7281")}
             </Link>
             .
           </p>
@@ -351,12 +364,12 @@ export function LoginPage() {
             className="primary form-submit"
             onClick={() => setBoundary(true)}
           >
-            Add passkey
+            {ui("addPasskey")}
           </button>
         )}
         {showingSignIn && (
           <span className="sr-only">
-            Captured sign-in animation. No live account was authenticated.
+            {ui("capturedSignInAnimationNoLiveAccountWasAuthenticated")}
           </span>
         )}
       </div>
@@ -367,7 +380,7 @@ export function LoginPage() {
       )}
       <Sheet
         open={language}
-        title="Language"
+        title={ui("language")}
         onClose={() => setLanguage(false)}
       >
         <button className="account-row" onClick={() => setLanguage(false)}>
@@ -378,15 +391,15 @@ export function LoginPage() {
         open={boundary}
         title={
           passkey
-            ? "Passkeys are not connected"
-            : "Authentication is not connected"
+            ? ui("passkeysAreNotConnected")
+            : ui("authenticationIsNotConnected")
         }
         onClose={() => setBoundary(false)}
       >
         <p>
           {passkey
-            ? "No passkey was created and no account was signed in."
-            : "No code was sent and no account was signed in."}
+            ? ui("noPasskeyWasCreatedAndNoAccountWasSignedIn")
+            : ui("noCodeWasSentAndNoAccountWasSignedIn")}
         </p>
         <button
           className="form-cancel"
@@ -401,10 +414,10 @@ export function LoginPage() {
             });
           }}
         >
-          Replay captured sign-in
+          {ui("replayCapturedSignIn")}
         </button>
         <Link className="form-cancel" href="/login?screen=passkey">
-          Preview passkey screen
+          {ui("previewPasskeyScreen")}
         </Link>
         <Link
           className="primary form-submit"
@@ -414,10 +427,10 @@ export function LoginPage() {
               : "/onboarding?step=preferences"
           }
         >
-          Continue in reference preview
+          {ui("continueInReferencePreview")}
         </Link>
         <button className="form-cancel" onClick={() => setBoundary(false)}>
-          Back
+          {ui("back")}
         </button>
       </Sheet>
     </AccountPage>

@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import {
   useState,
   useEffect,
@@ -38,6 +40,7 @@ export function MiniShell({
   className?: string;
   nativeInfo?: NativeMiniInformation;
 }) {
+  const ui = useTranslations("discoveryUI");
   const router = useRouter();
   const { params, change } = useMiniRoute(usePathname());
   const menuOpen = Boolean(nativeInfo && params.get("miniMenu") === "1");
@@ -113,13 +116,18 @@ export function MiniShell({
         {showBack || documentType ? (
           onBack || documentType ? (
             <button
-              aria-label="Go back in Mini"
+              aria-label={ui("goBackInMini")}
               onClick={documentType ? closePanel : onBack}
+              data-ui-label="goBackInMini"
             >
               <Icon name="back" />
             </button>
           ) : (
-            <ContextualCloseLink href="/minis" aria-label="Back to Minis">
+            <ContextualCloseLink
+              href="/minis"
+              aria-label={ui("backToMinis")}
+              data-ui-label="backToMinis"
+            >
               <Icon name="back" />
             </ContextualCloseLink>
           )
@@ -154,7 +162,10 @@ export function MiniShell({
             <Icon name="chevron" />
           </span>
         )}
-        <ContextualCloseLink href="/minis" aria-label={`Close ${name}`}>
+        <ContextualCloseLink
+          href="/minis"
+          aria-label={ui("closeValue1", { value1: name ?? "" })}
+        >
           <Icon name="close" />
         </ContextualCloseLink>
       </header>
@@ -165,7 +176,9 @@ export function MiniShell({
           aria-label={name + " information"}
         >
           <p>{nativeInfo.description}</p>
-          <small>Developed by {nativeInfo.developer}</small>
+          <small>
+            {ui("developedBy")} {nativeInfo.developer}
+          </small>
           <div>
             <button
               onClick={() => {
@@ -174,15 +187,15 @@ export function MiniShell({
               }}
             >
               <Icon name="share-android" />
-              Share
+              {ui("share")}
             </button>
             <button onClick={() => openDocument("terms")}>
               <Icon name="info" />
-              Terms and conditions
+              {ui("termsAndConditions")}
             </button>
             <button onClick={() => openDocument("privacy")}>
               <Icon name="shield-check" />
-              Privacy policy
+              {ui("privacyPolicy")}
             </button>
           </div>
         </nav>
@@ -206,15 +219,18 @@ export function MiniShell({
         <button
           className="mini-native-shade"
           style={{ top: 44 + menuHeight + 12 }}
-          aria-label="Close Mini information"
+          aria-label={ui("closeMiniInformation")}
           onClick={closePanel}
+          data-ui-label="closeMiniInformation"
         />
       )}
       {nativeInfo && documentType && (
         <section
           className="mini-native-document"
           aria-label={
-            documentType === "terms" ? "Terms and conditions" : "Privacy policy"
+            documentType === "terms"
+              ? ui("termsAndConditions")
+              : ui("privacyPolicy")
           }
         >
           <header>
@@ -225,14 +241,15 @@ export function MiniShell({
             ) : (
               <span>
                 {documentType === "terms"
-                  ? "Terms and conditions"
-                  : "Privacy policy"}
+                  ? ui("termsAndConditions")
+                  : ui("privacyPolicy")}
               </span>
             )}
             <button
               ref={documentClose}
-              aria-label="Close provider page"
+              aria-label={ui("closeProviderPage")}
               onClick={closePanel}
+              data-ui-label="closeProviderPage"
             >
               <Icon name="close" />
             </button>
@@ -242,28 +259,27 @@ export function MiniShell({
               src={documentUrl}
               title={
                 documentType === "terms"
-                  ? "Provider terms and conditions"
-                  : "Provider privacy policy"
+                  ? ui("providerTermsAndConditions")
+                  : ui("providerPrivacyPolicy")
               }
               referrerPolicy="no-referrer"
               sandbox="allow-scripts allow-same-origin allow-popups"
             />
           ) : (
-            <p>
-              This provider page isn’t connected in the local preview. No
-              agreement has been accepted.
-            </p>
+            <p>{ui("thisProviderPageIsnTConnectedInTheLocalPreview")}</p>
           )}
         </section>
       )}
       {nativeInfo && (
         <Sheet
           open={sharing}
-          title="Sharing link"
+          title={ui("sharingLink")}
           onClose={() => setSharing(false)}
           className="curation-share-sheet"
         >
-          <label htmlFor="mini-share-url">Link to {name}</label>
+          <label htmlFor="mini-share-url">
+            {ui("linkTo")} {name}
+          </label>
           <input
             id="mini-share-url"
             value={nativeInfo.shareUrl}
@@ -281,7 +297,7 @@ export function MiniShell({
               }
             }}
           >
-            Copy link
+            {ui("copyLink")}
           </button>
           <p role="status">{copyStatus}</p>
         </Sheet>
@@ -311,6 +327,8 @@ export function MiniAccess({
   previewNote?: string;
   className?: string;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const account = useAccount();
   const [information, setInformation] = useState("");
   const firstName = account.profile.firstName.trim();
@@ -337,7 +355,9 @@ export function MiniAccess({
               alt=""
             />
             <span
-              aria-label={firstName ? `${firstName}'s profile` : "Your profile"}
+              aria-label={
+                firstName ? `${firstName}'s profile` : ui("yourProfile")
+              }
             >
               {profileImageSrc && (!profileImageRequiresName || firstName) ? (
                 <img src={profileImageSrc} alt="" />
@@ -351,41 +371,43 @@ export function MiniAccess({
         </div>
         {name !== "Gift Sense" && (
           <p>
-            By continuing to use this Mini, you agree to the{" "}
-            <button onClick={() => setInformation("Terms")}>terms</button> and{" "}
-            <button onClick={() => setInformation("Privacy policy")}>
-              privacy policy
+            {ui("byContinuingToUseThisMiniYouAgreeToThe")}{" "}
+            <button onClick={() => setInformation("Terms")}>
+              {ui("terms")}
             </button>{" "}
-            of 9.8.
+            {ui("and")}{" "}
+            <button onClick={() => setInformation("Privacy policy")}>
+              {ui("privacyPolicy_2b7281")}
+            </button>{" "}
+            {ui("of98")}
           </p>
         )}
         <p>
           {accessDescription ?? (
             <>
-              By Agreeing, {name} will be able to access your profile and update
-              your saved products.
+              {ui("byAgreeing")} {name}{" "}
+              {ui("willBeAbleToAccessYourProfileAndUpdateYour")}
             </>
           )}{" "}
           <button onClick={() => setInformation("Mini access")}>
-            Learn more
+            {ui("learnMore")}
           </button>
         </p>
         {previewNote && <p role="note">{previewNote}</p>}
         <button className="mini-agree" onClick={onContinue}>
-          Agree
+          {ui("agree")}
         </button>
         <button className="mini-without" onClick={onContinue}>
-          Continue without access
+          {ui("continueWithoutAccess")}
         </button>
       </Sheet>
       <Sheet
         open={!!information}
-        title={information}
+        title={caption(information)}
         onClose={() => setInformation("")}
       >
         <p className="sheet-copy">
-          This local preview does not share your profile or saved products with
-          a Mini. External terms and privacy services are not connected.
+          {ui("thisLocalPreviewDoesNotShareYourProfileOrSaved")}
         </p>
       </Sheet>
     </>
@@ -404,24 +426,25 @@ export function NativeMiniPhotoAccess({
   onContinue: () => void;
   icon: string;
 }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title="Allow access to your camera?"
+      title={ui("allowAccessToYourCamera")}
       headerless
       className="native-mini-photo-access"
     >
       <div className="native-mini-access-heading">
         <div>
-          <h2>Allow access to your camera?</h2>
-          <p>Choose a photo on this device. Nothing is uploaded or analyzed.</p>
+          <h2>{ui("allowAccessToYourCamera")}</h2>
+          <p>{ui("chooseAPhotoOnThisDeviceNothingIsUploadedOr")}</p>
         </div>
         <img src={icon} alt="" />
       </div>
       <div className="native-mini-access-actions">
-        <button onClick={onClose}>Cancel</button>
-        <button onClick={onContinue}>Share</button>
+        <button onClick={onClose}>{ui("cancel")}</button>
+        <button onClick={onContinue}>{ui("share")}</button>
       </div>
     </Sheet>
   );

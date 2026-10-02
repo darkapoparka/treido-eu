@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { SourceLink } from "./return-navigation";
 import { useState } from "react";
 import { formatMoney, type SavedListing } from "../catalog/types";
@@ -17,6 +19,8 @@ export function SavedCard({
   selected?: boolean;
   onSelect?: () => void;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const saved = state.saved.includes(product.id);
@@ -44,7 +48,7 @@ export function SavedCard({
     />
   ) : (
     <span className="sr-only">
-      Product photograph was not included in the reference.
+      {ui("productPhotographWasNotIncludedInTheReference")}
     </span>
   );
   const title = <strong>{product.title}</strong>;
@@ -59,7 +63,7 @@ export function SavedCard({
         {onSelect ? (
           <button
             type="button"
-            aria-label={`Select ${product.title}`}
+            aria-label={ui("selectValue1", { value1: product.title ?? "" })}
             aria-pressed={selected}
             onClick={onSelect}
           >
@@ -68,7 +72,9 @@ export function SavedCard({
         ) : product.detailUnavailable ? (
           <button
             type="button"
-            aria-label={`View captured ${product.title}`}
+            aria-label={ui("viewCapturedValue1", {
+              value1: product.title ?? "",
+            })}
             onClick={() => setDetailsOpen(true)}
           >
             {photo}
@@ -87,8 +93,8 @@ export function SavedCard({
           icon={onSelect ? (selected ? "check" : "plus") : "heart"}
           label={
             onSelect
-              ? `${selected ? "Remove" : "Add"} ${product.title}`
-              : `${saved ? "Unsave" : "Save"} ${product.title}`
+              ? `${selected ? ui("remove") : ui("add")} ${product.title}`
+              : `${saved ? ui("unsave") : ui("save")} ${product.title}`
           }
           pressed={onSelect ? selected : saved}
           filled={onSelect ? false : undefined}
@@ -114,11 +120,11 @@ export function SavedCard({
       )}
       {product.price && (
         <b>
-          {formatMoney(product.price)}
+          {formatMoney(product.price, intlLocale)}
           {native && product.compareAt && (
             <>
               {" "}
-              <del>{formatMoney(product.compareAt)}</del>
+              <del>{formatMoney(product.compareAt, intlLocale)}</del>
             </>
           )}
         </b>
@@ -129,7 +135,7 @@ export function SavedCard({
       {product.detailUnavailable && (
         <Sheet
           open={detailsOpen}
-          title="Captured item details"
+          title={ui("capturedItemDetails")}
           onClose={() => setDetailsOpen(false)}
         >
           <p className="sheet-copy">{product.detailUnavailable}</p>
@@ -137,7 +143,7 @@ export function SavedCard({
             className="primary form-submit"
             onClick={() => setDetailsOpen(false)}
           >
-            Back to Saved
+            {ui("backToSaved")}
           </button>
         </Sheet>
       )}

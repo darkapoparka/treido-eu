@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "../discovery/hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
@@ -19,6 +20,7 @@ import {
 // Flow21/006–007 captures this seller checkout, but does not reveal the item name.
 // The item is intentionally checkout-only and is not linked to an invented PDP.
 export function PickupCheckout() {
+  const ui = useTranslations("commerceUI");
   const { paymentCards } = useAccount();
   const payment = paymentCards[0];
   const { value: draft, update } = usePickupDraft();
@@ -28,16 +30,25 @@ export function PickupCheckout() {
   return (
     <ShopSurface className="shop-page checkout-page source-checkout pickup-checkout">
       <header className="checkout-header">
-        <Link href="/cart" aria-label="Close checkout">
+        <Link
+          href="/cart"
+          aria-label={ui("closeCheckout")}
+          data-ui-label="closeCheckout"
+        >
           <Icon name="close" />
         </Link>
-        <h1>Review & Pay</h1>
+        <h1>{ui("reviewPay")}</h1>
       </header>
       <div className="checkout-identity">
         <strong>shop</strong>
         <span>{shopSourceBuyer.email}</span>
       </div>
-      <div className="fulfillment-tabs" role="tablist" aria-label="Fulfillment">
+      <div
+        className="fulfillment-tabs"
+        role="tablist"
+        aria-label={ui("fulfillment")}
+        data-ui-label="fulfillment"
+      >
         <button
           role="tab"
           aria-selected={!pickup}
@@ -54,14 +65,14 @@ export function PickupCheckout() {
           >
             <path d="m12 3 9 4.5v9L12 21l-9-4.5v-9L12 3Zm0 9 9-4.5M12 12 3 7.5m9 4.5v9M7.5 5.25l9 4.5V14M1 12h5m-4 4h4" />
           </svg>{" "}
-          Ship
+          {ui("ship")}
         </button>
         <button
           role="tab"
           aria-selected={pickup}
           onClick={() => update({ pickup: true })}
         >
-          <AccountIcon name="location" /> Pickup
+          <AccountIcon name="location" /> {ui("pickup")}
         </button>
       </div>
       {pickup && (
@@ -72,15 +83,15 @@ export function PickupCheckout() {
               {shopSourcePickup.warning}{" "}
               <button
                 type="button"
-                onClick={() => setBoundary("Location lookup")}
+                onClick={() => setBoundary(ui("locationLookup"))}
               >
                 {shopSourcePickup.searchPostalCode}
               </button>
             </span>
           </p>
           <p className="pickup-count">
-            1 location with your item{" "}
-            <button onClick={() => setBoundary("Location lookup")}>
+            {ui("text1LocationWithYourItem")}{" "}
+            <button onClick={() => setBoundary(ui("locationLookup"))}>
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
@@ -99,7 +110,7 @@ export function PickupCheckout() {
       <section className="pickup-details">
         {pickup ? (
           <div className="pickup-location">
-            <small>Location</small>
+            <small>{ui("location")}</small>
             <input
               type="radio"
               name="pickup-location"
@@ -134,42 +145,46 @@ export function PickupCheckout() {
         ) : (
           <>
             <div>
-              <small>Ship to</small>
+              <small>{ui("shipTo")}</small>
               <p>
                 <strong>
                   {shopSourceBuyer.firstName} {shopSourceBuyer.lastName}
                 </strong>
                 <br />
                 {shopSourceAddress.street}, {shopSourceAddress.city}{" "}
-                {shopSourceAddress.region} {shopSourceAddress.postalCode}, US
+                {shopSourceAddress.region} {shopSourceAddress.postalCode}
+                {ui("uS")}
               </p>
               <button
                 type="button"
-                aria-label="Shipping address is a captured source value"
-                onClick={() => setBoundary("Address service")}
+                aria-label={ui("shippingAddressIsACapturedSourceValue")}
+                onClick={() => setBoundary(ui("addressService"))}
+                data-ui-label="shippingAddressIsACapturedSourceValue"
               >
                 <span className="pickup-caret" aria-hidden="true" />
               </button>
             </div>
             <div>
-              <small>Shipping</small>
+              <small>{ui("shipping")}</small>
               <p>
-                <strong>Ground Shipping · $7.00</strong>
+                <strong>{ui("groundShipping700")}</strong>
                 <br />
                 <button
                   className="pickup-promise"
                   type="button"
-                  onClick={() => setBoundary("Shipping promise")}
+                  onClick={() => setBoundary(ui("shippingPromise"))}
                 >
-                  Fri, Jul 31 <span aria-hidden="true">◔</span> Promise
+                  {ui("friJul31")} <span aria-hidden="true">◔</span>{" "}
+                  {ui("promise")}
                 </button>
                 <br />
-                Tracking number provided
+                {ui("trackingNumberProvided")}
               </p>
               <button
                 type="button"
-                aria-label="Shipping service details"
-                onClick={() => setBoundary("Shipping service")}
+                aria-label={ui("shippingServiceDetails")}
+                onClick={() => setBoundary(ui("shippingService"))}
+                data-ui-label="shippingServiceDetails"
               >
                 <span className="pickup-caret" aria-hidden="true" />
               </button>
@@ -177,7 +192,7 @@ export function PickupCheckout() {
           </>
         )}
         <div>
-          <small>Payment</small>
+          <small>{ui("payment")}</small>
           <strong>
             {payment ? (
               <>
@@ -185,10 +200,14 @@ export function PickupCheckout() {
                 <span className="visa-mark">VISA</span>
               </>
             ) : (
-              "Add payment method"
+              ui("addPaymentMethod")
             )}
           </strong>
-          <SourceLink href="/account/payments" aria-label="Edit payment method">
+          <SourceLink
+            href="/account/payments"
+            aria-label={ui("editPaymentMethod")}
+            data-ui-label="editPaymentMethod"
+          >
             <span className="pickup-caret" aria-hidden="true" />
           </SourceLink>
         </div>
@@ -199,30 +218,31 @@ export function PickupCheckout() {
           checked={offers}
           onChange={(e) => update({ offers: e.target.checked })}
         />
-        Sign me up for news and offers from this store
+        {ui("signMeUpForNewsAndOffersFromThisStore")}
       </label>
       <button
         className="pill"
         onClick={() => update({ discount: !discount })}
         aria-expanded={discount}
       >
-        <Icon name="tag" /> Add discount
+        <Icon name="tag" /> {ui("addDiscount")}
       </button>
       {discount && (
         <form
           className="discount-form"
           onSubmit={(e) => {
             e.preventDefault();
-            setBoundary("Discount validation");
+            setBoundary(ui("discountValidation"));
           }}
         >
           <input
-            aria-label="Discount code"
-            placeholder="Discount code"
+            aria-label={ui("discountCode")}
+            placeholder={ui("discountCode")}
             value={discountCode}
             onChange={(event) => update({ discountCode: event.target.value })}
+            data-ui-label="discountCode"
           />
-          <button>Apply</button>
+          <button>{ui("apply")}</button>
         </form>
       )}
       <button
@@ -232,11 +252,11 @@ export function PickupCheckout() {
       >
         <img
           src="/api/reference-media/checkout-white-rock-item"
-          alt="Captured checkout item"
+          alt={ui("capturedCheckoutItem")}
         />
         <span>
-          <strong>Total</strong>
-          <small>1 item</small>
+          <strong>{ui("total")}</strong>
+          <small>{ui("text1Item")}</small>
         </span>
         <b>
           <small>USD</small>
@@ -247,7 +267,7 @@ export function PickupCheckout() {
       {summary && (
         <div className="checkout-totals">
           <p>
-            1 item · {pickup ? "Pickup" : "Ship"}
+            {ui("text1Item_620d09")} {pickup ? ui("pickup") : ui("ship")}
             <span>${total}</span>
           </p>
         </div>
@@ -256,9 +276,9 @@ export function PickupCheckout() {
         <button
           className="primary"
           disabled={!payment}
-          onClick={() => setBoundary("Payment")}
+          onClick={() => setBoundary(ui("payment"))}
         >
-          <span>Pay now</span>
+          <span>{ui("payNow")}</span>
           <b>${total}</b>
         </button>
       </div>

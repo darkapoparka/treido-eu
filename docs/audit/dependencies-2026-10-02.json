@@ -1,0 +1,834 @@
+{
+  "checkedAt": "2026-10-02T11:38:04.366Z",
+  "source": "https://registry.npmjs.org",
+  "declarations": [
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "@eslint/js",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "@playwright/test",
+      "pin": "1.63.0"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "@types/node",
+      "pin": "24.13.3"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "prettier",
+      "pin": "3.9.6"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "turbo",
+      "pin": "2.10.12"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "typescript-eslint",
+      "pin": "8.70.0"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "vitest",
+      "pin": "5.0.0"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@clerk/nextjs",
+      "pin": "7.9.9"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "aws4fetch",
+      "pin": "1.0.20"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "drizzle-orm",
+      "pin": "0.45.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "inngest",
+      "pin": "4.21.0"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "next",
+      "pin": "16.3.4"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "pg",
+      "pin": "8.23.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "react",
+      "pin": "19.2.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "react-dom",
+      "pin": "19.2.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "server-only",
+      "pin": "0.0.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "sharp",
+      "pin": "0.35.4"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@tailwindcss/postcss",
+      "pin": "4.3.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/node",
+      "pin": "24.13.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/pg",
+      "pin": "8.23.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/react",
+      "pin": "19.2.18"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/react-dom",
+      "pin": "19.2.7"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "embedded-postgres",
+      "pin": "18.4.0-beta.17"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "eslint-config-next",
+      "pin": "16.3.4"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "tailwindcss",
+      "pin": "4.3.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo",
+      "pin": "57.0.21"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-constants",
+      "pin": "57.0.17"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-linking",
+      "pin": "57.0.9"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-router",
+      "pin": "57.0.20"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-status-bar",
+      "pin": "57.0.1"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react",
+      "pin": "19.2.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native",
+      "pin": "0.86.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-gesture-handler",
+      "pin": "2.32.0"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-reanimated",
+      "pin": "4.5.1"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-safe-area-context",
+      "pin": "5.7.0"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-screens",
+      "pin": "4.26.2"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-worklets",
+      "pin": "0.10.1"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "@react-native/metro-config",
+      "pin": "0.86.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "@types/react",
+      "pin": "19.2.18"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "eslint-config-expo",
+      "pin": "57.0.2"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "expo-doctor",
+      "pin": "1.20.4"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/packages/contracts/package.json",
+      "section": "dependencies",
+      "name": "zod",
+      "pin": "4.5.4"
+    },
+    {
+      "manifest": "app/packages/contracts/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/packages/contracts/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "next-intl",
+      "pin": "4.14.9"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@clerk/localizations",
+      "pin": "4.21.2"
+    }
+  ],
+  "packages": {
+    "turbo": {
+      "version": "2.11.6",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/turbo/latest"
+    },
+    "@types/node": {
+      "version": "26.6.4",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40types%2Fnode/latest"
+    },
+    "eslint": {
+      "version": "10.11.0",
+      "engines": {
+        "node": "^20.19.0 || ^22.13.0 || >=24"
+      },
+      "peerDependencies": {
+        "jiti": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/eslint/latest"
+    },
+    "prettier": {
+      "version": "3.9.9",
+      "engines": {
+        "node": ">=14"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/prettier/latest"
+    },
+    "@eslint/js": {
+      "version": "10.0.1",
+      "engines": {
+        "node": "^20.19.0 || ^22.13.0 || >=24"
+      },
+      "peerDependencies": {
+        "eslint": "^10.0.0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40eslint%2Fjs/latest"
+    },
+    "@playwright/test": {
+      "version": "1.63.0",
+      "engines": {
+        "node": ">=20"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40playwright%2Ftest/latest"
+    },
+    "typescript": {
+      "version": "7.0.2",
+      "engines": {
+        "node": ">=16.20.0"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/typescript/latest"
+    },
+    "typescript-eslint": {
+      "version": "8.71.0",
+      "engines": {
+        "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+      },
+      "peerDependencies": {
+        "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0",
+        "typescript": ">=4.8.4 <6.1.0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/typescript-eslint/latest"
+    },
+    "vitest": {
+      "version": "5.0.3",
+      "engines": {
+        "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+      },
+      "peerDependencies": {
+        "vite": "^6.4.0 || ^7.0.0 || ^8.0.0",
+        "jsdom": "*",
+        "happy-dom": "*",
+        "@vitest/ui": "5.0.3",
+        "@types/node": "^22.0.0 || >=24.0.0",
+        "@edge-runtime/vm": "*",
+        "@opentelemetry/api": "^1.9.0",
+        "@vitest/coverage-v8": "5.0.3",
+        "@vitest/browser-preview": "5.0.3",
+        "@vitest/coverage-istanbul": "5.0.3",
+        "@vitest/browser-playwright": "5.0.3",
+        "@vitest/browser-webdriverio": "^5.0.0-beta.5 || >=5.0.0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/vitest/latest"
+    },
+    "aws4fetch": {
+      "version": "1.0.20",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/aws4fetch/latest"
+    },
+    "drizzle-orm": {
+      "version": "0.45.3",
+      "engines": {},
+      "peerDependencies": {
+        "pg": ">=8",
+        "gel": ">=2",
+        "knex": "*",
+        "kysely": "*",
+        "mysql2": ">=2",
+        "sql.js": ">=1",
+        "sqlite3": ">=5",
+        "postgres": ">=3",
+        "@types/pg": "*",
+        "bun-types": "*",
+        "@netlify/db": ">=0.4.0",
+        "expo-sqlite": ">=14.0.0",
+        "@types/sql.js": "*",
+        "@libsql/client": ">=0.10.0",
+        "@prisma/client": "*",
+        "@upstash/redis": ">=1.34.7",
+        "better-sqlite3": ">=7",
+        "@xata.io/client": "*",
+        "@vercel/postgres": ">=0.8.0",
+        "@opentelemetry/api": "^1.4.1",
+        "@libsql/client-wasm": ">=0.10.0",
+        "@electric-sql/pglite": ">=0.2.0",
+        "@planetscale/database": ">=1.13",
+        "@tidbcloud/serverless": "*",
+        "@types/better-sqlite3": "*",
+        "@aws-sdk/client-rds-data": ">=3",
+        "@neondatabase/serverless": ">=0.10.0",
+        "@cloudflare/workers-types": ">=4",
+        "@op-engineering/op-sqlite": ">=2"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/drizzle-orm/latest"
+    },
+    "@clerk/nextjs": {
+      "version": "7.9.10",
+      "engines": {
+        "node": ">=20.9.0"
+      },
+      "peerDependencies": {
+        "next": "^15.2.8 || ^15.3.8 || ^15.4.10 || ^15.5.9 || ^15.6.0-0 || ^16.0.10 || ^16.1.0-0",
+        "react": "^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0",
+        "react-dom": "^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40clerk%2Fnextjs/latest"
+    },
+    "pg": {
+      "version": "8.23.1",
+      "engines": {
+        "node": ">= 16.0.0"
+      },
+      "peerDependencies": {
+        "pg-native": ">=3.0.1"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/pg/latest"
+    },
+    "next": {
+      "version": "16.3.8",
+      "engines": {
+        "node": ">=20.9.0"
+      },
+      "peerDependencies": {
+        "sass": "^1.3.0",
+        "react": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0",
+        "react-dom": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0",
+        "@playwright/test": "^1.51.1",
+        "@opentelemetry/api": "^1.1.0",
+        "babel-plugin-react-compiler": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/next/latest"
+    },
+    "react": {
+      "version": "19.3.0",
+      "engines": {
+        "node": ">=0.10.0"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react/latest"
+    },
+    "inngest": {
+      "version": "4.21.1",
+      "engines": {
+        "node": ">=20"
+      },
+      "peerDependencies": {
+        "h3": ">=1.8.1",
+        "koa": ">=2.14.2",
+        "zod": "^3.25.0 || ^4.0.0",
+        "hono": ">=4.2.7",
+        "next": ">=12.0.0",
+        "react": ">=18.0.0",
+        "express": ">=4.19.2",
+        "fastify": ">=4.21.0",
+        "aws-lambda": ">=1.0.7",
+        "typescript": ">=5.8.0",
+        "@vercel/node": ">=2.15.9",
+        "@sveltejs/kit": ">=1.27.3"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/inngest/latest"
+    },
+    "react-dom": {
+      "version": "19.3.0",
+      "engines": {},
+      "peerDependencies": {
+        "react": "^19.3.0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react-dom/latest"
+    },
+    "server-only": {
+      "version": "0.0.1",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/server-only/latest"
+    },
+    "@tailwindcss/postcss": {
+      "version": "4.3.3",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40tailwindcss%2Fpostcss/latest"
+    },
+    "@types/pg": {
+      "version": "8.23.1",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40types%2Fpg/latest"
+    },
+    "@types/react-dom": {
+      "version": "19.3.0",
+      "engines": {},
+      "peerDependencies": {
+        "@types/react": "^19.3.0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40types%2Freact-dom/latest"
+    },
+    "@types/react": {
+      "version": "19.3.0",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40types%2Freact/latest"
+    },
+    "sharp": {
+      "version": "0.35.5",
+      "engines": {
+        "node": ">=20.9.0"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/sharp/latest"
+    },
+    "embedded-postgres": {
+      "version": "18.4.0-beta.17",
+      "engines": {
+        "node": ">=16"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/embedded-postgres/latest"
+    },
+    "eslint-config-next": {
+      "version": "16.3.8",
+      "engines": {},
+      "peerDependencies": {
+        "eslint": ">=9.0.0",
+        "typescript": ">=3.3.1"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/eslint-config-next/latest"
+    },
+    "expo-constants": {
+      "version": "57.0.20",
+      "engines": {},
+      "peerDependencies": {
+        "expo": "*",
+        "react-native": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/expo-constants/latest"
+    },
+    "tailwindcss": {
+      "version": "4.3.3",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/tailwindcss/latest"
+    },
+    "expo-linking": {
+      "version": "57.0.11",
+      "engines": {},
+      "peerDependencies": {
+        "react": "*",
+        "react-native": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/expo-linking/latest"
+    },
+    "expo-router": {
+      "version": "57.0.24",
+      "engines": {},
+      "peerDependencies": {
+        "expo": "*",
+        "react": "*",
+        "react-dom": "*",
+        "expo-linking": "^57.0.11",
+        "react-native": "*",
+        "@expo/log-box": "^57.0.4",
+        "expo-constants": "^57.0.20",
+        "react-native-web": "*",
+        "@expo/metro-runtime": "^57.0.16",
+        "react-native-screens": "^4.26.0",
+        "react-native-reanimated": "*",
+        "react-server-dom-webpack": "~19.0.4 || ~19.1.5 || ~19.2.4",
+        "react-native-gesture-handler": "*",
+        "@testing-library/react-native": ">= 13.2.0",
+        "react-native-safe-area-context": ">= 5.4.0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/expo-router/latest"
+    },
+    "expo": {
+      "version": "57.0.26",
+      "engines": {},
+      "peerDependencies": {
+        "react": "*",
+        "react-dom": "*",
+        "react-native": "*",
+        "react-native-web": "*",
+        "@expo/dom-webview": "*",
+        "@expo/metro-runtime": "*",
+        "react-native-webview": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/expo/latest"
+    },
+    "expo-status-bar": {
+      "version": "57.0.1",
+      "engines": {},
+      "peerDependencies": {
+        "expo": "*",
+        "react": "*",
+        "react-native": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/expo-status-bar/latest"
+    },
+    "react-native-gesture-handler": {
+      "version": "3.3.0",
+      "engines": {},
+      "peerDependencies": {
+        "react": "*",
+        "react-native": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react-native-gesture-handler/latest"
+    },
+    "react-native-reanimated": {
+      "version": "4.7.0",
+      "engines": {},
+      "peerDependencies": {
+        "react": "*",
+        "react-native": "0.86 - 0.88",
+        "react-native-worklets": "0.13.x"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react-native-reanimated/latest"
+    },
+    "react-native-safe-area-context": {
+      "version": "5.10.1",
+      "engines": {},
+      "peerDependencies": {
+        "react": "*",
+        "react-native": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react-native-safe-area-context/latest"
+    },
+    "react-native-screens": {
+      "version": "4.28.0",
+      "engines": {},
+      "peerDependencies": {
+        "react": "*",
+        "react-native": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react-native-screens/latest"
+    },
+    "react-native": {
+      "version": "0.87.1",
+      "engines": {
+        "node": "^22.13.0 || ^24.3.0 || >= 26.0.0"
+      },
+      "peerDependencies": {
+        "react": "^19.2.3",
+        "@types/react": "^19.1.1"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react-native/latest"
+    },
+    "eslint-config-expo": {
+      "version": "57.0.2",
+      "engines": {},
+      "peerDependencies": {
+        "eslint": ">=8.10"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/eslint-config-expo/latest"
+    },
+    "expo-doctor": {
+      "version": "1.20.4",
+      "engines": {
+        "node": "^20.19.4 || ^22.13.0 || ^24.3.0 || >= 25.0.0"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/expo-doctor/latest"
+    },
+    "react-native-worklets": {
+      "version": "0.13.0",
+      "engines": {},
+      "peerDependencies": {
+        "react": "*",
+        "@babel/core": "*",
+        "react-native": "0.86 - 0.88",
+        "@react-native/metro-config": "*"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/react-native-worklets/latest"
+    },
+    "@react-native/metro-config": {
+      "version": "0.87.1",
+      "engines": {
+        "node": "^22.13.0 || ^24.3.0 || >= 26.0.0"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/%40react-native%2Fmetro-config/latest"
+    },
+    "pnpm": {
+      "version": "12.8.1",
+      "engines": {
+        "node": ">=18.*"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/pnpm/latest"
+    },
+    "zod": {
+      "version": "4.6.5",
+      "engines": {},
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/zod/latest"
+    },
+    "next-intl": {
+      "version": "4.14.9",
+      "engines": {},
+      "peerDependencies": {
+        "next": "^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0 || ^16.0.0",
+        "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || >=19.0.0-rc <19.0.0 || ^19.0.0",
+        "@types/react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+      },
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/next-intl/latest",
+      "checkedAt": "2026-10-02T16:34:41.099Z"
+    },
+    "@clerk/localizations": {
+      "version": "4.21.2",
+      "engines": {
+        "node": ">=20.9.0"
+      },
+      "peerDependencies": {},
+      "deprecated": null,
+      "source": "https://registry.npmjs.org/@clerk%2flocalizations/latest"
+    }
+  },
+  "runtime": {
+    "declaredNode": "24.20.0",
+    "executedNode": "v24.20.0",
+    "declaredPackageManager": "pnpm@12.3.4",
+    "latestLtsNode": "24.21.0",
+    "nodeSource": "https://nodejs.org/en/about/previous-releases"
+  },
+  "manifestHashes": {
+    "app/package.json": "81d8e2a367f72a75c5df5cadf5f7c2044f53d412a0761c3275a1371b6a6b91b9",
+    "app/apps/web/package.json": "7e1d9720469584e0a8d66c0a0e7ac2f72fff11dbb8d30cc3f399cf2f9b641766",
+    "app/apps/mobile/package.json": "e7bc2dcee0a74273f4e0500708fb510bff0e30512ed7aa5382ab70455c84e023",
+    "app/packages/contracts/package.json": "5ddb35d7de699d52eb1e1d9fbf1e15c91b6106ab81f089a62f866e83d5d39673"
+  },
+  "localizationUpdate": {
+    "checkedAt": "2026-10-02T16:34:41.101Z",
+    "task": "T35",
+    "note": "Added exact next-intl pin and current peers. Other package observations retain their original timestamp."
+  },
+  "clerkLocalizationUpdate": {
+    "checkedAt": "2026-10-02T18:29:51.668Z",
+    "version": "4.21.2",
+    "scope": "T37: selected BG/EN embedded Clerk UI dictionary; existing auth SDK pins and provider bindings unchanged"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "created": "2026-10-02",
+  "tool": "Built-in image_gen tool; no explicit model-selection parameter is exposed",
+  "ownership": "Original Treido artwork generated for this task; no captured Shopify imagery is included",
+  "files": [
+    {
+      "file": "treido-sell-helper-v1.png",
+      "prompt_summary": "An original transparent mint-green rounded helper head, expressive dark eyes, confident smile and folded leaf tuft, polished clay/translucent acrylic, readable at 20–40px. No text, logos, badges, superhero mask or existing Shopify Sidekick character."
+    },
+    {
+      "file": "onboarding-shipping-v1.png",
+      "prompt_summary": "A white parcel tilted on its corner, mint-green curved arrow, folded shipping label and forest-green fabric accent. Original wide 3D still life, near-white studio background, matte paper and iridescent glass, no text or commercial marks."
+    },
+    {
+      "file": "onboarding-markets-v1.png",
+      "prompt_summary": "Three folded white map panels, mint-green home marker and curved route arrows connecting simple round markers. Original wide 3D still life, near-white studio background, paper and acrylic, no text or country borders."
+    },
+    {
+      "file": "onboarding-policies-v1.png",
+      "prompt_summary": "A returned white cardboard package with mint-green return arrow and small silver coins. Original wide 3D still life, near-white studio background, ivory and green tones, no text or logos."
+    },
+    {
+      "file": "onboarding-profile-v1.png",
+      "prompt_summary": "A floating translucent mint-green glass panel with abstract store-detail rows and a small white storefront in front. Original wide 3D still life, near-white studio background, matte ivory and green acrylic, no text or logos."
+    },
+    {
+      "file": "empty-orders-v1.png",
+      "prompt_summary": "An original transparent pale-gray circular empty-orders still life with a soft mint-green basket and simple white receipt slips. Quiet ivory, mint and cool gray; small centered composition, no text, logos or Shopify marks."
+    },
+    {
+      "file": "empty-discounts-v1.png",
+      "prompt_summary": "An original transparent pale-gray circular empty-discounts still life with mint-green scissors, one simple ivory and ochre perforated coupon and soft gray shadow. Small centered composition, no text, logos or Shopify marks."
+    }
+  ]
+}

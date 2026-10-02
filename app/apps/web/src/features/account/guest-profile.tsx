@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 /* eslint-disable @next/next/no-img-element -- Bounded reference brand artwork. */
 import type { Catalog } from "../catalog/types";
 import { AccountPage, Row } from "./forms";
@@ -7,23 +8,23 @@ import { ProfileFooter } from "./profile-footer";
 import { useAccount } from "./state";
 import { Icon } from "../discovery/icons";
 import { SourceLink } from "../discovery/return-navigation";
+import { LanguagePreferenceRow } from "../locale/preference-row";
+import { MessagesEntry } from "../messaging/entry";
 
 export function GuestProfile({ catalog }: { catalog: Catalog }) {
+  const t = useTranslations("account");
   const { orders } = useAccount();
   return (
     <AccountPage android className="android-guest-profile">
       <section className="guest-sign-in">
         <img src="/api/reference-media/live-guest-signin-mark" alt="" />
-        <h1>Sign in or create an account</h1>
-        <p>
-          Buy whatever you want. Track every order. Catch every deal and
-          restock.
-        </p>
+        <h1>{t("signInOrCreateAnAccount")}</h1>
+        <p>{t("profileIntro")}</p>
         <SourceLink
           className="primary"
           href="/login?journey=new&returnTo=/profile"
         >
-          Sign in
+          {t("signIn")}
         </SourceLink>
       </section>
       <div className="guest-profile-panels">
@@ -31,27 +32,24 @@ export function GuestProfile({ catalog }: { catalog: Catalog }) {
           <span>
             <Icon name="heart" />
           </span>
-          <strong>Saved</strong>
+          <strong>{t("saved")}</strong>
         </SourceLink>
         <SourceLink href="/following">
           <span>
             <Icon name="storefront" />
           </span>
-          <strong>Following</strong>
+          <strong>{t("following")}</strong>
         </SourceLink>
       </div>
       <ProfileRecent catalog={catalog} />
       <section className="guest-profile-orders">
-        <h2>Order history</h2>
+        <h2>{t("orderHistory")}</h2>
         {orders.length === 0 ? (
           <div className="guest-no-orders">
             <img src="/api/reference-media/live-guest-order-package" alt="" />
             <span>
-              <strong>No orders yet</strong>
-              <p>
-                Orders you place in Shop or sync from your emails will show up
-                here
-              </p>
+              <strong>{t("noOrdersYet")}</strong>
+              <p>{t("orderHistoryNote")}</p>
             </span>
           </div>
         ) : (
@@ -68,6 +66,9 @@ export function GuestProfile({ catalog }: { catalog: Catalog }) {
         )}
       </section>
       <div className="account-panel guest-profile-settings">
+        <LanguagePreferenceRow native />
+        <MessagesEntry native />
+        <Row native label="Sell an item" href="/sell" />
         <Row native label="Notifications" href="/account/notifications" />
         <Row native label="Data & privacy" href="/account/privacy" />
         <Row native label="Development mode" href="/account/development" />

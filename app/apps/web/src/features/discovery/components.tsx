@@ -1,60 +1,31 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Local allowlisted reference crops. */
+import { displayRating, displayCount } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { SourceLink, useSourceNavigationTab } from "./return-navigation";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { discoveryDestination } from "./browse-scope-route";
 import {
+  Suspense,
   useEffect,
   useRef,
   useId,
-  type CSSProperties,
   type ReactNode,
   type PointerEvent,
 } from "react";
-import { Icon, type IconName } from "./icons";
-import { ReviewStars } from "./rating-stars";
+import { Icon } from "./icons";
+import { NativeIcon } from "./native-icons";
+import { IconButton } from "./icon-button";
+export { IconButton } from "./icon-button";
+export { ProductCard, SaveButton } from "./product-card";
 import { useDiscovery } from "./state";
 import { useSurfaceReady } from "./hydration-boundary";
-import { formatMoney, type Product, type Store } from "../catalog/types";
-export function IconButton({
-  icon,
-  label,
-  onClick,
-  pressed,
-  filled,
-  disabled,
-  className = "",
-}: {
-  icon: IconName;
-  label: string;
-  onClick?: () => void;
-  pressed?: boolean;
-  filled?: boolean;
-  disabled?: boolean;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      className={`icon-button ${className}`}
-      aria-label={label}
-      aria-pressed={pressed}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      <Icon name={icon} filled={filled ?? pressed} />
-    </button>
-  );
-}
-export function FloatingNav({
-  back = false,
-  cart,
-  onBack,
-  showCartWhenEmpty = false,
-  showExplore = true,
-  fade = false,
-  android = false,
-}: {
+import type { Store } from "../catalog/types";
+import { useLocale } from "../locale/provider";
+import { localeDestination, parseLocale } from "../locale/locale";
+type FloatingNavProps = {
   back?: boolean;
   cart?: () => void;
   onBack?: () => void;
@@ -62,7 +33,30 @@ export function FloatingNav({
   showExplore?: boolean;
   fade?: boolean;
   android?: boolean;
-}) {
+  nativeIcons?: boolean;
+};
+export function FloatingNav(props: FloatingNavProps) {
+  return (
+    <Suspense fallback={<FloatingNavContent {...props} params={null} />}>
+      <ScopedFloatingNav {...props} />
+    </Suspense>
+  );
+}
+function ScopedFloatingNav(props: FloatingNavProps) {
+  const params = useSearchParams();
+  return <FloatingNavContent {...props} params={new URLSearchParams(params)} />;
+}
+function FloatingNavContent({
+  back = false,
+  cart,
+  onBack,
+  showCartWhenEmpty = false,
+  showExplore = true,
+  fade = false,
+  android = false,
+  nativeIcons = false,
+  params,
+}: FloatingNavProps & { params: URLSearchParams | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const { cart: lines, viewedProducts } = useDiscovery();
@@ -71,6 +65,8 @@ export function FloatingNav({
     0,
   );
   const active = useSourceNavigationTab(pathname, android);
+  const { messages } = useLocale();
+  const text = messages.navigation;
   return (
     <div
       data-fade={fade || undefined}
@@ -79,8 +75,9 @@ export function FloatingNav({
       {back && (
         <IconButton
           icon="back"
-          label="Go back"
+          label={text.back}
           className="dock-back"
+          native={nativeIcons}
           onClick={() => {
             if (onBack) onBack();
             else if (window.history.length > 1) router.back();
@@ -88,28 +85,40 @@ export function FloatingNav({
           }}
         />
       )}
-      <nav aria-label="Main navigation" className="floating-nav">
+      <nav aria-label={text.main} className="floating-nav">
         {(
           [
-            ["/", "home", "Home"],
-            ["/search", "search", "Search"],
-            ["/explore", "explore", "Explore"],
-            ["/orders", "orders", "Orders"],
+            ["/", "home", text.home],
+            ["/search", "search", text.search],
+            ["/explore", "explore", text.explore],
+            ["/orders", "orders", text.orders],
           ] as const
         )
           .filter(([href]) => showExplore || href !== "/explore")
           .map(([href, icon, label]) => (
             <Link
-              href={
-                android && href === "/" && viewedProducts.length > 0
-                  ? "/?home=recent"
-                  : href
-              }
-              aria-label={android && label === "Search" ? "Chat" : label}
+              href={localeDestination(
+                discoveryDestination(
+                  android && href === "/" && viewedProducts.length > 0
+                    ? "/?home=recent"
+                    : href,
+                  new URLSearchParams(params ?? undefined),
+                ),
+                parseLocale(params?.get("lang")),
+              )}
+              aria-label={android && href === "/search" ? text.chat : label}
+              data-nav-kind={android && icon === "search" ? "chat" : icon}
               aria-current={active === href ? "page" : undefined}
               key={href}
             >
-              <Icon name={icon} filled={icon !== "search"} />
+              {nativeIcons ? (
+                <NativeIcon
+                  name={icon === "search" ? "search-nav" : icon}
+                  filled={icon !== "search"}
+                />
+              ) : (
+                <Icon name={icon} filled={icon !== "search"} />
+              )}
             </Link>
           ))}
       </nav>
@@ -117,11 +126,15 @@ export function FloatingNav({
         <button
           type="button"
           className={`icon-button dock-cart ${cartQuantity > 0 ? "cart-filled" : ""}`}
-          aria-label="Open cart"
+          aria-label={text.cart}
           data-focus-return="cart"
           onClick={cart}
         >
-          <Icon name="cart" filled />
+          {nativeIcons ? (
+            <NativeIcon name="cart" filled />
+          ) : (
+            <Icon name="cart" filled />
+          )}
           {cartQuantity > 0 && (
             <span
               className="dock-cart-count"
@@ -136,171 +149,15 @@ export function FloatingNav({
     </div>
   );
 }
-export function SaveButton({ product }: { product: Product }) {
-  const state = useDiscovery();
-  return (
-    <IconButton
-      className="save-button"
-      icon="heart"
-      label={`${state.saved.includes(product.id) ? "Unsave" : "Save"} ${product.title}`}
-      pressed={state.saved.includes(product.id)}
-      onClick={() => state.toggleSaved(product.id)}
-    />
-  );
-}
-export function ProductCard({
-  product,
-  compact = false,
-  showPromotion = false,
-  showRating = true,
-  mediaOnly = false,
-  storeName,
-  ratingStyle = "stars",
-  ratingStars,
-  partialRatingStars,
-}: {
-  product: Product;
-  compact?: boolean;
-  showPromotion?: boolean;
-  showRating?: boolean;
-  mediaOnly?: boolean;
-  storeName?: string;
-  ratingStyle?: "stars" | "summary";
-  /** The depicted star fill when a shelf snapshot differs from product details. */
-  ratingStars?: number;
-  /** Only these filled stars were visible; the full rating and count are unknown. */
-  partialRatingStars?: number;
-}) {
-  const discovery = useDiscovery();
-  const reported = discovery.reportedProducts.includes(product.id);
-  const markdown =
-    product.referenceStyle === "android" &&
-    !product.promotion &&
-    product.compareAt?.currency === product.price.currency &&
-    product.compareAt.amount > product.price.amount
-      ? Math.round(
-          (100 * (product.compareAt.amount - product.price.amount)) /
-            product.compareAt.amount,
-        )
-      : undefined;
-  const showMarkdown = showPromotion && !compact && markdown !== undefined;
-  const photo =
-    product.referenceThumbnails?.[compact ? "shelf" : "grid"] ??
-    product.images[0];
-  return (
-    <article
-      className={`product-card ${compact ? "compact" : ""}`}
-      data-product-id={product.id}
-      data-native-photo={
-        product.referenceImageTreatment === "native" || undefined
-      }
-    >
-      <div className="product-media">
-        <SourceLink
-          href={`/products/${product.id}`}
-          startAtTop={product.referenceStyle === "android"}
-          aria-label={product.images[0] ? undefined : product.title}
-        >
-          {product.images[0] ? (
-            <img
-              className={reported ? "product-reported-media" : ""}
-              src={photo}
-              srcSet={
-                product.referenceThumbnails
-                  ? `${photo} 1x, ${photo}-3x 3x`
-                  : undefined
-              }
-              alt={product.title}
-            />
-          ) : (
-            <span className="sr-only">
-              Product photograph was not included in the reference.
-            </span>
-          )}
-        </SourceLink>
-        {reported && (
-          <span className="product-reported-mark">
-            <Icon name="eye-off" />
-          </span>
-        )}
-        {(compact || (showPromotion && product.promotion) || showMarkdown) && (
-          <span
-            className={`price-badge ${product.promotion ? "deal" : ""}`}
-            data-reference-markdown={showMarkdown || undefined}
-          >
-            {showMarkdown
-              ? `${markdown}% off`
-              : (product.promotion ?? formatMoney(product.price))}
-            {!showMarkdown &&
-              product.referenceStyle === "android" &&
-              product.compareAt && <del>{formatMoney(product.compareAt)}</del>}
-          </span>
-        )}
-        {!reported && <SaveButton product={product} />}
-      </div>
-      {!compact && !mediaOnly && (
-        <SourceLink
-          href={`/products/${product.id}`}
-          className="product-copy"
-          startAtTop={product.referenceStyle === "android"}
-        >
-          {storeName && <span className="product-seller">{storeName}</span>}
-          <strong>{product.title}</strong>
-          {showRating &&
-            (product.ratingCount || partialRatingStars !== undefined) && (
-              <span
-                className="rating"
-                data-partial-rating={
-                  partialRatingStars !== undefined || undefined
-                }
-                style={
-                  partialRatingStars === undefined
-                    ? undefined
-                    : ({
-                        "--partial-rating-stars": partialRatingStars,
-                      } as CSSProperties)
-                }
-              >
-                {ratingStyle === "summary" ? (
-                  <>
-                    ★ {product.rating} · {product.ratingCount} reviews
-                  </>
-                ) : (
-                  <>
-                    <ReviewStars
-                      rating={ratingStars ?? product.rating ?? 5}
-                      label={
-                        partialRatingStars !== undefined
-                          ? "Partially captured stars; full rating and review count unavailable"
-                          : ratingStars === undefined &&
-                              product.rating === undefined
-                            ? "Captured rating"
-                            : undefined
-                      }
-                    />{" "}
-                    {product.ratingCount && `(${product.ratingCount})`}
-                  </>
-                )}
-              </span>
-            )}
-          <span>
-            {formatMoney(product.price)}{" "}
-            {showPromotion && product.compareAt && (
-              <del>{formatMoney(product.compareAt)}</del>
-            )}
-          </span>
-        </SourceLink>
-      )}
-    </article>
-  );
-}
 export function StoreRow({
   store,
   onMore,
 }: {
-  store: Store;
+  store: Pick<Store, "id" | "name" | "logo" | "rating" | "ratingCount">;
   onMore?: () => void;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   return (
     <div className="store-row">
       <SourceLink className="store-row-identity" href={`/stores/${store.id}`}>
@@ -315,17 +172,25 @@ export function StoreRow({
           <strong>{store.name}</strong>
           {store.rating !== undefined && (
             <span>
-              {store.rating} ★ {store.ratingCount && `(${store.ratingCount})`}
+              {displayRating(store.rating, intlLocale)} ★{" "}
+              {store.ratingCount &&
+                `(${displayCount(store.ratingCount, intlLocale)})`}
             </span>
           )}
         </span>
       </SourceLink>
       {onMore ? (
-        <IconButton icon="more" label="More options" onClick={onMore} />
+        <IconButton
+          icon="more"
+          label={ui("moreOptions")}
+          onClick={onMore}
+          data-ui-label="moreOptions"
+        />
       ) : (
         <SourceLink
           href={`/stores/${store.id}/info`}
-          aria-label="Store information"
+          aria-label={ui("storeInformation")}
+          data-ui-label="storeInformation"
         >
           <Icon name="more" />
         </SourceLink>
@@ -388,6 +253,7 @@ export function Sheet({
   // URL-owned stages already have an entry; only local overlays add one.
   manageHistory?: boolean;
 }) {
+  const ui = useTranslations("discoveryUI");
   const ready = useSurfaceReady();
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
@@ -561,7 +427,7 @@ export function Sheet({
             "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
           ) ??
           document.querySelector<HTMLElement>(
-            'nav[aria-label="Main navigation"] a[aria-current="page"]',
+            '.floating-nav a[aria-current="page"]',
           );
         fallback?.focus({ preventScroll: true });
       }
@@ -647,7 +513,12 @@ export function Sheet({
       ) : (
         <div className="sheet-header" {...dragHandlers}>
           <h2 id={titleId}>{title}</h2>
-          <IconButton icon="close" label={`Close ${title}`} onClick={dismiss} />
+          <IconButton
+            icon="close"
+            label={ui("closeValue1", { value1: title ?? "" })}
+            onClick={dismiss}
+            data-ui-label="closeValue1"
+          />
         </div>
       )}
       {children}

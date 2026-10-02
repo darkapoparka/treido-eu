@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useLayoutEffect, useState, type ReactNode } from "react";
 import { SourceLink } from "../discovery/return-navigation";
@@ -10,9 +12,9 @@ import {
   formatMoney,
   referenceVariantProduct,
   variantSelectionLimit,
-  type Catalog,
 } from "../catalog/types";
 import { capturedLineAmount } from "./pricing";
+import type { CartCatalog } from "./cart-catalog";
 function cartMutationFocus(control: HTMLElement, ...selectors: string[]) {
   const owner = control.closest<HTMLElement>("dialog, main");
   return owner ? { owner, selectors } : null;
@@ -22,10 +24,12 @@ export function CartContents({
   onNavigate,
   onOffer,
 }: {
-  catalog: Catalog;
+  catalog: CartCatalog;
   onNavigate?: (href: string) => void;
   onOffer?: (id: string) => void;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("commerceUI");
   const state = useDiscovery();
   const { hasPaymentProfile } = useAccount();
   const [pendingFocus, setPendingFocus] = useState<{
@@ -76,22 +80,22 @@ export function CartContents({
     later = resolve(state.later);
   // Missing seller identities are not evidence that unrelated items share a
   // merchant. Keep each unidentified product in its own local cart group.
-  const groupKey = (product: Catalog["products"][number]) =>
+  const groupKey = (product: CartCatalog["products"][number]) =>
     product.storeId || `uncaptured:${product.id}`;
   const stores = [...new Set(resolved.map((l) => groupKey(l.product)))];
   return (
     <>
       {!resolved.length ? (
         <div className="notification-empty">
-          <h2 tabIndex={-1}>Your cart is empty</h2>
+          <h2 tabIndex={-1}>{ui("yourCartIsEmpty")}</h2>
           <p>
-            Add products while you shop, so
+            {ui("addProductsWhileYouShopSo")}
             <br />
-            they’ll be ready for checkout later.
+            {ui("theyLlBeReadyForCheckoutLater")}
           </p>
           {!onNavigate && (
             <Link className="primary form-submit" href="/search">
-              Go shopping
+              {ui("goShopping")}
             </Link>
           )}
         </div>
@@ -110,7 +114,7 @@ export function CartContents({
                 {store?.logo && <img src={store.logo} alt="" />}
                 <div>
                   <strong>
-                    {store?.name ?? "Shop information not captured"}
+                    {store?.name ?? ui("shopInformationNotCaptured")}
                   </strong>
                   {store?.rating !== undefined && (
                     <p>
@@ -129,7 +133,9 @@ export function CartContents({
                   <p className="cart-captured-error" role="status">
                     <Icon name="alert" />
                     <span>
-                      The spring20orderdiscountold discount code is not honoured
+                      {ui(
+                        "theSpring20orderdiscountoldDiscountCodeIsNotHonoured",
+                      )}
                     </span>
                   </p>
                 )}
@@ -151,10 +157,13 @@ export function CartContents({
                         <strong>{l.product.title}</strong>
                       </CartNavigationLink>
                       <span>
-                        {formatMoney({
-                          ...l.product.price,
-                          amount: l.product.price.amount * l.quantity,
-                        })}
+                        {formatMoney(
+                          {
+                            ...l.product.price,
+                            amount: l.product.price.amount * l.quantity,
+                          },
+                          intlLocale,
+                        )}
                       </span>
                     </div>
                     {l.product.variants.length > 1 && (
@@ -163,12 +172,15 @@ export function CartContents({
                     {capturedLineAmount(l, l.product.price.amount) !==
                       l.product.price.amount && (
                       <p className="cart-discount">
-                        Discount applied{" "}
+                        {ui("discountApplied")}{" "}
                         <span>
-                          {formatMoney({
-                            amount: -135 * l.quantity,
-                            currency: "USD",
-                          })}
+                          {formatMoney(
+                            {
+                              amount: -135 * l.quantity,
+                              currency: "USD",
+                            },
+                            intlLocale,
+                          )}
                         </span>
                       </p>
                     )}
@@ -196,7 +208,9 @@ export function CartContents({
                         </button>
                         <output>{l.quantity}</output>
                         <button
-                          aria-label={`Increase ${l.product.title}`}
+                          aria-label={ui("increaseValue1", {
+                            value1: l.product.title ?? "",
+                          })}
                           disabled={
                             l.quantity >= variantSelectionLimit(l.variant)
                           }
@@ -221,7 +235,7 @@ export function CartContents({
                           state.saveForLater(l.productId, l.variantId);
                         }}
                       >
-                        Save for later
+                        {ui("saveForLater")}
                       </button>
                     </div>
                   </div>
@@ -233,24 +247,30 @@ export function CartContents({
                   onClick={() => onOffer(storeId)}
                 >
                   <span>
-                    Add{" "}
-                    {formatMoney({
-                      amount: Math.max(0, 5000 - total),
-                      currency: "USD",
-                    })}{" "}
-                    to save $20 with your exclusive offer
+                    {ui("add")}{" "}
+                    {formatMoney(
+                      {
+                        amount: Math.max(0, 5000 - total),
+                        currency: "USD",
+                      },
+                      intlLocale,
+                    )}{" "}
+                    {ui("toSave20WithYourExclusiveOffer")}
                   </span>
-                  <strong>Add items</strong>
+                  <strong>{ui("addItems")}</strong>
                   <progress value={total} max={5000} aria-hidden="true" />
                 </button>
               )}
               <div className="cart-subtotal">
-                <span>Subtotal</span>
+                <span>{ui("subtotal")}</span>
                 <strong>
-                  {formatMoney({
-                    amount: total,
-                    currency: lines[0].product.price.currency,
-                  })}
+                  {formatMoney(
+                    {
+                      amount: total,
+                      currency: lines[0].product.price.currency,
+                    },
+                    intlLocale,
+                  )}
                 </strong>
               </div>
               {store ? (
@@ -259,12 +279,11 @@ export function CartContents({
                   className="primary form-submit"
                   href={`/checkout?store=${encodeURIComponent(storeId)}${hasPaymentProfile ? "" : "&stage=phone"}`}
                 >
-                  Continue to checkout
+                  {ui("continueToCheckout")}
                 </CartNavigationLink>
               ) : (
                 <p className="form-note">
-                  Checkout details were not captured for this item. Nothing will
-                  be charged.
+                  {ui("checkoutDetailsWereNotCapturedForThisItemNothingWill")}
                 </p>
               )}
             </section>
@@ -273,7 +292,7 @@ export function CartContents({
       )}
       {later.length > 0 && (
         <section className="cart-later">
-          <h2>Saved for later</h2>
+          <h2>{ui("savedForLater")}</h2>
           {later.map((l) => (
             <article
               className="commerce-line"
@@ -296,10 +315,13 @@ export function CartContents({
                 <div className="cart-line-title">
                   <strong>{l.product.title}</strong>
                   <span>
-                    {formatMoney({
-                      ...l.product.price,
-                      amount: l.product.price.amount * l.quantity,
-                    })}
+                    {formatMoney(
+                      {
+                        ...l.product.price,
+                        amount: l.product.price.amount * l.quantity,
+                      },
+                      intlLocale,
+                    )}
                   </span>
                 </div>
                 {l.product.variants.length > 1 && (
@@ -307,7 +329,9 @@ export function CartContents({
                 )}
                 <div className="cart-controls">
                   <button
-                    aria-label={`Remove saved ${l.product.title}`}
+                    aria-label={ui("removeSavedValue1", {
+                      value1: l.product.title ?? "",
+                    })}
                     onClick={(event) => {
                       prepareMutationFocus(event.currentTarget);
                       state.removeLater(l.productId, l.variantId);
@@ -316,7 +340,9 @@ export function CartContents({
                     <Icon name="trash" />
                   </button>
                   <button
-                    aria-label={`Save ${l.product.title}`}
+                    aria-label={ui("saveValue1", {
+                      value1: l.product.title ?? "",
+                    })}
                     aria-pressed={state.saved.includes(l.productId)}
                     onClick={() => state.toggleSaved(l.productId)}
                   >
@@ -330,7 +356,7 @@ export function CartContents({
                     disabled={variantSelectionLimit(l.variant) <= 0}
                     title={
                       variantSelectionLimit(l.variant) <= 0
-                        ? "Currently unavailable"
+                        ? ui("currentlyUnavailable")
                         : undefined
                     }
                     onClick={(event) => {
@@ -345,7 +371,7 @@ export function CartContents({
                       );
                     }}
                   >
-                    <span>Move to cart</span>
+                    <span>{ui("moveToCart")}</span>
                   </button>
                 </div>
               </div>

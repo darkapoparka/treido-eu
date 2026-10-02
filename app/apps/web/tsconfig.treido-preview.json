@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "*.ts",
+    "*.mts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.mts",
+    ".qa/treido-preview/types/**/*.ts",
+    ".qa/treido-preview/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

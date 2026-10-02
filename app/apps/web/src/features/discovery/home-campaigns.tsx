@@ -1,5 +1,8 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { displayRating } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import type { Catalog } from "../catalog/types";
@@ -209,6 +212,8 @@ export function HomeCampaigns({
   productOrder?: "welcome" | "tracking";
   history?: CampaignHistory;
 }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   // Captured histories are bounded sequences, not one rotating global feed.
   // Conceal/Undo only affect the selected card; they never reorder the history.
   const orderedCampaigns = campaignHistoryIds[history].flatMap((id) =>
@@ -304,7 +309,9 @@ export function HomeCampaigns({
               key={c.id}
               data-campaign={c.id}
               data-product-order={productOrder}
-              aria-label={`${store?.name ?? "Accessories"} campaign`}
+              aria-label={ui("value1Campaign", {
+                value1: store?.name ?? "Accessories",
+              })}
               className={`home-campaign campaign-${c.tone} ${c.tall || (c.id === "drmtlgy" && productLayout === "grid") ? "campaign-tall" : ""} ${c.continuation ? "campaign-continuation" : ""} ${c.id === "drmtlgy" && productLayout === "grid" ? "campaign-product-grid" : ""} ${puraReason ? "campaign-pura-reason" : ""} ${concealed ? "campaign-concealed" : ""}`}
             >
               <div
@@ -342,7 +349,9 @@ export function HomeCampaigns({
                   <Link
                     href={href}
                     className={`campaign-brand ${c.title ? "campaign-wordmark" : ""}`}
-                    aria-label={`Visit ${store?.name ?? "shop"}`}
+                    aria-label={ui("visitValue1", {
+                      value1: store?.name ?? "shop",
+                    })}
                     data-home-campaign-return="brand"
                     onClick={(event) =>
                       rememberHomeCampaignReturn(event, c.id, "brand")
@@ -374,7 +383,9 @@ export function HomeCampaigns({
                         )}
                         <span>
                           {store.name}
-                          {c.rating && <small>{c.rating}</small>}
+                          {c.rating && (
+                            <small>{displayRating(c.rating, intlLocale)}</small>
+                          )}
                         </span>
                       </>
                     ) : null}
@@ -384,12 +395,15 @@ export function HomeCampaigns({
                   )}
                   <IconButton
                     icon="more"
-                    label={`More options for ${store?.name ?? "shop"}`}
+                    label={ui("moreOptionsForValue1", {
+                      value1: store?.name ?? "shop",
+                    })}
                     onClick={() => {
                       lastMenu.current = c;
                       setMenu(c);
                       setStage("menu");
                     }}
+                    data-ui-label="moreOptionsForValue1"
                   />
                 </header>
                 <div className="campaign-product-rail">
@@ -443,11 +457,11 @@ export function HomeCampaigns({
                           />
                         </Link>
                         <span className="campaign-price">
-                          {formatMoney(p.price)}
+                          {formatMoney(p.price, intlLocale)}
                           {p.compareAt && (
                             <>
                               {" "}
-                              <del>{formatMoney(p.compareAt)}</del>
+                              <del>{formatMoney(p.compareAt, intlLocale)}</del>
                             </>
                           )}
                         </span>
@@ -459,7 +473,9 @@ export function HomeCampaigns({
                     <Link
                       className="campaign-product campaign-uncaptured"
                       href={href}
-                      aria-label={`More products from ${store?.name}`}
+                      aria-label={ui("moreProductsFromValue1", {
+                        value1: store?.name ?? "",
+                      })}
                       data-home-campaign-return="more-products"
                       onClick={(event) =>
                         rememberHomeCampaignReturn(event, c.id, "more-products")
@@ -484,7 +500,7 @@ export function HomeCampaigns({
                         href="/search"
                         className={`campaign-product campaign-partial-product ${index === 1 ? "campaign-accessory-dark" : ""} ${index === 2 ? "campaign-source-sliver" : ""}`}
                         key={price}
-                        aria-label="Browse accessories"
+                        aria-label={ui("browseAccessories")}
                         data-home-campaign-return={`accessory-${index}`}
                         onClick={(event) =>
                           rememberHomeCampaignReturn(
@@ -493,6 +509,7 @@ export function HomeCampaigns({
                             `accessory-${index}`,
                           )
                         }
+                        data-ui-label="browseAccessories"
                       >
                         {image && (
                           <img src={`/api/reference-media/${image}`} alt="" />
@@ -517,7 +534,7 @@ export function HomeCampaigns({
                         href={href}
                         key={n}
                         className="campaign-product campaign-uncaptured"
-                        aria-label="Explore Pura fragrances"
+                        aria-label={ui("explorePuraFragrances")}
                         data-home-campaign-return={`fragrance-${n}`}
                         onClick={(event) =>
                           rememberHomeCampaignReturn(
@@ -526,6 +543,7 @@ export function HomeCampaigns({
                             `fragrance-${n}`,
                           )
                         }
+                        data-ui-label="explorePuraFragrances"
                       />
                     ))}
                 </div>
@@ -538,7 +556,7 @@ export function HomeCampaigns({
                       rememberHomeCampaignReturn(event, c.id, "cta")
                     }
                   >
-                    <strong>{c.offer ?? "Shop all"}</strong>
+                    <strong>{c.offer ?? ui("shopAll")}</strong>
                     <Icon name="arrow" />
                   </Link>
                 )}
@@ -555,7 +573,9 @@ export function HomeCampaigns({
                   }
                 >
                   <b>{c.offer}</b>
-                  <span>on orders over {c.threshold}</span>
+                  <span>
+                    {ui("onOrdersOver_0463e6")} {c.threshold}
+                  </span>
                 </Link>
               )}
               {concealed && c.id === "pura" && (
@@ -568,20 +588,20 @@ export function HomeCampaigns({
               {concealed && (
                 <div className="campaign-hidden-message">
                   <Icon name="eye-off" />
-                  <p>We’ll show you less like this</p>
+                  <p>{ui("weLlShowYouLessLikeThis")}</p>
                   <button
                     onClick={() => {
                       setHidden((v) => v.filter((id) => id !== c.id));
                       setNotice("");
                     }}
                   >
-                    Undo
+                    {ui("undo")}
                   </button>
                 </div>
               )}
               {concealed && notice === c.id && (
                 <div className="campaign-hidden-toast" role="status">
-                  We’ll show you less like this
+                  {ui("weLlShowYouLessLikeThis")}
                 </div>
               )}
             </section>

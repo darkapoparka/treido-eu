@@ -31,6 +31,7 @@ export function normalizeStoreQuery(value: string): string {
 }
 export function readStoreFilters(
   params: Pick<URLSearchParams, "get">,
+  defaultInStockOnly = true,
 ): StoreFilters {
   const price = (key: string, fallback: number) => {
     const raw = params.get(key);
@@ -48,16 +49,22 @@ export function readStoreFilters(
     min: Math.min(first, second),
     max: Math.max(first, second),
     sale: params.get("sale") === "1",
-    stock: params.get("stock") !== "0",
+    stock:
+      params.get("stock") === null
+        ? defaultInStockOnly
+        : params.get("stock") !== "0",
     sort: STORE_SORTS.includes(sort as StoreSort)
       ? (sort as StoreSort)
       : "Best selling",
   };
 }
-export function hasStoreFilters(filters: StoreFilters): boolean {
+export function hasStoreFilters(
+  filters: StoreFilters,
+  defaultInStockOnly = true,
+): boolean {
   return (
     filters.sale ||
-    !filters.stock ||
+    filters.stock !== defaultInStockOnly ||
     filters.min > 0 ||
     filters.max < STORE_PRICE_CEILING ||
     filters.sort !== "Best selling"
@@ -83,7 +90,12 @@ export function matchStoreProducts(
 export function selectStoreProducts(
   products: readonly Product[],
   filters: StoreFilters,
+  /** Display-only captured listing eligibility; never a stock quantity. */
+  inStockProductIds?: readonly string[],
 ): Product[] {
+  const capturedStock = inStockProductIds
+    ? new Set(inStockProductIds)
+    : undefined;
   const capturedKitschSaleRange =
     filters.sale &&
     filters.stock &&
@@ -101,6 +113,7 @@ export function selectStoreProducts(
             product.compareAt.currency === product.price.currency &&
             product.compareAt.amount > product.price.amount)) &&
         (!filters.stock ||
+          capturedStock?.has(product.id) ||
           product.variants.some(
             (variant) =>
               variant.availableQuantity !== null &&

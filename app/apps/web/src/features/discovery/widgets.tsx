@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import { useState } from "react";
@@ -7,6 +8,7 @@ import { Sheet } from "./components";
 import { useAccount } from "../account/state";
 import "./widgets.css";
 function OrderWidget({ size }: { size: "large" | "medium" | "small" }) {
+  const ui = useTranslations("discoveryUI");
   const { orders } = useAccount();
   const bag = orders.find((order) => order.productId === "shampoo-bag");
   const shirt = orders.find((order) => order.id === "REF-manual-shirt");
@@ -15,7 +17,9 @@ function OrderWidget({ size }: { size: "large" | "medium" | "small" }) {
       <Link
         className="widget-order-open"
         href={bag ? `/orders/${bag.id}` : "/orders"}
-        aria-label={`Open KITSCH order from ${size} widget`}
+        aria-label={ui("openKITSCHOrderFromValue1Widget", {
+          value1: size ?? "",
+        })}
       />
       <header>
         <img src="/api/reference-media/widget-kitsch-logo" alt="" />
@@ -28,16 +32,20 @@ function OrderWidget({ size }: { size: "large" | "medium" | "small" }) {
       </header>
       <div className="widget-order-status">
         {size === "small" && <span>KITSCH</span>}
-        <b>Order placed</b>
-        <p>Standard Shipping</p>
+        <b>{ui("orderPlaced")}</b>
+        <p>{ui("standardShipping")}</p>
         {size !== "small" && (
           <>
             <progress
               value="20"
               max="100"
-              aria-label="Order delivery progress"
+              aria-label={ui("orderDeliveryProgress")}
+              data-ui-label="orderDeliveryProgress"
             />
-            <img src="/api/reference-media/shampoo-bag" alt="Shampoo bar bag" />
+            <img
+              src="/api/reference-media/shampoo-bag"
+              alt={ui("shampooBarBag")}
+            />
           </>
         )}
       </div>
@@ -46,15 +54,16 @@ function OrderWidget({ size }: { size: "large" | "medium" | "small" }) {
           <Link
             className="widget-order-open"
             href={shirt ? `/orders/${shirt.id}?view=tracking` : "/orders"}
-            aria-label="Open delivered T-shirt order from large widget"
+            aria-label={ui("openDeliveredTShirtOrderFromLargeWidget")}
+            data-ui-label="openDeliveredTShirtOrderFromLargeWidget"
           />
           <header>
             <img src="/api/reference-media/widget-dhl-logo" alt="DHL" />
-            <b>Loose Fit Printed T-Shirt</b>
+            <b>{ui("looseFitPrintedTShirt")}</b>
           </header>
           <div>
-            <b>Delivered</b>
-            <p>Delivered today</p>
+            <b>{ui("delivered")}</b>
+            <p>{ui("deliveredToday")}</p>
           </div>
         </div>
       )}
@@ -62,6 +71,7 @@ function OrderWidget({ size }: { size: "large" | "medium" | "small" }) {
   );
 }
 export function Widgets() {
+  const ui = useTranslations("discoveryUI");
   const [instructions, setInstructions] = useState(false);
   return (
     <ShopSurface className="widget-page">
@@ -69,18 +79,16 @@ export function Widgets() {
       <OrderWidget size="medium" />
       <OrderWidget size="small" />
       <button className="pill" onClick={() => setInstructions(true)}>
-        About these widgets
+        {ui("aboutTheseWidgets")}
       </button>
-      <Link href="/orders">Back to orders</Link>
+      <Link href="/orders">{ui("backToOrders")}</Link>
       <Sheet
         open={instructions}
-        title="Order widgets"
+        title={ui("orderWidgets")}
         onClose={() => setInstructions(false)}
       >
         <p className="sheet-copy">
-          These are browser previews of the captured Shop widgets. Installing an
-          iOS home-screen widget is not available from this website. The order
-          examples are local reference fixtures.
+          {ui("theseAreBrowserPreviewsOfTheCapturedShopWidgetsInstalling")}
         </p>
       </Sheet>
     </ShopSurface>

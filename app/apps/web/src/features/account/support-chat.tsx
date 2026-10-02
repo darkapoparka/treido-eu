@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AccountPage } from "./forms";
@@ -18,6 +19,7 @@ const capturedReply = [
 // This opt-in reference surface replays only the frozen example. Arbitrary
 // questions never claim to contact support or receive a live model response.
 export function SupportChat() {
+  const ui = useTranslations("accountUI");
   const { supportConversation, setSupportConversation } = useAccount();
   const { draft, attempt, phase, query } = supportConversation;
   const setDraft = (draft: string) =>
@@ -87,27 +89,28 @@ export function SupportChat() {
         <ContextualCloseLink
           className="icon-button"
           href="/support"
-          aria-label="Close support"
+          aria-label={ui("closeSupport")}
+          data-ui-label="closeSupport"
         >
           <Icon name="close" />
         </ContextualCloseLink>
-        <h1>Support</h1>
+        <h1>{ui("support")}</h1>
       </header>
       <div
         ref={conversation}
         className="support-chat-scroll"
-        aria-label="Support conversation"
+        aria-label={ui("supportConversation")}
         onScroll={(event) => {
           savedScroll.current = event.currentTarget.scrollTop;
         }}
+        data-ui-label="supportConversation"
       >
         <div className="support-chat-messages">
           <p className="support-chat-notice">
-            You can close this conversation at any time and return to it from
-            your account
+            {ui("youCanCloseThisConversationAtAnyTimeAndReturn")}
           </p>
           <p className="support-message">
-            Hi, I’m your AI support assistant, what can I help you with today?
+            {ui("hiIMYourAISupportAssistantWhatCanI")}
           </p>
           {attempt && (
             <p
@@ -123,7 +126,8 @@ export function SupportChat() {
             <div
               className="support-typing"
               role="status"
-              aria-label="Preparing captured reply"
+              aria-label={ui("preparingCapturedReply")}
+              data-ui-label="preparingCapturedReply"
             >
               <i />
               <i />
@@ -134,7 +138,8 @@ export function SupportChat() {
             <>
               <div
                 className="support-message response"
-                aria-label="Captured example response"
+                aria-label={ui("capturedExampleResponse")}
+                data-ui-label="capturedExampleResponse"
               >
                 {capturedReply.map((p) => (
                   <p key={p}>{p}</p>
@@ -144,17 +149,17 @@ export function SupportChat() {
                 <span>
                   <AccountIcon name="receipt" filled />
                 </span>
-                Go to orders <Icon name="chevron" />
+                {ui("goToOrders")} <Icon name="chevron" />
               </Link>
             </>
           )}
           {phase === "unavailable" && (
             <div className="support-unavailable">
               <p role="status">
-                Support is not connected. Your message was not sent.
+                {ui("supportIsNotConnectedYourMessageWasNotSent")}
               </p>
               <button className="form-cancel" onClick={playExample}>
-                View captured example conversation
+                {ui("viewCapturedExampleConversation")}
               </button>
             </div>
           )}
@@ -162,8 +167,9 @@ export function SupportChat() {
       </div>
       <button
         className="support-search-fab icon-button"
-        aria-label="Search conversation"
+        aria-label={ui("searchConversation")}
         onClick={() => setSearching(true)}
+        data-ui-label="searchConversation"
       >
         <Icon name="search" />
       </button>
@@ -184,18 +190,20 @@ export function SupportChat() {
       >
         <textarea
           rows={1}
-          aria-label="Message support"
-          placeholder="Ask anything..."
+          aria-label={ui("messageSupport")}
+          placeholder={ui("askAnything")}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           maxLength={2000}
+          data-ui-label="messageSupport"
         />
         {phase === "thinking" ? (
           <button
             type="button"
             className="support-stop"
-            aria-label="Stop response"
+            aria-label={ui("stopResponse")}
             onClick={() => setPhase("idle")}
+            data-ui-label="stopResponse"
           >
             <span />
           </button>
@@ -203,7 +211,8 @@ export function SupportChat() {
           <button
             type="submit"
             className="support-send"
-            aria-label="Send message"
+            aria-label={ui("sendMessage")}
+            data-ui-label="sendMessage"
           >
             ↑
           </button>
@@ -211,8 +220,9 @@ export function SupportChat() {
           <button
             type="button"
             className="support-reset"
-            aria-label="Start a new conversation"
+            aria-label={ui("startANewConversation")}
             onClick={reset}
+            data-ui-label="startANewConversation"
           >
             <svg
               viewBox="0 0 24 24"
@@ -227,15 +237,16 @@ export function SupportChat() {
       </form>
       <Sheet
         open={searching}
-        title="Search conversation"
+        title={ui("searchConversation")}
         onClose={() => setSearching(false)}
       >
         <label className="form-field">
-          Search
+          {ui("search")}
           <input
-            aria-label="Search messages"
+            aria-label={ui("searchMessages")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            data-ui-label="searchMessages"
           />
         </label>
         <div className="support-search-results">
@@ -247,7 +258,7 @@ export function SupportChat() {
           {query &&
             !text.some((p) =>
               p.toLowerCase().includes(query.toLowerCase()),
-            ) && <p>No matching messages</p>}
+            ) && <p>{ui("noMatchingMessages")}</p>}
         </div>
       </Sheet>
     </AccountPage>

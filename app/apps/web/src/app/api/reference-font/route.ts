@@ -8,12 +8,17 @@ import { referencePreviewEnabled } from "@/features/catalog/queries.server";
 export async function GET() {
   if (!referencePreviewEnabled()) return new Response(null, { status: 404 });
   try {
-    const input = await readFile(
-      resolve(
-        process.cwd(),
-        "../../.local/shop-reference/live/android-home-20260926/Roboto-Regular.ttf",
-      ),
-    );
+    // Reference font files must not enter the production asset graph.
+    const input =
+      process.env.NODE_ENV === "production"
+        ? undefined
+        : await readFile(
+            resolve(
+              process.cwd(),
+              "../../.local/shop-reference/live/android-home-20260926/Roboto-Regular.ttf",
+            ),
+          );
+    if (!input) return new Response(null, { status: 404 });
     if (
       createHash("sha256").update(input).digest("hex") !==
       "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50"

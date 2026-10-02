@@ -1371,7 +1371,7 @@
 
 .shop-page.android-product
   .product-heading
-  button[aria-label="Save product"][aria-pressed="true"] {
+  button[data-ui-label="saveProduct"][aria-pressed="true"] {
   background: #5433f6;
   border-color: #5433f6;
   color: white;

@@ -1,4 +1,6 @@
 "use client";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
@@ -33,6 +35,8 @@ import {
 import { useReducedMotion } from "./motion-preference";
 
 export function Saved({ catalog }: { catalog: Catalog }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const native = !!catalog.liveHomeStoreIds;
   const state = useDiscovery(),
     account = useAccount(),
@@ -277,7 +281,7 @@ export function Saved({ catalog }: { catalog: Catalog }) {
     >
       <header className="section-heading saved-heading">
         <h1 className={addMode && selectedPreview ? "sr-only" : undefined}>
-          {addMode ? panel : collection ? collection.name : "Saved"}
+          {addMode ? panel : collection ? collection.name : ui("saved")}
           {!addMode && collection?.visibility === "Private" && (
             <small>
               <Icon name="lock" />
@@ -295,7 +299,7 @@ export function Saved({ catalog }: { catalog: Catalog }) {
               />
             )}
             <button className="saved-selection-done" onClick={finishSelection}>
-              Done
+              {ui("done")}
             </button>
           </>
         ) : collection ? (
@@ -303,28 +307,31 @@ export function Saved({ catalog }: { catalog: Catalog }) {
             {collection.visibility === "Public" && (
               <IconButton
                 icon="share"
-                label="Share collection"
+                label={ui("shareCollection")}
                 onClick={() => setPanel("Share collection")}
+                data-ui-label="shareCollection"
               />
             )}
             <IconButton
               icon="more"
-              label="Collection options"
+              label={ui("collectionOptions")}
               onClick={() => setPanel("Collection options")}
+              data-ui-label="collectionOptions"
             />
           </div>
         ) : !guest && state.collections.length > 0 && !selected ? (
           <IconButton
             icon="plus"
-            label="Create collection"
+            label={ui("createCollection")}
             onClick={beginCreation}
+            data-ui-label="createCollection"
           />
         ) : null}
       </header>
       {selected && !collection ? (
         <p className="empty-state">
-          This local collection is unavailable.{" "}
-          <Link href="/saved">Return to Saved</Link>
+          {ui("thisLocalCollectionIsUnavailable")}{" "}
+          <Link href="/saved">{ui("returnToSaved")}</Link>
         </p>
       ) : (
         <>
@@ -334,7 +341,7 @@ export function Saved({ catalog }: { catalog: Catalog }) {
             (products.length > 0 || state.collections.length > 0) && (
               <>
                 <h2>
-                  Collections{" "}
+                  {ui("collections")}{" "}
                   {state.collections.length > 0 && (
                     <span className="saved-heading-arrow" aria-hidden="true">
                       ›
@@ -395,7 +402,7 @@ export function Saved({ catalog }: { catalog: Catalog }) {
                   >
                     <span>
                       <Icon name="plus" />
-                      Create collection
+                      {ui("createCollection")}
                     </span>
                     <div>
                       {products
@@ -427,26 +434,27 @@ export function Saved({ catalog }: { catalog: Catalog }) {
                   )}
                   <Icon name="plus" />
                 </span>
-                Invite collaborators
+                {ui("inviteCollaborators")}
               </button>
             ) : (
               <section className="collection-invite-callout">
                 <IconButton
                   icon="close"
-                  label="Dismiss collaboration suggestion"
+                  label={ui("dismissCollaborationSuggestion")}
                   onClick={() =>
                     state.updateCollection(collection.id, {
                       collaborationPromptDismissed: true,
                     })
                   }
+                  data-ui-label="dismissCollaborationSuggestion"
                 />
-                <strong>Collaborate with people you know</strong>
-                <p>Shop together, plan events, and share gift ideas.</p>
+                <strong>{ui("collaborateWithPeopleYouKnow")}</strong>
+                <p>{ui("shopTogetherPlanEventsAndShareGiftIdeas")}</p>
                 <button
                   className="primary"
                   onClick={() => setPanel("Invite collaborators")}
                 >
-                  Invite collaborators
+                  {ui("inviteCollaborators")}
                 </button>
               </section>
             ))}
@@ -468,16 +476,16 @@ export function Saved({ catalog }: { catalog: Catalog }) {
             <>
               {!products.length && (
                 <p className="collection-empty">
-                  There are no items in this collection yet.{" "}
+                  {ui("thereAreNoItemsInThisCollectionYet")}{" "}
                   <button onClick={() => setPanel("Add from saved")}>
-                    Add from saved
+                    {ui("addFromSaved")}
                   </button>
                 </p>
               )}
               {featured.length > 0 && (
                 <>
                   <h2 className="featured-heading">
-                    Featured brands{" "}
+                    {ui("featuredBrands")}{" "}
                     <span className="saved-heading-arrow" aria-hidden="true">
                       ›
                     </span>
@@ -488,7 +496,9 @@ export function Saved({ catalog }: { catalog: Catalog }) {
                         key={store.id}
                         className={`featured-brand ${store.id === "kitsch" ? "featured-kitsch" : ""}`}
                         href={`/stores/${store.id}`}
-                        aria-label={`Visit ${store.name}`}
+                        aria-label={ui("visitValue1", {
+                          value1: store.name ?? "",
+                        })}
                       >
                         {store.id === "kitsch" ? (
                           <KitschWordmark />
@@ -508,7 +518,7 @@ export function Saved({ catalog }: { catalog: Catalog }) {
               >
                 <span>
                   <Icon name="plus-circle" />
-                  Find more ideas
+                  {ui("findMoreIdeas")}
                 </span>
                 <div>
                   {ideas.map((product) => (
@@ -527,24 +537,24 @@ export function Saved({ catalog }: { catalog: Catalog }) {
                       ? "/api/reference-media/live-empty-saved-mug"
                       : "/api/reference-media/saved-socks"
                   }
-                  alt={native ? "" : "Socks"}
+                  alt={native ? "" : ui("socks")}
                 />
                 <Icon name="heart" filled />
               </div>
-              <h2>You haven’t saved any items yet</h2>
+              <h2>{ui("youHavenTSavedAnyItemsYet")}</h2>
               <p>
-                Tap the heart icon on any item to save it and get notified if it
-                drops in price{native ? "" : "."}
+                {ui("tapTheHeartIconOnAnyItemToSaveIt")}
+                {native ? "" : "."}
               </p>
               <Link className="primary" href="/">
-                Go shopping
+                {ui("goShopping")}
               </Link>
             </div>
           )}
           {addMode && selectionProducts.length === 0 && (
             <p className="collection-empty">
-              No saved items are available to add.{" "}
-              <Link href="/">Go shopping</Link>
+              {ui("noSavedItemsAreAvailableToAdd")}{" "}
+              <Link href="/">{ui("goShopping")}</Link>
             </p>
           )}
         </>
@@ -581,10 +591,10 @@ export function Saved({ catalog }: { catalog: Catalog }) {
         className={`saved-sheet ${editing ? `collection-editor ${panel === "Edit name" ? "collection-editor-edit" : ""}` : panel === "Collection options" ? "collection-options-sheet" : panel === "Delete collection" ? "collection-delete-sheet" : panel === "Make public" ? "collection-public-sheet" : "collection-sharing-sheet"}`}
         title={
           panel === "Make public"
-            ? "Anyone on Shop will be able to view this collection"
+            ? ui("anyoneOnShopWillBeAbleToViewThisCollection")
             : panel === "Delete collection"
-              ? "Are you sure you want to delete this collection?"
-              : panel
+              ? ui("areYouSureYouWantToDeleteThisCollection")
+              : caption(panel)
         }
         onClose={() => setPanel("")}
       >
@@ -625,15 +635,15 @@ export function Saved({ catalog }: { catalog: Catalog }) {
               }}
             >
               <Icon name="edit" />
-              Edit name
+              {ui("editName")}
             </button>
             <button onClick={() => setPanel("Add from saved")}>
               <Icon name="plus-circle" />
-              Add from saved
+              {ui("addFromSaved")}
             </button>
             <button
               data-collection-stage="Make public"
-              title="Changes local preview visibility only; nothing is published"
+              title={ui("changesLocalPreviewVisibilityOnlyNothingIsPublished")}
               onClick={() => {
                 if (collection.visibility === "Private")
                   setPanel("Make public");
@@ -641,7 +651,7 @@ export function Saved({ catalog }: { catalog: Catalog }) {
                   state.updateCollection(collection.id, {
                     visibility: "Private",
                   });
-                  setNotice("Collection is now private");
+                  setNotice(ui("collectionIsNowPrivate"));
                   setPanel("");
                 }
               }}
@@ -649,8 +659,10 @@ export function Saved({ catalog }: { catalog: Catalog }) {
               <Icon
                 name={collection.visibility === "Private" ? "globe" : "lock"}
               />
-              Make collection{" "}
-              {collection.visibility === "Private" ? "public" : "private"}
+              {ui("makeCollection")}{" "}
+              {collection.visibility === "Private"
+                ? ui("public")
+                : ui("private")}
             </button>
             <button
               className="danger-text"
@@ -658,49 +670,49 @@ export function Saved({ catalog }: { catalog: Catalog }) {
               onClick={() => setPanel("Delete collection")}
             >
               <Icon name="trash" />
-              Delete collection
+              {ui("deleteCollection")}
             </button>
           </div>
         ) : panel === "Make public" && collection ? (
           <>
             <p className="collection-confirm-copy">
-              Your collection will be discoverable by others and may appear on
-              the feed.
+              {ui("yourCollectionWillBeDiscoverableByOthersAndMayAppear")}
             </p>
             <span id="collection-public-boundary" className="sr-only">
-              Local reference preview only. Nothing is published or shared.
-              Sharing and invitation actions explain this service boundary.
+              {ui("localReferencePreviewOnlyNothingIsPublishedOrSharedSharing")}
             </span>
             <div className="sheet-actions">
               <button className="pill" onClick={() => setPanel("")}>
-                Cancel
+                {ui("cancel")}
               </button>
               <button
                 className="primary"
                 aria-describedby="collection-public-boundary"
-                title="Changes local preview visibility only; nothing is published"
+                title={ui(
+                  "changesLocalPreviewVisibilityOnlyNothingIsPublished",
+                )}
                 onClick={() => {
                   state.updateCollection(collection.id, {
                     visibility: "Public",
                   });
                   setPanel("");
-                  setNotice("Collection is now public");
+                  setNotice(ui("collectionIsNowPublic"));
                 }}
               >
-                Make public
+                {ui("makePublic")}
               </button>
             </div>
           </>
         ) : panel === "Delete collection" && collection ? (
           <>
             <p className="collection-confirm-copy">
-              The items in this collection will remained saved.
+              {ui("theItemsInThisCollectionWillRemainedSaved")}
               <br />
-              This action can’t be undone.
+              {ui("thisActionCanTBeUndone")}
             </p>
             <div className="sheet-actions">
               <button className="pill" onClick={() => setPanel("")}>
-                Cancel
+                {ui("cancel")}
               </button>
               <button
                 className="primary collection-delete"
@@ -711,16 +723,16 @@ export function Saved({ catalog }: { catalog: Catalog }) {
                   });
                 }}
               >
-                Delete
+                {ui("delete")}
               </button>
             </div>
           </>
         ) : (
           <>
             <p className="sheet-copy">
-              Sharing and invitations are not connected. This collection exists
-              only in your local reference session; no invitation can be sent
-              and no public link is available.
+              {ui(
+                "sharingAndInvitationsAreNotConnectedThisCollectionExistsOnly",
+              )}
             </p>
             <button
               className="primary form-submit"
@@ -729,16 +741,14 @@ export function Saved({ catalog }: { catalog: Catalog }) {
                   await navigator.clipboard.writeText(
                     `Local reference collection: ${collection?.name ?? "Collection"}`,
                   );
-                  setNotice(
-                    "Collection name copied. Sharing is not connected.",
-                  );
+                  setNotice(ui("collectionNameCopiedSharingIsNotConnected"));
                 } catch {
-                  setNotice("Clipboard unavailable. Sharing is not connected.");
+                  setNotice(ui("clipboardUnavailableSharingIsNotConnected"));
                 }
                 setPanel("");
               }}
             >
-              Copy collection name
+              {ui("copyCollectionName")}
             </button>
           </>
         )}
@@ -746,7 +756,7 @@ export function Saved({ catalog }: { catalog: Catalog }) {
       {notice && (
         <button
           className="local-toast"
-          title="Local reference preview only; no remote account was changed"
+          title={ui("localReferencePreviewOnlyNoRemoteAccountWasChanged")}
           onClick={() => setNotice("")}
           role="status"
         >

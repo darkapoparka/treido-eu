@@ -1,4 +1,6 @@
 "use client";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import { Sheet } from "./components";
 import { Icon } from "./icons";
@@ -59,6 +61,7 @@ export function ReviewBody({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const ui = useTranslations("discoveryUI");
   const [overflows, setOverflows] = useState(false);
   const [breakWord, setBreakWord] = useState<{
     body: string;
@@ -120,7 +123,7 @@ export function ReviewBody({
           aria-controls={id}
           onClick={onToggle}
         >
-          {expanded ? "Read less" : "Read more"}
+          {expanded ? ui("readLess") : ui("readMore")}
         </button>
       )}
     </>
@@ -136,17 +139,18 @@ export function ReviewHelpful({
   onToggle: () => void;
   disabled?: boolean;
 }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <button
       type="button"
       className={`review-helpful ${selected ? "helpful-selected" : ""}`}
-      aria-label={selected ? "Helpful (1) ✓" : "Helpful"}
+      aria-label={selected ? ui("helpful1") : ui("helpful")}
       aria-pressed={selected}
-      title="Helpful selection is local to this reference preview"
+      title={ui("helpfulSelectionIsLocalToThisReferencePreview")}
       disabled={disabled}
       onClick={onToggle}
     >
-      <Icon name="thumb-up" /> Helpful
+      <Icon name="thumb-up" /> {ui("helpful")}
       {selected && <b className="helpful-count">1</b>}
     </button>
   );
@@ -201,6 +205,8 @@ export function ReviewReport({
   onReopen: () => void;
   onReport: (reason: string) => void;
 }) {
+  const caption = useCaption();
+  const ui = useTranslations("discoveryUI");
   const [reason, setReason] = useState("");
   const flow = useSheetStages<"menu" | "reasons" | "thanks">({
     open,
@@ -232,7 +238,7 @@ export function ReviewReport({
   return (
     <Sheet
       open={open}
-      title={title}
+      title={caption(title)}
       onClose={() => flow.close()}
       manageHistory={false}
       headerless={stage !== "menu"}
@@ -244,7 +250,7 @@ export function ReviewReport({
           className="review-report-entry danger-text"
           onClick={() => flow.navigate("reasons")}
         >
-          <Icon name="alert" /> Report this review
+          <Icon name="alert" /> {ui("reportThisReview")}
         </button>
       ) : stage === "reasons" ? (
         <form
@@ -260,17 +266,17 @@ export function ReviewReport({
             {title}
           </p>
           <p className="review-report-subtitle">
-            This won’t be shared with the reviewer or the store.
+            {ui("thisWonTBeSharedWithTheReviewerOrThe")}
           </p>
           <fieldset className="review-reason-options">
             <legend className="sr-only">
-              Choose a reason for reporting this review
+              {ui("chooseAReasonForReportingThisReview")}
             </legend>
             {reportReasons.map(([label, description], index) => (
               <label key={label}>
                 <span>
-                  <strong>{label}</strong>
-                  <small id={`${group}-${index}`}>{description}</small>
+                  <strong>{caption(label)}</strong>
+                  <small id={`${group}-${index}`}>{caption(description)}</small>
                 </span>
                 <input
                   ref={
@@ -281,7 +287,7 @@ export function ReviewReport({
                   type="radio"
                   name={group}
                   value={label}
-                  aria-label={label}
+                  aria-label={caption(label)}
                   checked={reason === label}
                   aria-describedby={`${group}-${index}`}
                   onChange={() => setReason(label)}
@@ -291,15 +297,15 @@ export function ReviewReport({
           </fieldset>
           <div className="sheet-actions">
             <button type="button" className="pill" onClick={() => flow.close()}>
-              Cancel
+              {ui("cancel")}
             </button>
             <button
               type="submit"
               className="primary"
               disabled={!reason}
-              title="Local preview only; no report will be sent"
+              title={ui("localPreviewOnlyNoReportWillBeSent")}
             >
-              Report
+              {ui("report")}
             </button>
           </div>
         </form>
@@ -309,9 +315,7 @@ export function ReviewReport({
             {title}
           </p>
           <p className="review-report-confirmation" role="status">
-            Your selection is marked in this browser preview only. No report was
-            sent to the reviewer, store or moderation service. Moderation is
-            unavailable in this preview; the marked review is a local example.
+            {ui("yourSelectionIsMarkedInThisBrowserPreviewOnlyNo")}
           </p>
           <button
             ref={closeRef}
@@ -319,7 +323,7 @@ export function ReviewReport({
             className="review-report-close"
             onClick={() => flow.close()}
           >
-            Close
+            {ui("close")}
           </button>
         </>
       )}

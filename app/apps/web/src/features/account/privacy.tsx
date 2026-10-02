@@ -1,5 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,23 +15,18 @@ import {
   SourceLink,
 } from "../discovery/return-navigation";
 export function PrivacyPage() {
+  const ui = useTranslations("accountUI");
   return (
     <AccountPage
-      title="Data & privacy"
+      title={ui("dataPrivacy")}
       className="account-settings-page privacy-page"
     >
       <section>
-        <h2>Data sharing</h2>
-        <p>
-          We use your personal information to show you more of what you like and
-          to make your ads experience better on other websites.
-        </p>
-        <p>
-          If you don’t want to share your personal information for targeted ads,
-          you can opt out.
-        </p>
+        <h2>{ui("dataSharing")}</h2>
+        <p>{ui("weUseYourPersonalInformationToShowYouMoreOf")}</p>
+        <p>{ui("ifYouDonTWantToShareYourPersonalInformation")}</p>
         <Link href="https://www.shopify.com/legal/privacy/choices">
-          Your Privacy Choices{" "}
+          {ui("yourPrivacyChoices")}{" "}
           <svg
             className="privacy-choices-mark"
             aria-hidden="true"
@@ -54,6 +51,8 @@ export function PrivacyPage() {
   );
 }
 export function ConnectionsPage() {
+  const caption = useCaption();
+  const ui = useTranslations("accountUI");
   const params = useSearchParams(),
     router = useRouter();
   const provider = params.get("provider");
@@ -64,10 +63,10 @@ export function ConnectionsPage() {
       <AccountPage
         title={
           provider === "outlook"
-            ? "Connect Hotmail or Outlook"
+            ? ui("connectHotmailOrOutlook")
             : provider === "amazon"
-              ? "Connect Amazon"
-              : "Connection unavailable"
+              ? ui("connectAmazon")
+              : ui("connectionUnavailable")
         }
       >
         <Boundary
@@ -87,8 +86,9 @@ export function ConnectionsPage() {
     <AccountPage dock={false} className="gmail-connect">
       <button
         className="connection-close connection-drag-handle"
-        aria-label="Close connection"
+        aria-label={ui("closeConnection")}
         onClick={() => router.back()}
+        data-ui-label="closeConnection"
       >
         <span aria-hidden="true" />
       </button>
@@ -104,35 +104,36 @@ export function ConnectionsPage() {
         />
       </div>
       <h1>
-        Connect{" "}
+        {ui("connect")}{" "}
         {provider === "gmail"
           ? "Gmail"
           : provider === "outlook"
             ? "Outlook"
             : "Amazon"}{" "}
-        account
+        {ui("account")}
       </h1>
       <p>
-        Get tracking updates for all orders
+        {ui("getTrackingUpdatesForAllOrders")}
         <br />
-        sent to your {provider === "gmail" ? "Gmail" : provider} account
+        {ui("sentToYour")} {provider === "gmail" ? "Gmail" : provider}{" "}
+        {ui("account")}
       </p>
       <div className="connection-benefits">
         <p>
           <AccountIcon name="truck-check" />
-          Track the progress of your orders associated with your Gmail account
+          {ui("trackTheProgressOfYourOrdersAssociatedWithYourGmail")}
         </p>
         <p>
           <AccountIcon name="shield" />
-          Shop will scan your Gmail inbox for order information from your emails
+          {ui("shopWillScanYourGmailInboxForOrderInformationFrom")}
         </p>
         <p>
           <AccountIcon name="unlink" />
-          Disconnect at any time from your Shop or Google accounts
+          {ui("disconnectAtAnyTimeFromYourShopOrGoogleAccounts")}
         </p>
       </div>
       <button className="primary form-submit" onClick={() => setBoundary(true)}>
-        Continue to{" "}
+        {ui("continueTo")}{" "}
         {provider === "gmail"
           ? "Google"
           : provider === "outlook"
@@ -147,13 +148,13 @@ export function ConnectionsPage() {
     </AccountPage>
   ) : (
     <AccountPage
-      title="Connections"
+      title={ui("connections")}
       className="account-settings-page connections-page"
     >
       <div className="account-panel">
-        <h2>Accounts</h2>
+        <h2>{ui("accounts")}</h2>
         <button className="account-row" onClick={() => setOpen(true)}>
-          + Connect an account{" "}
+          {ui("connectAnAccount")}{" "}
           <span className="connection-provider-marks">
             {["outlook", "amazon", "google"].map((p) => (
               <img
@@ -173,7 +174,7 @@ export function ConnectionsPage() {
             src="/api/reference-media/mini-sol-icon"
             alt=""
           />
-          Sol: Browse by Voice
+          {ui("solBrowseByVoice")}
         </SourceLink>
         <SourceLink className="account-row" href="/minis/gift">
           <img
@@ -186,7 +187,7 @@ export function ConnectionsPage() {
       </div>
       <Sheet
         open={open}
-        title="Connect an account"
+        title={ui("connectAnAccount_efeac4")}
         className="connection-provider-sheet"
         onClose={() => setOpen(false)}
       >
@@ -213,8 +214,8 @@ export function ConnectionsPage() {
                 />
               </span>
               <strong>
-                {label}
-                <small>Connect account</small>
+                {caption(label)}
+                <small>{ui("connectAccount")}</small>
               </strong>
               <b>+</b>
             </button>
@@ -225,6 +226,7 @@ export function ConnectionsPage() {
   );
 }
 export function DeleteAccount() {
+  const ui = useTranslations("accountUI");
   const { profile } = useAccount();
   const router = useRouter(),
     params = useSearchParams();
@@ -241,12 +243,12 @@ export function DeleteAccount() {
     );
   return (
     <AccountPage className="delete-account-page">
-      <h1>Delete your Shop account</h1>
+      <h1>{ui("deleteYourShopAccount")}</h1>
       {codeStage ? (
         <div className="delete-code">
-          <h2>Enter the verification code sent to your email</h2>
+          <h2>{ui("enterTheVerificationCodeSentToYourEmail")}</h2>
           <CodeInput
-            label="Deletion verification code"
+            label={ui("deletionVerificationCode")}
             value={code}
             onChange={(v) => {
               setCode(v);
@@ -261,45 +263,43 @@ export function DeleteAccount() {
             {profile.email}
           </div>
           <div className="delete-copy">
-            <p>
-              Once deleted, Shop won’t remember the info you might have shared
-              including your:
-            </p>
+            <p>{ui("onceDeletedShopWonTRememberTheInfoYouMight")}</p>
             <ul>
-              <li>Email address</li>
-              <li>Phone number</li>
-              <li>Order and delivery history</li>
+              <li>{ui("emailAddress")}</li>
+              <li>{ui("phoneNumber")}</li>
+              <li>{ui("orderAndDeliveryHistory")}</li>
               <li>
-                Shop Pay information including credit and debit card numbers,
-                billing, and shipping addresses
+                {ui(
+                  "shopPayInformationIncludingCreditAndDebitCardNumbersBilling",
+                )}
               </li>
             </ul>
-            <p>This action can’t be undone.</p>
+            <p>{ui("thisActionCanTBeUndone")}</p>
           </div>
           <button
             className="danger-button form-submit"
             onClick={() => setConfirm(true)}
           >
-            Delete account
+            {ui("deleteAccount")}
           </button>
           <ContextualCloseLink className="form-cancel" href="/account/privacy">
-            Cancel
+            {ui("cancel")}
           </ContextualCloseLink>
         </>
       )}
       <Sheet
         open={confirm}
-        title="Are you sure you want to delete your account?"
+        title={ui("areYouSureYouWantToDeleteYourAccount")}
         className="delete-account-confirm"
         headerless
         onClose={() => setConfirm(false)}
       >
         <div className="delete-confirm-title">
-          Are you sure you want to delete your account?
+          {ui("areYouSureYouWantToDeleteYourAccount")}
         </div>
-        <p>Once deleted, your data will be lost.</p>
+        <p>{ui("onceDeletedYourDataWillBeLost")}</p>
         <button className="form-cancel" onClick={() => setConfirm(false)}>
-          Cancel
+          {ui("cancel")}
         </button>
         <button
           className="danger-button form-submit"
@@ -309,17 +309,15 @@ export function DeleteAccount() {
             router.replace("/account/delete?stage=code", { scroll: false });
           }}
         >
-          Delete account
+          {ui("deleteAccount")}
         </button>
       </Sheet>
       <Sheet
         open={boundary}
-        title="Account deletion is not connected"
+        title={ui("accountDeletionIsNotConnected")}
         onClose={() => setBoundary(false)}
       >
-        <p>
-          No verification code was sent and no deletion request was submitted.
-        </p>
+        <p>{ui("noVerificationCodeWasSentAndNoDeletionRequestWas")}</p>
         <button
           className="form-cancel"
           onClick={() => {
@@ -330,10 +328,10 @@ export function DeleteAccount() {
             });
           }}
         >
-          View captured deletion example
+          {ui("viewCapturedDeletionExample")}
         </button>
         <button className="form-cancel" onClick={() => setBoundary(false)}>
-          Back
+          {ui("back")}
         </button>
       </Sheet>
     </AccountPage>

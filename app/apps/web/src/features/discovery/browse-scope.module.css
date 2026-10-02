@@ -1,0 +1,75 @@
+.trigger {
+  min-height: 40px;
+  flex-shrink: 0;
+}
+.trigger:global(.pill)[data-browse-scope-trigger] {
+  padding-block: 0;
+}
+.trigger > svg {
+  flex-shrink: 0;
+}
+.sheet {
+  white-space: normal;
+}
+.sheet :global(.sheet-header) {
+  gap: 16px;
+}
+.sheet :global(.sheet-header) :global(.icon-button) {
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 40px;
+}
+.options {
+  display: grid;
+}
+.options > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  width: 100%;
+  padding: 12px 0;
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+}
+.options > button > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.options > button[aria-pressed="true"] {
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+}
+.sheet .options svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.trigger:focus-visible,
+.options > button:focus-visible,
+.unavailable a:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 3px;
+}
+.status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.unavailable {
+  padding: 16px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.explanation {
+  margin-top: 8px;
+  color: #737373;
+}
+.unavailable a {
+  margin-top: 12px;
+}

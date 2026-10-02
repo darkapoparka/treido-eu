@@ -1,10 +1,12 @@
 "use client";
+import { useTranslations } from "next-intl";
 import type { ReferencePolicy } from "../catalog/types";
 import { ShopSurface } from "./hydration-boundary";
 import { FloatingNav } from "./components";
 import "./merchant-policy.css";
 
 export function MerchantPolicy({ policy }: { policy: ReferencePolicy }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <ShopSurface className="shop-page android-live native-merchant-policy">
       <header>
@@ -26,7 +28,8 @@ export function MerchantPolicy({ policy }: { policy: ReferencePolicy }) {
               key={index}
               tabIndex={0}
               role="region"
-              aria-label="Captured merchant shipping rates"
+              aria-label={ui("capturedMerchantShippingRates")}
+              data-ui-label="capturedMerchantShippingRates"
             >
               <table>
                 <thead>

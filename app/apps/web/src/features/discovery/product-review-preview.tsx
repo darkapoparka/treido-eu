@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { SourceLink } from "./return-navigation";
 import { ReviewStars } from "./review-feedback";
 import { ProductDisclosure } from "./product-disclosure";
@@ -28,10 +29,11 @@ export function ProductReviewPreview({
   collapsible?: boolean;
   cardWidth?: number;
 }) {
+  const ui = useTranslations("discoveryUI");
   return (
     <ProductDisclosure
       className="pdp-review-preview"
-      title="Reviews"
+      title={ui("reviews")}
       collapsible={collapsible}
       productId={productId}
     >
@@ -40,11 +42,17 @@ export function ProductReviewPreview({
           <strong>{collapsible ? rating.toFixed(1) : rating}</strong>
           <ReviewStars
             rating={Math.round(rating * 2) / 2}
-            label={`${rating} out of 5 stars`}
+            label={ui("value1OutOf5Stars", { value1: rating ?? "" })}
           />
-          <p>{ratingCount} ratings</p>
+          <p>
+            {ratingCount} {ui("ratings")}
+          </p>
         </div>
-        <div className="rating-bars" aria-label="Rating distribution">
+        <div
+          className="rating-bars"
+          aria-label={ui("ratingDistribution")}
+          data-ui-label="ratingDistribution"
+        >
           {[5, 4, 3, 2, 1].map((value, index) => (
             <div key={value}>
               <span>{value}</span>
@@ -79,7 +87,7 @@ export function ProductReviewPreview({
             }}
             title={
               review.partial
-                ? "Only this part of the review was captured."
+                ? ui("onlyThisPartOfTheReviewWasCaptured")
                 : undefined
             }
           >
@@ -93,7 +101,9 @@ export function ProductReviewPreview({
                 {review.author}
                 {review.date && <> · {review.date}</>}
                 {review.partial && (
-                  <small className="sr-only">Partially captured review</small>
+                  <small className="sr-only">
+                    {ui("partiallyCapturedReview")}
+                  </small>
                 )}
               </footer>
             )}
@@ -101,7 +111,7 @@ export function ProductReviewPreview({
         ))}
       </div>
       <SourceLink href={`/products/${productId}/reviews`}>
-        Read all reviews
+        {ui("readAllReviews")}
       </SourceLink>
     </ProductDisclosure>
   );

@@ -1,5 +1,9 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { displayRating } from "../locale/number-display";
+import { useLocale as useIntlLocale } from "next-intl";
+import { useCaption } from "../locale/use-caption";
+import { useTranslations } from "next-intl";
 import { Icon } from "./icons";
 import { ProductCard } from "./components";
 import { SourceLink } from "./return-navigation";
@@ -55,6 +59,7 @@ function Editorial({
   copy: string;
   image: string;
 }) {
+  const caption = useCaption();
   return (
     <SourceLink
       className="editorial-hero beauty-editorial"
@@ -62,7 +67,7 @@ function Editorial({
     >
       <img src={`/api/reference-media/${image}`} alt="" />
       <div>
-        <strong>{title}</strong>
+        <strong>{caption(title)}</strong>
         <p>{copy}</p>
         <Icon name="arrow" />
       </div>
@@ -70,15 +75,17 @@ function Editorial({
   );
 }
 export function BeautySections({ catalog }: { catalog: Catalog }) {
+  const intlLocale = useIntlLocale();
+  const ui = useTranslations("discoveryUI");
   return (
     <>
       <Editorial
-        title="Skincare starter set"
+        title={ui("skincareStarterSet")}
         copy="Moisturizers, spot patches, and invisible SPF."
         image="beauty-starter-photo"
       />
       <section className="beauty-section beauty-scent-section">
-        <h2>Scent &amp; body</h2>
+        <h2>{ui("scentBody")}</h2>
         <div className="beauty-category-grid">
           {[
             ["Perfume & cologne", "perfume", "#bebda5"],
@@ -95,9 +102,9 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
               <strong>
                 {key === "hair" ? (
                   <>
-                    Shampoo &amp;
+                    {ui("shampoo")}
                     <br />
-                    conditioner
+                    {ui("conditioner")}
                   </>
                 ) : (
                   title
@@ -108,7 +115,7 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
         </div>
       </section>
       <section className="beauty-section beauty-favorites-section">
-        <h2>Favorites for a reason</h2>
+        <h2>{ui("favoritesForAReason")}</h2>
         <div className="beauty-brand-grid">
           {brands.map((b) => (
             <SourceLink
@@ -123,7 +130,7 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
               </span>
               <h3>{b.name}</h3>
               <p>
-                {b.rating} ★ ({b.count})
+                {displayRating(b.rating, intlLocale)} ★ ({b.count})
               </p>
               <div className="beauty-brand-product">
                 {b.deal && <span className="deal-badge">{b.deal}</span>}
@@ -139,7 +146,7 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
       <section className="beauty-section beauty-bestsellers-section">
         <SourceLink href="/search?category=Beauty">
           <h2>
-            Bestsellers{" "}
+            {ui("bestsellers")}{" "}
             <span className="beauty-heading-chevron" aria-hidden="true">
               ›
             </span>
@@ -158,7 +165,8 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
           <SourceLink
             className="beauty-product-fragment"
             href="/search?category=Beauty"
-            aria-label="More beauty bestsellers"
+            aria-label={ui("moreBeautyBestsellers")}
+            data-ui-label="moreBeautyBestsellers"
           >
             <span>
               <img
@@ -170,7 +178,7 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
         </div>
       </section>
       <section className="beauty-section">
-        <h2>Sweet deals</h2>
+        <h2>{ui("sweetDeals")}</h2>
         <div className="product-rail beauty-deals">
           {[brands[0], brands[3]].map((b) => (
             <SourceLink
@@ -190,14 +198,15 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
               <span className="deal-badge">{b.deal}</span>
               <h3>{b.name}</h3>
               <p>
-                {b.rating} ★ ({b.count})
+                {displayRating(b.rating, intlLocale)} ★ ({b.count})
               </p>
             </SourceLink>
           ))}
           <SourceLink
             className="beauty-deal-fragment"
             href="/search?category=Beauty&deals=1"
-            aria-label="More beauty deals"
+            aria-label={ui("moreBeautyDeals")}
+            data-ui-label="moreBeautyDeals"
           >
             <img src="/api/reference-media/beauty-deal-continuation" alt="" />
           </SourceLink>
@@ -205,7 +214,7 @@ export function BeautySections({ catalog }: { catalog: Catalog }) {
       </section>
       <div className="beauty-editorial-rail">
         <Editorial
-          title="Vacation-ready nails"
+          title={ui("vacationReadyNails")}
           copy="Shop quick-dry polish, gel-like top coats, press-…"
           image="beauty-nails-photo"
         />
