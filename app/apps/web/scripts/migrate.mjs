@@ -145,6 +145,7 @@ async function main() {
         "0041_shipping_retention",
         "0042_shipping_financial",
         "0043_shipping_lifecycle",
+        "0044_astra_closure_consistency",
       ]) {
         const source = await readFile(
           new URL(`../migrations/${version}.sql`, import.meta.url),

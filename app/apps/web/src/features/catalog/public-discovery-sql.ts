@@ -24,6 +24,14 @@ function foldSql(expression: string): string {
   }
   return result;
 }
+// Publication keeps the accepted form strings. Match the form's trim and
+// decimal-comma normalization before numeric validation, never after a cast.
+// The explicit characters match ECMAScript trim, including tabs and NBSP.
+function numericTextSql(expression: string): string {
+  const whitespace =
+    "\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff";
+  return `replace(btrim(${expression},'${whitespace}'),',','.')`;
+}
 const title = foldSql("p.payload->>'title'");
 const locality = foldSql("p.payload->>'locality'");
 const searchable = foldSql(
@@ -84,13 +92,15 @@ export function buildPublicDiscoveryQuery(
         const partKey = bind(part);
         const actual = `p.payload->'fields'->${key}->>${partKey}`;
         if (part === "unit") where.push(`${actual}=${bind(String(expected))}`);
-        else
+        else {
+          const normalized = numericTextSql(actual);
           where.push(
-            `CASE WHEN ${actual} ~ '^[0-9]+([.][0-9]+)?$' THEN (${actual})::numeric END=${bind(Number(expected))}::numeric`,
+            `CASE WHEN ${normalized} ~ '^[0-9]+([.][0-9]+)?$' THEN (${normalized})::numeric END=${bind(Number(expected))}::numeric`,
           );
+        }
       }
     } else if (typeof value === "number") {
-      const actual = `p.payload->'fields'->>${key}`;
+      const actual = numericTextSql(`p.payload->'fields'->>${key}`);
       where.push(
         `CASE WHEN ${actual} ~ '^[0-9]+$' THEN (${actual})::numeric END=${bind(value)}::numeric`,
       );

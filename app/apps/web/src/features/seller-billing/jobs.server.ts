@@ -646,16 +646,38 @@ export async function scheduleBillingRepair(database: SellerDatabase) {
     await tx.client.query(
       "UPDATE treido.billing_intents SET state='expired',updated_at=clock_timestamp() WHERE state='prepared' AND first_attempt_at IS NULL AND expires_at<=clock_timestamp()",
     );
-    const rows = (
-      await tx.client.query<{
-        id: string;
-        sellerId: string;
-      }>(`SELECT DISTINCT i.id,i.seller_id AS "sellerId" FROM treido.billing_intents i LEFT JOIN treido.billing_subscriptions s ON s.origin_intent_id=i.id
-      WHERE (i.state IN ('creating','reconciling','ready') AND i.operation IN ('checkout','cancel','change') OR s.retired_at IS NULL AND s.id IS NOT NULL)
+    const due = `(i.state IN ('creating','reconciling','ready') AND i.operation IN ('checkout','cancel','change')
+      OR EXISTS(SELECT 1 FROM treido.billing_subscriptions s WHERE s.origin_intent_id=i.id
+        AND s.seller_id=i.seller_id AND s.customer_binding_id=i.customer_binding_id AND s.retired_at IS NULL))
       AND i.updated_at<clock_timestamp()-interval '60 seconds'
-      AND NOT EXISTS(SELECT 1 FROM treido.outbox_jobs j WHERE j.kind='billing.reconcile' AND j.resource_id=i.id AND j.state IN ('pending','accepted'))
-      ORDER BY i.id LIMIT 20`)
+      AND NOT EXISTS(SELECT 1 FROM treido.outbox_jobs j WHERE j.kind='billing.reconcile' AND j.resource_id=i.id
+        AND j.seller_id=i.seller_id AND j.state IN ('pending','accepted'))`;
+    // Lock parent rows before intents: enqueue's seller foreign-key check must
+    // never wait behind a seller-first command while holding that command's intent.
+    // A bounded candidate window permits overlapping sweeps without locking the
+    // whole catalogue. Busy sellers are deferred, not waited on or bypassed.
+    const sellers = (
+      await tx.client.query<{ id: string }>(
+        `SELECT id FROM treido.seller_accounts WHERE id IN (
+          SELECT i.seller_id FROM treido.billing_intents i WHERE ${due}
+          ORDER BY i.updated_at,i.id LIMIT 40)
+        ORDER BY id FOR KEY SHARE SKIP LOCKED`,
+      )
+    ).rows.map((row) => row.id);
+    if (sellers.length === 0) return 0;
+    const rows = (
+      await tx.client.query<{ id: string; sellerId: string }>(
+        `WITH due AS (
+          SELECT i.id FROM treido.billing_intents i
+          WHERE i.seller_id=ANY($1::uuid[]) AND ${due}
+          ORDER BY i.updated_at,i.id LIMIT 20 FOR UPDATE OF i SKIP LOCKED)
+        UPDATE treido.billing_intents i SET updated_at=clock_timestamp() FROM due
+        WHERE i.id=due.id RETURNING i.id,i.seller_id AS "sellerId"`,
+        [sellers],
+      )
     ).rows;
+    // The durable scheduling marker and outbox writes commit together. Completed
+    // origins move behind older due work; failed jobs can retry after 60 seconds.
     for (const row of rows) await enqueueBillingObservation(tx, row);
     return rows.length;
   });

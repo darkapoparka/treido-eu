@@ -10,6 +10,7 @@ import {
 } from "./model";
 import { removalDelay } from "./policy";
 import { readObligations } from "./obligations.server";
+import { reviewedCleanupResources } from "./acceptance-resources.server";
 import type {
   FrozenTarget,
   LifecycleBinding,
@@ -50,6 +51,7 @@ export async function buildPlan(
     )
   ).rows[0];
   if (!request) throw new ClosureError("CONFLICT");
+  const cleanupResources = await reviewedCleanupResources(tx, userId, policy);
   const obligations = await readObligations(tx, userId);
   assertNoObligations(obligations);
   const personalSellers = (
@@ -184,6 +186,7 @@ export async function buildPlan(
     policy,
     obligations,
     targets,
+    cleanupResources,
     personalSellers,
     businessMemberships,
     createdAt: clock.now.toISOString(),

@@ -31,7 +31,9 @@ import {
   canDelegateTeamAccess,
   canManageTeamMember,
   effectiveTeamAccess,
+  canIssuerDelegateTeamAccess,
 } from "./policy.server";
+import { lockInvitationHumans } from "./issuer.server";
 
 export type VerifiedRecipientIdentity = VerifiedIdentity & {
   readonly verifiedEmails: readonly string[];
@@ -417,14 +419,23 @@ export function acceptInvitation(
   if (!validId(invitationId)) throw new SellerError("INVALID_INPUT");
   const emails = recipientEmails(identity);
   return inTransaction(database, async (tx) => {
-    const user = await authorizeHuman(tx, identity, true);
     const initial = (
-      await tx.client.query<{ sellerId: string }>(
-        `SELECT seller_id AS "sellerId" FROM treido.seller_invitations WHERE id=$1 AND recipient=ANY($2::text[])`,
+      await tx.client.query<{ sellerId: string; createdBy: string }>(
+        `SELECT seller_id AS "sellerId",created_by AS "createdBy" FROM treido.seller_invitations WHERE id=$1 AND recipient=ANY($2::text[])`,
         [invitationId, emails],
       )
     ).rows[0];
     if (!initial) throw new SellerError("FORBIDDEN");
+    await tx.client.query(
+      `INSERT INTO treido.users(id,clerk_subject) VALUES($1,$2) ON CONFLICT(clerk_subject) DO NOTHING`,
+      [randomUUID(), identity.subject],
+    );
+    const issuer = await lockInvitationHumans(
+      tx,
+      identity.subject,
+      initial.createdBy,
+    );
+    const user = await authorizeHuman(tx, identity, false);
     const seller = (
       await tx.client.query<{ id: string; status: string }>(
         `SELECT id,status FROM treido.seller_accounts WHERE id=$1 AND kind='business' FOR UPDATE`,
@@ -433,18 +444,20 @@ export function acceptInvitation(
     ).rows[0];
     if (!seller || seller.status !== "active")
       throw new SellerError("FORBIDDEN");
+    const members = (
+      await tx.client.query<TeamMember>(
+        `SELECT user_id AS "userId",role,grants,status,revision FROM treido.seller_memberships WHERE seller_id=$1 AND user_id=ANY($2::uuid[]) ORDER BY user_id FOR UPDATE`,
+        [seller.id, [user.id, issuer.id]],
+      )
+    ).rows;
+    const membership = members.find((row) => row.userId === user.id);
     const invitation = (
       await tx.client.query<InvitationRow>(
-        `SELECT ${invitationColumns} FROM treido.seller_invitations WHERE id=$1 FOR UPDATE`,
-        [invitationId],
+        `SELECT ${invitationColumns} FROM treido.seller_invitations WHERE id=$1 AND seller_id=$2 AND created_by=$3 AND recipient=ANY($4::text[]) FOR UPDATE`,
+        [invitationId, seller.id, issuer.id, emails],
       )
     ).rows[0];
-    const membership = (
-      await tx.client.query<TeamMember>(
-        `SELECT user_id AS "userId",role,grants,status,revision FROM treido.seller_memberships WHERE seller_id=$1 AND user_id=$2 FOR UPDATE`,
-        [seller.id, user.id],
-      )
-    ).rows[0];
+    if (!invitation) throw new SellerError("FORBIDDEN");
     if (invitation.status === "accepted") {
       if (
         invitation.acceptedBy !== user.id ||
@@ -457,6 +470,27 @@ export function acceptInvitation(
     }
     if (invitation.status !== "pending" || !invitation.valid)
       throw new SellerError("CONFLICT");
+    const access = parseTeamAccess(invitation);
+    if (
+      !access ||
+      !canIssuerDelegateTeamAccess(
+        {
+          actor: {
+            userId: user.id,
+            status: "active",
+            session: "verified",
+            recentlyAuthenticated: false,
+          },
+          sellerId: seller.id,
+          seller: { id: seller.id, kind: "business", status: "active" },
+          membership: null,
+        },
+        issuer,
+        members.find((row) => row.userId === issuer.id),
+        access,
+      )
+    )
+      throw new SellerError("FORBIDDEN");
     if (membership?.status === "active") throw new SellerError("CONFLICT");
     const limits = await readFreeCatalogueLimits(
       tx,

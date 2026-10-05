@@ -1,5 +1,12 @@
 "use client";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  Fragment,
+  type ReactNode,
+} from "react";
+import { BuyerSessionBoundary } from "./session-boundary";
 import type { LibraryQuery } from "./model";
 import { useLibraryController, type LibraryController } from "./use-library";
 import { LibraryFeedback } from "./feedback";
@@ -15,15 +22,39 @@ export function LibraryProvider({
   query: Partial<LibraryQuery>;
   children: ReactNode;
 }) {
-  const library = useLibraryController(query),
-    [picker, setPicker] = useState<string | null>(null);
   return (
-    <Context.Provider value={{ ...library, openPicker: setPicker }}>
-      {children}
+    <BuyerSessionBoundary>
+      <ScopedLibraryProvider query={query}>{children}</ScopedLibraryProvider>
+    </BuyerSessionBoundary>
+  );
+}
+function ScopedLibraryProvider({
+  query,
+  children,
+}: {
+  query: Partial<LibraryQuery>;
+  children: ReactNode;
+}) {
+  const library = useLibraryController(query),
+    [picker, setPicker] = useState<{ id: string; scope: string } | null>(null);
+  return (
+    <Context.Provider
+      value={{
+        ...library,
+        openPicker: (id) => setPicker({ id, scope: library.scopeKey }),
+      }}
+    >
+      <Fragment key={library.scopeKey}>{children}</Fragment>
       <LibraryFeedback controller={library} />
-      {picker && (
-        <CollectionPicker listingId={picker} onClose={() => setPicker(null)} />
-      )}
+      {picker &&
+        picker.scope === library.scopeKey &&
+        library.status === "ready" && (
+          <CollectionPicker
+            key={library.scopeKey}
+            listingId={picker.id}
+            onClose={() => setPicker(null)}
+          />
+        )}
     </Context.Provider>
   );
 }

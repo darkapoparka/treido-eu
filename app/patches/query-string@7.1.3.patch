@@ -1,0 +1,16 @@
+diff --git a/index.js b/index.js
+index d45e67d91d38c91d05e68e8b338e4bc2de591dcc..1ea077388b2e0954df488707ac4f434f84299121 100644
+--- a/index.js
++++ b/index.js
+@@ -1,6 +1,10 @@
+ 'use strict';
+ const strictUriEncode = require('strict-uri-encode');
+-const decodeComponent = require('decode-uri-component');
++// T71: GHSA-vcc3-ghjq-m6fr is fixed in upstream decode-uri-component@0.5.0.
++// https://github.com/SamVerschueren/decode-uri-component/releases/tag/v0.5.0
++// That release exports an ESM default; preserve query-string's synchronous CJS API
++// for Expo Router/Metro and the pinned Node 24 runtime by selecting the function.
++const decodeComponent = require('decode-uri-component').default;
+ const splitOnFirst = require('split-on-first');
+ const filterObject = require('filter-obj');
+ 

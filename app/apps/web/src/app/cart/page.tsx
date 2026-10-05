@@ -15,9 +15,11 @@ export default async function Page() {
     return <CartPage catalog={await readCatalog()} />;
   let initial: BuyerCart | null = null;
   let status: "ready" | "guest" | "error" = "guest";
+  let initialSubject: string | null = null;
   try {
     const identity = await readVerifiedIdentity();
     if (identity) {
+      initialSubject = identity.subject;
       initial = await readBuyerCart(getDatabase(), identity);
       status = "ready";
     }
@@ -29,7 +31,7 @@ export default async function Page() {
     <BuyerCartPage
       initial={initial}
       status={status}
-      key={initial?.actorKey ?? status}
+      initialSubject={initialSubject}
     />
   );
 }

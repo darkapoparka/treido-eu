@@ -5,9 +5,8 @@ import {
   CreateReviewButton,
   BuyerReviewLinks,
 } from "../purchase-reviews/controls";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { ShopSurface } from "../discovery/hydration-boundary";
 import { FloatingNav } from "../discovery/components";
 import { SourceLink } from "../discovery/return-navigation";
@@ -16,13 +15,15 @@ import { variantCaption } from "../inventory/model";
 import { CartMutationButton } from "./mutation-button";
 import type { BuyerCart, CartLine } from "./model";
 import { paymentText } from "../payments/messages";
+import { BuyerSessionBoundary } from "../library/session-boundary";
+import { useBuyerCartController } from "./use-cart";
 import s from "./cart.module.css";
 function CartRow({
   line,
   base,
 }: {
   line: CartLine;
-  base: Pick<BuyerCart, "actorKey" | "revision">;
+  base: Pick<BuyerCart, "actorKey" | "revision"> & { subject: string };
 }) {
   const t = useTranslations("buyerCart"),
     locale = useLocale(),
@@ -118,24 +119,35 @@ function CartRow({
 export function BuyerCartPage({
   initial,
   status,
+  initialSubject = null,
 }: {
   initial: BuyerCart | null;
   status: "ready" | "guest" | "error";
+  initialSubject?: string | null;
+}) {
+  return (
+    <BuyerSessionBoundary>
+      <ScopedBuyerCartPage
+        initial={initial}
+        status={status}
+        initialSubject={initialSubject}
+      />
+    </BuyerSessionBoundary>
+  );
+}
+function ScopedBuyerCartPage({
+  initial: serverInitial,
+  initialSubject,
+}: {
+  initial: BuyerCart | null;
+  status: "ready" | "guest" | "error";
+  initialSubject: string | null;
 }) {
   const t = useTranslations("buyerCart"),
     locale = useLocale(),
-    router = useRouter();
-  useEffect(() => {
-    const refresh = () => {
-      if (document.visibilityState === "visible") router.refresh();
-    };
-    window.addEventListener("focus", refresh);
-    window.addEventListener("online", refresh);
-    return () => {
-      window.removeEventListener("focus", refresh);
-      window.removeEventListener("online", refresh);
-    };
-  }, [router]);
+    controller = useBuyerCartController(serverInitial, initialSubject);
+  const initial = controller.cart,
+    status = controller.status;
   const groups = initial
     ? [
         ...new Set(
@@ -173,7 +185,10 @@ export function BuyerCartPage({
               </Link>
             </>
           ) : (
-            <button className="primary" onClick={() => router.refresh()}>
+            <button
+              className="primary"
+              onClick={() => void controller.refresh()}
+            >
               {t("retry")}
             </button>
           )}
@@ -220,6 +235,7 @@ export function BuyerCartPage({
                     base={{
                       actorKey: initial.actorKey,
                       revision: initial.revision,
+                      subject: controller.subject!,
                     }}
                   />
                 ))}

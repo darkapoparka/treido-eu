@@ -1,7 +1,8 @@
 "use server";
 import { getDatabase } from "../../server/db/database";
 import { requireVerifiedIdentity } from "../../server/identity/clerk.server";
-import { SellerError, type SellerResult } from "../sellers/errors";
+import { SellerError } from "../sellers/errors";
+import type { PrivateResult } from "./private-session";
 import { readLibrary } from "./queries.server";
 import { changeLibrary } from "./commands.server";
 import {
@@ -9,38 +10,43 @@ import {
   type LibraryView,
   type LibraryChange,
 } from "./model";
-function failure(error: unknown) {
+function failure(error: unknown, subject: string | null) {
   if (!(error instanceof SellerError))
     console.error("Treido buyer library unavailable.");
   return {
     ok: false,
+    subject,
     code: error instanceof SellerError ? error.code : "NOT_AVAILABLE",
   } as const;
 }
 export async function readLibraryAction(
   input: unknown,
-): Promise<SellerResult<LibraryView>> {
+): Promise<PrivateResult<LibraryView>> {
+  let subject: string | null = null;
   try {
+    const actor = await requireVerifiedIdentity();
+    subject = actor.subject;
     return {
       ok: true,
-      data: await readLibrary(
-        getDatabase(),
-        await requireVerifiedIdentity(),
-        input,
-      ),
+      subject,
+      data: await readLibrary(getDatabase(), actor, input),
     };
   } catch (error) {
-    return failure(error);
+    return failure(error, subject);
   }
 }
 export async function changeLibraryAction(
   command: unknown,
   query: unknown,
-): Promise<SellerResult<{ change: LibraryChange; view: LibraryView }>> {
+  expectedSubject: string,
+): Promise<PrivateResult<{ change: LibraryChange; view: LibraryView }>> {
+  let subject: string | null = null;
   try {
     const input = parseLibraryQuery(query),
-      actor = await requireVerifiedIdentity(),
-      database = getDatabase();
+      actor = await requireVerifiedIdentity();
+    subject = actor.subject;
+    if (subject !== expectedSubject) throw new SellerError("FORBIDDEN");
+    const database = getDatabase();
     const change = await changeLibrary(database, actor, command);
     // A delete can legitimately invalidate the selected collection. Return the root library instead.
     const operation =
@@ -58,9 +64,10 @@ export async function changeLibraryAction(
     }
     return {
       ok: true,
+      subject,
       data: { change, view: await readLibrary(database, actor, input) },
     };
   } catch (error) {
-    return failure(error);
+    return failure(error, subject);
   }
 }

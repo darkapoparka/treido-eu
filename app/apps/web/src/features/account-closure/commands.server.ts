@@ -24,6 +24,7 @@ import {
 import { ownSessions } from "./clerk-adapter.server";
 import { buildPlan, createPlanEffects } from "./planning.server";
 import { preferenceStorageReady } from "./preferences.server";
+import { acceptReviewedClosure } from "./acceptance-resources.server";
 export async function changeClosure(
   database: SellerDatabase,
   identity: VerifiedIdentity,
@@ -135,9 +136,12 @@ export async function changeClosure(
       if (plan.state !== "reviewed") throw new ClosureError("CONFLICT");
       if (plan.expired) throw new ClosureError("EXPIRED");
       requireRecent(identity);
-      await tx.client.query(
-        `SELECT treido.account_accept_closure($1::uuid,$2::uuid,$3::text,$4::uuid)`,
-        [user.id, plan.id, op.planHash, command.requestId],
+      await acceptReviewedClosure(
+        tx,
+        user.id,
+        plan.id,
+        op.planHash,
+        command.requestId,
       );
       await createPlanEffects(tx, plan.id, user.id, plan.payload);
       await tx.client.query(`SELECT treido.account_enqueue_closure($1::uuid)`, [

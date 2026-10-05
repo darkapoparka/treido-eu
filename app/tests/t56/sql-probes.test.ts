@@ -179,16 +179,21 @@ describe("T56 prepare actual feature SELECTs for separate readonly schema qualif
       "features/saved-searches/feed.server.ts",
       "features/account-privacy/projections.server.ts",
     ];
+    const workspaceRoot = path.resolve(import.meta.dirname, "../..");
     const sourceHashes = Object.fromEntries(
       sourceFiles.map((file) => [
         file,
         createHash("sha256")
-          .update(fs.readFileSync(path.resolve("apps/web/src", file)))
+          .update(
+            fs.readFileSync(path.resolve(workspaceRoot, "apps/web/src", file)),
+          )
           .digest("hex"),
       ]),
     );
+    const output = path.resolve(workspaceRoot, "../.qa/t56/sql-probes.json");
+    fs.mkdirSync(path.dirname(output), { recursive: true });
     fs.writeFileSync(
-      path.resolve("../.qa/t56/sql-probes.json"),
+      output,
       JSON.stringify(
         {
           syntheticParameters: true,

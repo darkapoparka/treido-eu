@@ -35,6 +35,7 @@ export async function applyAccountClosureGrants(client, role) {
     "account_read_closure_plan(uuid,uuid,boolean)",
     "account_lock_security_effect(uuid,text,text)",
     "account_read_personal_closure_subscriptions(uuid)",
+    "account_closure_cleanup_resources(uuid,boolean,boolean)",
     "account_closure_obligations(uuid)",
     "account_assert_clear(uuid)",
     "account_accept_closure(uuid,uuid,text,uuid)",

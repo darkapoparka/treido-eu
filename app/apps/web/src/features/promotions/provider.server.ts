@@ -378,8 +378,14 @@ export async function applyPromotionObservation(
       fact.state,
     ],
   );
-  if (latest && Date.parse(fact.authoritativeAt) <= latest.at.getTime()) return;
+  // The signed trigger has second-resolution event time, while the trusted
+  // bridge retrieves current payment/charge state. Never discard restrictive
+  // evidence because another distinct event has an equal or later timestamp.
+  // attempt() holds the seller/campaign/attempt locks; event identity handles
+  // retries, and quarantine cannot be revived by a later paid observation.
   if (fact.state === "refunded" || fact.state === "disputed") {
+    const current = await campaign(tx, row.sellerId, row.campaignId);
+    if (!current) throw new SellerError("NOT_FOUND");
     await tx.client.query(
       `UPDATE treido.promotion_attempts SET state='quarantined',provider_id=$2,checkout_session_id=$3,checkout_url=NULL,updated_at=clock_timestamp() WHERE id=$1`,
       [id, fact.providerId, fact.checkoutSessionId],
@@ -392,7 +398,11 @@ export async function applyPromotionObservation(
     await transition(
       tx,
       row,
-      fact.state === "refunded" ? "cancelled" : "paused",
+      fact.state === "refunded"
+        ? "cancelled"
+        : current.state === "cancelled" || current.state === "completed"
+          ? current.state
+          : "paused",
       "payment_failed",
       "provider",
       fact.state === "refunded"
@@ -424,6 +434,9 @@ export async function applyPromotionObservation(
     );
     return;
   }
+  // Stale non-restrictive observations cannot change delivery. Distinct
+  // events in the same second remain eligible for the monotonic guards below.
+  if (latest && Date.parse(fact.authoritativeAt) < latest.at.getTime()) return;
   if (["paid", "cancelled", "quarantined"].includes(row.state)) return;
   const c = await campaign(tx, row.sellerId, row.campaignId);
   if (!c) throw new SellerError("NOT_FOUND");

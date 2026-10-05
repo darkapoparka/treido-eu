@@ -220,6 +220,139 @@ describe("trusted promotion provider boundary (transport tests, no actual Stripe
       ),
     ).toBe(false);
   });
+  it.each([
+    ["refunded", "2026-10-04T12:00:00Z"],
+    ["disputed", "2026-10-04T12:00:00Z"],
+    ["refunded", "2026-10-04T12:00:02Z"],
+    ["disputed", "2026-10-04T12:00:02Z"],
+  ] as const)(
+    "applies current %s evidence even when a paid event has timestamp %s",
+    async (state, latest) => {
+      const t = transport("paid", undefined, new Date(latest));
+      await applyPromotionObservation(
+        t.tx,
+        id,
+        { binding } as PromotionPaymentBridge,
+        {
+          ...fact,
+          eventId: "evt_reversal",
+          evidenceHash: "b".repeat(64),
+          state,
+        },
+      );
+      expect(t.query).toHaveBeenCalledWith(
+        expect.stringContaining("INSERT INTO treido.promotion_provider_events"),
+        expect.arrayContaining(["evt_reversal", state]),
+      );
+      expect(t.query).toHaveBeenCalledWith(
+        expect.stringContaining("state='quarantined'"),
+        [id, fact.providerId, fact.checkoutSessionId],
+      );
+      expect(t.query).toHaveBeenCalledWith(
+        expect.stringContaining("UPDATE treido.promotion_campaigns"),
+        [id, state === "refunded" ? "cancelled" : "paused", "payment_failed"],
+      );
+      expect(
+        t.query.mock.calls.some(([sql]) => sql.includes("status='released'")),
+      ).toBe(state === "refunded");
+      expect(
+        t.query.mock.calls.some(([sql]) =>
+          sql.includes("INSERT INTO treido.promotion_intervals"),
+        ),
+      ).toBe(false);
+    },
+  );
+  it.each(["refunded", "disputed"] as const)(
+    "replaying the identical %s event has no second effect",
+    async (state) => {
+      const t = transport("quarantined", {
+        hash: fact.evidenceHash,
+        attemptId: id,
+      });
+      await applyPromotionObservation(
+        t.tx,
+        id,
+        { binding } as PromotionPaymentBridge,
+        { ...fact, state },
+      );
+      expect(
+        t.query.mock.calls.some(([sql]) => /^(INSERT|UPDATE)/.test(sql)),
+      ).toBe(false);
+    },
+  );
+  it.each(["cancelled", "completed"] as const)(
+    "a later dispute preserves terminal campaign state %s",
+    async (state) => {
+      f.campaign.mockResolvedValue({
+        id,
+        state,
+        reason: "payment_failed",
+        productId: intent.productId,
+        listingId: id,
+      });
+      const t = transport("quarantined");
+      await applyPromotionObservation(
+        t.tx,
+        id,
+        { binding } as PromotionPaymentBridge,
+        { ...fact, state: "disputed" },
+      );
+      expect(t.query).toHaveBeenCalledWith(
+        expect.stringContaining("UPDATE treido.promotion_campaigns"),
+        [id, state, "payment_failed"],
+      );
+    },
+  );
+  it("a newer paid observation cannot revive a quarantined payment", async () => {
+    const t = transport(
+      "quarantined",
+      undefined,
+      new Date(fact.authoritativeAt),
+    );
+    await applyPromotionObservation(
+      t.tx,
+      id,
+      { binding } as PromotionPaymentBridge,
+      {
+        ...fact,
+        eventId: "evt_latepaid",
+        authoritativeAt: "2026-10-04T12:00:01Z",
+      },
+    );
+    expect(t.query.mock.calls.some(([sql]) => sql.startsWith("UPDATE"))).toBe(
+      false,
+    );
+    expect(
+      t.query.mock.calls.some(([sql]) =>
+        sql.includes("INSERT INTO treido.promotion_intervals"),
+      ),
+    ).toBe(false);
+  });
+  it.each(["2026-10-04T12:00:00Z", "2026-10-04T12:00:02Z"])(
+    "late payment after cancellation still enters remedy review with latest event %s",
+    async (latest) => {
+      const t = transport("cancelled", undefined, new Date(latest));
+      await applyPromotionObservation(
+        t.tx,
+        id,
+        { binding } as PromotionPaymentBridge,
+        fact,
+      );
+      expect(
+        t.query.mock.calls.some(([sql]) => sql.includes("state='quarantined'")),
+      ).toBe(true);
+      expect(
+        t.query.mock.calls.some(([sql]) =>
+          sql.includes("promotion_remedy_reviews"),
+        ),
+      ).toBe(true);
+      expect(
+        t.query.mock.calls.some(([sql]) =>
+          sql.includes("INSERT INTO treido.promotion_intervals"),
+        ),
+      ).toBe(false);
+    },
+  );
   it("genuine expired Checkout without any PI can cancel, release and retain only its actual signed event", async () => {
     const t = transport("pending");
     await applyPromotionObservation(

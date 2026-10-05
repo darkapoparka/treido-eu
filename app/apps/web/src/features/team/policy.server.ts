@@ -43,6 +43,34 @@ export function assertDelegableTeamAccess(
   if (!canDelegateTeamAccess(authority, access))
     throw new SellerError("FORBIDDEN");
 }
+/** Persisted issuer authority is not an issuer session. The verified recipient's
+ * actor is used only to project role templates in this business; no offline
+ * issuer authentication or recent-auth evidence is invented. */
+export function canIssuerDelegateTeamAccess(
+  recipientAuthority: SellerAuthorityFacts,
+  issuer: { status: string },
+  membership:
+    | {
+        status: string;
+        role: "owner" | TeamAccess["role"];
+        grants: readonly string[];
+      }
+    | undefined,
+  access: TeamAccess,
+) {
+  if (issuer.status !== "active" || membership?.status !== "active")
+    return false;
+  const current = effectiveTeamAccess(recipientAuthority, {
+    role: membership.role,
+    grants: membership.grants,
+  });
+  return (
+    current.includes("team.manage") &&
+    effectiveTeamAccess(recipientAuthority, access).every((capability) =>
+      current.includes(capability),
+    )
+  );
+}
 export function canManageTeamMember(
   authority: SellerAuthorityFacts,
   target: {

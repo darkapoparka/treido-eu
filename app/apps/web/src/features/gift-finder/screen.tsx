@@ -48,11 +48,7 @@ export function GiftScreen({ continuation }: { continuation: string }) {
         </main>
       </MiniShell>
     );
-  return (
-    <LibraryProvider key={userId} query={{}}>
-      <GiftWorkspace key={userId} subject={userId} />
-    </LibraryProvider>
-  );
+  return <GiftWorkspace key={userId} subject={userId} />;
 }
 function GiftWorkspace({ subject }: { subject: string }) {
   const locale = useAssistantLocale(),
@@ -93,7 +89,7 @@ function GiftWorkspace({ subject }: { subject: string }) {
     });
     setConfirmed(false);
   }
-  return (
+  const content = (
     <MiniShell name={t.title}>
       <main className={s.content}>
         <h1>{t.title}</h1>
@@ -259,5 +255,12 @@ function GiftWorkspace({ subject }: { subject: string }) {
         </Sheet>
       </main>
     </MiniShell>
+  );
+  return (
+    <LibraryProvider
+      query={{ listingIds: view?.items.map((item) => item.listingId) ?? [] }}
+    >
+      {content}
+    </LibraryProvider>
   );
 }

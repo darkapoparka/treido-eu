@@ -79,13 +79,12 @@ export function CompatibilityScreen({
   return (
     <AssistantSession kind="compatibility" continuation={continuation}>
       {(subject) => (
-        <LibraryProvider key={subject} query={{}}>
-          <CompatibilityWorkspace
-            subject={subject}
-            initialIds={initialIds}
-            initialCategory={initialCategory}
-          />
-        </LibraryProvider>
+        <CompatibilityWorkspace
+          key={subject}
+          subject={subject}
+          initialIds={initialIds}
+          initialCategory={initialCategory}
+        />
       )}
     </AssistantSession>
   );
@@ -284,7 +283,7 @@ function CompatibilityWorkspace({
         setReading(false);
     }
   }
-  return (
+  const content = (
     <MiniShell name={t.compatibility}>
       <main className={s.content}>
         <h1>{t.compatibility}</h1>
@@ -585,7 +584,10 @@ function CompatibilityWorkspace({
                     actorKey: controller.view.actorKey,
                     expectedRevision: clear.revision,
                     requestId: crypto.randomUUID(),
-                    operation: { kind: "clear", listingIds: clear.listingIds },
+                    operation: {
+                      kind: "clear",
+                      listingIds: clear.listingIds,
+                    },
                   });
                 setClear(null);
               }}
@@ -596,5 +598,19 @@ function CompatibilityWorkspace({
         </Sheet>
       </main>
     </MiniShell>
+  );
+  return (
+    <LibraryProvider
+      query={{
+        listingIds: [
+          ...new Set([
+            ...selected.map((item) => item.card.id),
+            ...(controller.view?.items.map((item) => item.listingId) ?? []),
+          ]),
+        ],
+      }}
+    >
+      {content}
+    </LibraryProvider>
   );
 }

@@ -15,6 +15,7 @@ import {
   type PlanState,
 } from "./model";
 import { parsePolicy } from "./policy";
+import type { CleanupResource } from "./acceptance-resources.server";
 export function actorKey(identity: VerifiedIdentity) {
   return createHmac("sha256", publicDiscoveryKey())
     .update("account-lifecycle-v1:" + identity.subject)
@@ -32,7 +33,7 @@ export function requireRecent(identity: VerifiedIdentity) {
 export async function storageReady(tx: SellerTransaction) {
   const row = (
     await tx.client.query<{ ready: boolean }>(
-      `SELECT to_regclass('treido.account_lifecycle_workspaces') IS NOT NULL AND to_regclass('treido.account_closure_policies') IS NOT NULL AND to_regclass('treido.account_lifecycle_bindings') IS NOT NULL AND to_regclass('treido.account_execution_plans') IS NOT NULL AND to_regclass('treido.account_lifecycle_effects') IS NOT NULL AND to_regclass('treido.account_lifecycle_receipts') IS NOT NULL AND to_regprocedure('treido.account_closure_extension_facts(uuid)') IS NOT NULL AND to_regprocedure('treido.account_read_approved_binding(uuid)') IS NOT NULL AND to_regprocedure('treido.account_read_approved_policy(uuid)') IS NOT NULL AND to_regprocedure('treido.account_read_closure_plan(uuid,uuid,boolean)') IS NOT NULL AND to_regprocedure('treido.account_lock_security_effect(uuid,text,text)') IS NOT NULL AND to_regprocedure('treido.account_read_personal_closure_subscriptions(uuid)') IS NOT NULL AND to_regprocedure('treido.account_enqueue_closure(uuid)') IS NOT NULL AND to_regprocedure('treido.account_repair_closure(integer)') IS NOT NULL AS ready`,
+      `SELECT to_regclass('treido.account_lifecycle_workspaces') IS NOT NULL AND to_regclass('treido.account_closure_policies') IS NOT NULL AND to_regclass('treido.account_lifecycle_bindings') IS NOT NULL AND to_regclass('treido.account_execution_plans') IS NOT NULL AND to_regclass('treido.account_lifecycle_effects') IS NOT NULL AND to_regclass('treido.account_lifecycle_receipts') IS NOT NULL AND to_regprocedure('treido.account_closure_extension_facts(uuid)') IS NOT NULL AND to_regprocedure('treido.account_closure_cleanup_resources(uuid,boolean,boolean)') IS NOT NULL AND to_regprocedure('treido.account_read_approved_binding(uuid)') IS NOT NULL AND to_regprocedure('treido.account_read_approved_policy(uuid)') IS NOT NULL AND to_regprocedure('treido.account_read_closure_plan(uuid,uuid,boolean)') IS NOT NULL AND to_regprocedure('treido.account_lock_security_effect(uuid,text,text)') IS NOT NULL AND to_regprocedure('treido.account_read_personal_closure_subscriptions(uuid)') IS NOT NULL AND to_regprocedure('treido.account_enqueue_closure(uuid)') IS NOT NULL AND to_regprocedure('treido.account_repair_closure(integer)') IS NOT NULL AS ready`,
     )
   ).rows[0];
   if (!row?.ready) throw new ClosureError("NOT_AVAILABLE");
@@ -92,6 +93,7 @@ export type PlanPayload = {
   policy: ClosurePolicy;
   obligations: Obligations;
   targets: FrozenTarget[];
+  cleanupResources?: CleanupResource[];
   personalSellers: { id: string; status: string; revision: number }[];
   businessMemberships: { sellerId: string; role: string }[];
   createdAt: string;
