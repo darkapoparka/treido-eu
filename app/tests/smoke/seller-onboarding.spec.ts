@@ -269,16 +269,15 @@ test("catalogue file choice is disabled until its real page hydrates", async ({
     });
     await expect(input).toBeDisabled();
     await expect(
-      page.locator("fieldset[data-shop-interactive]"),
+      input.locator("xpath=ancestor::fieldset[@data-shop-interactive][1]"),
     ).toHaveAttribute("data-shop-interactive", "false");
   } finally {
     resume();
   }
   await expect(input).toBeEnabled();
-  await expect(page.locator("fieldset[data-shop-interactive]")).toHaveAttribute(
-    "data-shop-interactive",
-    "true",
-  );
+  await expect(
+    input.locator("xpath=ancestor::fieldset[@data-shop-interactive][1]"),
+  ).toHaveAttribute("data-shop-interactive", "true");
   await input.setInputFiles({
     name: "bad.csv",
     mimeType: "text/csv",
