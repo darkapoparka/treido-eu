@@ -7,6 +7,7 @@ import {
 } from "../../server/identity/clerk.server";
 import { validId } from "../selling/draft-model";
 import { SellerError } from "../sellers/errors";
+import { manageBillingRecovery } from "./recovery.server";
 import {
   prepareBillingIntent,
   executeBillingIntent,
@@ -18,6 +19,20 @@ function failure(error: unknown) {
     ok: false,
     code: error instanceof SellerError ? error.code : "NOT_AVAILABLE",
   } as const;
+}
+export async function billingRecoveryCommandAction(raw: unknown) {
+  try {
+    const identity = await requireVerifiedIdentity();
+    if (!hasVerifiedRecentAuthentication(identity))
+      return reverificationError("strict");
+    return {
+      ok: true,
+      data: await manageBillingRecovery(getDatabase(), identity, raw),
+      actorSubject: identity.subject,
+    } as const;
+  } catch (error) {
+    return failure(error);
+  }
 }
 export async function billingCommandAction(raw: unknown) {
   try {

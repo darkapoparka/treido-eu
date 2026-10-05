@@ -14,6 +14,7 @@ export function useReplyDraft(
   scope: Pick<ReplyCommand, "actorSubject" | "sellerId" | "threadId">,
   canReply: boolean,
   onSent: () => void,
+  attachments: { ids: string[]; ready: boolean } = { ids: [], ready: true },
 ) {
   const clerk = useClerk(),
     { isLoaded, user } = useUser();
@@ -55,7 +56,8 @@ export function useReplyDraft(
       life.current.busy ||
       invalid ||
       draft.rejected ||
-      (!canReply && !draft.attempt)
+      (!canReply && !draft.attempt) ||
+      (!draft.attempt && !attachments.ready)
     )
       return;
     let command: ReplyCommand;
@@ -65,6 +67,7 @@ export function useReplyDraft(
         parseReplyCommand({
           ...scope,
           body: draft.body,
+          attachmentIds: attachments.ids,
           requestId: crypto.randomUUID(),
         });
     } catch {
@@ -128,6 +131,9 @@ export function useReplyDraft(
       invalid ||
       draft.rejected ||
       (!canReply && !draft.attempt) ||
-      !draft.body.trim(),
+      (!draft.body.trim() &&
+        !attachments.ids.length &&
+        !draft.attempt?.attachmentIds?.length) ||
+      (!draft.attempt && !attachments.ready),
   };
 }

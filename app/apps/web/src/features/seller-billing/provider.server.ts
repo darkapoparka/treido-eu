@@ -19,6 +19,8 @@ export const BILLING_EVENTS = [
   "customer.subscription.deleted",
   "customer.subscription.paused",
   "customer.subscription.resumed",
+  "customer.subscription.pending_update_applied",
+  "customer.subscription.pending_update_expired",
   "invoice.paid",
   "invoice.payment_failed",
   "invoice.updated",
@@ -67,16 +69,11 @@ export async function qualifiedBillingProvider(
     throw new SellerError("NOT_AVAILABLE");
   // Stopping future renewal must remain possible when a catalogue price/tax/portal is retired.
   if (operation === "cancel") return stripe;
-  const [price, product, endpoint, registrations, portal] = await Promise.all([
+  const [price, product, endpoint, registrations] = await Promise.all([
     stripe.prices.retrieve(plan.priceId),
     stripe.products.retrieve(plan.productId),
     stripe.webhookEndpoints.retrieve(requireWebhookBinding(binding).endpoint),
     stripe.tax.registrations.list({ status: "active", limit: 100 }),
-    stripe.billingPortal.configurations.retrieve(
-      operation === "change"
-        ? plan.changeConfiguration
-        : plan.portalConfiguration,
-    ),
   ]);
   if (
     !price.active ||
@@ -105,9 +102,16 @@ export async function qualifiedBillingProvider(
         ),
     ) ||
     registrations.has_more ||
-    !registrations.data.some(
-      (r) => r.country === "BG" && r.status === "active",
-    ) ||
+    !registrations.data.some((r) => r.country === "BG" && r.status === "active")
+  )
+    throw new SellerError("NOT_AVAILABLE");
+  // App-reviewed updates have no portal money session. Portal qualification only
+  // applies when actually opening the read/payment-details portal.
+  if (operation !== "portal") return stripe;
+  const portal = await stripe.billingPortal.configurations.retrieve(
+    plan.portalConfiguration,
+  );
+  if (
     !portal.active ||
     portal.livemode !== binding.livemode ||
     portal.features.subscription_cancel.enabled ||
@@ -116,21 +120,7 @@ export async function qualifiedBillingProvider(
     portal.metadata?.purpose !== "seller_subscription"
   )
     throw new SellerError("NOT_AVAILABLE");
-  if (operation === "change") {
-    const update = portal.features.subscription_update;
-    if (
-      !update.enabled ||
-      update.proration_behavior !== "always_invoice" ||
-      !update.products?.length ||
-      !update.products.every(
-        (p) =>
-          p.product === plan.productId &&
-          p.prices.length > 0 &&
-          p.prices.every((price) => price === plan.priceId),
-      )
-    )
-      throw new SellerError("NOT_AVAILABLE");
-  } else if (portal.features.subscription_update.enabled)
+  if (portal.features.subscription_update.enabled)
     throw new SellerError("NOT_AVAILABLE");
   return stripe;
 }

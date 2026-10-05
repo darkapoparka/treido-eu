@@ -20,6 +20,8 @@ import { inputHash } from "../sellers/persistence.server";
 import { validId } from "../selling/draft-model";
 import { safeBillingUrl } from "./model";
 import { capturedChargeMatches } from "./payment-evidence";
+import { pendingChange, changeResolution } from "./recovery-model";
+import { matchingChangeInvoice, invoiceReview } from "./change-provider.server";
 import {
   billingStorageReady,
   catalogueColumns,
@@ -46,6 +48,9 @@ export async function receiveBillingEvent(
     subscription?: unknown;
     payment_intent?: unknown;
     charge?: unknown;
+    customer?: unknown;
+    latest_invoice?: unknown;
+    pending_update?: { metadata?: Record<string, unknown> };
     metadata?: Record<string, unknown>;
     parent?: {
       subscription_details?: {
@@ -89,6 +94,43 @@ export async function receiveBillingEvent(
   ).rows;
   if (rows.length > 1) throw new SellerError("CONFLICT");
   if (!rows[0]) return false;
+  const changeId =
+    object.pending_update?.metadata?.billing_change_intent_id ??
+    object.metadata?.billing_change_intent_id;
+  const invoiceId = providerId(object.latest_invoice);
+  if (
+    event.type.startsWith("customer.subscription.") &&
+    validId(changeId) &&
+    invoiceId &&
+    /^in_[A-Za-z0-9]+$/.test(invoiceId)
+  ) {
+    // Preserve the signed invoice correlation even if the update response was
+    // lost and pending_update later disappears. This never grants/retires state.
+    await tx.client.query(
+      "SELECT id FROM treido.seller_accounts WHERE id=$1 FOR KEY SHARE",
+      [rows[0].sellerId],
+    );
+    await lockBillingUsage(tx, rows[0].sellerId);
+    await tx.client.query(
+      `UPDATE treido.billing_intents i SET change_invoice_id=COALESCE(change_invoice_id,$2),updated_at=clock_timestamp()
+      FROM treido.billing_customers b WHERE i.id=$1 AND i.seller_id=$3 AND i.subscription_id=$4
+      AND i.operation='change' AND i.parameters->>'payment_behavior'='pending_if_incomplete'
+      AND i.state IN ('creating','reconciling','ready') AND (i.change_invoice_id IS NULL OR i.change_invoice_id=$2)
+      AND b.id=i.customer_binding_id AND b.provider_id=$5 AND b.platform_account=$6 AND b.livemode=$7
+      AND b.environment=$8 AND b.application_id=$9 AND b.purpose='seller_subscription'`,
+      [
+        changeId,
+        invoiceId,
+        rows[0].sellerId,
+        subId,
+        providerId(object.customer),
+        binding.platformAccount,
+        binding.livemode,
+        binding.environment,
+        binding.applicationId,
+      ],
+    );
+  }
   const hash = createHash("sha256")
       .update(
         "seller_subscription:" +
@@ -110,6 +152,20 @@ export async function receiveBillingEvent(
       "-" +
       hash.slice(20, 32);
   await enqueueBillingObservation(tx, rows[0], operation);
+  // Signed subscription signals also wake the actual money command; the
+  // checkout-origin observation alone cannot settle a later plan-change intent.
+  const changes = (
+    await tx.client.query<{ id: string; sellerId: string }>(
+      `SELECT id,seller_id AS "sellerId" FROM treido.billing_intents WHERE seller_id=$1
+     AND operation='change' AND state IN ('creating','reconciling','ready') LIMIT 1`,
+      [rows[0].sellerId],
+    )
+  ).rows;
+  for (const change of changes) {
+    const h = inputHash({ operation, intentId: change.id });
+    const key = `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
+    await enqueueBillingObservation(tx, change, key);
+  }
   return true;
 }
 type InvoiceFact = {
@@ -443,6 +499,31 @@ export async function processBillingObservation(
     sub.schedule
   )
     throw new SellerError("CONFLICT");
+  let changeInvoice: Stripe.Invoice | null = null;
+  if (
+    source.row.operation === "change" &&
+    pendingChange(source.row.parameters)
+  ) {
+    const correlation =
+      sub.pending_update?.metadata?.billing_change_intent_id ??
+      sub.metadata.billing_change_intent_id;
+    const candidateId =
+      source.row.changeInvoiceId ??
+      (correlation === source.row.id ? providerId(sub.latest_invoice) : null);
+    if (candidateId) {
+      const candidate = await stripe.invoices.retrieve(candidateId);
+      if (
+        !matchingChangeInvoice(
+          candidate,
+          source.customer.providerId,
+          sub.id,
+          binding.livemode,
+        )
+      )
+        throw new SellerError("CONFLICT");
+      changeInvoice = candidate;
+    }
+  }
   const mapped = await inTransaction(database, async (tx) => {
     const origin = (
       await tx.client.query<{ id: string }>(
@@ -496,6 +577,7 @@ export async function processBillingObservation(
     limit: 20,
   });
   const invoices = new Map(latest.data.map((x) => [x.id, x]));
+  if (changeInvoice) invoices.set(changeInvoice.id, changeInvoice);
   for (const id of mapped.activeInvoices)
     if (!invoices.has(id)) invoices.set(id, await stripe.invoices.retrieve(id));
   const facts: InvoiceFact[] = [];
@@ -522,6 +604,14 @@ export async function processBillingObservation(
         )
       ).rows[0];
       if (!sync || sync.generation !== source.sync.generation) return;
+      const observedIntent = (
+        await tx.client.query<{ revision: number }>(
+          "SELECT revision FROM treido.billing_intents WHERE id=$1 FOR UPDATE",
+          [source.row.id],
+        )
+      ).rows[0];
+      if (!observedIntent || observedIntent.revision !== source.row.revision)
+        return;
       const current = (
         await tx.client.query<{
           id: string;
@@ -540,7 +630,11 @@ export async function processBillingObservation(
       )
         return;
       // A permanently retired subscription cannot be revived by any delayed observation.
-      if (current?.retiredAt) return;
+      if (
+        current?.retiredAt &&
+        !["canceled", "incomplete_expired"].includes(sub.status)
+      )
+        return;
       const id = current?.id ?? randomUUID(),
         terminal = ["canceled", "incomplete_expired"].includes(sub.status),
         state =
@@ -565,7 +659,7 @@ export async function processBillingObservation(
             terminal,
           ],
         );
-      else
+      else if (!current.retiredAt)
         await tx.client.query(
           `UPDATE treido.billing_subscriptions SET catalogue_id=$2,item_id=$3,state=$4,cancel_at_period_end=$5,period_end=to_timestamp($6),observed_at=clock_timestamp(),retired_at=CASE WHEN $7 THEN clock_timestamp() ELSE retired_at END WHERE id=$1`,
           [
@@ -617,12 +711,46 @@ export async function processBillingObservation(
             ],
           );
       }
+      if (source.row.operation === "change") {
+        const resolution = changeResolution({
+          legacy: !pendingChange(source.row.parameters),
+          subscriptionTerminal: terminal,
+          hasPendingUpdate: !!sub.pending_update,
+          targetApplied: mapped.plan.id === source.row.catalogueId,
+          invoiceStatus: changeInvoice?.status ?? null,
+          invoiceMatches:
+            !!changeInvoice &&
+            (changeInvoice.status === "void" ||
+              invoiceReview(changeInvoice).invoiceHash ===
+                source.row.result?.invoiceHash),
+        });
+        // A timer, unchanged price or a legacy portal's apparent completion
+        // cannot prove the old hosted session incapable of acting again.
+        await tx.client.query(
+          `UPDATE treido.billing_intents SET change_invoice_id=COALESCE(change_invoice_id,$2),
+           hosted_url=COALESCE(hosted_url,$3),state=COALESCE($4,state),updated_at=clock_timestamp()
+           WHERE id=$1 AND state IN ('creating','reconciling','ready')`,
+          [
+            source.row.id,
+            changeInvoice?.id ?? null,
+            safeBillingUrl(changeInvoice?.hosted_invoice_url, "invoice"),
+            resolution ??
+              (changeInvoice?.status === "open" && sub.pending_update
+                ? "ready"
+                : null),
+          ],
+        );
+        if (resolution)
+          await tx.client.query(
+            `UPDATE treido.billing_recovery_requests SET state='complete',updated_at=clock_timestamp()
+           WHERE intent_id=$1 AND operation='abandon' AND state IN ('creating','reconciling')`,
+            [source.row.id],
+          );
+      }
       if (
         (source.row.operation === "checkout" &&
           session?.status === "complete") ||
-        (source.row.operation === "cancel" && sub.cancel_at_period_end) ||
-        (source.row.operation === "change" &&
-          mapped.plan.id === source.row.catalogueId)
+        (source.row.operation === "cancel" && sub.cancel_at_period_end)
       )
         await tx.client.query(
           `UPDATE treido.billing_intents SET state='complete',provider_id=COALESCE(provider_id,$2),updated_at=clock_timestamp() WHERE id=$1 AND state IN ('creating','reconciling','ready')`,

@@ -34,6 +34,7 @@ import {
   canIssuerDelegateTeamAccess,
 } from "./policy.server";
 import { lockInvitationHumans } from "./issuer.server";
+import { retryInvitationMail } from "./mail-jobs.server";
 
 export type VerifiedRecipientIdentity = VerifiedIdentity & {
   readonly verifiedEmails: readonly string[];
@@ -51,6 +52,7 @@ type InvitationRow = Omit<
   valid: boolean;
 };
 const invitationColumns = `id,seller_id AS "sellerId",recipient,role,grants,status,created_by AS "createdBy",expires_at AS "expiresAt",accepted_by AS "acceptedBy",accepted_membership_revision AS "acceptedMembershipRevision",expires_at > clock_timestamp() AS valid`;
+const teamInvitationColumns = `i.id,i.seller_id AS "sellerId",i.recipient,i.role,i.grants,i.status,i.created_by AS "createdBy",i.expires_at AS "expiresAt",i.accepted_by AS "acceptedBy",i.accepted_membership_revision AS "acceptedMembershipRevision",i.expires_at > clock_timestamp() AS valid`;
 
 async function revision(tx: SellerTransaction, sellerId: string) {
   return (
@@ -103,10 +105,17 @@ async function projectTeam(
   ).length;
   const invitations = (
     await tx.client.query<
-      InvitationRow & { delivery: TeamInvitation["delivery"] }
+      InvitationRow & {
+        delivery: TeamInvitation["delivery"];
+        canRetryMail: boolean;
+        canResendMail: boolean;
+      }
     >(
-      `SELECT ${invitationColumns},COALESCE((SELECT CASE WHEN d.state='cancelled' THEN 'cancelled' WHEN j.state='dead' THEN 'unavailable' WHEN j.state='cancelled' THEN 'cancelled' ELSE d.state END FROM treido.invitation_deliveries d LEFT JOIN treido.outbox_jobs j ON j.kind='team.invitation' AND j.operation_key=d.id WHERE d.invitation_id=i.id ORDER BY d.created_at DESC,d.id DESC LIMIT 1),'pending') AS delivery FROM treido.seller_invitations i WHERE seller_id=$1 ORDER BY CASE WHEN status='pending' AND expires_at>clock_timestamp() THEN 0 ELSE 1 END,created_at DESC,id DESC LIMIT 50`,
-      [seller.id],
+      `SELECT ${teamInvitationColumns},COALESCE(mail.state,'pending') AS delivery,
+       COALESCE(mail.actor_id=$2 AND mail.state IN ('pending','unavailable','uncertain') AND mail.provider_id IS NULL AND (mail.first_attempt_at IS NULL OR mail.first_attempt_at>clock_timestamp()-interval '23 hours') AND NOT EXISTS(SELECT 1 FROM treido.outbox_jobs j JOIN treido.job_effects e ON e.job_id=j.id WHERE j.kind='team.invitation' AND j.operation_key=mail.id AND (j.state IN ('completed','cancelled') OR e.state='completed' OR e.execution_until>clock_timestamp())),false) AS "canRetryMail",
+       COALESCE(mail.state IN ('submitted','sent','delivered','bounced','failed','complained') AND NOT EXISTS(SELECT 1 FROM treido.invitation_deliveries d WHERE d.invitation_id=i.id AND d.state IN ('pending','unavailable','uncertain') AND d.provider_id IS NULL),false) AS "canResendMail"
+       FROM treido.seller_invitations i LEFT JOIN LATERAL(SELECT * FROM treido.invitation_deliveries d WHERE d.invitation_id=i.id ORDER BY d.created_at DESC,d.id DESC LIMIT 1) mail ON true WHERE i.seller_id=$1 ORDER BY CASE WHEN i.status='pending' AND i.expires_at>clock_timestamp() THEN 0 ELSE 1 END,i.created_at DESC,i.id DESC LIMIT 50`,
+      [seller.id, user.id],
     )
   ).rows;
   return {
@@ -147,6 +156,8 @@ async function projectTeam(
       status: i.status === "pending" && !i.valid ? "expired" : i.status,
       expiresAt: i.expiresAt.toISOString(),
       delivery: i.delivery,
+      canRetryMail: i.canRetryMail,
+      canResendMail: i.canResendMail,
       canManage:
         i.status === "pending" &&
         i.valid &&
@@ -173,7 +184,7 @@ async function queueInvitation(
 ) {
   const deliveryId = randomUUID();
   await tx.client.query(
-    `INSERT INTO treido.invitation_deliveries(id,seller_id,invitation_id,actor_id,seller_name) VALUES($1,$2,$3,$4,$5)`,
+    `INSERT INTO treido.invitation_deliveries(id,seller_id,invitation_id,actor_id,seller_name,invitation_revision) SELECT $1,$2,i.id,$4,$5,i.revision FROM treido.seller_invitations i WHERE i.id=$3 AND i.seller_id=$2`,
     [
       deliveryId,
       authorized.seller.id,
@@ -265,7 +276,11 @@ export function changeTeam(
         ],
       );
       await queueInvitation(tx, authorized, resultId);
-    } else if (input.kind === "cancel" || input.kind === "resend") {
+    } else if (
+      input.kind === "cancel" ||
+      input.kind === "resend" ||
+      input.kind === "retry-mail"
+    ) {
       const invitation = (
         await tx.client.query<InvitationRow>(
           `SELECT ${invitationColumns} FROM treido.seller_invitations WHERE seller_id=$1 AND id=$2 FOR UPDATE`,
@@ -289,7 +304,21 @@ export function changeTeam(
           `UPDATE treido.invitation_deliveries SET state='cancelled' WHERE invitation_id=$1 AND state IN ('pending','unavailable')`,
           [invitation.id],
         );
+      } else if (input.kind === "retry-mail") {
+        resultId = await retryInvitationMail(
+          tx,
+          seller.id,
+          invitation.id,
+          user.id,
+        );
       } else {
+        // Only a deliberately new message after a known outcome. Unknown outcomes
+        // require same-intent recovery, never a fresh provider key.
+        const unsafe = await tx.client.query(
+          `SELECT 1 FROM treido.invitation_deliveries d LEFT JOIN treido.outbox_jobs j ON j.kind='team.invitation' AND j.operation_key=d.id LEFT JOIN treido.job_effects e ON e.job_id=j.id WHERE d.invitation_id=$1 AND ((d.provider_id IS NULL AND d.state IN ('pending','unavailable','uncertain')) OR (e.state='running' AND e.execution_until>clock_timestamp())) LIMIT 1`,
+          [invitation.id],
+        );
+        if (unsafe.rowCount) throw new SellerError("CONFLICT");
         const recent = (
           await tx.client.query<{ limited: boolean }>(
             `SELECT (count(*) FILTER (WHERE created_at>clock_timestamp()-interval '1 minute')>0 OR count(*) FILTER (WHERE created_at>clock_timestamp()-interval '1 day')>=5) AS limited FROM treido.invitation_deliveries WHERE invitation_id=$1`,
@@ -297,7 +326,6 @@ export function changeTeam(
           )
         ).rows[0];
         if (recent.limited) throw new SellerError("CONFLICT");
-        // An uncertain delivery may have reached the recipient. A resend is an explicit new intent.
         await queueInvitation(tx, authorized, invitation.id);
       }
     } else {

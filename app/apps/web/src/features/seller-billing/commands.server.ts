@@ -28,6 +28,7 @@ import {
   approvedCatalogue,
   approvedCustomer,
   billingStorageReady,
+  billingRecoveryReady,
   catalogueColumns,
   checkedCatalogue,
   type CatalogueRow,
@@ -37,6 +38,13 @@ import {
   qualifiedBillingProvider,
   subscriptionBindings,
 } from "./provider.server";
+import { pendingChange } from "./recovery-model";
+import {
+  assertSupportedChange,
+  invoiceReview,
+  subscriptionReview,
+  matchingChangeInvoice,
+} from "./change-provider.server";
 
 export type BillingIntent = {
   id: string;
@@ -56,16 +64,24 @@ export type BillingIntent = {
   state: string;
   providerId: string | null;
   hostedUrl: string | null;
+  firstAttemptAt: Date | null;
+  revision: number;
+  changeInvoiceId: string | null;
   result: {
     amountMinor: number;
     currency: string;
     prorationDate: number;
     previousPrice: string;
+    invoiceHash?: string;
+    subscriptionHash?: string;
+    reviewHash?: string;
+    monthlyAmountMinor?: number;
+    termsVersion?: string;
   } | null;
 };
 export const intentColumns = `id,seller_id AS "sellerId",actor_id AS "actorId",request_id AS "requestId",input_hash AS "inputHash",operation,
  catalogue_id AS "catalogueId",customer_binding_id AS "customerBindingId",subscription_id AS "subscriptionId",parameters,
- expected_price_id AS "expectedPriceId",parameter_hash AS "parameterHash",idempotency_key AS "idempotencyKey",expires_at AS "expiresAt",state,provider_id AS "providerId",hosted_url AS "hostedUrl",result`;
+ expected_price_id AS "expectedPriceId",parameter_hash AS "parameterHash",idempotency_key AS "idempotencyKey",expires_at AS "expiresAt",state,provider_id AS "providerId",hosted_url AS "hostedUrl",result,first_attempt_at AS "firstAttemptAt",revision,change_invoice_id AS "changeInvoiceId"`;
 async function lockUsage(tx: SellerTransaction, sellerId: string) {
   const row = await tx.client.query(
     "SELECT seller_id FROM treido.seller_usage WHERE seller_id=$1 FOR UPDATE",
@@ -127,7 +143,7 @@ export async function prepareBillingIntent(
       "billing.manage",
     );
     await lockUsage(tx, command.sellerId);
-    if (!(await billingStorageReady(tx)))
+    if (!(await billingStorageReady(tx)) || !(await billingRecoveryReady(tx)))
       throw new SellerError("NOT_AVAILABLE");
     const hash = inputHash(command);
     const prior = (
@@ -251,43 +267,38 @@ export async function prepareBillingIntent(
           proration_date: Math.floor(now.getTime() / 1000),
         },
       };
-    } else {
+    } else if (command.operation === "portal") {
       parameters = {
         customer: customer.providerId,
         configuration: plan.portalConfiguration,
         locale: command.language,
         return_url: returnUrl,
       };
-      if (command.operation === "change") {
-        const preview = (
-          await tx.client.query<BillingIntent>(
-            `SELECT ${intentColumns} FROM treido.billing_intents WHERE id=$1 AND seller_id=$2 AND actor_id=$3 AND operation='preview' AND state='ready' AND expires_at>clock_timestamp() FOR SHARE`,
-            [command.previewId, command.sellerId, access.user.id],
-          )
-        ).rows[0];
-        if (
-          !preview?.result ||
-          preview.result.previousPrice !== previousPrice ||
-          preview.catalogueId !== plan.id ||
-          preview.subscriptionId !== subscription!.providerId ||
-          preview.customerBindingId !== customer.id
+    } else {
+      const preview = (
+        await tx.client.query<BillingIntent>(
+          `SELECT ${intentColumns} FROM treido.billing_intents WHERE id=$1 AND seller_id=$2 AND actor_id=$3 AND operation='preview' AND state='ready' AND expires_at>clock_timestamp() FOR SHARE`,
+          [command.previewId, command.sellerId, access.user.id],
         )
-          throw new SellerError("CONFLICT");
-        parameters = {
-          ...parameters,
-          configuration: plan.changeConfiguration,
-          flow_data: {
-            type: "subscription_update_confirm",
-            subscription_update_confirm: {
-              subscription: subscription!.providerId,
-              items: [
-                { id: subscription!.itemId, price: plan.priceId, quantity: 1 },
-              ],
-            },
-          },
-        };
-        // Provider confirmation recalculates final proration. The saved preview is an estimate, not a debit authorization.
-      }
+      ).rows[0];
+      if (
+        !preview?.result ||
+        preview.result.previousPrice !== previousPrice ||
+        preview.catalogueId !== plan.id ||
+        preview.subscriptionId !== subscription!.providerId ||
+        preview.customerBindingId !== customer.id ||
+        !preview.result.reviewHash ||
+        preview.result.reviewHash !== command.reviewHash
+      )
+        throw new SellerError("CONFLICT");
+      parameters = {
+        payment_behavior: "pending_if_incomplete",
+        proration_behavior: "always_invoice",
+        proration_date: preview.result.prorationDate,
+        items: [{ id: subscription!.itemId, price: plan.priceId, quantity: 1 }],
+        metadata: { billing_change_intent_id: id },
+        expand: ["latest_invoice"],
+      };
     }
     const pending = (
       await tx.client.query(
@@ -309,6 +320,15 @@ export async function prepareBillingIntent(
         binding.applicationId,
       ],
     );
+    const acceptedReview =
+      command.operation === "change"
+        ? (
+            await tx.client.query<BillingIntent>(
+              `SELECT ${intentColumns} FROM treido.billing_intents WHERE id=$1`,
+              [command.previewId],
+            )
+          ).rows[0].result
+        : null;
     const row = (
       await tx.client.query<BillingIntent>(
         `INSERT INTO treido.billing_intents(id,seller_id,actor_id,request_id,input_hash,operation,catalogue_id,customer_binding_id,subscription_id,preview_id,parameters,parameter_hash,idempotency_key,api_version,expires_at,expected_price_id)
@@ -333,6 +353,15 @@ export async function prepareBillingIntent(
         ],
       )
     ).rows[0];
+    if (acceptedReview) {
+      const saved = (
+        await tx.client.query<BillingIntent>(
+          `UPDATE treido.billing_intents SET result=$2 WHERE id=$1 RETURNING ${intentColumns}`,
+          [row.id, acceptedReview],
+        )
+      ).rows[0];
+      return saved;
+    }
     return row;
   });
 }
@@ -352,7 +381,7 @@ export async function recoverBillingIntent(
       sellerId,
       "billing.manage",
     );
-    if (!(await billingStorageReady(tx)))
+    if (!(await billingStorageReady(tx)) || !(await billingRecoveryReady(tx)))
       throw new SellerError("NOT_AVAILABLE");
     const row = (
       await tx.client.query<BillingIntent>(
@@ -365,13 +394,19 @@ export async function recoverBillingIntent(
   });
 }
 export function publicIntent(row: BillingIntent) {
+  const directChange =
+    row.operation === "change" && pendingChange(row.parameters);
   const url =
     row.hostedUrl &&
     row.state === "ready" &&
-    row.expiresAt.getTime() > Date.now()
+    (directChange || row.expiresAt.getTime() > Date.now())
       ? safeBillingUrl(
           row.hostedUrl,
-          row.operation === "checkout" ? "checkout" : "portal",
+          directChange
+            ? "invoice"
+            : row.operation === "checkout"
+              ? "checkout"
+              : "portal",
         )
       : null;
   return {
@@ -382,6 +417,17 @@ export function publicIntent(row: BillingIntent) {
     expiresAt: row.expiresAt.toISOString(),
     url,
     preview: row.operation === "preview" ? row.result : null,
+    revision: row.revision,
+    recovery:
+      row.operation === "change" &&
+      !pendingChange(row.parameters) &&
+      row.firstAttemptAt
+        ? ("legacy" as const)
+        : row.operation === "change" && row.changeInvoiceId
+          ? ("invoice" as const)
+          : row.state === "prepared" && !row.firstAttemptAt
+            ? ("unattempted" as const)
+            : ("observe" as const),
   };
 }
 /** Only the original prepared intent can attempt a provider write. Creating/unknown is READ-only recovery. */
@@ -423,6 +469,9 @@ export async function executeBillingIntent(
     return { row, customer, plan };
   });
   if (facts.row.state !== "prepared") return publicIntent(facts.row);
+  if (facts.row.operation === "change" && !pendingChange(facts.row.parameters))
+    throw new SellerError("CONFLICT"); // Never create another legacy money portal.
+  let reviewedSubscription: Stripe.Subscription | null = null;
   const stripe = await qualifiedBillingProvider(
     binding,
     facts.customer,
@@ -470,10 +519,8 @@ export async function executeBillingIntent(
               facts.row
                 .parameters as unknown as Stripe.InvoiceCreatePreviewParams
             ).subscription_details?.items?.[0]?.id
-          : (
-              facts.row
-                .parameters as unknown as Stripe.BillingPortal.SessionCreateParams
-            ).flow_data?.subscription_update_confirm?.items[0].id;
+          : (facts.row.parameters as unknown as Stripe.SubscriptionUpdateParams)
+              .items?.[0]?.id;
       if (
         current.items.data[0].id !== expectedItem ||
         current.items.data[0].price.id !== facts.row.expectedPriceId ||
@@ -481,6 +528,28 @@ export async function executeBillingIntent(
         current.status !== "active"
       )
         throw new SellerError("CONFLICT");
+      await assertSupportedChange(stripe, current, facts.customer.providerId);
+      reviewedSubscription = current;
+      if (facts.row.operation === "change") {
+        if (
+          !facts.row.result?.invoiceHash ||
+          !facts.row.result.subscriptionHash ||
+          subscriptionReview(current) !== facts.row.result.subscriptionHash
+        )
+          throw new SellerError("CONFLICT");
+        const fresh = await stripe.invoices.createPreview({
+          customer: facts.customer.providerId,
+          subscription: current.id,
+          subscription_details: {
+            items: (facts.row.parameters as Stripe.SubscriptionUpdateParams)
+              .items,
+            proration_behavior: "always_invoice",
+            proration_date: facts.row.result.prorationDate,
+          },
+        });
+        if (invoiceReview(fresh).invoiceHash !== facts.row.result.invoiceHash)
+          throw new SellerError("CONFLICT");
+      }
     }
   }
   const claimed = await inTransaction(database, async (tx) => {
@@ -489,11 +558,23 @@ export async function executeBillingIntent(
     if (!hasVerifiedRecentAuthentication(identity))
       throw new SellerError("FORBIDDEN");
     await lockApproval(tx, facts.row, binding);
+    if (facts.row.operation === "change") {
+      const preview = await tx.client.query(
+        `SELECT id FROM treido.billing_intents WHERE id=(SELECT preview_id FROM treido.billing_intents WHERE id=$1)
+         AND state='ready' AND expires_at>clock_timestamp() FOR SHARE`,
+        [prepared.id],
+      );
+      if (!preview.rowCount) throw new SellerError("CONFLICT");
+    }
     const row = (
       await tx.client.query<BillingIntent>(
         `UPDATE treido.billing_intents SET state='creating',first_attempt_at=clock_timestamp(),updated_at=clock_timestamp()
-      WHERE id=$1 AND state='prepared' AND expires_at>clock_timestamp()+make_interval(secs=>$2) RETURNING ${intentColumns}`,
-        [prepared.id, facts.row.operation === "checkout" ? 1800 : 0],
+      WHERE id=$1 AND state='prepared' AND revision=$3 AND expires_at>clock_timestamp()+make_interval(secs=>$2) RETURNING ${intentColumns}`,
+        [
+          prepared.id,
+          facts.row.operation === "checkout" ? 1800 : 0,
+          facts.row.revision,
+        ],
       )
     ).rows[0];
     if (row) await enqueueBillingObservation(tx, row);
@@ -508,6 +589,7 @@ export async function executeBillingIntent(
       libraryActorKey(identity),
     );
   let providerObjectId: string | null = null,
+    changeInvoiceId: string | null = null,
     hostedUrl: string | null = null,
     result: BillingIntent["result"] = null;
   try {
@@ -565,11 +647,48 @@ export async function executeBillingIntent(
         throw new SellerError("NOT_AVAILABLE");
       providerObjectId = response.id;
       result = {
+        ...invoiceReview(response),
         amountMinor: response.amount_due,
         currency: "EUR",
         prorationDate,
         previousPrice: claimed.expectedPriceId,
+        subscriptionHash: subscriptionReview(reviewedSubscription!),
+        monthlyAmountMinor: facts.plan.amountMinor,
+        termsVersion: facts.plan.termsVersion,
       };
+      result.reviewHash = inputHash({
+        ...result,
+        catalogueId: claimed.catalogueId,
+        subscriptionId: claimed.subscriptionId,
+      });
+    } else if (claimed.operation === "change") {
+      const response = await stripe.subscriptions.update(
+        claimed.subscriptionId!,
+        claimed.parameters as Stripe.SubscriptionUpdateParams,
+        options,
+      );
+      providerObjectId = response.id;
+      if (
+        response.id !== claimed.subscriptionId ||
+        providerId(response.customer) !== facts.customer.providerId ||
+        response.livemode !== binding.livemode
+      )
+        throw new SellerError("NOT_AVAILABLE");
+      const invoiceId = providerId(response.latest_invoice);
+      if (!invoiceId) throw new SellerError("NOT_AVAILABLE");
+      const invoice = await stripe.invoices.retrieve(invoiceId);
+      if (
+        !matchingChangeInvoice(
+          invoice,
+          facts.customer.providerId,
+          response.id,
+          binding.livemode,
+        )
+      )
+        throw new SellerError("CONFLICT");
+      changeInvoiceId = invoice.id;
+      hostedUrl = safeBillingUrl(invoice.hosted_invoice_url, "invoice");
+      result = claimed.result; // Exact immutable accepted quote, never a new browser estimate.
     } else {
       const response = await stripe.billingPortal.sessions.create(
         claimed.parameters as Stripe.BillingPortal.SessionCreateParams,
@@ -583,13 +702,14 @@ export async function executeBillingIntent(
     await inTransaction(database, async (tx) => {
       await lockUsage(tx, claimed.sellerId);
       await tx.client.query(
-        `UPDATE treido.billing_intents SET provider_id=COALESCE(provider_id,$2),hosted_url=COALESCE(hosted_url,$3),result=COALESCE(result,$4),state=$5,updated_at=clock_timestamp() WHERE id=$1 AND state IN ('creating','reconciling')`,
+        `UPDATE treido.billing_intents SET provider_id=COALESCE(provider_id,$2),hosted_url=COALESCE(hosted_url,$3),result=COALESCE(result,$4),state=$5,change_invoice_id=COALESCE(change_invoice_id,$6),updated_at=clock_timestamp() WHERE id=$1 AND state IN ('creating','reconciling')`,
         [
           claimed.id,
           providerObjectId,
           hostedUrl,
           result,
           claimed.operation === "cancel" ? "complete" : "ready",
+          changeInvoiceId,
         ],
       );
       await enqueueBillingObservation(tx, claimed);

@@ -31,10 +31,26 @@ export function billingText(language: "bg" | "en") {
         cancelReview:
           "Платеният достъп остава до края на потвърдения период. Ново плащане няма да бъде повторено при неясен резултат.",
         preview: "Прегледай промяна на плана",
-        confirmChange: "Прегледай крайна промяна в Stripe",
-        estimate: "Оценка за следваща фактура",
+        confirmChange: "Приемам прегледаната сума и промяна на плана",
+        estimate: "Сума за тази промяна",
         estimateNote:
-          "Оценката включва предложени пропорционални суми. Stripe показва крайната сума и датата преди потвърждение; те може да се променят.",
+          "С потвърждението разрешаваш плащане с текущата карта за показаната промяна. Запазваме датата на пропорционалното изчисление. Ако прегледаните условия са променени, е нужен нов преглед. При непълно плащане планът не се променя.",
+        recoveryTitle: "Възстановяване на заявка",
+        reference: "Номер за справка",
+        reconcile: "Провери актуалното състояние в Stripe",
+        abandon: "Откажи тази промяна",
+        abandonConfirm: "Потвърди отказа",
+        abandonReview:
+          "Нова промяна е възможна само след потвърден отказ на фактурата. Ако плащането вече е минало, отказът няма да го отмени или възстанови.",
+        legacyRecovery:
+          "Стара заявка през портала може още да действа, дори връзката да е скрита. Не можем безопасно да я отменим тук. Провери състоянието или запази номер за помощ; новите промени остават блокирани.",
+        unknownRecovery:
+          "Резултатът още е неясен. Не повтаряме плащането и не освобождаваме заявката по таймер.",
+        escalate: "Запази номер за помощ",
+        supportSaved:
+          "Номерът е запазен. Предай го на поддръжката; съобщение не е изпратено автоматично.",
+        support: "Свържи се с поддръжката",
+        back: "Назад",
         recover: "Провери първоначалната заявка",
         pending: "Проверяваме резултата. Не започвай друго плащане.",
         open: "Продължи първоначалната заявка в Stripe",
@@ -82,10 +98,26 @@ export function billingText(language: "bg" | "en") {
         cancelReview:
           "Paid access remains until the verified interval ends. An uncertain result will not repeat a payment.",
         preview: "Preview plan change",
-        confirmChange: "Review final change in Stripe",
-        estimate: "Estimated next invoice",
+        confirmChange: "Accept reviewed amount and change plan",
+        estimate: "Amount for this change",
         estimateNote:
-          "The estimate includes proposed prorations. Stripe shows the final amount and date before confirmation; they can change.",
+          "Confirming authorizes payment with your current card for the displayed change. We retain the proration date. Changed reviewed terms require a new preview. Incomplete payment does not change the plan.",
+        recoveryTitle: "Request recovery",
+        reference: "Reference",
+        reconcile: "Check current Stripe state",
+        abandon: "Abandon this change",
+        abandonConfirm: "Confirm abandonment",
+        abandonReview:
+          "A replacement is possible only after the invoice is confirmed void. If payment already succeeded, abandonment does not undo or refund it.",
+        legacyRecovery:
+          "An older portal request may still act even when its link is hidden. We cannot safely cancel it here. Check its state or save a support reference; further changes remain blocked.",
+        unknownRecovery:
+          "The outcome remains uncertain. We do not repeat payment or release the request on a timer.",
+        escalate: "Save support reference",
+        supportSaved:
+          "Reference saved. Share it with support; no message was sent automatically.",
+        support: "Contact support",
+        back: "Back",
         recover: "Check original request",
         pending: "Reconciling the result. Do not start another payment.",
         open: "Continue original request in Stripe",

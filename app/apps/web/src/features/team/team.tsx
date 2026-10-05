@@ -374,6 +374,11 @@ export function Team({
                       {
                         pending: "deliveryPending",
                         submitted: "deliverySubmitted",
+                        sent: "deliverySent",
+                        delivered: "deliveryDelivered",
+                        bounced: "deliveryBounced",
+                        failed: "deliveryFailed",
+                        complained: "deliveryComplained",
                         unavailable: "deliveryUnavailable",
                         uncertain: "deliveryUncertain",
                         cancelled: "deliveryCancelled",
@@ -406,6 +411,7 @@ export function Team({
                     </button>
                     <button
                       className={a.secondary}
+                      disabled={!invitation.canResendMail || pending}
                       onClick={() =>
                         open({
                           kind: "resend",
@@ -416,6 +422,25 @@ export function Team({
                     >
                       {t("resend")}
                     </button>
+                    {invitation.canRetryMail && (
+                      <button
+                        className={a.secondary}
+                        disabled={pending}
+                        onClick={() =>
+                          open({
+                            kind: "retry-mail",
+                            invitationId: invitation.id,
+                            recipient: invitation.recipient,
+                          })
+                        }
+                      >
+                        {t("retryMail")}
+                      </button>
+                    )}
+                    {invitation.delivery === "uncertain" &&
+                      !invitation.canRetryMail && (
+                        <p className={s.muted}>{t("uncertainMailNote")}</p>
+                      )}
                     <button
                       className={a.secondary}
                       onClick={() =>
@@ -457,7 +482,9 @@ export function Team({
                         ? "revoke"
                         : edit.kind === "resend"
                           ? "resend"
-                          : "cancelInvite",
+                          : edit.kind === "retry-mail"
+                            ? "retryMail"
+                            : "cancelInvite",
                 )}
               </h2>
               <button
@@ -587,7 +614,9 @@ export function Team({
                           ? "confirmRevoke"
                           : edit.kind === "resend"
                             ? "resendNote"
-                            : "confirmCancel",
+                            : edit.kind === "retry-mail"
+                              ? "retryMailNote"
+                              : "confirmCancel",
                       )}
                     </p>
                   </>

@@ -80,6 +80,7 @@ export type BillingCommand = {
   planId: PlanId | null;
   version: number | null;
   previewId: string | null;
+  reviewHash?: string | null;
   language: "bg" | "en";
 };
 export function parseBillingCommand(value: unknown): BillingCommand | null {
@@ -96,6 +97,7 @@ export function parseBillingCommand(value: unknown): BillingCommand | null {
           "planId",
           "version",
           "previewId",
+          "reviewHash",
           "language",
         ].includes(k),
     ) ||
@@ -122,6 +124,12 @@ export function parseBillingCommand(value: unknown): BillingCommand | null {
     return null;
   if (x.operation === "change" ? !validId(x.previewId) : x.previewId != null)
     return null;
+  if (
+    x.operation === "change"
+      ? typeof x.reviewHash !== "string" || !/^[a-f0-9]{64}$/.test(x.reviewHash)
+      : x.reviewHash != null
+  )
+    return null;
   return {
     sellerId: x.sellerId as string,
     requestId: x.requestId as string,
@@ -130,6 +138,7 @@ export function parseBillingCommand(value: unknown): BillingCommand | null {
     planId: priced ? (x.planId as PlanId) : null,
     version: priced ? (x.version as number) : null,
     previewId: (x.previewId as string) ?? null,
+    ...(x.reviewHash != null ? { reviewHash: x.reviewHash as string } : {}),
     language: x.language as "bg" | "en",
   };
 }

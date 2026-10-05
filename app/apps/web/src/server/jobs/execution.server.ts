@@ -16,6 +16,8 @@ import {
   type AssistantJobRow,
   type ClosureJobRow,
   isAssistantJob,
+  isAttachmentJob,
+  type AttachmentJobRow,
   isShippingJob,
   type ShippingJobRow,
 } from "./outbox.server";
@@ -27,9 +29,12 @@ import {
   type JobEvent,
   type SellerJobKind,
   type AssistantJobKind,
+  type AttachmentJobKind,
   type ShippingJobKind,
 } from "./model";
 
+import { authorizeInvitationMailJob } from "../../features/team/mail-persistence.server";
+import { authorizeAttachmentJob } from "../../features/message-attachments/jobs.server";
 import { authorizeShippingArtifact } from "./shipping-authority.server";
 import { authorizeLifecycleArtifact } from "./lifecycle-authority.server";
 
@@ -38,6 +43,9 @@ export type AssistantEffectContext = AssistantJobRow & {
 };
 export type ClosureEffectContext = ClosureJobRow & { executionToken: string };
 export type ShippingEffectContext = ShippingJobRow & { executionToken: string };
+export type AttachmentEffectContext = AttachmentJobRow & {
+  executionToken: string;
+};
 export type EffectContext = SellerJobRow & { executionToken: string };
 export type BuyerEffectContext = BuyerJobRow & { executionToken: string };
 export type EffectResult = {
@@ -47,11 +55,21 @@ export type EffectResult = {
   apply?: (tx: SellerTransaction) => Promise<void>;
 };
 export type JobHandlers = Partial<
-  Record<SellerJobKind, (context: EffectContext) => Promise<EffectResult>>
-> & {
-  "buyer.saved-search"?: (context: BuyerEffectContext) => Promise<EffectResult>;
-  "account.closure"?: (context: ClosureEffectContext) => Promise<EffectResult>;
-} & Partial<
+  Record<
+    AttachmentJobKind,
+    (context: AttachmentEffectContext) => Promise<EffectResult>
+  >
+> &
+  Partial<
+    Record<SellerJobKind, (context: EffectContext) => Promise<EffectResult>>
+  > & {
+    "buyer.saved-search"?: (
+      context: BuyerEffectContext,
+    ) => Promise<EffectResult>;
+    "account.closure"?: (
+      context: ClosureEffectContext,
+    ) => Promise<EffectResult>;
+  } & Partial<
     Record<
       AssistantJobKind,
       (context: AssistantEffectContext) => Promise<EffectResult>
@@ -72,6 +90,24 @@ async function currentAuthority(
   job: JobRow,
   executionToken?: string,
 ) {
+  if (job.kind === "team.invitation") {
+    await authorizeInvitationMailJob(tx, job, executionToken);
+    return;
+  }
+  if (isAttachmentJob(job)) {
+    try {
+      await authorizeAttachmentJob(tx, job, executionToken);
+    } catch (error) {
+      // A concurrent lease/revision conflict is retryable, not revoked authority.
+      if (
+        error instanceof SellerError &&
+        ["CONFLICT", "NOT_AVAILABLE"].includes(error.code)
+      )
+        throw new JobError("CONFLICT");
+      throw error;
+    }
+    return;
+  }
   if (isShippingJob(job)) {
     await authorizeShippingArtifact(tx, job, executionToken);
     return;
@@ -92,15 +128,6 @@ async function currentAuthority(
     )
   ).rows[0];
   if (!human) throw new SellerError("FORBIDDEN");
-  if (job.kind === "team.invitation") {
-    await authorizeSeller(
-      tx,
-      { subject: human.subject },
-      job.sellerId,
-      "team.manage",
-    );
-    return;
-  }
   if (job.kind === "catalogue.import")
     await authorizeSeller(
       tx,
@@ -183,7 +210,8 @@ async function claimExecution(
     if (
       job.kind === "account.closure" ||
       isAssistantJob(job) ||
-      isShippingJob(job)
+      isShippingJob(job) ||
+      isAttachmentJob(job)
     )
       await currentAuthority(tx, job, token);
     await tx.client.query(
@@ -237,6 +265,10 @@ export async function executeJob(
       if (!handler) throw new JobError("NOT_AVAILABLE");
       result = await handler(context);
     } else if (context.kind === "shipping.recipient-expiry") {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    } else if (isAttachmentJob(context)) {
       const handler = handlers[context.kind];
       if (!handler) throw new JobError("NOT_AVAILABLE");
       result = await handler(context);

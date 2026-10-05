@@ -1,0 +1,71 @@
+.root {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.root p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.root input {
+  max-width: 100%;
+  font: inherit;
+}
+.root input::file-selector-button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 20px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font: inherit;
+  margin-inline-end: 8px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.actions button,
+.actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: normal;
+  text-align: center;
+}
+.rows {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rows li {
+  padding: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  overflow-wrap: anywhere;
+}
+.rows h3 {
+  margin: 0 0 6px;
+  font: inherit;
+  font-weight: 600;
+}
+.rows ul {
+  padding-inline-start: 20px;
+}
+.rows ul li {
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+}
+.caption {
+  color: var(--color-muted);
+}
+.root :focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}

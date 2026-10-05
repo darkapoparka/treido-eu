@@ -8,6 +8,7 @@ export type ReplyCommand = {
   threadId: string;
   requestId: string;
   body: string;
+  attachmentIds?: string[];
 };
 export type ReplyReceipt = { id: string; sequence: number; recovered: boolean };
 export type ReplyDraft = {
@@ -23,9 +24,14 @@ export function parseReplyCommand(raw: unknown): ReplyCommand {
     !object(raw) ||
     Object.keys(raw).some(
       (k) =>
-        !["actorSubject", "sellerId", "threadId", "requestId", "body"].includes(
-          k,
-        ),
+        ![
+          "actorSubject",
+          "sellerId",
+          "threadId",
+          "requestId",
+          "body",
+          "attachmentIds",
+        ].includes(k),
     ) ||
     typeof raw.actorSubject !== "string" ||
     !/^[A-Za-z0-9_-]{1,128}$/.test(raw.actorSubject) ||
@@ -36,7 +42,7 @@ export function parseReplyCommand(raw: unknown): ReplyCommand {
     threadId: raw.threadId,
     requestId: raw.requestId,
     body: raw.body,
-    attachmentIds: [],
+    attachmentIds: raw.attachmentIds ?? [],
   });
   if (!input) throw new SellerError("INVALID_INPUT");
   return {
@@ -45,6 +51,9 @@ export function parseReplyCommand(raw: unknown): ReplyCommand {
     threadId: input.threadId,
     requestId: input.requestId,
     body: input.body,
+    ...(input.attachmentIds.length
+      ? { attachmentIds: input.attachmentIds }
+      : {}),
   };
 }
 export const emptyReplyDraft = (): ReplyDraft => ({

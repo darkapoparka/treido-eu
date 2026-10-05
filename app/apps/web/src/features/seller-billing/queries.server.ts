@@ -7,6 +7,7 @@ import { readFreeCatalogueLimits } from "../sellers/free-catalogue.server";
 import { safeBillingUrl } from "./model";
 import {
   billingStorageReady,
+  billingRecoveryReady,
   approvedCustomer,
   catalogueColumns,
   checkedCatalogue,
@@ -64,7 +65,7 @@ export async function readSellerBilling(
         variants: Number(usage.variants),
       },
     };
-    if (!(await billingStorageReady(tx)))
+    if (!(await billingStorageReady(tx)) || !(await billingRecoveryReady(tx)))
       return {
         ...base,
         available: false,
@@ -73,6 +74,14 @@ export async function readSellerBilling(
         invoices: [],
         intents: [],
       };
+    const pendingHistory = (
+      await tx.client.query<BillingIntent>(
+        `SELECT ${intentColumns} FROM treido.billing_intents WHERE seller_id=$1
+       AND operation IN ('checkout','change') AND state IN ('prepared','creating','reconciling','ready')
+       ORDER BY created_at DESC LIMIT 10`,
+        [sellerId],
+      )
+    ).rows.map(publicIntent);
     let binding, customer;
     try {
       binding = subscriptionBindings();
@@ -86,7 +95,7 @@ export async function readSellerBilling(
         plans: [],
         subscription: null,
         invoices: [],
-        intents: [],
+        intents: pendingHistory.map((i) => ({ ...i, url: null })),
       };
     }
     const plans = (
@@ -130,7 +139,9 @@ export async function readSellerBilling(
     ).rows;
     const intents = (
       await tx.client.query<BillingIntent>(
-        `SELECT ${intentColumns} FROM treido.billing_intents WHERE seller_id=$1 AND actor_id=$2 AND customer_binding_id=$3 ORDER BY created_at DESC LIMIT 10`,
+        `SELECT ${intentColumns} FROM treido.billing_intents WHERE seller_id=$1 AND customer_binding_id=$3
+         AND (actor_id=$2 OR (operation IN ('checkout','change') AND state IN ('prepared','creating','reconciling','ready')))
+         ORDER BY (state IN ('prepared','creating','reconciling','ready') AND operation IN ('checkout','change')) DESC,created_at DESC LIMIT 10`,
         [sellerId, access.user.id, customer.id],
       )
     ).rows.map(publicIntent);

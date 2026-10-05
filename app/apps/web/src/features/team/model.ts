@@ -1,5 +1,6 @@
 import { validId } from "../selling/draft-model";
 import type { SellerCapability } from "../sellers/capabilities";
+import type { MailState } from "./mail-model";
 
 export const TEAM_GRANTS = [
   "seller.read",
@@ -62,6 +63,7 @@ export type TeamCommand = {
     }
   | { kind: "cancel"; invitationId: string }
   | { kind: "resend"; invitationId: string }
+  | { kind: "retry-mail"; invitationId: string }
   | { kind: "change"; userId: string; access: TeamAccess }
   | { kind: "revoke"; userId: string }
 );
@@ -84,7 +86,7 @@ export function validTeamCommand(input: TeamCommand) {
     return Boolean(validId(input.userId) && parseTeamAccess(input.access));
   if (input.kind === "revoke") return validId(input.userId);
   return (
-    ["cancel", "resend"].includes(input.kind) &&
+    ["cancel", "resend", "retry-mail"].includes(input.kind) &&
     validId((input as { invitationId: string }).invitationId)
   );
 }
@@ -105,8 +107,10 @@ export type TeamInvitation = {
   grants: SellerCapability[];
   status: "pending" | "accepted" | "cancelled" | "expired" | "declined";
   expiresAt: string;
-  delivery: "pending" | "submitted" | "unavailable" | "uncertain" | "cancelled";
+  delivery: MailState;
   canManage: boolean;
+  canRetryMail?: boolean;
+  canResendMail?: boolean;
 };
 export type TeamView = {
   sellerId: string;

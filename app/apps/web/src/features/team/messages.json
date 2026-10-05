@@ -32,7 +32,7 @@
     "cancelInvite": "Cancel invitation",
     "resend": "Queue another email",
     "resendNote": "An earlier email may already have arrived. This creates a new delivery intent; it does not extend the invitation. Wait at least one minute between requests.",
-    "confirmRevoke": "Remove this person's access to this business? Their pending invitations will also be cancelled. Existing stock, imports and conversations are retained.",
+    "confirmRevoke": "Remove this person\u0027s access to this business? Their pending invitations will also be cancelled. Existing stock, imports and conversations are retained.",
     "confirmChange": "Changing permissions cancels pending invitations created by this person. It does not change their access to other businesses.",
     "confirmCancel": "Cancel this invitation and release its reserved seat? The link will no longer permit acceptance.",
     "cancel": "Cancel",
@@ -98,7 +98,15 @@
     "declined": "Declined",
     "decline": "Decline invitation",
     "confirmDecline": "Decline this invitation? You will not join this business and its reserved seat will be released. Joining later requires a new invitation.",
-    "membershipUnavailable": "This invitation was accepted previously, but it does not grant current access. Ask an owner for a new invitation or choose another business."
+    "membershipUnavailable": "This invitation was accepted previously, but it does not grant current access. Ask an owner for a new invitation or choose another business.",
+    "deliveryBounced": "Email bounced",
+    "deliveryFailed": "Email failed or was suppressed",
+    "deliverySent": "Sent; recipient delivery has not been confirmed",
+    "deliveryDelivered": "Recipient mail server accepted the email",
+    "uncertainMailNote": "This email may already have been sent. Safe automatic recovery is unavailable. Copy the recipient-bound link or ask an operator to reconcile the original request.",
+    "retryMailNote": "Retry the original request with the same delivery identity. This does not extend the invitation or create another email intent.",
+    "deliveryComplained": "Recipient reported this email as spam",
+    "retryMail": "Retry original email"
   },
   "bg": {
     "title": "Екип",
@@ -199,6 +207,14 @@
     "declined": "Отказана",
     "decline": "Откажи поканата",
     "confirmDecline": "Да откажете ли поканата? Няма да се присъедините към този бизнес и запазеното място ще се освободи. За присъединяване по-късно е нужна нова покана.",
-    "membershipUnavailable": "Тази покана е приета по-рано, но не дава текущ достъп. Поискайте нова покана от собственик или изберете друг бизнес."
+    "membershipUnavailable": "Тази покана е приета по-рано, но не дава текущ достъп. Поискайте нова покана от собственик или изберете друг бизнес.",
+    "deliveryBounced": "Имейлът е върнат",
+    "deliveryFailed": "Имейлът е неуспешен или блокиран",
+    "deliverySent": "Изпратен; доставянето до получателя не е потвърдено",
+    "deliveryDelivered": "Имейл сървърът на получателя прие писмото",
+    "uncertainMailNote": "Имейлът може вече да е изпратен. Безопасното автоматично възстановяване не е достъпно. Копирайте връзката за посочения получател или поискайте проверка на първоначалната заявка.",
+    "retryMailNote": "Повторете първоначалната заявка със същия идентификатор. Поканата не се удължава и не се създава нова заявка за имейл.",
+    "deliveryComplained": "Получателят е отбелязал писмото като спам",
+    "retryMail": "Повтори първоначалния имейл"
   }
 }

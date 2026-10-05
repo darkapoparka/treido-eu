@@ -35,14 +35,38 @@ export function isShippingJobKind(kind: unknown): kind is ShippingJobKind {
     kind === "shipping.input-expiry" || kind === "shipping.recipient-expiry"
   );
 }
+export type AttachmentJobKind =
+  "message-attachment.process" | "message-attachment.expire";
+export function isAttachmentJobKind(kind: unknown): kind is AttachmentJobKind {
+  return (
+    kind === "message-attachment.process" ||
+    kind === "message-attachment.expire"
+  );
+}
+export type AttachmentJobIntent = {
+  kind: AttachmentJobKind;
+  sellerId: string;
+  buyerId: null;
+  resourceId: string;
+  operationKey: string;
+  actorId: string;
+  authority: "attachment";
+};
 export type JobKind =
+  | AttachmentJobKind
   | SellerJobKind
   | "buyer.saved-search"
   | AssistantJobKind
   | "account.closure"
   | ShippingJobKind;
 export type JobAuthority =
-  "member" | "service" | "buyer" | "assistant" | "closure" | "shipping";
+  | "member"
+  | "service"
+  | "buyer"
+  | "assistant"
+  | "closure"
+  | "shipping"
+  | "attachment";
 export type JobState =
   "pending" | "accepted" | "completed" | "cancelled" | "dead";
 export type SellerJobIntent = {
@@ -84,6 +108,7 @@ export type ShippingJobIntent = Omit<
   "kind" | "authority"
 > & { kind: ShippingJobKind; authority: "shipping" };
 export type JobIntent =
+  | AttachmentJobIntent
   | SellerJobIntent
   | BuyerJobIntent
   | AssistantJobIntent
@@ -114,6 +139,18 @@ export class JobError extends Error {
   }
 }
 export function validateJobIntent(input: JobIntent) {
+  if (isAttachmentJobKind(input?.kind)) {
+    if (
+      !validId(input.sellerId) ||
+      input.buyerId !== null ||
+      !validId(input.actorId) ||
+      input.authority !== "attachment" ||
+      !validId(input.resourceId) ||
+      input.operationKey !== input.resourceId
+    )
+      throw new JobError("INVALID_INPUT");
+    return;
+  }
   if (isShippingJobKind(input?.kind)) {
     if (
       input.sellerId !== null ||

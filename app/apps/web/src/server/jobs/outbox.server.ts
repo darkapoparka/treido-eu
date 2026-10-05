@@ -11,6 +11,8 @@ import {
   JOB_LIMITS,
   validateJobIntent,
   isAssistantJobKind,
+  isAttachmentJobKind,
+  type AttachmentJobKind,
   isShippingJobKind,
   type ShippingJobKind,
   type AssistantJobKind,
@@ -66,8 +68,25 @@ export type ShippingJobRow = {
 export function isShippingJob(job: JobRow): job is ShippingJobRow {
   return isShippingJobKind(job.kind);
 }
+export type AttachmentJobRow = Omit<
+  SellerJobRow,
+  "kind" | "buyerId" | "actorId" | "authority"
+> & {
+  kind: AttachmentJobKind;
+  buyerId: null;
+  actorId: string;
+  authority: "attachment";
+};
+export function isAttachmentJob(job: JobRow): job is AttachmentJobRow {
+  return isAttachmentJobKind(job.kind);
+}
 export type JobRow =
-  SellerJobRow | BuyerJobRow | AssistantJobRow | ClosureJobRow | ShippingJobRow;
+  | SellerJobRow
+  | BuyerJobRow
+  | AssistantJobRow
+  | ClosureJobRow
+  | ShippingJobRow
+  | AttachmentJobRow;
 export function isAssistantJob(job: JobRow): job is AssistantJobRow {
   return isAssistantJobKind(job.kind);
 }

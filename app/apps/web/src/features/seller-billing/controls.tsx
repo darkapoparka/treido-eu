@@ -16,6 +16,7 @@ import { parseBillingCommand, type BillingCommand } from "./model";
 import type { SellerBillingView } from "./queries.server";
 import type { publicIntent } from "./commands.server";
 import s from "./billing.module.css";
+import { BillingRecoveryControls } from "./recovery-controls";
 
 const ORIGINAL_EVENT = "treido-billing-original-v1";
 const emptyOriginalSnapshot = () => null;
@@ -125,6 +126,7 @@ export function BillingControls({
     operation: BillingCommand["operation"],
     plan: SellerBillingView["plans"][number] | null = null,
     previewId: string | null = null,
+    reviewHash: string | null = null,
   ) {
     run({
       sellerId: view.sellerId,
@@ -134,6 +136,7 @@ export function BillingControls({
       planId: plan?.planId ?? null,
       version: plan?.version ?? null,
       previewId,
+      ...(reviewHash ? { reviewHash } : {}),
       language,
     });
   }
@@ -257,7 +260,11 @@ export function BillingControls({
               rel="noopener noreferrer"
               target="_blank"
               onClick={(event) => {
-                if (!current() || Date.now() >= Date.parse(result.expiresAt)) {
+                if (
+                  !current() ||
+                  (result.operation !== "change" &&
+                    Date.now() >= Date.parse(result.expiresAt))
+                ) {
                   event.preventDefault();
                   setResult(null);
                 }
@@ -276,6 +283,15 @@ export function BillingControls({
                 }).format(result.preview.amountMinor / 100)}
               </p>
               <p>{t.estimateNote}</p>
+              <p>
+                {t.version}: {target.version} · {t.terms}: {target.termsVersion}{" "}
+                ·
+                {new Intl.NumberFormat(language, {
+                  style: "currency",
+                  currency: "EUR",
+                }).format(target.amountMinor / 100)}
+              </p>
+              <p>{target.terms[language]}</p>
               <button
                 disabled={pending || blocked}
                 onClick={() => {
@@ -287,7 +303,12 @@ export function BillingControls({
                     setResult(null);
                     return;
                   }
-                  command("change", target, result.id);
+                  command(
+                    "change",
+                    target,
+                    result.id,
+                    result.preview?.reviewHash ?? null,
+                  );
                 }}
               >
                 {t.confirmChange}
@@ -298,6 +319,20 @@ export function BillingControls({
       )}
       {view.intents.filter((i) => ["creating", "reconciling"].includes(i.state))
         .length > 0 && <p role="status">{t.pending}</p>}
+      {view.intents
+        .filter(
+          (i) =>
+            ["checkout", "change"].includes(i.operation) &&
+            ["prepared", "creating", "reconciling", "ready"].includes(i.state),
+        )
+        .map((intent) => (
+          <BillingRecoveryControls
+            key={intent.id}
+            intent={intent}
+            view={view}
+            language={language}
+          />
+        ))}
     </div>
   );
 }

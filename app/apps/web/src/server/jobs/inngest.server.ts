@@ -1,4 +1,7 @@
 import "server-only";
+import { maintainInvitationMail } from "../../features/team/mail-jobs.server";
+import { invitationMailConfig } from "../../features/team/mail-model";
+import { maintainMessageAttachments } from "../../features/message-attachments/maintenance.server";
 import { scheduleLifecycleMaintenance } from "./lifecycle-maintenance.server";
 import { scheduleOrderRefundRepair } from "../../features/order-aftercare/jobs.server";
 import { scheduleBillingRepair } from "../../features/seller-billing/jobs.server";
@@ -178,6 +181,20 @@ export function createJobExecutor(
       );
       await step.run("expire-private-csv-uploads-v1", () =>
         expireImportUploads(database()),
+      );
+      await step.run("reconcile-invitation-mail-v1", async () => {
+        const db = database();
+        const ready = await db.pool.query(
+          "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='treido' AND table_name='invitation_deliveries' AND column_name='mail_binding') AS ready",
+        );
+        if (!ready.rows[0]?.ready) return { available: false, checked: 0 };
+        return maintainInvitationMail(
+          db,
+          invitationMailConfig(process.env, bindings),
+        );
+      });
+      await step.run("cleanup-private-message-images-v1", () =>
+        maintainMessageAttachments(database()),
       );
       await step.run("expire-business-invitations-v1", () =>
         expireTeamInvitations(database()),

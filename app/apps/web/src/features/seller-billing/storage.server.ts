@@ -28,6 +28,14 @@ export type CatalogueRow = {
   portalConfiguration: string;
   changeConfiguration: string;
 };
+export async function billingRecoveryReady(tx: SellerTransaction) {
+  const row = (
+    await tx.client.query<{ ready: boolean }>(
+      "SELECT to_regclass('treido.billing_recovery_requests') IS NOT NULL AS ready",
+    )
+  ).rows[0];
+  return row?.ready === true;
+}
 export function checkedCatalogue(
   row: CatalogueRow | undefined,
   kind: SellerKind,

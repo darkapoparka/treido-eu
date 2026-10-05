@@ -147,6 +147,7 @@ export async function readConversation(
         `SELECT m.id,m.sequence,CASE WHEN ${hidden} THEN '' ELSE m.body END AS body,${hidden} AS "moderationHidden",${messageReasonSql(moderationReady)} AS "moderationReason",CASE WHEN m.author_id=$2 THEN 'buyer' ELSE 'seller' END AS "from",m.author_id=$3 AS mine,
         to_char(m.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt",
         CASE WHEN ${hidden} THEN 0 ELSE (SELECT count(*)::int FROM treido.message_attachment_links a WHERE a.message_id=m.id) END AS attachments,
+        CASE WHEN ${hidden} THEN ARRAY[]::uuid[] ELSE ARRAY(SELECT a.attachment_id FROM treido.message_attachment_links a JOIN treido.message_attachments image ON image.id=a.attachment_id WHERE a.message_id=m.id AND image.state='ready' AND image.purpose='private-message-images-v1' AND image.ready_checksum IS NOT NULL ORDER BY a.attachment_id) END AS "attachmentIds",
         (SELECT jsonb_build_object('kind',e.kind,'unitPriceMinor',o.unit_price_minor,'quantity',o.quantity,'currency',o.currency) FROM treido.offer_events e JOIN treido.listing_offers o ON o.thread_id=e.thread_id AND o.id=e.offer_id WHERE e.thread_id=m.thread_id AND e.id=m.offer_event_id) AS offer
        FROM treido.messages m WHERE m.thread_id=$1 AND ($4::int IS NULL OR m.sequence<$4) ORDER BY m.sequence DESC LIMIT 51`,
         [thread.id, thread.buyerId, user.id, query.before],

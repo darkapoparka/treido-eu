@@ -1,3 +1,9 @@
+import { createInvitationMailHandler } from "../../../features/team/mail-jobs.server";
+import { invitationMailConfig } from "../../../features/team/mail-model";
+import {
+  processAttachmentJob,
+  expireAttachmentJob,
+} from "../../../features/message-attachments/jobs.server";
 import { processUnboundShippingInput } from "../../../server/jobs/shipping-authority.server";
 import { processAcceptedRecipientRetention } from "../../../features/order-aftercare/shipping-retention.server";
 import { processAssistantMaintenanceJob } from "../../../features/assistant-runs/jobs.server";
@@ -34,6 +40,15 @@ async function handle(
     await import("../../../server/jobs/inngest.server");
   const executor = createJobExecutor(bindings, {
     "system.probe": async (job) => ({ resultId: job.resourceId }),
+    "team.invitation": (job) =>
+      createInvitationMailHandler(
+        getDatabase(),
+        invitationMailConfig(process.env, bindings),
+      )(job),
+    "message-attachment.process": (job) =>
+      processAttachmentJob(getDatabase(), job),
+    "message-attachment.expire": (job) =>
+      expireAttachmentJob(getDatabase(), job),
     "catalogue.import": (job) => processCatalogueImport(getDatabase(), job),
     "buyer.saved-search": (job) => processSavedSearchJob(getDatabase(), job),
     "media.process": (job) =>

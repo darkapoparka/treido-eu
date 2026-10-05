@@ -135,11 +135,13 @@ export async function startSecurityCluster() {
       max: 3,
     });
     const files = (await fs.readdir(path.join(root, "app/apps/web/migrations")))
-      .filter((f) => /^\d{4}_[a-z_]+\.sql$/.test(f))
+      .filter(
+        (f) => /^\d{4}_[a-z_]+\.sql$/.test(f) && Number(f.slice(0, 4)) <= 47,
+      )
       .sort();
     if (
-      files.length !== 44 ||
-      files.at(-1) !== "0044_astra_closure_consistency.sql"
+      files.length !== 47 ||
+      files.at(-1) !== "0047_billing_change_recovery.sql"
     )
       throw Error("Unexpected migration inventory");
     const client = await admin.connect();

@@ -34,6 +34,7 @@ describe("seller billing boundary", () => {
         ...command,
         operation: "change",
         previewId: command.requestId,
+        reviewHash: "b".repeat(64),
       }),
     ).not.toBeNull();
     expect(parseBillingCommand({ ...command, operation: "change" })).toBeNull();

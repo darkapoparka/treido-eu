@@ -33,6 +33,7 @@ export type ConversationMessage = {
   mine: boolean;
   createdAt: string;
   attachments: number;
+  attachmentIds?: string[];
   offer?: OfferMessage | null;
 };
 export type ConversationView = {

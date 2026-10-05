@@ -138,10 +138,16 @@ export async function sendConversationMessageInTransaction(
     [thread.sellerId, thread.buyerId, user.id],
   );
   if (recent.rows[0].count >= 30) throw new SellerError("QUOTA_EXCEEDED");
-  for (const id of data.attachmentIds) {
+  for (const id of [...data.attachmentIds].sort()) {
     const asset = await tx.client.query(
-      "SELECT id FROM treido.message_attachments a WHERE id=$1 AND thread_id=$2 AND created_by=$3 AND state='ready' AND NOT EXISTS(SELECT 1 FROM treido.message_attachment_links WHERE attachment_id=a.id) FOR SHARE",
-      [id, thread.id, user.id],
+      "SELECT id FROM treido.message_attachments a WHERE id=$1 AND thread_id=$2 AND created_by=$3 AND state='ready' AND purpose='private-message-images-v1' AND storage_scope IS NOT NULL AND ready_checksum IS NOT NULL AND ready_bytes IS NOT NULL AND width IS NOT NULL AND height IS NOT NULL AND expires_at>clock_timestamp() AND operating_seller_id IS NOT DISTINCT FROM $4::uuid AND EXISTS(SELECT 1 FROM treido.message_attachment_objects o WHERE o.storage_scope=a.storage_scope AND o.object_key=a.object_key AND o.attachment_id=a.id AND o.kind='ready' AND o.state='tracked') AND NOT EXISTS(SELECT 1 FROM treido.message_attachment_links WHERE attachment_id=a.id) FOR UPDATE",
+      [
+        id,
+        thread.id,
+        user.id,
+        scope?.sellerId ??
+          (user.id === thread.buyerId ? null : thread.sellerId),
+      ],
     );
     if (asset.rowCount !== 1) throw new SellerError("INVALID_INPUT");
   }
@@ -216,7 +222,7 @@ export async function readParticipantAttachment(
     if (suppressed.rowCount) throw new SellerError("NOT_FOUND");
     const row = (
       await tx.client.query<{ objectKey: string; contentType: string }>(
-        'SELECT object_key AS "objectKey",content_type AS "contentType" FROM treido.message_attachments WHERE id=$1 AND thread_id=$2 AND state=\'ready\'',
+        "SELECT object_key AS \"objectKey\",'image/webp' AS \"contentType\" FROM treido.message_attachments a WHERE id=$1 AND thread_id=$2 AND state='ready' AND purpose='private-message-images-v1' AND storage_scope IS NOT NULL AND ready_checksum IS NOT NULL AND EXISTS(SELECT 1 FROM treido.message_attachment_links WHERE attachment_id=a.id) AND EXISTS(SELECT 1 FROM treido.message_attachment_objects o WHERE o.storage_scope=a.storage_scope AND o.object_key=a.object_key AND o.state='tracked')",
         [attachmentId, threadId],
       )
     ).rows[0];

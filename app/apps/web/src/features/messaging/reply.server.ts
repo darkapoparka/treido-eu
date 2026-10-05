@@ -34,7 +34,11 @@ export async function sendRecoverableReply(
     ).rows[0];
     if (
       row &&
-      row.hash !== inputHash({ body: command.body, attachmentIds: [] })
+      row.hash !==
+        inputHash({
+          body: command.body,
+          attachmentIds: command.attachmentIds ?? [],
+        })
     )
       throw new SellerError("CONFLICT");
     return row ? { id: row.id, sequence: row.sequence } : null;
@@ -47,7 +51,7 @@ export async function sendRecoverableReply(
       threadId: command.threadId,
       requestId: command.requestId,
       body: command.body,
-      attachmentIds: [],
+      attachmentIds: command.attachmentIds ?? [],
     },
     scope,
   );

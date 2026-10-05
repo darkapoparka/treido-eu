@@ -246,3 +246,12 @@ Shipping reviews consume the actual current cart group or exact accepted offer t
 Aftercare requires current participants or the specifically authorized operator, versioned accepted rights, immutable order/charge/settlement evidence and exact revisions. Full/partial refunds reserve cumulative original line quantities, gross/fees and supported shipping components before any provider effect. One original idempotent provider attempt is reconciled by its actual observation; uncertainty retains reservations and blocks unsafe completion. Refunds do not restock inventory or create escrow. Shipping dispatch reporting and buyer-confirmed receipt are separate from legacy pickup completion. Eligible purchase feedback requires actual completed-order evidence, explicit submission/moderation and current seller/publication/payment eligibility; public feedback is anonymous and minimal.
 
 The owning [API](api.md), [assistants](assistants.md), [operations](operations.md), [data model](data-model.md) and [billing](../billing.md) contracts remain authoritative for supported scope. Progress and qualified versus unavailable effects are recorded only in [tasks](../tasks.md).
+
+
+## Launch-feature integration — T72
+
+Additive migrations 0045–0047 and the existing runtime-grant runner integrate invitation delivery, private message images and recoverable seller plan changes. The existing finite outbox/executor contract owns both attachment processing/expiry and invitation work; no second queue or fixture fallback was added. The buyer/business inboxes use participant-authorized private byte delivery, immutable message links and registered source/derivative cleanup. Ordinary current-member permission is rechecked around external operations.
+
+T72's mail adapter preserves identical payload bytes and the original provider key after PostgreSQL JSONB serialization. Bounded status sweeps select matching immutable bindings before their limit; failed lookups retain known acceptance and advance the cooldown so later receipts are not starved. Billing recovery never releases pending-money uniqueness merely because a browser URL expired.
+
+The source packet is replayable from `app/tests/t72` without private credentials. Tests are not real sender/storage/payment qualification. Sent image evidence remains retained and requires the communication-retention/closure follow-through; no unseen approval or automatic deletion policy is created. See [the implemented feature receipt](audit/2026-10-05-launch-features.md) and [API contracts](api.md).

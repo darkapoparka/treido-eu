@@ -5,6 +5,8 @@ import type { Locale } from "../locale/locale";
 import { useUnsavedChanges } from "../sellers/use-unsaved-changes";
 import { useReplyDraft } from "./use-reply-draft";
 import s from "./messaging.module.css";
+import { useAttachments } from "../message-attachments/use-attachments";
+import { AttachmentPicker } from "../message-attachments/controls";
 export function ReplyComposer({
   actorSubject,
   sellerId,
@@ -23,17 +25,34 @@ export function ReplyComposer({
   const t = useTranslations("messaging"),
     format = useFormatter(),
     input = useRef<HTMLTextAreaElement>(null);
+  const attachments = useAttachments({ sellerId, threadId }, actorSubject);
   const reply = useReplyDraft(
     { actorSubject, sellerId, threadId },
     canReply,
-    onSent,
+    () => {
+      attachments.clear();
+      onSent();
+    },
+    { ids: attachments.ids, ready: attachments.ready },
   );
   useUnsavedChanges(
-    !!reply.draft.body.trim() || !!reply.draft.attempt || reply.storageFailed,
+    !!reply.draft.body.trim() ||
+      !!reply.draft.attempt ||
+      reply.storageFailed ||
+      !!attachments.items.length,
     language,
   );
   const acknowledgment = reply.acknowledgment,
     busy = reply.busy;
+  const recoveredAttachmentIds = (
+    reply.draft.attempt?.attachmentIds ?? []
+  ).join(",");
+  const recoverAttachments = attachments.recover;
+  useEffect(() => {
+    recoverAttachments(
+      recoveredAttachmentIds ? recoveredAttachmentIds.split(",") : [],
+    );
+  }, [recoveredAttachmentIds, recoverAttachments]);
   // A stored historical receipt must not open the keyboard on navigation.
   // Focus returns only after an explicit send/recovery finishes in this mount.
   useEffect(() => {
@@ -77,6 +96,14 @@ export function ReplyComposer({
           {t(reply.draft.rejected ? "replyRejected" : "replyUncertain")}
         </p>
       )}
+      <AttachmentPicker
+        controller={attachments}
+        scope={{ sellerId, threadId }}
+        language={language}
+        disabled={
+          !canReply || reply.busy || !!reply.draft.attempt || reply.invalid
+        }
+      />
       {reply.draft.code && (
         <p role="alert" className={s.error}>
           {t(

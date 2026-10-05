@@ -6,6 +6,7 @@ import { ShopSurface } from "../discovery/hydration-boundary";
 import { sellerEntryCopy } from "./copy";
 import { parseSellerEntry, sellerEntryHref } from "./model";
 import { SellerTemplateControls } from "./template-controls";
+import { SellerCsvPreflight } from "./preflight-controls";
 import s from "../selling/selling.module.css";
 
 export async function SellerEntryPage({
@@ -100,6 +101,7 @@ export async function SellerEntryPage({
               <SellerTemplateControls language={language} />
               <p>{t.importNote}</p>
               <p>{t.businessSession}</p>
+              <SellerCsvPreflight language={language} />
             </section>
           )}
           <section className="account-panel">
@@ -125,6 +127,13 @@ export async function SellerEntryPage({
         </>
       )}
       <p>{t.choicesNote}</p>
+      <p>
+        <Link href={"/support?lang=" + language}>
+          {language === "bg"
+            ? "Помощ за продажби и акаунта"
+            : "Selling and account help"}
+        </Link>
+      </p>
       {online && <Link href={`/app?lang=${language}`}>{t.chooseSeller}</Link>}
     </ShopSurface>
   );

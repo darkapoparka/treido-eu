@@ -20,6 +20,7 @@ import {
 import { useInboxRefresh } from "./use-inbox-refresh";
 import { ConversationDialog } from "./dialog";
 import s from "./messaging.module.css";
+import { PrivateAttachmentImage } from "../message-attachments/controls";
 export function Conversation({
   initial,
   actorSubject,
@@ -226,7 +227,15 @@ export function Conversation({
             ) : !message.moderationHidden ? (
               <p>{message.body}</p>
             ) : null}
-            {message.attachments > 0 && (
+            {message.attachmentIds?.map((id) => (
+              <PrivateAttachmentImage
+                key={id}
+                id={id}
+                scope={{ sellerId, threadId }}
+                language={language}
+              />
+            ))}
+            {message.attachments > (message.attachmentIds?.length ?? 0) && (
               <p className={s.muted}>
                 {t("attachments", { count: message.attachments })} ·{" "}
                 {t("attachmentUnavailable")}

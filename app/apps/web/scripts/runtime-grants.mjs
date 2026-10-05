@@ -1,3 +1,6 @@
+import { applyBillingRecoveryGrants } from "../src/features/seller-billing/recovery-runtime-grants.mjs";
+import { applyInvitationMailGrants } from "../src/features/team/runtime-grants.mjs";
+import { applyMessageAttachmentGrants } from "../src/features/message-attachments/runtime-grants.mjs";
 import { applyOrderShippingGrants } from "../src/features/order-shipping/runtime-grants.mjs";
 import { applyShippingRetentionGrants } from "../src/features/order-aftercare/shipping-retention-grants.mjs";
 import { applyShippingIntegrationGrants } from "../src/server/jobs/shipping-grants.mjs";
@@ -112,4 +115,19 @@ export async function applyRuntimeGrants(client, role) {
   await applyOrderShippingGrants(client, role);
   await applyShippingRetentionGrants(client, role);
   await applyShippingIntegrationGrants(client, role);
+  // Historical isolated suites retain their declared migration baselines.
+  // Current installs always apply these restrictions after the broad data grants.
+  const mail = await client.query(
+    "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='treido' AND table_name='invitation_deliveries' AND column_name='mail_binding') AS ready",
+  );
+  if (mail.rows[0]?.ready) await applyInvitationMailGrants(client, role);
+  const attachments = await client.query(
+    "SELECT to_regclass('treido.message_attachment_objects') IS NOT NULL AS ready",
+  );
+  if (attachments.rows[0]?.ready)
+    await applyMessageAttachmentGrants(client, role);
+  const recovery = await client.query(
+    "SELECT to_regclass('treido.billing_recovery_requests') IS NOT NULL AS ready",
+  );
+  if (recovery.rows[0]?.ready) await applyBillingRecoveryGrants(client, role);
 }
