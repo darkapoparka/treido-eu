@@ -44,3 +44,26 @@ export async function withdrawProductsAction(
     return failure(error);
   }
 }
+
+export async function duplicateProductsAction(
+  input: unknown,
+): Promise<
+  SellerResult<
+    import("./admin-product-management-model").ProductDuplicateResult[]
+  >
+> {
+  try {
+    const { duplicateSellerProducts } =
+      await import("./admin-product-management.server");
+    return {
+      ok: true,
+      data: await duplicateSellerProducts(
+        getDatabase(),
+        await requireVerifiedIdentity(),
+        input,
+      ),
+    };
+  } catch (error) {
+    return failure(error);
+  }
+}

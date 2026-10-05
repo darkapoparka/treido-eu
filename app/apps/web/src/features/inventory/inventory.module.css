@@ -1,0 +1,146 @@
+.root {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.header,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.header {
+  justify-content: space-between;
+}
+.header h2 {
+  margin: 0;
+}
+.tableWrap {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+.table th,
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--admin-line, #ebebeb);
+  vertical-align: top;
+}
+.table th {
+  font-weight: 500;
+  color: var(--admin-muted, #707070);
+}
+.table td:first-child {
+  min-width: 130px;
+  overflow-wrap: anywhere;
+}
+.table small {
+  display: block;
+  margin-top: 4px;
+}
+.form {
+  display: grid;
+  gap: 16px;
+}
+.options {
+  display: grid;
+  gap: 12px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+.notice {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--admin-surface, #f6f6f6);
+  overflow-wrap: anywhere;
+}
+.history {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.history li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--admin-line, #ebebeb);
+}
+.history p {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .actions > button,
+  .form button {
+    min-height: 44px;
+    white-space: normal;
+  }
+  .table th,
+  .table td {
+    padding: 10px 6px;
+  }
+  .option {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .option > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+.root[hidden] {
+  display: none;
+}
+
+.index {
+  min-width: 0;
+}
+.index[hidden] {
+  display: none;
+}
+
+.batchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(80px, 110px);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--admin-line, #ebebeb);
+  overflow-wrap: anywhere;
+}
+.batchRow small {
+  display: block;
+  margin-top: 4px;
+}
+.index .table .selectColumn {
+  min-width: 0;
+  width: 36px;
+}
+.batchToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+}
+@media (max-width: 767px) {
+  .batchToolbar button {
+    min-height: 44px;
+    white-space: normal;
+  }
+}

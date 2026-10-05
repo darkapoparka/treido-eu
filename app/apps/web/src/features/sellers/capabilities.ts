@@ -52,6 +52,7 @@ export const SELLER_CAPABILITIES = Object.freeze([
   "profile.manage",
   "declaration.manage",
   "delivery.manage",
+  "marketing.manage",
   "billing.manage",
   "payment.setup",
   "refund.request",

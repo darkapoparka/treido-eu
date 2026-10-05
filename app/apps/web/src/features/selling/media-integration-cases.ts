@@ -24,6 +24,7 @@ import {
 import { executeJob } from "../../server/jobs/execution.server";
 import type { MediaStorage } from "../../server/media/storage.server";
 import { MEDIA_LIMITS } from "./media-model";
+import { cleanupMediaObjects } from "../../server/media/retention.server";
 
 export function defineMediaIntegrationCases(
   get: () => {
@@ -50,7 +51,13 @@ export function defineMediaIntegrationCases(
     });
     const objects = new Map<string, Buffer>();
     const storage: MediaStorage = {
+      scope: createHash("sha256")
+        .update("test-treido/" + sellerId)
+        .digest("hex"),
       prefix: "test-treido/",
+      async remove(key) {
+        objects.delete(key);
+      },
       async upload(key) {
         return {
           url: `http://isolated-storage.invalid/${key}`,
@@ -583,6 +590,184 @@ export function defineMediaIntegrationCases(
         ),
       ).rejects.toMatchObject({ code: "23514" });
     });
+    it("retains live processing/ready images while expiring scoped raw files after their retention", async () => {
+      const item = await setup(),
+        ctx = get(),
+        { intent } = await stage(item);
+      await completeMediaUpload(
+        ctx.database,
+        ctx.owner,
+        {
+          sellerId: item.sellerId,
+          draftId: item.draft.id,
+          assetId: intent.assetId,
+        },
+        item.storage,
+      );
+      await ctx.admin.query(
+        "UPDATE treido.media_storage_objects SET write_until=clock_timestamp()-interval '1 hour',retain_until=clock_timestamp()-interval '1 hour' WHERE storage_scope=$1",
+        [item.storage.scope],
+      );
+      expect(
+        (await cleanupMediaObjects(ctx.database, item.storage)).deleted,
+      ).toBe(1);
+      expect(await processAsset(item, intent.assetId)).toMatchObject({
+        status: "completed",
+      });
+      const original = (
+        await ctx.admin.query(
+          "SELECT retain_until>clock_timestamp()+interval '6 days' AS retained FROM treido.media_storage_objects WHERE storage_scope=$1 AND kind='immutable'",
+          [item.storage.scope],
+        )
+      ).rows[0];
+      expect(original.retained).toBe(true);
+      expect(
+        (await cleanupMediaObjects(ctx.database, item.storage)).deleted,
+      ).toBe(0);
+      await ctx.admin.query(
+        "UPDATE treido.media_storage_objects SET write_until=clock_timestamp()-interval '1 hour',retain_until=clock_timestamp()-interval '1 hour' WHERE storage_scope=$1",
+        [item.storage.scope],
+      );
+      expect(
+        await cleanupMediaObjects(ctx.database, {
+          ...item.storage,
+          scope: "f".repeat(64),
+        }),
+      ).toEqual({ deleted: 0, pending: 0, skipped: 0 });
+      expect(
+        (await cleanupMediaObjects(ctx.database, item.storage)).deleted,
+      ).toBe(1);
+      const ready = await readOwnedMedia(
+        ctx.database,
+        ctx.owner,
+        item.sellerId,
+        intent.assetId,
+      );
+      expect(item.objects.has(ready.key)).toBe(true);
+      expect(
+        (
+          await listDraftMedia(
+            ctx.database,
+            ctx.owner,
+            item.sellerId,
+            item.draft.id,
+          )
+        )[0].state,
+      ).toBe("ready");
+      expect(
+        (await cleanupMediaObjects(ctx.database, item.storage)).deleted,
+      ).toBe(0);
+    });
+    it("keeps uncertain deletion retryable and expires the upload without pretending its photo was processed", async () => {
+      const ctx = get(),
+        item = await setup(),
+        { intent } = await stage(item);
+      await ctx.admin.query(
+        "UPDATE treido.media_assets SET expires_at=clock_timestamp()-interval '2 days' WHERE id=$1",
+        [intent.assetId],
+      );
+      await ctx.admin.query(
+        "UPDATE treido.media_storage_objects SET write_until=clock_timestamp()-interval '1 hour',retain_until=clock_timestamp()-interval '1 hour' WHERE storage_scope=$1",
+        [item.storage.scope],
+      );
+      let lost = true;
+      const remove = item.storage.remove;
+      item.storage.remove = async (key) => {
+        await remove(key);
+        if (lost) {
+          lost = false;
+          throw new Error("Lost deletion response");
+        }
+      };
+      expect(
+        (await cleanupMediaObjects(ctx.database, item.storage)).pending,
+      ).toBe(1);
+      expect(
+        (
+          await ctx.admin.query(
+            "SELECT state FROM treido.media_storage_objects WHERE storage_scope=$1",
+            [item.storage.scope],
+          )
+        ).rows[0].state,
+      ).toBe("deleting");
+      expect(
+        (
+          await listDraftMedia(
+            ctx.database,
+            ctx.owner,
+            item.sellerId,
+            item.draft.id,
+          )
+        )[0],
+      ).toMatchObject({ state: "failed", error: "upload_expired" });
+      await ctx.admin.query(
+        "UPDATE treido.media_storage_objects SET available_at=clock_timestamp()-interval '1 second' WHERE storage_scope=$1",
+        [item.storage.scope],
+      );
+      expect(
+        (await cleanupMediaObjects(ctx.database, item.storage)).deleted,
+      ).toBe(1);
+      await expect(
+        completeMediaUpload(
+          ctx.database,
+          ctx.owner,
+          {
+            sellerId: item.sellerId,
+            draftId: item.draft.id,
+            assetId: intent.assetId,
+          },
+          item.storage,
+        ),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+      await expect(
+        ctx.database.pool.query(
+          "UPDATE treido.media_storage_objects SET object_key=object_key",
+        ),
+      ).rejects.toMatchObject({ code: "42501" });
+    });
+    it("records a frozen candidate before provider I/O so a lost completion does not leak an untracked original", async () => {
+      const ctx = get(),
+        item = await setup(),
+        { intent } = await stage(item),
+        freeze = item.storage.freeze;
+      item.storage.freeze = async (...args) => {
+        await freeze(...args);
+        throw new Error("Lost freeze response");
+      };
+      await expect(
+        completeMediaUpload(
+          ctx.database,
+          ctx.owner,
+          {
+            sellerId: item.sellerId,
+            draftId: item.draft.id,
+            assetId: intent.assetId,
+          },
+          item.storage,
+        ),
+      ).rejects.toThrow("Lost freeze response");
+      expect(
+        (
+          await ctx.admin.query(
+            "SELECT count(*)::int AS n FROM treido.media_storage_objects WHERE storage_scope=$1",
+            [item.storage.scope],
+          )
+        ).rows[0].n,
+      ).toBe(2);
+      await ctx.admin.query(
+        "UPDATE treido.media_assets SET expires_at=clock_timestamp()-interval '2 days' WHERE id=$1",
+        [intent.assetId],
+      );
+      await ctx.admin.query(
+        "UPDATE treido.media_storage_objects SET write_until=clock_timestamp()-interval '1 hour',retain_until=clock_timestamp()-interval '1 hour' WHERE storage_scope=$1",
+        [item.storage.scope],
+      );
+      expect(
+        (await cleanupMediaObjects(ctx.database, item.storage)).deleted,
+      ).toBe(2);
+      expect(item.objects.size).toBe(0);
+    });
+
     if (process.env.TREIDO_MEDIA_BROWSER_HELPER)
       it("actual photo picker with native PostgreSQL (synthetic session/storage; no live Clerk/R2)", async () => {
         const item = await setup();

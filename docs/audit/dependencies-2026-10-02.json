@@ -313,8 +313,29 @@
       "section": "dependencies",
       "name": "@clerk/localizations",
       "pin": "4.21.2"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@opentelemetry/api",
+      "pin": "1.9.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@stripe/stripe-js",
+      "pin": "10.0.0"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "stripe",
+      "pin": "23.0.0"
     }
   ],
+  "declarationAdditions": {
+    "2026-10-04": "T46 added exact Stripe SDK declarations. Existing registry observations and audit findings were not refreshed."
+  },
   "packages": {
     "turbo": {
       "version": "2.11.6",

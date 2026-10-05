@@ -18,12 +18,14 @@ export function BusinessSetupForm({
   requestId,
   actorSubject,
   language,
+  stayOnPage = false,
 }: {
   initial: BusinessSetupView;
   section: "details" | "declaration";
   requestId: string;
   actorSubject: string;
   language: "bg" | "en";
+  stayOnPage?: boolean;
 }) {
   const [profile, setProfile] = useState(initial.profile);
   const [declaration, setDeclaration] = useState(
@@ -111,7 +113,7 @@ export function BusinessSetupForm({
       setNotice("SAVED");
       setLatest(null);
       attempt.current = { id: crypto.randomUUID(), hash: "" };
-      if (section === "details" || submit)
+      if (!stayOnPage && (section === "details" || submit))
         router.push(
           `/app/sellers/${initial.sellerId}/onboarding?step=${result.data.step}&lang=${language}`,
         );
@@ -333,13 +335,17 @@ export function BusinessSetupForm({
                 ? bg
                   ? "Запазване…"
                   : "Saving…"
-                : section === "details"
+                : stayOnPage
                   ? bg
-                    ? "Запази и продължи"
-                    : "Save and continue"
-                  : bg
-                    ? "Запази за по-късно"
-                    : "Save for later"}
+                    ? "Запази промените"
+                    : "Save changes"
+                  : section === "details"
+                    ? bg
+                      ? "Запази и продължи"
+                      : "Save and continue"
+                    : bg
+                      ? "Запази за по-късно"
+                      : "Save for later"}
             </button>
             {section === "declaration" && (
               <button

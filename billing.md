@@ -92,3 +92,8 @@ Late payment without an owned allocation blocks fulfillment and enters a reviewe
 ## Live activation decisions
 
 T12/T13/T26 inspect the intended existing accounts and record legal entity, supported seller countries/capabilities, test/live catalogue mappings, final prices/caps/fees/tax/invoices, handover/carrier policy, returns/refunds/disputes, settlement and support owner. Account availability is owner-declared; bindings and live offers are unverified by this documentation task. Reuse an authorised existing mapping only after purpose/ownership verification, never another app's credentials or an arbitrary duplicate Product. [Operations](docs/operations.md) and [launch](docs/launch.md) own release proof. This financial decision list does not block unrelated local implementation or require another whole-platform planning round.
+
+
+### Contact-review boundary
+
+A saved purchase review is not the immutable payable quote described above. Contact-only publications may provide a server-derived merchandise subtotal and an explicitly supported handover preference, but missing delivery charges, buyer fees and payable totals must remain unknown. Saving, archiving, sending or returning to that review does not authorize card collection, create a payment attempt, consume an allocation or establish an order. Accepted-offer reviews retain the original accepted allocation and agreed item price without reserving again. A future payable checkout must separately satisfy the approved provider/mode, immutable fee/delivery policy, inventory and settlement contracts; it must not promote a contact review to payment authority based on a browser flag or return URL.

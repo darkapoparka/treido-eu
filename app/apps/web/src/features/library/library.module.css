@@ -1,0 +1,143 @@
+.page {
+  padding-bottom: calc(var(--dock-bottom) + 112px);
+}
+.tabs,
+.actions,
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tabs {
+  margin-block: 16px 24px;
+}
+.tabs [aria-current="page"] {
+  background: var(--color-ink);
+  color: var(--color-canvas);
+}
+.actions {
+  margin-block: 12px;
+}
+.form {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+.form label {
+  display: grid;
+  gap: 8px;
+}
+.form input {
+  width: 100%;
+  min-height: var(--control-size);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 12px;
+  font: inherit;
+}
+.form p {
+  color: var(--color-muted);
+}
+.feedback {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: min(540px, calc(100vw - 32px));
+  z-index: 120;
+}
+.feedback button {
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.feedback a {
+  flex-shrink: 0;
+}
+.unavailable {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-media);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.unavailable p,
+.muted {
+  color: var(--color-muted);
+}
+.itemActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 12px 20px;
+}
+.itemActions button {
+  text-align: start;
+}
+.emptyCover {
+  display: grid !important;
+  place-items: center;
+}
+.emptyCover svg {
+  width: var(--control-size);
+  height: var(--control-size);
+}
+.sellers {
+  display: grid;
+  gap: 20px;
+}
+.seller {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-line);
+  padding-block: 16px;
+}
+.seller > a,
+.seller > div {
+  flex: 1;
+  min-width: 0;
+}
+.seller strong,
+.seller small {
+  display: block;
+}
+.seller small {
+  color: var(--color-muted);
+  margin-top: 4px;
+}
+.pagination {
+  justify-content: center;
+  margin-block: 24px;
+}
+
+.inlineFeedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid var(--color-line);
+}
+.inlineFeedback button {
+  text-decoration: underline;
+}
+
+.picker:global(.collection-options-sheet) {
+  height: auto;
+  max-height: min(640px, calc(100dvh - 96px));
+  overflow-y: auto;
+}
+.picker .form {
+  padding-inline: 0;
+}
+.nameEditor {
+  display: grid;
+  gap: 16px;
+}
+.nameEditor :global(.collection-name-input) {
+  margin: 8px 0 16px;
+}
+.nameEditor p {
+  color: var(--color-muted);
+}

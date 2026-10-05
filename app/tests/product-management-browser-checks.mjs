@@ -270,6 +270,56 @@ export async function runProductManagementChecks({
         );
       }
     await check(
+      "multi-product copying replays a lost response without creating duplicate drafts",
+      async () => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.goto(list());
+        await ready();
+        const before = await rows().count();
+        await selected("Телефон за преглед").check();
+        await selected("100%_ literal product").check();
+        await page
+          .getByRole("button", {
+            name: "Duplicate selected as drafts",
+            exact: true,
+          })
+          .click();
+        await expect(dialog()).toBeVisible();
+        await page.route(
+          "**/__duplicate-many",
+          async (route) => {
+            await route.fetch();
+            await route.abort("failed");
+          },
+          { times: 1 },
+        );
+        await dialog()
+          .getByRole("button", { name: "Create drafts", exact: true })
+          .click();
+        await expect(dialog().getByRole("alert")).toContainText(
+          "Retry this request",
+        );
+        await dialog()
+          .getByRole("button", { name: "Retry this request", exact: true })
+          .click();
+        await expect(dialog()).not.toBeVisible();
+        await expect(
+          page.getByRole("region", { name: "Copy results" }),
+        ).toContainText("Drafts created: 2 of 2.");
+        await expect(
+          page.getByRole("region", { name: "Copy results" }).getByRole("link"),
+        ).toHaveCount(2);
+        await expect(rows()).toHaveCount(before + 2);
+        await page.screenshot({
+          path: join(output, "bulk-copy-results-desktop.png"),
+          animations: "disabled",
+        });
+        await page.reload();
+        await ready();
+        await expect(rows()).toHaveCount(before + 2);
+      },
+    );
+    await check(
       "switching to the other seller shows its own empty catalog",
       async () => {
         await page.goto(list("", emptyId));

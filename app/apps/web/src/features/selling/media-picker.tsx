@@ -293,9 +293,13 @@ export function MediaPicker({
                       ? bg
                         ? "Качването не е завършено"
                         : "Upload not finished"
-                      : bg
-                        ? "Неуспешна снимка"
-                        : "Photo failed"}
+                      : asset.error === "upload_expired"
+                        ? bg
+                          ? "Качването е изтекло. Премахни и избери снимката отново."
+                          : "Upload expired. Remove and select this photo again."
+                        : bg
+                          ? "Неуспешна снимка"
+                          : "Photo failed"}
                 </div>
               )}
               <div className={styles.photoControls}>

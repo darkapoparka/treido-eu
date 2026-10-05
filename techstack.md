@@ -1,6 +1,6 @@
 # Tech stack and compatible upgrade policy
 
-Architecture remains the October 1 decision in [research and tradeoffs](docs/audit/2026-10-01-seller-architecture.md). Exact declared dependencies and current npm latest metadata were rechecked October 2: [machine-readable snapshot](docs/audit/dependencies-2026-10-02.json), covering all four package manifests and 44 distinct registry packages including pnpm (next-intl added in T35; Clerk localizations added in T37). This is a registry/peer comparison, not a fresh vulnerability scan or an installation. Application manifests, lockfile and running preview were not upgraded by T31.
+Architecture remains the October 1 decision in [research and tradeoffs](docs/audit/2026-10-01-seller-architecture.md). Exact current declarations in all four manifests and runtime pins were rechecked October 4: [current declaration snapshot](docs/audit/dependencies-2026-10-04.json). The [October 2 registry and peer snapshot](docs/audit/dependencies-2026-10-02.json) retains its original observations; its latest-version metadata was not refreshed by the October 4 declaration read. This evidence does not qualify installed dependencies or resolve the failed vulnerability audit. No manifest, lockfile, dependency installation or running preview was changed by this documentation correction.
 
 ## Decision
 
@@ -18,7 +18,7 @@ T35 adds exact `next-intl 4.14.9` for shared request negotiation, typed message 
 | ------------------------- | --------------- | ---------------- | ---------------------------------------------------------- |
 | Node LTS                  | 24.20.0         | 24.21.0          | Qualify the 24.x patch; do not replace LTS with Current 26 |
 | pnpm                      | 12.3.4          | 12.8.1           | T02c: exact toolchain plus frozen-lockfile qualification   |
-| Next + eslint-config-next | 16.3.4          | 16.3.8           | T02b priority: paired security patch before release        |
+| Next + eslint-config-next | 16.3.8          | 16.3.8           | Paired source pin delivered; remaining audit/release gates stay open |
 | React + React DOM         | 19.2.3          | 19.3.0           | T02d: align pair, types, auth and Expo consumers           |
 | next-intl                 | 4.14.9          | 4.14.9           | T35: typed BG/EN request/client and Studio catalogues      |
 | Tailwind + PostCSS        | 4.3.3           | 4.3.3            | Keep current styling system                                |

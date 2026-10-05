@@ -14,7 +14,6 @@ import {
   sellerSetupReceipts,
   signupIntents,
   drafts,
-  sellerUsage,
 } from "../../server/db/schema";
 import type { VerifiedIdentity } from "../../server/identity/clerk.server";
 import {
@@ -24,7 +23,7 @@ import {
 } from "./persistence.server";
 import { SellerError } from "./errors";
 import { validId } from "../selling/draft-model";
-import { FREE_DRAFT_LIMITS } from "../selling/draft-quota";
+import { readFreeCatalogueLimits } from "./free-catalogue.server";
 import { evaluateSellerReadiness, type SellerReadiness } from "./readiness";
 import {
   BUSINESS_SETUP_VERSION,
@@ -364,18 +363,9 @@ export function readSellerReadiness(
       "seller.read",
     );
     const { declaration } = await setupRecords(tx, sellerId);
-    const [usage] = await tx.db
-      .select()
-      .from(sellerUsage)
-      .where(eq(sellerUsage.sellerId, sellerId));
+    const usage = await readFreeCatalogueLimits(tx, sellerId, seller.kind);
     const draftQuota =
-      !usage ||
-      usage.planVersion !== 1 ||
-      usage.planId !== `${seller.kind}_free`
-        ? "unavailable"
-        : usage.draftCount < FREE_DRAFT_LIMITS[seller.kind]
-          ? "available"
-          : "exhausted";
+      usage.draftCount < usage.drafts ? "available" : "exhausted";
     return ["draft", "publish", "checkout", "payout"].map((operation) =>
       evaluateSellerReadiness(
         authority,

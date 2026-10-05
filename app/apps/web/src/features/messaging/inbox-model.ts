@@ -1,3 +1,4 @@
+import type { OfferMessage } from "../offers/model";
 import { validId } from "../selling/draft-model";
 export type InboxScope = { sellerId: string | null };
 export type InboxQuery = InboxScope & {
@@ -12,6 +13,7 @@ export type InboxItem = {
   sellerName: string;
   sellerKind: "personal" | "business";
   lastBody: string;
+  lastOffer?: boolean;
   lastAt: string;
   unread: number;
   blocked: boolean;
@@ -22,6 +24,8 @@ export type InboxView = {
   query: InboxQuery;
 };
 export type ConversationMessage = {
+  moderationHidden?: boolean;
+  moderationReason?: string | null;
   id: string;
   sequence: number;
   body: string;
@@ -29,6 +33,7 @@ export type ConversationMessage = {
   mine: boolean;
   createdAt: string;
   attachments: number;
+  offer?: OfferMessage | null;
 };
 export type ConversationView = {
   id: string;

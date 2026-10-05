@@ -1,5 +1,17 @@
 "use client";
+import { PublicInventoryPanel } from "../inventory/public-panel";
+import type { PublicInventory } from "../inventory/model";
+import { LibraryProvider } from "../library/provider";
+import {
+  ListingSaveButton,
+  ListingCollectionButton,
+  SellerFollowButton,
+} from "../library/controls";
+import libraryStyles from "../library/library.module.css";
 import Link from "next/link";
+import { SourceLink } from "./return-navigation";
+import { PublicListingGrid } from "./public-listing-grid";
+import type { PublicListingCard } from "../catalog/public-discovery-model";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { getCategory } from "@treido/contracts/categories";
@@ -14,13 +26,36 @@ import { ProductPriceSummary } from "./product-price-summary";
 import { ProductDisclosure } from "./product-disclosure";
 import s from "./published-detail.module.css";
 import "./product.css";
-export function PublishedProductDetail({
+export function PublishedProductDetail(
+  props: Parameters<typeof PublishedProductContent>[0],
+) {
+  return (
+    <LibraryProvider
+      query={{
+        view: "state",
+        listingIds: [
+          props.listing.id,
+          ...(props.moreFromSeller ?? []).map((item) => item.id),
+        ],
+        sellerIds: [props.listing.seller.id],
+      }}
+    >
+      <PublishedProductContent {...props} />
+    </LibraryProvider>
+  );
+}
+function PublishedProductContent({
   listing,
+  moreFromSeller = [],
+  inventory,
 }: {
   listing: PublishedListing;
+  moreFromSeller?: PublicListingCard[];
+  inventory?: PublicInventory | null;
 }) {
   const locale = useLocale(),
     t = useTranslations("publication");
+  const market = useTranslations("marketplace");
   const [shareStatus, setShareStatus] = useState("");
   const photos = listing.photos.map((photo) => photo.url);
   const gallery = useProductGallery(photos, false);
@@ -43,7 +78,11 @@ export function PublishedProductDetail({
     >
       <div className="product-underlay">
         <div className="store-row">
-          <div className="store-row-identity">
+          <SourceLink
+            className="store-row-identity"
+            preserveDiscoveryContext={false}
+            href={"/stores/" + listing.seller.id + "?lang=" + locale}
+          >
             <span className="store-logo-fallback" aria-hidden="true">
               {listing.seller.name.slice(0, 1)}
             </span>
@@ -51,7 +90,8 @@ export function PublishedProductDetail({
               <strong>{listing.seller.name}</strong>
               <small className={s.muted}>{t(listing.seller.kind)}</small>
             </span>
-          </div>
+          </SourceLink>
+          <SellerFollowButton id={listing.seller.id} />
         </div>
         <ProductGalleryRail
           product={product}
@@ -92,13 +132,30 @@ export function PublishedProductDetail({
               {shareStatus}
             </p>
           )}
-          <ProductPriceSummary
-            product={product}
-            variant=""
-            price={listing.price}
-            capturedSpendOffer=""
-            onDetails={() => {}}
-          />
+          {inventory !== undefined ? (
+            <PublicInventoryPanel
+              product={product}
+              revision={listing.revision}
+              initial={inventory}
+            />
+          ) : (
+            <ProductPriceSummary
+              product={product}
+              variant=""
+              price={listing.price}
+              capturedSpendOffer=""
+              onDetails={() => {}}
+            />
+          )}
+          {category && (
+            <SourceLink
+              className={s.category}
+              preserveDiscoveryContext={false}
+              href={"/search?category=" + category.id + "&lang=" + locale}
+            >
+              {category.labels[locale]}
+            </SourceLink>
+          )}
           <dl className={s.facts}>
             <div>
               <dt>{t("condition")}</dt>
@@ -110,6 +167,14 @@ export function PublishedProductDetail({
             </div>
           </dl>
           <div className={s.contact}>
+            <div className={libraryStyles.actions}>
+              <ListingSaveButton
+                id={listing.id}
+                title={listing.title}
+                overlay={false}
+              />
+              <ListingCollectionButton id={listing.id} />
+            </div>
             <Link
               className="primary"
               prefetch={false}
@@ -171,7 +236,13 @@ export function PublishedProductDetail({
           </Link>
         </section>
       </div>
-      <FloatingNav back />
+      {moreFromSeller.length > 0 && (
+        <section className={s.recommendations}>
+          <h2>{market("moreFromSeller")}</h2>
+          <PublicListingGrid items={moreFromSeller} rail />
+        </section>
+      )}
+      <FloatingNav back marketplace />
       <ProductLightbox product={product} photos={photos} controller={gallery} />
     </ShopSurface>
   );

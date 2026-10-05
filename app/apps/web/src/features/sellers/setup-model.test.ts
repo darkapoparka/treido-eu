@@ -125,6 +125,8 @@ describe("safe workspace sign-in recovery", () => {
     `/app/sellers/${id}`,
     `/app/sellers/${id}/settings?lang=en`,
     `/app/sellers/${id}/onboarding?lang=bg&step=declaration`,
+    `/app/sellers/${id}/billing?lang=bg`,
+    `/app/sellers/${id}/promotions?lang=en`,
   ])("accepts a known internal route: %s", (route) => {
     expect(parseWorkspaceContinuation(route)).not.toBeNull();
   });
@@ -137,7 +139,8 @@ describe("safe workspace sign-in recovery", () => {
     "/app?role=owner",
     "/app/intent?returnTo=https://example.test",
     `/app/sellers/${id}/onboarding?step=payments`,
-    `/app/sellers/${id}/billing`,
+    `/app/sellers/${id}/billing?paid=true`,
+    `/app/sellers/${id}/promotions?role=owner`,
     "/app/sellers/arbitrary-id/settings",
     "/app#private",
     "/app\\intent",

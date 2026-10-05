@@ -10,27 +10,69 @@ import {
   JobError,
   JOB_LIMITS,
   validateJobIntent,
-  type JobAuthority,
+  isAssistantJobKind,
+  isShippingJobKind,
+  type ShippingJobKind,
+  type AssistantJobKind,
   type JobIntent,
-  type JobKind,
+  type SellerJobKind,
   type JobState,
 } from "./model";
 import { validId } from "../../features/selling/draft-model";
 
-export type JobRow = {
+export type SellerJobRow = {
   id: string;
-  kind: JobKind;
+  kind: SellerJobKind;
   sellerId: string;
+  buyerId?: null;
   resourceId: string;
   operationKey: string;
   actorId: string | null;
-  authority: JobAuthority;
+  authority: "member" | "service";
   state: JobState;
   generation: number;
   attempts: number;
 };
+export type BuyerJobRow = Omit<
+  SellerJobRow,
+  "kind" | "sellerId" | "buyerId" | "actorId" | "authority"
+> & {
+  kind: "buyer.saved-search";
+  sellerId: null;
+  buyerId: string;
+  actorId: string;
+  authority: "buyer";
+};
+export type AssistantJobRow = Omit<
+  SellerJobRow,
+  "kind" | "sellerId" | "buyerId" | "actorId" | "authority"
+> & {
+  kind: AssistantJobKind;
+  sellerId: null;
+  buyerId: string;
+  actorId: null;
+  authority: "assistant";
+};
+export type ClosureJobRow = Omit<AssistantJobRow, "kind" | "authority"> & {
+  kind: "account.closure";
+  authority: "closure";
+};
+export type ShippingJobRow = {
+  [K in ShippingJobKind]: Omit<AssistantJobRow, "kind" | "authority"> & {
+    kind: K;
+    authority: "shipping";
+  };
+}[ShippingJobKind];
+export function isShippingJob(job: JobRow): job is ShippingJobRow {
+  return isShippingJobKind(job.kind);
+}
+export type JobRow =
+  SellerJobRow | BuyerJobRow | AssistantJobRow | ClosureJobRow | ShippingJobRow;
+export function isAssistantJob(job: JobRow): job is AssistantJobRow {
+  return isAssistantJobKind(job.kind);
+}
 export type LeasedJob = JobRow & { dispatchToken: string };
-export const jobColumns = `id, kind, seller_id AS "sellerId", resource_id AS "resourceId",
+export const jobColumns = `id, kind, seller_id AS "sellerId", buyer_id AS "buyerId", resource_id AS "resourceId",
   operation_key AS "operationKey", actor_id AS "actorId", authority, state, generation, attempts`;
 
 /** The caller holds the feature's authority/resource locks on this same transaction. */
@@ -40,8 +82,8 @@ export async function enqueueJob(tx: SellerTransaction, intent: JobIntent) {
   const id = randomUUID();
   await tx.client.query(
     `INSERT INTO treido.outbox_jobs
-     (id, kind, seller_id, resource_id, operation_key, actor_id, authority, intent_hash)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (kind, operation_key) DO NOTHING`,
+     (id, kind, seller_id, resource_id, operation_key, actor_id, authority, intent_hash,buyer_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (kind, operation_key) DO NOTHING`,
     [
       id,
       intent.kind,
@@ -51,6 +93,7 @@ export async function enqueueJob(tx: SellerTransaction, intent: JobIntent) {
       intent.actorId,
       intent.authority,
       hash,
+      intent.buyerId ?? null,
     ],
   );
   const result = await tx.client.query<{ id: string; hash: string }>(
@@ -97,7 +140,8 @@ export async function leaseJobs(
        ORDER BY j.available_at,j.id LIMIT $2 FOR UPDATE OF j SKIP LOCKED)
        UPDATE treido.outbox_jobs j SET dispatch_token=$3,
          dispatch_until=clock_timestamp()+make_interval(secs=>$4), attempts=j.attempts+1
-       FROM selected s WHERE j.id=s.id RETURNING j.id,j.kind,j.seller_id AS "sellerId",
+      FROM selected s WHERE j.id=s.id RETURNING j.id,j.kind,j.seller_id AS "sellerId",
+         j.buyer_id AS "buyerId",
          j.resource_id AS "resourceId",j.operation_key AS "operationKey",j.actor_id AS "actorId",
          j.authority,j.state,j.generation,j.attempts,j.dispatch_token AS "dispatchToken"`,
       [JOB_LIMITS.attempts, limit, token, JOB_LIMITS.leaseSeconds],

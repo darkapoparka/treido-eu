@@ -18,12 +18,19 @@ import {
 import type { MediaStorage } from "../../server/media/storage.server";
 import { enqueueJob } from "../../server/jobs/outbox.server";
 import { processPhoto } from "../../server/media/process.server";
+import {
+  assertMediaStorageScope,
+  registerMediaObject,
+  requireMediaObjectLease,
+  retainProcessedOriginal,
+} from "../../server/media/retention.server";
 import type {
   EffectContext,
   EffectResult,
 } from "../../server/jobs/execution.server";
 
 type Asset = MediaView & {
+  storageScope: string | null;
   sellerId: string;
   listingId: string;
   createdBy: string;
@@ -39,7 +46,7 @@ type Asset = MediaView & {
   jobId: string | null;
   expiresAt: Date;
 };
-const columns = `id,seller_id AS "sellerId",listing_id AS "listingId",created_by AS "createdBy",request_id AS "requestId",
+const columns = `storage_scope AS "storageScope",id,seller_id AS "sellerId",listing_id AS "listingId",created_by AS "createdBy",request_id AS "requestId",
   input_hash AS "inputHash",state,expected_bytes AS "expectedBytes",content_type AS "contentType",
   expected_checksum AS "expectedChecksum",staging_key AS "stagingKey",immutable_key AS "immutableKey",
   derivative_key AS "derivativeKey",derivative_checksum AS "derivativeChecksum",position,width,height,revision,job_id AS "jobId",error_code AS error,expires_at AS "expiresAt"`;
@@ -126,15 +133,27 @@ export async function createMediaIntent(
       )
     ).rows[0];
     if (previous) {
+      assertMediaStorageScope(previous.storageScope, storage);
       if (previous.inputHash !== hash || previous.state !== "staged")
         throw new SellerError("CONFLICT");
       const renewed = (
         await tx.client.query<{ expiresAt: Date }>(
-          `UPDATE treido.media_assets SET expires_at=clock_timestamp()+make_interval(secs=>$2) WHERE id=$1 RETURNING expires_at AS "expiresAt"`,
-          [previous.id, MEDIA_LIMITS.uploadSeconds],
+          `UPDATE treido.media_assets SET expires_at=clock_timestamp()+make_interval(secs=>$2),storage_scope=coalesce(storage_scope,$3) WHERE id=$1 RETURNING expires_at AS "expiresAt"`,
+          [previous.id, MEDIA_LIMITS.uploadSeconds, storage.scope],
         )
       ).rows[0];
-      return { ...previous, expiresAt: renewed.expiresAt };
+      await registerMediaObject(
+        tx,
+        storage,
+        previous,
+        "staging",
+        previous.stagingKey,
+      );
+      return {
+        ...previous,
+        storageScope: storage.scope,
+        expiresAt: renewed.expiresAt,
+      };
     }
     const positions = (
       await tx.client.query<{ position: number }>(
@@ -152,8 +171,8 @@ export async function createMediaIntent(
     const key = `${storage.prefix}staging/${input.sellerId}/${id}`;
     const created = await tx.client.query<Asset>(
       `INSERT INTO treido.media_assets
-      (id,seller_id,listing_id,created_by,request_id,input_hash,expected_bytes,content_type,expected_checksum,staging_key,position,expires_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,clock_timestamp()+make_interval(secs=>$12)) RETURNING ${columns}`,
+      (id,seller_id,listing_id,created_by,request_id,input_hash,expected_bytes,content_type,expected_checksum,staging_key,position,expires_at,storage_scope)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,clock_timestamp()+make_interval(secs=>$12),$13) RETURNING ${columns}`,
       [
         id,
         input.sellerId,
@@ -167,8 +186,10 @@ export async function createMediaIntent(
         key,
         position,
         MEDIA_LIMITS.uploadSeconds,
+        storage.scope,
       ],
     );
+    await registerMediaObject(tx, storage, created.rows[0], "staging", key);
     return created.rows[0];
   });
   const signed = await storage.upload(asset.stagingKey, input);
@@ -198,15 +219,19 @@ export async function completeMediaUpload(
   if (!validId(input.assetId)) throw new SellerError("INVALID_INPUT");
   const asset = await inTransaction(database, async (tx) => {
     await authorizeSeller(tx, identity, input.sellerId, "listing.write");
-    await ownedDraft(tx, input.sellerId, input.draftId, false);
+    await ownedDraft(tx, input.sellerId, input.draftId, true);
     const row = (
       await tx.client.query<Asset>(
-        `SELECT ${columns} FROM treido.media_assets WHERE seller_id=$1 AND listing_id=$2 AND id=$3`,
+        `SELECT ${columns} FROM treido.media_assets WHERE seller_id=$1 AND listing_id=$2 AND id=$3 FOR UPDATE`,
         [input.sellerId, input.draftId, input.assetId],
       )
     ).rows[0];
     if (!row || row.state === "detached") throw new SellerError("NOT_FOUND");
-    return row;
+    assertMediaStorageScope(row.storageScope, storage);
+    const frozen = `${storage.prefix}immutable/${row.sellerId}/${row.id}/${randomUUID()}`;
+    if (row.state === "staged" && row.expiresAt.getTime() > Date.now())
+      await registerMediaObject(tx, storage, row, "immutable", frozen);
+    return { ...row, frozen };
   });
   if (["processing", "ready"].includes(asset.state))
     return { assetId: asset.id, state: asset.state };
@@ -215,8 +240,13 @@ export async function completeMediaUpload(
   const head = await storage.head(asset.stagingKey);
   if (head.bytes !== asset.expectedBytes)
     throw new SellerError("INVALID_INPUT");
-  const frozen = `${storage.prefix}immutable/${asset.sellerId}/${asset.id}/${randomUUID()}`;
-  await storage.freeze(asset.stagingKey, head.etag, frozen);
+  const frozen = asset.frozen;
+  await storage.freeze(
+    asset.stagingKey,
+    head.etag,
+    frozen,
+    asset.expectedChecksum,
+  );
   return inTransaction(database, async (tx) => {
     const { user } = await authorizeSeller(
       tx,
@@ -237,6 +267,7 @@ export async function completeMediaUpload(
       return { assetId: current.id, state: current.state };
     if (current.state !== "staged" || current.expiresAt.getTime() <= Date.now())
       throw new SellerError("CONFLICT");
+    await requireMediaObjectLease(tx, storage, current, frozen);
     const jobId = await enqueueJob(tx, {
       kind: "media.process",
       sellerId: current.sellerId,
@@ -246,8 +277,8 @@ export async function completeMediaUpload(
       authority: "member",
     });
     await tx.client.query(
-      `UPDATE treido.media_assets SET state='processing',immutable_key=$2,source_etag=$3,job_id=$4,revision=revision+1 WHERE id=$1`,
-      [current.id, frozen, head.etag, jobId],
+      `UPDATE treido.media_assets SET state='processing',immutable_key=$2,source_etag=$3,job_id=$4,storage_scope=coalesce(storage_scope,$5),revision=revision+1 WHERE id=$1`,
+      [current.id, frozen, head.etag, jobId, storage.scope],
     );
     return { assetId: current.id, state: "processing" };
   });
@@ -337,6 +368,7 @@ export async function processMediaJob(
     )
   ).rows[0];
   if (!asset || !asset.immutableKey) throw new SellerError("FORBIDDEN");
+  assertMediaStorageScope(asset.storageScope, storage);
   let processed;
   try {
     processed = await processPhoto(
@@ -351,7 +383,16 @@ export async function processMediaJob(
       );
     throw error;
   }
-  const key = `${storage.prefix}ready/${asset.sellerId}/${asset.id}/${processed.checksum}.webp`;
+  const key = `${storage.prefix}ready/${asset.sellerId}/${asset.id}/${randomUUID()}.webp`;
+  await inTransaction(database, async (tx) => {
+    await ownedDraft(tx, asset.sellerId, asset.listingId, true);
+    const current = await tx.client.query(
+      `SELECT id FROM treido.media_assets WHERE seller_id=$1 AND id=$2 AND state='processing' AND job_id=$3 AND immutable_key=$4 FOR UPDATE`,
+      [asset.sellerId, asset.id, job.id, asset.immutableKey],
+    );
+    if (current.rowCount !== 1) throw new SellerError("FORBIDDEN");
+    await registerMediaObject(tx, storage, asset, "ready", key);
+  });
   await storage.put(key, processed.bytes);
   return {
     resultId: asset.id,
@@ -365,6 +406,8 @@ export async function processMediaJob(
       ).rows[0];
       if (current?.state !== "processing" || current.key !== asset.immutableKey)
         throw new SellerError("FORBIDDEN");
+      await requireMediaObjectLease(tx, storage, asset, key);
+      await retainProcessedOriginal(tx, storage, asset, asset.immutableKey!);
     },
     apply: async (tx) => {
       await tx.client.query(
@@ -393,6 +436,10 @@ export async function readOwnedMedia(
     if (!asset || !asset.derivativeKey || !asset.derivativeChecksum)
       throw new SellerError("NOT_FOUND");
     await ownedDraft(tx, sellerId, asset.listingId, false);
-    return { key: asset.derivativeKey, checksum: asset.derivativeChecksum };
+    return {
+      key: asset.derivativeKey,
+      checksum: asset.derivativeChecksum,
+      storageScope: asset.storageScope,
+    };
   });
 }

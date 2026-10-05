@@ -18,6 +18,7 @@ import {
   publicationFieldIssues,
   type PublicationReview,
 } from "./publication-model";
+import { readSellerEntitlements } from "../seller-billing/storage.server";
 export const FREE_ACTIVE_LIMITS = { personal: 30, business: 100 } as const;
 export type PublicationAsset = {
   id: string;
@@ -51,6 +52,8 @@ export async function inspectPublication(
       [sellerId],
     )
   ).rows[0];
+  const entitlements = usage?.planId === access.seller.kind + "_free" && usage.planVersion === 1
+    ? await readSellerEntitlements(tx, sellerId, access.seller.kind) : null;
   const row = (
     await tx.client.query<{
       publication: PublicationReview["publication"];
@@ -146,9 +149,8 @@ export async function inspectPublication(
           ? "ready"
           : "pending",
       quota:
-        usage?.planId === access.seller.kind + "_free" &&
-        usage.planVersion === 1
-          ? active < FREE_ACTIVE_LIMITS[access.seller.kind] ||
+        entitlements
+          ? active < entitlements.active ||
             row.publication === "published"
             ? "available"
             : "exhausted"

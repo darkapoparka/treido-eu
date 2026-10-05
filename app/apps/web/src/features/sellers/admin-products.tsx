@@ -55,6 +55,21 @@ export function AdminProductList({
             <AdminIcon name="more" />
           </summary>
           <div>
+            {seller?.kind === "business" &&
+              seller.capabilities.includes("import.run") && (
+                <Link
+                  href={`/app/sellers/${seller.sellerId}/imports?lang=${language}`}
+                >
+                  {bg ? "Импортирай продукти" : "Import products"}
+                </Link>
+              )}
+            {seller && (
+              <Link
+                href={`/app/sellers/${seller.sellerId}/inventory?lang=${language}`}
+              >
+                {bg ? "Наличности" : "Inventory"}
+              </Link>
+            )}
             <Link
               href={
                 seller
@@ -206,18 +221,15 @@ export function AdminProductList({
                         <AdminIcon name="plus" />
                         {bg ? "Добави продукт" : "Add product"}
                       </Link>
-                      <button
-                        type="button"
-                        className={styles.secondary}
-                        disabled
-                        title={
-                          bg
-                            ? "Импортът все още не е достъпен"
-                            : "Import is not available yet"
-                        }
-                      >
-                        {bg ? "Импорт" : "Import"}
-                      </button>
+                      {seller?.kind === "business" &&
+                        seller.capabilities.includes("import.run") && (
+                          <Link
+                            className={styles.secondary}
+                            href={`/app/sellers/${seller.sellerId}/imports?lang=${language}`}
+                          >
+                            {bg ? "Импорт" : "Import"}
+                          </Link>
+                        )}
                     </div>
                   ) : (
                     <p>

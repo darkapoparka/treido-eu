@@ -9,21 +9,90 @@ export const JOB_LIMITS = {
   stalledSeconds: 600,
   attempts: 8,
 } as const;
-export type JobKind = "media.process" | "system.probe";
-export type JobAuthority = "member" | "service";
+export type SellerJobKind =
+  | "media.process"
+  | "system.probe"
+  | "catalogue.import"
+  | "team.invitation"
+  | "payment.reconcile"
+  | "payment.refund"
+  | "payment.aftercare"
+  | "billing.reconcile"
+  | "promotion.reconcile";
+export type AssistantJobKind =
+  "assistant.media-expiry" | "assistant.run-expiry" | "assistant.usage";
+export function isAssistantJobKind(kind: unknown): kind is AssistantJobKind {
+  return (
+    kind === "assistant.media-expiry" ||
+    kind === "assistant.run-expiry" ||
+    kind === "assistant.usage"
+  );
+}
+export type ShippingJobKind =
+  "shipping.input-expiry" | "shipping.recipient-expiry";
+export function isShippingJobKind(kind: unknown): kind is ShippingJobKind {
+  return (
+    kind === "shipping.input-expiry" || kind === "shipping.recipient-expiry"
+  );
+}
+export type JobKind =
+  | SellerJobKind
+  | "buyer.saved-search"
+  | AssistantJobKind
+  | "account.closure"
+  | ShippingJobKind;
+export type JobAuthority =
+  "member" | "service" | "buyer" | "assistant" | "closure" | "shipping";
 export type JobState =
   "pending" | "accepted" | "completed" | "cancelled" | "dead";
-export type JobIntent = {
-  kind: JobKind;
+export type SellerJobIntent = {
+  kind: SellerJobKind;
   sellerId: string;
+  buyerId?: null;
   resourceId: string;
   operationKey: string;
   actorId: string | null;
-  authority: JobAuthority;
+  authority: "member" | "service";
 };
+export type BuyerJobIntent = {
+  kind: "buyer.saved-search";
+  sellerId: null;
+  buyerId: string;
+  resourceId: string;
+  operationKey: string;
+  actorId: string;
+  authority: "buyer";
+};
+export type AssistantJobIntent = {
+  kind: AssistantJobKind;
+  sellerId: null;
+  buyerId: string;
+  resourceId: string;
+  operationKey: string;
+  actorId: null;
+  authority: "assistant";
+};
+export type ClosureJobIntent = Omit<
+  AssistantJobIntent,
+  "kind" | "authority"
+> & {
+  kind: "account.closure";
+  authority: "closure";
+};
+export type ShippingJobIntent = Omit<
+  AssistantJobIntent,
+  "kind" | "authority"
+> & { kind: ShippingJobKind; authority: "shipping" };
+export type JobIntent =
+  | SellerJobIntent
+  | BuyerJobIntent
+  | AssistantJobIntent
+  | ClosureJobIntent
+  | ShippingJobIntent;
 export type JobEvent = {
   jobId: string;
-  sellerId: string;
+  sellerId: string | null;
+  buyerId?: string;
   generation: number;
   schemaVersion: 1;
   environment: string;
@@ -45,16 +114,77 @@ export class JobError extends Error {
   }
 }
 export function validateJobIntent(input: JobIntent) {
+  if (isShippingJobKind(input?.kind)) {
+    if (
+      input.sellerId !== null ||
+      !validId(input.buyerId) ||
+      input.actorId !== null ||
+      input.authority !== "shipping" ||
+      !validId(input.resourceId) ||
+      input.operationKey !== input.resourceId
+    )
+      throw new JobError("INVALID_INPUT");
+    return;
+  }
+  if (isAssistantJobKind(input?.kind) || input?.kind === "account.closure") {
+    if (
+      input.sellerId !== null ||
+      !validId(input.buyerId) ||
+      input.actorId !== null ||
+      !validId(input.resourceId) ||
+      !validId(input.operationKey) ||
+      (input.kind === "account.closure"
+        ? input.authority !== "closure"
+        : input.authority !== "assistant" ||
+          input.operationKey !== input.resourceId)
+    )
+      throw new JobError("INVALID_INPUT");
+    return;
+  }
+  if (input?.kind === "buyer.saved-search") {
+    if (
+      input.sellerId !== null ||
+      !validId(input.buyerId) ||
+      input.actorId !== input.buyerId ||
+      input.authority !== "buyer" ||
+      !validId(input.resourceId) ||
+      !validId(input.operationKey)
+    )
+      throw new JobError("INVALID_INPUT");
+    return;
+  }
   if (
     !input ||
-    !["media.process", "system.probe"].includes(input.kind) ||
+    ![
+      "media.process",
+      "system.probe",
+      "catalogue.import",
+      "team.invitation",
+      "payment.reconcile",
+      "payment.refund",
+      "payment.aftercare",
+      "billing.reconcile",
+      "promotion.reconcile",
+    ].includes(input.kind) ||
     !validId(input.sellerId) ||
+    input.buyerId != null ||
     !validId(input.resourceId) ||
     !validId(input.operationKey) ||
     !["member", "service"].includes(input.authority) ||
     (input.authority === "member" && !validId(input.actorId)) ||
     (input.authority === "service" && input.actorId !== null) ||
-    (input.kind === "media.process" && input.authority !== "member")
+    ([
+      "payment.reconcile",
+      "payment.refund",
+      "payment.aftercare",
+      "billing.reconcile",
+      "promotion.reconcile",
+    ].includes(input.kind) &&
+      input.authority !== "service") ||
+    (["media.process", "catalogue.import", "team.invitation"].includes(
+      input.kind,
+    ) &&
+      input.authority !== "member")
   )
     throw new JobError("INVALID_INPUT");
 }
@@ -68,6 +198,7 @@ export function parseJobEvent(value: unknown): JobEvent | null {
         ![
           "jobId",
           "sellerId",
+          "buyerId",
           "generation",
           "schemaVersion",
           "environment",
@@ -75,7 +206,9 @@ export function parseJobEvent(value: unknown): JobEvent | null {
         ].includes(key),
     ) ||
     !validId(event.jobId) ||
-    !validId(event.sellerId) ||
+    (event.sellerId === null
+      ? !validId(event.buyerId)
+      : !validId(event.sellerId) || event.buyerId !== undefined) ||
     !Number.isSafeInteger(event.generation) ||
     (event.generation as number) < 1 ||
     event.schemaVersion !== JOB_VERSION ||

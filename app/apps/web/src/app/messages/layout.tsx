@@ -23,7 +23,11 @@ export default async function MessagesLayout({
     "https://treido.invalid",
   );
   const params = new URLSearchParams();
-  for (const key of ["lang", "listing", "kind", "id"])
+  for (const key of entry.pathname === "/messages/report"
+    ? ["lang", "kind", "id"]
+    : entry.pathname === "/messages/new"
+      ? ["lang", "listing"]
+      : ["lang"])
     if (entry.searchParams.has(key))
       params.set(key, entry.searchParams.get(key)!);
   const target =

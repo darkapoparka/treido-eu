@@ -1,13 +1,14 @@
 "use client";
+import { ReplyComposer } from "./reply-composer";
+import { notificationsHref } from "../notifications/model";
+import { OfferPanel, OfferMessageCard } from "../offers/panel";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import type { Locale } from "../locale/locale";
-import { useUnsavedChanges } from "../sellers/use-unsaved-changes";
 import { ReportForm } from "../trust/report-form";
 import {
   readConversationAction,
-  sendMessageAction,
   markReadAction,
   blockContactAction,
 } from "./actions";
@@ -32,6 +33,7 @@ export function Conversation({
   language: Locale;
   onChanged: () => void;
 }) {
+  const cases = useTranslations("trustCases");
   const t = useTranslations("messaging"),
     format = useFormatter(),
     sellerId = scope.sellerId,
@@ -46,11 +48,7 @@ export function Conversation({
     status,
     refresh,
   } = useInboxRefresh(initial, actorSubject, load);
-  const [body, setBody] = useState(""),
-    [error, setError] = useState<string | null>(null),
-    [sent, setSent] = useState(false);
-  const [pending, start] = useTransition(),
-    [report, setReport] = useState<string | null>(null);
+  const [report, setReport] = useState<string | null>(null);
   const [block, setBlock] = useState<{
     blocked: boolean;
     requestId: string;
@@ -59,11 +57,8 @@ export function Conversation({
   const [blockPending, startBlock] = useTransition(),
     [blockError, setBlockError] = useState(false),
     [contactChanged, setContactChanged] = useState(false);
-  const input = useRef<HTMLTextAreaElement>(null),
-    alive = useRef(true),
-    request = useRef<{ body: string; id: string } | null>(null),
+  const alive = useRef(true),
     read = useRef(0);
-  useUnsavedChanges(!!body.trim(), language);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -74,14 +69,10 @@ export function Conversation({
   if (previousStatus !== status) {
     setPreviousStatus(status);
     if (status === "denied") {
-      setBody("");
       setReport(null);
       setBlock(null);
     }
   }
-  useEffect(() => {
-    if (status === "denied") request.current = null;
-  }, [status]);
   useEffect(() => {
     const sequence = view.messages.at(-1)?.sequence ?? 0;
     if (
@@ -102,43 +93,6 @@ export function Conversation({
         read.current = 0;
       });
   }, [view, status, sellerId, threadId, onChanged]);
-  const send = () => {
-    if (!body.trim() || pending || status !== "ready") return;
-    const value = body.trim();
-    if (request.current?.body !== value)
-      request.current = { body: value, id: crypto.randomUUID() };
-    const command = {
-      sellerId,
-      threadId,
-      body: value,
-      requestId: request.current.id,
-    };
-    setError(null);
-    setSent(false);
-    start(async () => {
-      try {
-        const result = await sendMessageAction(command);
-        if (!alive.current) return;
-        if (!result.ok) {
-          setError(result.code);
-          if (
-            ["FORBIDDEN", "NOT_FOUND", "UNAUTHENTICATED"].includes(result.code)
-          )
-            void refresh(true);
-          return;
-        }
-        setBody("");
-        request.current = null;
-        setSent(true);
-        setBefore(null);
-        await refresh();
-        onChanged();
-        input.current?.focus();
-      } catch {
-        if (alive.current) setError("NOT_AVAILABLE");
-      }
-    });
-  };
   if (status !== "ready")
     return (
       <section className={s.conversation} role="status">
@@ -179,6 +133,12 @@ export function Conversation({
           >
             {t("backInbox")}
           </Link>
+          <Link
+            className={s.button}
+            href={notificationsHref(sellerId, language)}
+          >
+            {t("notificationUpdates")}
+          </Link>
           <h2>
             {view.title === null ? t("removed") : view.title || t("untitled")}
           </h2>
@@ -218,7 +178,6 @@ export function Conversation({
             className={s.button}
             onClick={() => {
               setBefore(view.olderBefore);
-              setSent(false);
             }}
           >
             {t("older")}
@@ -255,7 +214,18 @@ export function Conversation({
                 </button>
               )}
             </header>
-            <p>{message.body}</p>
+            {message.moderationHidden && (
+              <div className={s.notice}>
+                <p>{cases("messageHidden")}</p>
+                <p>{message.moderationReason}</p>
+                {message.offer && <small>{cases("retainedOffer")}</small>}
+              </div>
+            )}
+            {message.offer ? (
+              <OfferMessageCard value={message.offer} />
+            ) : !message.moderationHidden ? (
+              <p>{message.body}</p>
+            ) : null}
             {message.attachments > 0 && (
               <p className={s.muted}>
                 {t("attachments", { count: message.attachments })} ·{" "}
@@ -265,54 +235,28 @@ export function Conversation({
           </li>
         ))}
       </ol>
-      {view.canReply ? (
-        <form
-          className={s.composer}
-          onSubmit={(event) => {
-            event.preventDefault();
-            send();
-          }}
-        >
-          <label htmlFor={"message-" + threadId}>{t("write")}</label>
-          <textarea
-            ref={input}
-            id={"message-" + threadId}
-            value={body}
-            maxLength={4000}
-            disabled={pending}
-            onChange={(event) => {
-              setBody(event.target.value);
-              setSent(false);
-            }}
-          />
-          {error && (
-            <p role="alert" className={s.error}>
-              {t(
-                error === "QUOTA_EXCEEDED"
-                  ? "sendLimit"
-                  : error === "CONFLICT"
-                    ? "sendConflict"
-                    : "sendFailed",
-              )}
-            </p>
-          )}
-          <div className={s.composerFooter}>
-            <span role="status" className={s.muted}>
-              {sent
-                ? t("sent")
-                : format.number(body.length) + " / " + format.number(4000)}
-            </span>
-            <button
-              className={s.button + " " + s.primary}
-              disabled={pending || !body.trim()}
-            >
-              {t(pending ? "sending" : "send")}
-            </button>
-          </div>
-        </form>
-      ) : (
-        <p className={s.notice}>{t("replyUnavailable")}</p>
-      )}
+      <OfferPanel
+        threadId={threadId}
+        scope={scope}
+        actorSubject={actorSubject}
+        onChanged={() => {
+          void refresh();
+          onChanged();
+        }}
+      />
+      <ReplyComposer
+        key={actorSubject + ":" + sellerId + ":" + threadId}
+        actorSubject={actorSubject}
+        sellerId={sellerId}
+        threadId={threadId}
+        canReply={view.canReply}
+        language={language}
+        onSent={() => {
+          setBefore(null);
+          void refresh();
+          onChanged();
+        }}
+      />
       {block && (
         <ConversationDialog
           title={t(block.blocked ? "blockTitle" : "unblockTitle")}

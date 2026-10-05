@@ -1,14 +1,21 @@
 import { Client } from "pg";
+import process from "node:process";
+import console from "node:console";
+import { URL } from "node:url";
 import { readFile } from "node:fs/promises";
-import { validateBackendBindings } from "../src/server/config/backend-bindings.ts";
+import {
+  deriveDevelopmentDatabaseEnvironment,
+  validateDatabaseBindings,
+} from "../src/server/config/backend-bindings.ts";
 import { applyReviewedMigration } from "./identity-draft-migration.mjs";
 import { applyRuntimeGrants } from "./runtime-grants.mjs";
 
 async function main() {
-  const configured = validateBackendBindings(process.env);
+  const databaseEnvironment = deriveDevelopmentDatabaseEnvironment(process.env);
+  const configured = validateDatabaseBindings(databaseEnvironment);
   if (!configured.ok)
     throw new Error(
-      "Set the intended backend bindings before running migrations.",
+      "Set the intended isolated database bindings before running migrations.",
     );
   const { database, environment } = configured.bindings;
   const args = process.argv.slice(2);
@@ -26,7 +33,7 @@ async function main() {
       "This initial migration command supports isolated development/test branches only.",
     );
   const migration = new URL(process.env.MIGRATION_DATABASE_URL ?? "");
-  const runtime = new URL(process.env.DATABASE_URL);
+  const runtime = new URL(databaseEnvironment.DATABASE_URL);
   const ssl = migration.searchParams.getAll("sslmode");
   if (
     !["postgres:", "postgresql:"].includes(migration.protocol) ||
@@ -106,6 +113,38 @@ async function main() {
         "0009_product_duplicates",
         "0010_inbox_controls",
         "0011_listing_publications",
+        "0012_buyer_library",
+        "0013_inventory_allocations",
+        "0014_buyer_cart",
+        "0015_structured_offers",
+        "0016_catalogue_imports",
+        "0017_stock_batches_offer_expiry",
+        "0018_team_settings",
+        "0019_profile_invitation_decisions",
+        "0020_media_retention",
+        "0021_purchase_reviews",
+        "0022_contact_operations",
+        "0023_connected_payments",
+        "0024_payment_source_identity",
+        "0025_trust_case_decisions",
+        "0026_buyer_comparisons",
+        "0027_saved_searches",
+        "0028_account_privacy_requests",
+        "0029_assistant_tools",
+        "0030_buyer_gift_finder",
+        "0031_seller_billing",
+        "0032_seller_promotions",
+        "0033_promotion_payment_bridge",
+        "0034_assistant_inputs",
+        "0035_order_aftercare",
+        "0036_order_feedback",
+        "0037_account_lifecycle",
+        "0038_lifecycle_extensions",
+        "0039_lifecycle_jobs",
+        "0040_order_shipping",
+        "0041_shipping_retention",
+        "0042_shipping_financial",
+        "0043_shipping_lifecycle",
       ]) {
         const source = await readFile(
           new URL(`../migrations/${version}.sql`, import.meta.url),
@@ -116,7 +155,14 @@ async function main() {
           outcome: await applyReviewedMigration(client, version, source),
         });
       }
-      await applyRuntimeGrants(client, database.runtimeRole);
+      await client.query("BEGIN");
+      try {
+        await applyRuntimeGrants(client, database.runtimeRole);
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      }
       const schema = await client.query(
         "SELECT has_schema_privilege($1,'treido','CREATE') AS can_create",
         [database.runtimeRole],

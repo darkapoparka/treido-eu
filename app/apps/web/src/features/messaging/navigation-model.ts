@@ -19,7 +19,7 @@ export function parseMessagingContinuation(value: unknown): string | null {
   if (parts.length > 2) return null;
   const [pathname, raw] = parts;
   const thread = /^[/]messages[/]([^/]+)$/.exec(pathname);
-  const report = /^[/]messages[/]reports[/]([^/]+)$/.exec(pathname);
+  const report = /^[/]messages[/](?:reports|appeals)[/]([^/]+)$/.exec(pathname);
   const seller = /^[/]app[/]sellers[/]([^/]+)[/]inbox(?:[/]([^/]+))?$/.exec(
     pathname,
   );
@@ -31,6 +31,7 @@ export function parseMessagingContinuation(value: unknown): string | null {
     ![
       "/messages",
       "/messages/reports",
+      "/messages/appeals",
       "/messages/new",
       "/messages/report",
     ].includes(pathname) &&

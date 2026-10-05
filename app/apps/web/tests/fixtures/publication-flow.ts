@@ -57,7 +57,13 @@ export async function createPublicationFixture(
   });
   const objects = new Map<string, Buffer>();
   const storage: MediaStorage = {
+    scope: createHash("sha256")
+      .update("test-publication/" + sellerId)
+      .digest("hex"),
     prefix: "test-publication/",
+    async remove(key) {
+      objects.delete(key);
+    },
     async upload(key) {
       return {
         url: "http://fixture.invalid/" + key,

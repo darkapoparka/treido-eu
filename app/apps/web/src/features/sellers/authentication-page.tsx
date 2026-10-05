@@ -1,3 +1,4 @@
+import { parseBuyerContinuation } from "../library/buyer-continuation";
 import { ClerkProvider, SignIn, SignUp } from "@clerk/nextjs";
 import { getTranslations } from "next-intl/server";
 import { clerkLocalization } from "../locale/clerk-localization.server";
@@ -17,9 +18,11 @@ export async function AuthenticationPage({
 }) {
   const { returnTo, lang } = await searchParams;
   const parsed = parseSellContinuation(returnTo);
+  const buyerTarget = parseBuyerContinuation(returnTo);
   const validatedTarget = parsed.ok
     ? parsed.continuation.target
-    : (parseWorkspaceContinuation(returnTo) ??
+    : (buyerTarget ??
+      parseWorkspaceContinuation(returnTo) ??
       (mode === "sign-up" ? "/app/intent" : "/app"));
   const destination = new URL(validatedTarget, "https://treido.invalid");
   const language = await pageLocale(
@@ -45,7 +48,7 @@ export async function AuthenticationPage({
             ? t("signInToTreido")
             : t("createYourTreidoAccount")
         }
-        back={`/sell?lang=${language}`}
+        back={buyerTarget ? target : `/sell?lang=${language}`}
         language={language}
       >
         {mode === "sign-in" ? (

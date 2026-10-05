@@ -1,8 +1,10 @@
+import { readBuyerPageMetadata } from "@/features/catalog/public-metadata.server";
+export const generateMetadata = () => readBuyerPageMetadata("home");
 import {
   readCatalog,
   referencePreviewEnabled,
 } from "@/features/catalog/queries.server";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { Home } from "@/features/discovery/home";
@@ -10,13 +12,21 @@ import { referenceScenarioCookie } from "@/features/catalog/reference/scenarios"
 import { previewOnboardedCookie } from "@/features/catalog/reference/session";
 import { HomeLoading } from "@/features/discovery/home-loading";
 import { Suspense } from "react";
+import {
+  MarketplacePage,
+  type MarketplaceSearchParams,
+} from "@/features/discovery/marketplace-page.server";
 async function HomeContent() {
   return <Home catalog={await readCatalog()} />;
 }
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<MarketplaceSearchParams>;
+}) {
   await connection();
-  // Preserve the non-preview 404 before the loading boundary can stream.
-  if (!referencePreviewEnabled()) notFound();
+  if (!referencePreviewEnabled())
+    return <MarketplacePage raw={await searchParams} home />;
   const cookieStore = await cookies();
   const scenario = cookieStore.get(referenceScenarioCookie)?.value;
   const onboarded = cookieStore.get(previewOnboardedCookie)?.value === "1";

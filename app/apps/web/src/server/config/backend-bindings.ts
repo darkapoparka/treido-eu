@@ -3,7 +3,12 @@ export type BackendEnvironment =
 export type BindingIssue = {
   variable: string;
   code:
-    "MISSING" | "INVALID" | "MODE_MISMATCH" | "PUBLIC_SECRET" | "UNSAFE_ROLE";
+    | "MISSING"
+    | "INVALID"
+    | "MODE_MISMATCH"
+    | "PUBLIC_SECRET"
+    | "UNSAFE_ROLE"
+    | "MASKED_CREDENTIAL";
 };
 
 export type BackendBindings = {
@@ -18,6 +23,8 @@ export type BackendBindings = {
     region: string;
     databaseName: string;
     runtimeRole: string;
+    loginRole: string;
+    localBridge: boolean;
   };
 };
 
@@ -38,6 +45,59 @@ const requiredVariables = [
   "TREIDO_DB_ROLE",
   "DATABASE_URL",
 ] as const;
+
+export function deriveDevelopmentDatabaseEnvironment(
+  env: Readonly<Record<string, string | undefined>>,
+): Readonly<Record<string, string | undefined>> {
+  if (env.TREIDO_DB_LOCAL_BRIDGE !== "true") return env;
+  try {
+    const existing = new URL(env.DATABASE_URL ?? "");
+    const password = decodeURIComponent(existing.password);
+    if (password && !/^[*\u2022\u25cf\u2026]{3,}$/u.test(password)) return env;
+  } catch {
+    // A missing or invalid runtime URL is derived from the migration-only source below.
+  }
+  const runtimeRole = env.TREIDO_DB_ROLE ?? "";
+  const databaseName = env.TREIDO_DB_DATABASE ?? "";
+  const region = env.TREIDO_DB_REGION ?? "";
+  let migration: URL;
+  try {
+    migration = new URL(env.MIGRATION_DATABASE_URL ?? "");
+  } catch {
+    throw new Error("Invalid development database bridge.");
+  }
+  const ssl = migration.searchParams.getAll("sslmode");
+  const allowed = [
+    "sslmode",
+    "channel_binding",
+    "connect_timeout",
+    "application_name",
+  ];
+  if (
+    env.TREIDO_ENV !== "development" ||
+    !/^[A-Za-z_][A-Za-z0-9_-]{0,62}$/.test(runtimeRole) ||
+    !["postgres:", "postgresql:"].includes(migration.protocol) ||
+    !migration.hostname.endsWith(".neon.tech") ||
+    migration.hostname.includes("-pooler.") ||
+    !migration.hostname.split(".").includes(region) ||
+    decodeURIComponent(migration.pathname.slice(1)) !== databaseName ||
+    !migration.username ||
+    !migration.password ||
+    decodeURIComponent(migration.username) === runtimeRole ||
+    migration.hash ||
+    ssl.length !== 1 ||
+    !["require", "verify-ca", "verify-full"].includes(ssl[0]) ||
+    [...migration.searchParams.keys()].some((key) => !allowed.includes(key))
+  )
+    throw new Error("Invalid development database bridge.");
+  const databaseUrl = new URL(migration.href);
+  databaseUrl.searchParams.set("options", `-c role=${runtimeRole}`);
+  return {
+    ...env,
+    TREIDO_DB_LOGIN_ROLE: decodeURIComponent(migration.username),
+    DATABASE_URL: databaseUrl.href,
+  };
+}
 
 /** Syntax and declared-target validation only; no authentication or provider connection. */
 export function validateBackendBindings(
@@ -104,6 +164,29 @@ export function validateBackendBindings(
   if (["postgres", "neondb_owner"].includes(value("TREIDO_DB_ROLE")))
     reject("TREIDO_DB_ROLE", "UNSAFE_ROLE");
 
+  const bridgeValue = value("TREIDO_DB_LOCAL_BRIDGE");
+  const localBridge = bridgeValue === "true";
+  if (bridgeValue && !["true", "false"].includes(bridgeValue))
+    reject("TREIDO_DB_LOCAL_BRIDGE");
+  if (localBridge && environment !== "development")
+    reject("TREIDO_DB_LOCAL_BRIDGE", "MODE_MISMATCH");
+  if (localBridge && !value("TREIDO_DB_LOGIN_ROLE").trim())
+    reject("TREIDO_DB_LOGIN_ROLE", "MISSING");
+  if (!localBridge && value("TREIDO_DB_LOGIN_ROLE").trim())
+    reject("TREIDO_DB_LOGIN_ROLE", "MODE_MISMATCH");
+  if (
+    value("TREIDO_DB_LOGIN_ROLE") &&
+    !/^[A-Za-z_][A-Za-z0-9_-]{0,62}$/.test(value("TREIDO_DB_LOGIN_ROLE"))
+  )
+    reject("TREIDO_DB_LOGIN_ROLE");
+  const loginRole = localBridge
+    ? value("TREIDO_DB_LOGIN_ROLE")
+    : value("TREIDO_DB_ROLE");
+  if (localBridge && loginRole === value("TREIDO_DB_ROLE"))
+    reject("TREIDO_DB_LOGIN_ROLE", "MODE_MISMATCH");
+  if (["postgres", "neondb_owner"].includes(loginRole))
+    reject("TREIDO_DB_LOGIN_ROLE", "UNSAFE_ROLE");
+
   let origin = "";
   try {
     const url = new URL(value("TREIDO_APP_ORIGIN"));
@@ -131,27 +214,37 @@ export function validateBackendBindings(
 
   try {
     const url = new URL(value("DATABASE_URL"));
+    if (/^[*\u2022\u25cf\u2026]{3,}$/u.test(decodeURIComponent(url.password)))
+      reject("DATABASE_URL", "MASKED_CREDENTIAL");
     const ssl = url.searchParams.getAll("sslmode");
+    const options = url.searchParams.getAll("options");
     const parameterNames = [...url.searchParams.keys()];
     const allowedParameters = [
       "sslmode",
       "channel_binding",
       "connect_timeout",
       "application_name",
+      ...(localBridge ? ["options"] : []),
     ];
+    const bridgeOptions = `-c role=${value("TREIDO_DB_ROLE")}`;
     if (
       !["postgres:", "postgresql:"].includes(url.protocol) ||
       !url.hostname.endsWith(".neon.tech") ||
       !url.password ||
       url.hash ||
-      decodeURIComponent(url.username) !== value("TREIDO_DB_ROLE") ||
+      decodeURIComponent(url.username) !== loginRole ||
       decodeURIComponent(url.pathname.slice(1)) !==
         value("TREIDO_DB_DATABASE") ||
       !url.hostname.split(".").includes(value("TREIDO_DB_REGION")) ||
       ssl.length !== 1 ||
       !["require", "verify-ca", "verify-full"].includes(ssl[0]) ||
       parameterNames.some((name) => !allowedParameters.includes(name)) ||
-      new Set(parameterNames).size !== parameterNames.length
+      new Set(parameterNames).size !== parameterNames.length ||
+      (localBridge &&
+        (url.hostname.includes("-pooler.") ||
+          options.length !== 1 ||
+          options[0] !== bridgeOptions)) ||
+      (!localBridge && options.length !== 0)
     ) {
       reject("DATABASE_URL");
     }
@@ -179,6 +272,65 @@ export function validateBackendBindings(
         region: value("TREIDO_DB_REGION"),
         databaseName: value("TREIDO_DB_DATABASE"),
         runtimeRole: value("TREIDO_DB_ROLE"),
+        loginRole,
+        localBridge,
+      },
+    },
+  };
+}
+
+const databaseVariables = new Set([
+  "TREIDO_ENV",
+  "TREIDO_DATA_MODE",
+  "TREIDO_NEON_PROJECT_ID",
+  "TREIDO_NEON_BRANCH_ID",
+  "TREIDO_NEON_BRANCH_PURPOSE",
+  "TREIDO_DB_REGION",
+  "TREIDO_DB_DATABASE",
+  "TREIDO_DB_ROLE",
+  "TREIDO_DB_LOGIN_ROLE",
+  "TREIDO_DB_LOCAL_BRIDGE",
+  "DATABASE_URL",
+]);
+
+type DatabaseBindings = Pick<BackendBindings, "environment" | "database">;
+
+/** Reuse the same database rules without requiring unrelated identity credentials.
+ * This qualifies declarations only; it grants no session or provider authority.
+ */
+export function validateDatabaseBindings(
+  env: Readonly<Record<string, string | undefined>>,
+):
+  | { ok: true; bindings: DatabaseBindings }
+  | { ok: false; issues: BindingIssue[] } {
+  const result = validateBackendBindings(env);
+  if (!result.ok) {
+    const issues = result.issues.filter(
+      ({ variable, code }) =>
+        databaseVariables.has(variable) || code === "PUBLIC_SECRET",
+    );
+    if (issues.length) return { ok: false, issues };
+  }
+  // All fields below have passed the existing database validation. Do not add
+  // fabricated Clerk keys to an environment merely to run database migrations.
+  const environment = env.TREIDO_ENV as BackendEnvironment;
+  return {
+    ok: true,
+    bindings: {
+      environment,
+      database: {
+        provider: "neon",
+        projectId: env.TREIDO_NEON_PROJECT_ID!,
+        branchId: env.TREIDO_NEON_BRANCH_ID!,
+        purpose: environment,
+        region: env.TREIDO_DB_REGION!,
+        databaseName: env.TREIDO_DB_DATABASE!,
+        runtimeRole: env.TREIDO_DB_ROLE!,
+        loginRole:
+          env.TREIDO_DB_LOCAL_BRIDGE === "true"
+            ? env.TREIDO_DB_LOGIN_ROLE!
+            : env.TREIDO_DB_ROLE!,
+        localBridge: env.TREIDO_DB_LOCAL_BRIDGE === "true",
       },
     },
   };

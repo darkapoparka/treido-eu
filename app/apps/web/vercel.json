@@ -2,5 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && corepack pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && corepack pnpm --filter @treido/web build && node scripts/ci/deploy-output.mjs"
+  "buildCommand": "cd ../.. && corepack pnpm --filter @treido/web build && node scripts/ci/deploy-output.mjs",
+  "git": {
+    "deploymentEnabled": {
+      "codex/astra-review-2026-10-05": false
+    }
+  }
 }

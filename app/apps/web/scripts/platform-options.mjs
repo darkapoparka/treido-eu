@@ -1,4 +1,7 @@
-import { validateBackendBindings } from "../src/server/config/backend-bindings.ts";
+import {
+  deriveDevelopmentDatabaseEnvironment,
+  validateBackendBindings,
+} from "../src/server/config/backend-bindings.ts";
 import { validateJobBindings } from "../src/server/jobs/bindings.ts";
 import { validateMediaBindings } from "../src/server/media/bindings.ts";
 
@@ -12,9 +15,24 @@ export function platformOptions(env = process.env, args = []) {
     throw new PlatformConfigurationError(
       "The development platform is local-only.",
     );
-  const backend = validateBackendBindings(env);
-  const jobs = validateJobBindings(env);
-  const media = validateMediaBindings(env);
+  let resolvedEnv;
+  try {
+    resolvedEnv = deriveDevelopmentDatabaseEnvironment(env);
+  } catch {
+    throw new PlatformConfigurationError(
+      "Configure the isolated development database bridge. Values are not logged.",
+    );
+  }
+  const backend = validateBackendBindings(resolvedEnv);
+  const jobs = validateJobBindings(resolvedEnv);
+  const media = validateMediaBindings(resolvedEnv);
+  if (
+    !backend.ok &&
+    backend.issues.some((issue) => issue.code === "MASKED_CREDENTIAL")
+  )
+    throw new PlatformConfigurationError(
+      "DATABASE_URL contains a masked password. Copy the unmasked runtime connection into web .env.local and save it; never paste it into chat.",
+    );
   const invalid = new Set([
     ...(backend.ok ? [] : backend.issues.map((issue) => issue.variable)),
     ...(jobs.ok ? [] : jobs.missing),
@@ -47,6 +65,13 @@ export function platformOptions(env = process.env, args = []) {
   const output = background
     ? ".qa/treido-platform-background"
     : ".qa/treido-platform";
+  const bridgeEnvironment = backend.bindings.database.localBridge
+    ? {
+        DATABASE_URL: resolvedEnv.DATABASE_URL,
+        TREIDO_DB_LOGIN_ROLE: resolvedEnv.TREIDO_DB_LOGIN_ROLE,
+        TREIDO_DB_LOCAL_BRIDGE: "true",
+      }
+    : {};
   return {
     background,
     output,
@@ -58,6 +83,7 @@ export function platformOptions(env = process.env, args = []) {
       SHOP_PARITY_DIST_DIR: output,
       SHOP_PARITY_TSCONFIG_PATH: "tsconfig.treido-platform.json",
       INNGEST_DEV: "false",
+      ...bridgeEnvironment,
       // An explicit empty value prevents Next's env-file loader restoring it.
       MIGRATION_DATABASE_URL: "",
     },

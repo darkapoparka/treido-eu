@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 const nextConfig: NextConfig = {
   transpilePackages: ["@treido/contracts"],
+  // Inngest loads its OpenTelemetry peer at runtime. Externalizing the SDK lets
+  // Node resolve the pnpm link without Turbopack rejecting the workspace link.
+  serverExternalPackages: ["inngest"],
   devIndicators: false,
   // Keep audit type generation away from the running preview's protected config.
   // Production checks use fresh route types, not stale dev/audit output.

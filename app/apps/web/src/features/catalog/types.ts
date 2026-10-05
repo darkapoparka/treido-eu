@@ -144,6 +144,8 @@ export type SavedListing = Readonly<{
   sellerName?: string;
   images: readonly string[];
   price?: Money;
+  priceFrom?: boolean;
+  stockState?: "unknown" | "available" | "reserved" | "out_of_stock";
   promotion?: string;
   variantLabel?: string;
   detailUnavailable?: string;

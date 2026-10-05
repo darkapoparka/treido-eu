@@ -28,7 +28,7 @@ export async function runAdminBrowserChecks({ database, admin, owner, api }) {
   const navigation = `let navigating=false;export const useParams=()=>({sellerId:window.__initial.seller?.sellerId});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const useRouter=()=>({replace:path=>history.replaceState(null,'',path),push:path=>{navigating=true;location.assign(path)},refresh:()=>{if(!navigating)void window.__refreshAdmin?.()}});`;
   const clerk = `export const useAuth=()=>({isLoaded:true,isSignedIn:true,userId:window.__initial.actor});export const useClerk=()=>({user:{id:window.__initial.actor}});`;
   const media = `export const listMediaAction=async()=>({ok:true,data:[]});export const createMediaIntentAction=async()=>({ok:false,code:'NOT_AVAILABLE'});export const completeMediaAction=createMediaIntentAction;export const changeMediaAction=createMediaIntentAction;`;
-  const management = `const call=async(path,input)=>(await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(input)})).json();export const duplicateProductAction=input=>call("/__duplicate",input);export const withdrawProductsAction=input=>call("/__withdraw",input);`;
+  const management = `const call=async(path,input)=>(await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(input)})).json();export const duplicateProductAction=input=>call("/__duplicate",input);export const withdrawProductsAction=input=>call("/__withdraw",input);export const duplicateProductsAction=input=>call("/__duplicate-many",input);`;
   const rebuild = () =>
     build({
       configFile: false,
@@ -39,6 +39,7 @@ export async function runAdminBrowserChecks({ database, admin, owner, api }) {
         alias: [
           { find: /^@\//, replacement: resolve(app, "apps/web/src") + "/" },
           ...[
+            "next-intl",
             "react",
             "react/jsx-runtime",
             "react/jsx-dev-runtime",
@@ -58,7 +59,8 @@ export async function runAdminBrowserChecks({ database, admin, owner, api }) {
           resolveId(id, importer) {
             if (
               id === "./admin-product-management-actions" &&
-              importer?.endsWith("admin-product-table.tsx")
+              (importer?.endsWith("admin-product-table.tsx") ||
+                importer?.endsWith("bulk-duplicate-products.tsx"))
             )
               return "\0review:management";
             if (
@@ -232,7 +234,9 @@ export async function runAdminBrowserChecks({ database, admin, owner, api }) {
         return;
       }
       if (
-        ["/__duplicate", "/__withdraw"].includes(url.pathname) &&
+        ["/__duplicate", "/__duplicate-many", "/__withdraw"].includes(
+          url.pathname,
+        ) &&
         req.method === "POST"
       ) {
         let raw = "";
@@ -243,9 +247,11 @@ export async function runAdminBrowserChecks({ database, admin, owner, api }) {
         let result;
         try {
           const execute =
-            url.pathname === "/__duplicate"
-              ? api.duplicateSellerProduct
-              : api.withdrawSellerProducts;
+            url.pathname === "/__duplicate-many"
+              ? api.duplicateSellerProducts
+              : url.pathname === "/__duplicate"
+                ? api.duplicateSellerProduct
+                : api.withdrawSellerProducts;
           result = {
             ok: true,
             data: await execute(database, owner, JSON.parse(raw)),

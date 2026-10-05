@@ -21,7 +21,7 @@ import {
   inputHash,
 } from "../sellers/persistence.server";
 import { SellerError } from "../sellers/errors";
-import { FREE_DRAFT_LIMITS } from "./draft-quota";
+import { readSellerEntitlements } from "../seller-billing/storage.server";
 import {
   parseDraftPayload,
   validId,
@@ -102,7 +102,7 @@ export async function createDraftInTransaction(
     return acknowledgement(previous);
   }
   // Version-one Free draft limits from billing.md; no browser plan selection.
-  const limit = FREE_DRAFT_LIMITS[seller.kind];
+  const limit = (await readSellerEntitlements(tx, sellerId, seller.kind)).drafts;
   if (usage.draftCount >= limit) throw new SellerError("QUOTA_EXCEEDED");
   const listingId = randomUUID();
   await tx.db.insert(listings).values({ id: listingId, sellerId });

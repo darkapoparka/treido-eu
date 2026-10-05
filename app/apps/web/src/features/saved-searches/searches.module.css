@@ -1,0 +1,54 @@
+.card {
+  border: 1px solid var(--border, #dedede);
+  border-radius: 20px;
+  padding: 20px;
+  min-width: 0;
+}
+.card h2 {
+  font-size: 20px;
+  line-height: 1.35;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.card p {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.consent input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+.criteria {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.list {
+  list-style: none;
+  margin: 18px 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.stamp {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #666);
+}
+.price {
+  font-size: 16px;
+  font-weight: 600;
+}
+@media (max-width: 420px) {
+  .card {
+    padding: 14px;
+  }
+}

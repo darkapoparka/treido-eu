@@ -23,6 +23,7 @@ export function InboxWorkspace({
   actorSubject: string;
   language: Locale;
 }) {
+  const offers = useTranslations("offers");
   const t = useTranslations("messaging"),
     query = initialInbox.query;
   const load = useCallback(() => readInboxAction(query), [query]);
@@ -140,7 +141,9 @@ export function InboxWorkspace({
                   </strong>
                   <p>{query.sellerId ? t("buyer") : item.sellerName}</p>
                   <p className={s.preview}>
-                    {item.lastBody || t("previewEmpty")}
+                    {item.lastOffer
+                      ? offers("update")
+                      : item.lastBody || t("previewEmpty")}
                   </p>
                   {item.blocked && (
                     <small className={s.muted}>{t("blocked")}</small>

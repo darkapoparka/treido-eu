@@ -40,6 +40,54 @@ function authority(
 }
 
 describe("current seller capabilities", () => {
+  it.each(["personal", "business"] as const)(
+    "%s owner can manage promotions under current ownership",
+    (kind) => {
+      expect(
+        checkSellerCapability(authority(kind), "marketing.manage"),
+      ).toEqual({
+        allowed: true,
+      });
+    },
+  );
+
+  it.each(["manager", "member"] as const)(
+    "%s marketing grant is explicit and cannot confer billing or refund authority",
+    (role) => {
+      const granted = authority("business", role, ["marketing.manage"]);
+      expect(checkSellerCapability(granted, "marketing.manage")).toEqual({
+        allowed: true,
+      });
+      for (const capability of [
+        "billing.manage",
+        "payment.setup",
+        "refund.request",
+      ] as const)
+        expect(checkSellerCapability(granted, capability)).toEqual({
+          allowed: false,
+          reason: "CAPABILITY_REQUIRED",
+        });
+      expect(
+        checkSellerCapability(authority("business", role), "marketing.manage"),
+      ).toEqual({
+        allowed: false,
+        reason: "CAPABILITY_REQUIRED",
+      });
+      expect(
+        checkSellerCapability(
+          {
+            ...granted,
+            membership: { ...granted.membership!, status: "revoked" },
+          },
+          "marketing.manage",
+        ),
+      ).toEqual({
+        allowed: false,
+        reason: "SELLER_ACCESS_DENIED",
+      });
+    },
+  );
+
   it.each<{
     kind: "personal" | "business";
     role: SellerMembershipFacts["role"];

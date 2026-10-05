@@ -1,3 +1,5 @@
+import { readInventory } from "@/features/inventory/queries.server";
+import { InventoryEditor } from "@/features/inventory/editor";
 import { pageLocale } from "@/features/locale/page-locale.server";
 import { randomUUID } from "node:crypto";
 import { backendConfigured } from "@/features/sellers/backend-status.server";
@@ -26,6 +28,9 @@ export default async function Page({
   const review = await readPrivatePage(() =>
     readPublicationReview(getDatabase(), identity, sellerId, draftId),
   );
+  const inventory = await readPrivatePage(() =>
+    readInventory(getDatabase(), identity, { sellerId, listingId: draftId }),
+  );
   return (
     <Workspace
       title={
@@ -39,6 +44,13 @@ export default async function Page({
         requestId={randomUUID()}
         language={language}
       />
+      <section id="inventory">
+        <InventoryEditor
+          key={identity.subject + ":" + draftId}
+          initial={inventory}
+          actorSubject={identity.subject}
+        />
+      </section>
     </Workspace>
   );
 }

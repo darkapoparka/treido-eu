@@ -1,0 +1,78 @@
+.body {
+  max-width: 960px;
+  display: grid;
+  gap: 20px;
+}
+.stack {
+  display: grid;
+  gap: 12px;
+}
+.card {
+  padding: 20px;
+  border: 1px solid #ebebeb;
+  border-radius: 12px;
+  background: #fff;
+}
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+.card p {
+  margin: 8px 0;
+}
+.muted {
+  color: #707070;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  padding: 10px 0;
+  text-align: start;
+  border-bottom: 1px solid #ebebeb;
+}
+.table th {
+  font-weight: 500;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.actions button,
+.notice button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: inherit;
+  background: #fff;
+  cursor: pointer;
+}
+.actions button:disabled,
+.notice button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.notice {
+  padding: 12px;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+}
+.card a,
+.notice a {
+  color: #2359bc;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .card {
+    padding: 16px;
+  }
+  .actions button,
+  .notice button {
+    min-height: 44px;
+  }
+}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AdminIcon } from "./admin-icons";
+import { BulkDuplicateProducts } from "./bulk-duplicate-products";
 import { productStatusLabel, type AdminProduct } from "./admin-products-model";
 import {
   duplicateProductAction,
@@ -241,6 +242,21 @@ export function AdminProductTable({
             </>
           )}
         </div>
+      )}
+      {canDuplicate && (
+        <BulkDuplicateProducts
+          sellerId={sellerId}
+          selected={selected}
+          revisions={selection}
+          language={language}
+          onComplete={(ids) =>
+            setSelection((current) =>
+              Object.fromEntries(
+                Object.entries(current).filter(([id]) => !ids.includes(id)),
+              ),
+            )
+          }
+        />
       )}
       {error && !command && (
         <p className={management.feedback} role="alert">

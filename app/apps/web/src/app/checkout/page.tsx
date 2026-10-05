@@ -1,4 +1,8 @@
-import { readCatalog } from "@/features/catalog/queries.server";
+import { PurchaseReviewsPage } from "@/features/purchase-reviews/pages.server";
+import {
+  readCatalog,
+  referencePreviewEnabled,
+} from "@/features/catalog/queries.server";
 import { PickupCheckout } from "@/features/commerce/pickup";
 import { Checkout } from "@/features/commerce/checkout";
 import { LiveCheckoutBoundary } from "@/features/commerce/live-checkout-boundary";
@@ -6,8 +10,10 @@ import { LiveCheckoutBoundary } from "@/features/commerce/live-checkout-boundary
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ store?: string; stage?: string }>;
+  searchParams: Promise<{ store?: string; stage?: string; lang?: string }>;
 }) {
+  if (!referencePreviewEnabled())
+    return <PurchaseReviewsPage searchParams={searchParams} />;
   const catalog = await readCatalog();
   const { store, stage } = await searchParams;
   const merchant = catalog.stores.find((item) => item.id === store);

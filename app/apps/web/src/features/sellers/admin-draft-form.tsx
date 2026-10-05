@@ -156,6 +156,17 @@ export function AdminDraftForm({
           </div>
         </div>
         <aside className={styles.side}>
+          {saved && (
+            <section className={styles.panel}>
+              <h2>{bg ? "Наличности и варианти" : "Inventory and variants"}</h2>
+              <Link
+                className={admin.secondary}
+                href={`/app/sellers/${saved.sellerId}/listings/${saved.id}/review?lang=${language}#inventory`}
+              >
+                {bg ? "Управлявай наличностите" : "Manage inventory"}
+              </Link>
+            </section>
+          )}
           <section className={`${styles.panel} ${styles.statusPanel}`}>
             <h2>{bg ? "Състояние" : "Status"}</h2>
             <span className={styles.draftStatus}>

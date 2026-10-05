@@ -1,0 +1,352 @@
+{
+  "checkedAt": "2026-10-04T13:55:25.236Z",
+  "source": "Current local manifest declarations; no registry, installed-tree or vulnerability qualification is inferred",
+  "scope": "T66 read-only declaration and runtime evidence, preserving all package and lock bytes",
+  "declarations": [
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "@eslint/js",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "@playwright/test",
+      "pin": "1.63.0"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "@types/node",
+      "pin": "24.13.3"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "prettier",
+      "pin": "3.9.6"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "turbo",
+      "pin": "2.10.12"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "typescript-eslint",
+      "pin": "8.70.0"
+    },
+    {
+      "manifest": "app/package.json",
+      "section": "devDependencies",
+      "name": "vitest",
+      "pin": "5.0.0"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@clerk/localizations",
+      "pin": "4.21.2"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@clerk/nextjs",
+      "pin": "7.9.9"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@opentelemetry/api",
+      "pin": "1.9.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "@stripe/stripe-js",
+      "pin": "10.0.0"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "aws4fetch",
+      "pin": "1.0.20"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "drizzle-orm",
+      "pin": "0.45.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "inngest",
+      "pin": "4.21.0"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "next",
+      "pin": "16.3.8"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "next-intl",
+      "pin": "4.14.9"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "pg",
+      "pin": "8.23.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "react",
+      "pin": "19.2.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "react-dom",
+      "pin": "19.2.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "server-only",
+      "pin": "0.0.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "sharp",
+      "pin": "0.35.4"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "stripe",
+      "pin": "23.0.0"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@tailwindcss/postcss",
+      "pin": "4.3.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/node",
+      "pin": "24.13.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/pg",
+      "pin": "8.23.1"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/react",
+      "pin": "19.2.18"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "@types/react-dom",
+      "pin": "19.2.7"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "embedded-postgres",
+      "pin": "18.4.0-beta.17"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "eslint-config-next",
+      "pin": "16.3.8"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "tailwindcss",
+      "pin": "4.3.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo",
+      "pin": "57.0.21"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-constants",
+      "pin": "57.0.17"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-linking",
+      "pin": "57.0.9"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-router",
+      "pin": "57.0.20"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "expo-status-bar",
+      "pin": "57.0.1"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react",
+      "pin": "19.2.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native",
+      "pin": "0.86.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-gesture-handler",
+      "pin": "2.32.0"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-reanimated",
+      "pin": "4.5.1"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-safe-area-context",
+      "pin": "5.7.0"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-screens",
+      "pin": "4.26.2"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "dependencies",
+      "name": "react-native-worklets",
+      "pin": "0.10.1"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "@react-native/metro-config",
+      "pin": "0.86.3"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "@types/react",
+      "pin": "19.2.18"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "eslint-config-expo",
+      "pin": "57.0.2"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "expo-doctor",
+      "pin": "1.20.4"
+    },
+    {
+      "manifest": "app/apps/mobile/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/packages/contracts/package.json",
+      "section": "dependencies",
+      "name": "zod",
+      "pin": "4.5.4"
+    },
+    {
+      "manifest": "app/packages/contracts/package.json",
+      "section": "devDependencies",
+      "name": "eslint",
+      "pin": "9.39.5"
+    },
+    {
+      "manifest": "app/packages/contracts/package.json",
+      "section": "devDependencies",
+      "name": "typescript",
+      "pin": "6.0.3"
+    }
+  ],
+  "runtime": {
+    "declaredNode": "24.20.0",
+    "executedNode": "v24.20.0",
+    "declaredPackageManager": "pnpm@12.3.4"
+  },
+  "manifestHashes": {
+    "app/package.json": "ab5b209823db8d86ac7d370e042fde702698c0ab8ca76358362748d36adcb3bf",
+    "app/apps/web/package.json": "1a7c3bdb402913a93894732e5dcb7ae2093a8a36140835e99e1be58d91abe338",
+    "app/apps/mobile/package.json": "e7bc2dcee0a74273f4e0500708fb510bff0e30512ed7aa5382ab70455c84e023",
+    "app/packages/contracts/package.json": "5ddb35d7de699d52eb1e1d9fbf1e15c91b6106ab81f089a62f866e83d5d39673"
+  },
+  "historicalRegistrySnapshot": "docs/audit/dependencies-2026-10-02.json",
+  "latestRegistryRechecked": false,
+  "installedTreeRequalified": false,
+  "auditPassed": false
+}

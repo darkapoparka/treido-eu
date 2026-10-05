@@ -1,6 +1,7 @@
 import { getDatabase } from "../../../../server/db/database";
 import { requireVerifiedIdentity } from "../../../../server/identity/clerk.server";
 import { requireMediaStorage } from "../../../../server/media/storage.server";
+import { assertMediaStorageScope } from "../../../../server/media/retention.server";
 import { readOwnedMedia } from "../../../../features/selling/media.server";
 import { SellerError } from "../../../../features/sellers/errors";
 import { MEDIA_LIMITS } from "../../../../features/selling/media-model";
@@ -17,10 +18,9 @@ export async function GET(
     const sellerId = new URL(request.url).searchParams.get("sellerId") ?? "";
     const database = getDatabase();
     const media = await readOwnedMedia(database, identity, sellerId, assetId);
-    const bytes = await requireMediaStorage().read(
-      media.key,
-      MEDIA_LIMITS.bytes,
-    );
+    const storage = requireMediaStorage();
+    assertMediaStorageScope(media.storageScope, storage);
+    const bytes = await storage.read(media.key, MEDIA_LIMITS.bytes);
     if (createHash("sha256").update(bytes).digest("hex") !== media.checksum)
       throw new SellerError("NOT_AVAILABLE");
     // Recheck eligibility after storage I/O; removed/foreign/revoked reads have no response bytes.

@@ -34,6 +34,7 @@ type FloatingNavProps = {
   fade?: boolean;
   android?: boolean;
   nativeIcons?: boolean;
+  marketplace?: boolean;
 };
 export function FloatingNav(props: FloatingNavProps) {
   return (
@@ -55,6 +56,7 @@ function FloatingNavContent({
   fade = false,
   android = false,
   nativeIcons = false,
+  marketplace = false,
   params,
 }: FloatingNavProps & { params: URLSearchParams | null }) {
   const pathname = usePathname();
@@ -64,7 +66,17 @@ function FloatingNavContent({
     (quantity, line) => quantity + line.quantity,
     0,
   );
-  const active = useSourceNavigationTab(pathname, android);
+  const sourceActive = useSourceNavigationTab(pathname, android);
+  const active = marketplace
+    ? pathname.startsWith("/messages")
+      ? "/messages"
+      : pathname.startsWith("/app")
+        ? "/app"
+        : pathname === "/"
+          ? "/"
+          : "/search"
+    : sourceActive;
+  const marketText = useTranslations("marketplace");
   const { messages } = useLocale();
   const text = messages.navigation;
   return (
@@ -86,13 +98,19 @@ function FloatingNavContent({
         />
       )}
       <nav aria-label={text.main} className="floating-nav">
-        {(
-          [
-            ["/", "home", text.home],
-            ["/search", "search", text.search],
-            ["/explore", "explore", text.explore],
-            ["/orders", "orders", text.orders],
-          ] as const
+        {(marketplace
+          ? ([
+              ["/", "home", text.home],
+              ["/search", "search", text.search],
+              ["/messages", "chat-round", marketText("messages")],
+              ["/app", "storefront", marketText("sell")],
+            ] as const)
+          : ([
+              ["/", "home", text.home],
+              ["/search", "search", text.search],
+              ["/explore", "explore", text.explore],
+              ["/orders", "orders", text.orders],
+            ] as const)
         )
           .filter(([href]) => showExplore || href !== "/explore")
           .map(([href, icon, label]) => (

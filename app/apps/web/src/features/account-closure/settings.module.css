@@ -1,0 +1,19 @@
+.form label {
+  display: grid;
+  gap: 8px;
+}
+.form select {
+  min-height: 44px;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid #c8c8c8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+.form select:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}

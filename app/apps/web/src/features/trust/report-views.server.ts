@@ -1,3 +1,10 @@
+import { libraryActorKey } from "../library/cursor.server";
+import {
+  caseStorageReady,
+  readCaseDecision,
+  caseDecisionColumns,
+} from "./case-storage.server";
+import type { CaseDecision } from "./case-model";
 import "server-only";
 import { inTransaction, type SellerDatabase } from "../../server/db/database";
 import type { VerifiedIdentity } from "../../server/identity/clerk.server";
@@ -15,12 +22,18 @@ export type ReportSummary = {
   createdAt: string;
 };
 export type DecisionView = {
+  viewer: { actorKey: string; actorSubject: string };
   id: string;
   listingId: string;
   state: "clear" | "restricted" | "removed";
   reason: string;
   createdAt: string;
-  appeals: { id: string; details: string; createdAt: string }[];
+  appeals: {
+    id: string;
+    details: string;
+    createdAt: string;
+    decision: CaseDecision | null;
+  }[];
 };
 export async function readReportTarget(
   database: SellerDatabase,
@@ -102,6 +115,33 @@ async function decisions(
     )
   ).rows;
 }
+async function ownOutcomes(
+  tx: import("../../server/db/database").SellerTransaction,
+  actor: VerifiedIdentity,
+  userId: string,
+  items: DecisionView[],
+) {
+  const ids = items.flatMap((item) => item.appeals.map((appeal) => appeal.id));
+  const available = await caseStorageReady(tx);
+  const outcomes =
+    ids.length && available
+      ? (
+          await tx.client.query<CaseDecision>(
+            `SELECT ${caseDecisionColumns} FROM treido.trust_case_decisions d JOIN treido.moderation_appeals x ON x.id=d.appeal_id WHERE x.actor_id=$1 AND x.id=ANY($2::uuid[])`,
+            [userId, ids],
+          )
+        ).rows
+      : [];
+  const byId = new Map(outcomes.map((value) => [value.caseId, value]));
+  return items.map((item) => ({
+    ...item,
+    viewer: { actorKey: libraryActorKey(actor), actorSubject: actor.subject },
+    appeals: item.appeals.map((appeal) => ({
+      ...appeal,
+      decision: byId.get(appeal.id) ?? null,
+    })),
+  }));
+}
 export async function readReportDetail(
   database: SellerDatabase,
   actor: VerifiedIdentity,
@@ -119,7 +159,16 @@ export async function readReportDetail(
     if (!report) throw new SellerError("NOT_FOUND");
     return {
       report,
-      decisions: await decisions(tx, user.id, "a.report_id=$2", [id]),
+      decisions: await ownOutcomes(
+        tx,
+        actor,
+        user.id,
+        await decisions(tx, user.id, "a.report_id=$2", [id]),
+      ),
+      formalDecision:
+        report.resourceKind === "message" && (await caseStorageReady(tx))
+          ? await readCaseDecision(tx, "message_report", id)
+          : null,
     };
   });
 }
@@ -137,6 +186,11 @@ export async function readSellerDecisions(
       [sellerId, listingId],
     );
     if (listing.rowCount !== 1) throw new SellerError("NOT_FOUND");
-    return decisions(tx, user.id, "a.listing_id=$2", [listingId]);
+    return ownOutcomes(
+      tx,
+      actor,
+      user.id,
+      await decisions(tx, user.id, "a.listing_id=$2", [listingId]),
+    );
   });
 }

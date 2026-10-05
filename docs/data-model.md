@@ -142,3 +142,20 @@ Migration evidence includes fresh install, previous-schema upgrade, duplicate/re
 Migration `0010_inbox_controls.sql` adds `contact_preferences` keyed by seller/buyer, independent buyer/seller block flags and an optimistic revision. Existing conversation pairs are backfilled before the composite foreign key is applied. Contact mutation receipts are immutable and bound to pair, actor and request.
 
 Threads now maintain `last_message_at` with buyer/seller activity indexes. `conversation_read_cursors` stores monotonically advancing sequence positions per thread/human, so one employee's read does not erase another's unread state. `message_notification_intents` stores one content-free recipient-side intent per persisted message and is not a claim of external provider delivery. Runtime cannot rewrite accepted contact/notification receipts. Previous migrations are unchanged; the native database suite exercises atomic application, rollback, replay, permissions and buyer/business isolation.
+
+
+## Catalogue import persistence — T42
+
+Additive migration `0016_catalogue_imports.sql` introduces `catalogue_imports`, bounded private `catalogue_import_chunks`, reviewed `catalogue_import_rows`, seller-scoped `catalogue_external_ids` and immutable `catalogue_import_receipts`. The first fifteen migration sources stay unchanged. Imports belong to a business seller and a creating human; composite foreign keys prevent a row result, job or external identifier from pointing into another seller's catalogue.
+
+The upload declaration binds filename, exact byte length and SHA-256. Numbered 128 KiB chunks can be retried without replacement. Completion checks all chunk hashes and the full UTF-8 source before one transaction stages at most 1,000 rows and deletes the uploaded chunks. Uploading creates no listing or stock. Raw chunks are also deleted on cancellation or by the scheduled 24-hour expiry sweep; reviewed row/history data is retained, not described as fully erased.
+
+Each selected row commits its normal listing draft, optional explicitly supplied inventory, seller/external-ID mapping and row result in the same transaction. A rejected stock row rolls back its draft and draft quota as well. External IDs are trimmed, NFC-normalized and case-sensitive, scoped to the seller; a repeated ID in the file or a previously imported ID is an explicit row error, not an upsert into live stock. One CSV row creates one draft product; its optional SKU/options initialize that product, and additional variants use the normal inventory editor.
+
+Import review/edit/select/start/cancel commands compare the aggregate revision and write retry receipts. The Free business catalogue currently allows 25 variants per product and 25 created rows per import, within the existing 200-draft limit. These are the existing version-one Free limits, not a paid-plan grant. The worker rechecks current membership and quota for each row. It creates at most five rows per effect iteration and schedules the next batch through the existing transactional outbox. Cancellation preserves already-created drafts and prevents subsequent batches. No imported row is automatically published, allocated, ordered or paid.
+
+## Stock batch and expiry records — T42 completion
+
+`0017_stock_batches_offer_expiry.sql` adds `inventory_batch_receipts`, keyed by seller/human/request with an input hash and final product/SKU revisions. The runtime can insert and read but cannot rewrite receipts. Bulk changes reuse existing stock rows/events rather than introducing a competing inventory authority.
+
+The same migration permits nullable actors in `offer_events` only for the new `expired` and `hold_expired` system kinds. All human-driven kinds still require an actor. A partial unique index on offer/kind prevents duplicate timer outcomes, and a pending-expiry index supports bounded sweeps. Accepted offer terms are retained when their allocation expires; payment settlement remains a separate verified-provider operation. No new event is presented as a verified purchase or attributed to an invented human.

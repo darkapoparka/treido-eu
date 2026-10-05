@@ -1,3 +1,16 @@
+import trustCases from "../trust/case-messages.json";
+import notifications from "../notifications/messages.json";
+import trustOperations from "../trust/operations-messages.json";
+import purchaseReviews from "../purchase-reviews/messages.json";
+import contactOperations from "../merchant-inquiries/messages.json";
+import team from "../team/messages.json";
+import sellerSettings from "../seller-settings/messages.json";
+import inventory from "../inventory/messages.json";
+import buyerCart from "../buyer-cart/messages.json";
+import offers from "../offers/messages.json";
+import library from "../library/messages.json";
+import marketplace from "./marketplace-messages.json";
+import catalogueImport from "../catalogue-import/messages.json";
 import regional from "./region-messages.json";
 import publication from "./publication-messages.json";
 import messaging from "../messaging/messages.json";
@@ -144,10 +157,23 @@ const bg: Messages = {
 export const messages = {
   bg: {
     ...bg,
+    purchaseReviews: purchaseReviews.bg,
+    contactOperations: contactOperations.bg,
+    notifications: notifications.bg,
+    team: team.bg,
+    sellerSettings: sellerSettings.bg,
+    marketplace: marketplace.bg,
+    catalogueImport: catalogueImport.bg,
+    library: library.bg,
+    inventory: inventory.bg,
+    buyerCart: buyerCart.bg,
+    offers: offers.bg,
     languagePrompt: languagePrompt.bg,
     messaging: messaging.bg,
     publication: publication.bg,
     trust: trust.bg,
+    trustOperations: trustOperations.bg,
+    trustCases: trustCases.bg,
     captions: captions.bg,
     discoveryUI: discoveryUI.bg,
     accountUI: accountUI.bg,
@@ -157,10 +183,23 @@ export const messages = {
   },
   en: {
     ...en,
+    purchaseReviews: purchaseReviews.en,
+    contactOperations: contactOperations.en,
+    notifications: notifications.en,
+    team: team.en,
+    sellerSettings: sellerSettings.en,
+    marketplace: marketplace.en,
+    catalogueImport: catalogueImport.en,
+    library: library.en,
+    inventory: inventory.en,
+    buyerCart: buyerCart.en,
+    offers: offers.en,
     languagePrompt: languagePrompt.en,
     messaging: messaging.en,
     publication: publication.en,
     trust: trust.en,
+    trustOperations: trustOperations.en,
+    trustCases: trustCases.en,
     captions: captions.en,
     discoveryUI: discoveryUI.en,
     accountUI: accountUI.en,

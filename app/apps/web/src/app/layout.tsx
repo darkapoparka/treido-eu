@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { readSiteMetadata } from "@/features/catalog/public-metadata.server";
 import { LanguagePrompt } from "@/features/locale/language-prompt";
 import { LocaleProvider } from "@/features/locale/provider";
 import { readLocaleRequest } from "@/features/locale/request.server";
@@ -17,13 +17,7 @@ import {
 } from "@/features/catalog/reference/live-guest-seed";
 import { DiscoveryProvider } from "@/features/discovery/state";
 import { readReferenceScenario } from "@/features/catalog/reference/scenario.server";
-export const metadata: Metadata = {
-  title: "Shop reference preview",
-  description:
-    "Isolated discovery reference preview. No live commerce services.",
-  robots: { index: false, follow: false },
-  icons: { icon: "data:," },
-};
+export const generateMetadata = readSiteMetadata;
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const [scenario, preference] = await Promise.all([
     readReferenceScenario(),

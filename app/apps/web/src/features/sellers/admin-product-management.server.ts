@@ -145,3 +145,40 @@ export async function withdrawSellerProducts(
   }
   return results;
 }
+
+/** Batch copying reuses the single-product receipt/quota transaction; each row remains independently retryable. */
+export async function duplicateSellerProducts(
+  database: SellerDatabase,
+  identity: VerifiedIdentity,
+  input: unknown,
+): Promise<
+  import("./admin-product-management-model").ProductDuplicateResult[]
+> {
+  const data = parseBulkWithdrawal(input);
+  if (!data) throw new SellerError("INVALID_INPUT");
+  const results: import("./admin-product-management-model").ProductDuplicateResult[] =
+    [];
+  for (const item of data.items) {
+    try {
+      const draft = await duplicateSellerProduct(database, identity, {
+        sellerId: data.sellerId,
+        ...item,
+      });
+      results.push({
+        listingId: item.listingId,
+        result: { ok: true, data: draft },
+      });
+    } catch (error) {
+      if (!(error instanceof SellerError))
+        console.error("Treido batch draft copy unavailable.");
+      const code =
+        error instanceof SellerError
+          ? error.code === "NOT_FOUND"
+            ? "FORBIDDEN"
+            : error.code
+          : "NOT_AVAILABLE";
+      results.push({ listingId: item.listingId, result: { ok: false, code } });
+    }
+  }
+  return results;
+}

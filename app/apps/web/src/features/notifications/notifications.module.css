@@ -1,0 +1,54 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 14px 24px 120px;
+  min-height: 100dvh;
+}
+.page > h1 {
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -1px;
+  margin: 0 0 24px;
+}
+.empty {
+  margin: 48px auto;
+  max-width: 360px;
+  text-align: center;
+}
+.empty h2 {
+  font-size: 26px;
+  line-height: 1.2;
+}
+.empty p {
+  color: #777;
+  line-height: 1.5;
+}
+.excerpt {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.select {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+  max-width: 100%;
+}
+.select input {
+  flex: none;
+  min-width: 18px;
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+}
+.select input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .page {
+    padding: 14px 16px 110px;
+  }
+}

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse, type NextFetchEvent } from "next/server";
 const mocks = vi.hoisted(() => ({ authenticate: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({
@@ -15,8 +15,14 @@ vi.mock("./server/config/backend-bindings", () => ({
 import proxy from "./proxy";
 
 describe("locale request routing without changing private authentication", () => {
-  beforeEach(() => mocks.authenticate.mockClear());
-  it("overwrites forged locale hints from the validated URL on public routes", () => {
+  beforeEach(() => {
+    mocks.authenticate.mockClear();
+    vi.stubEnv("SHOP_REFERENCE_PREVIEW", "0");
+    vi.stubEnv("VERCEL", "");
+    vi.stubEnv("VERCEL_ENV", "");
+  });
+  afterEach(() => vi.unstubAllEnvs());
+  it("overwrites forged locale hints while authenticating real buyer routes", async () => {
     const request = new NextRequest(
       "https://treido.invalid/search?lang=bg&seller=business",
       {
@@ -28,7 +34,10 @@ describe("locale request routing without changing private authentication", () =>
         },
       },
     );
-    const response = proxy(request, {} as NextFetchEvent) as NextResponse;
+    const response = (await proxy(
+      request,
+      {} as NextFetchEvent,
+    )) as NextResponse;
     expect(response.headers.get("x-middleware-request-x-treido-locale")).toBe(
       "bg",
     );
@@ -36,6 +45,18 @@ describe("locale request routing without changing private authentication", () =>
       response.headers.get("x-middleware-request-x-treido-locale-source"),
     ).toBe("url");
     expect(response.headers.get("location")).toBeNull();
+    expect(mocks.authenticate).toHaveBeenCalledOnce();
+  });
+  it("keeps the explicit reference preview independent of buyer authentication", async () => {
+    vi.stubEnv("SHOP_REFERENCE_PREVIEW", "1");
+    vi.stubEnv("NODE_ENV", "development");
+    const response = (await proxy(
+      new NextRequest("http://localhost:6418/search?lang=bg"),
+      {} as NextFetchEvent,
+    )) as NextResponse;
+    expect(response.headers.get("x-middleware-request-x-treido-locale")).toBe(
+      "bg",
+    );
     expect(mocks.authenticate).not.toHaveBeenCalled();
   });
   it.each(["/app", "/app/products", "/ops", "/sign-in", "/sign-up", "/sell"])(

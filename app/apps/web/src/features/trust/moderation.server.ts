@@ -4,7 +4,11 @@ import {
   publishedEligibility,
 } from "../catalog/publication-eligibility.server";
 import { randomUUID } from "node:crypto";
-import { inTransaction, type SellerDatabase } from "../../server/db/database";
+import {
+  inTransaction,
+  type SellerDatabase,
+  type SellerTransaction,
+} from "../../server/db/database";
 import type { VerifiedIdentity } from "../../server/identity/clerk.server";
 import {
   authorizeHuman,
@@ -25,82 +29,90 @@ export async function moderateListing(
   identity: VerifiedIdentity,
   input: unknown,
 ) {
+  return inTransaction(database, (tx) =>
+    moderateListingInTransaction(tx, identity, input),
+  );
+}
+/** Shared only for atomic formal appeal outcomes; preserves the original command. */
+export async function moderateListingInTransaction(
+  tx: SellerTransaction,
+  identity: VerifiedIdentity,
+  input: unknown,
+) {
   const data = parseModerationInput(input);
   if (!data) throw new SellerError("INVALID_INPUT");
-  return inTransaction(database, async (tx) => {
-    const actor = await authorizeOperator(tx, identity, "moderation.write");
-    if (data.reportId) await authorizeOperator(tx, identity, "reports.read");
-    const listing = (
-      await tx.client.query<{ state: ModerationState; revision: number }>(
-        "SELECT moderation_state AS state,moderation_revision AS revision FROM treido.listings WHERE id=$1 FOR UPDATE",
-        [data.listingId],
-      )
-    ).rows[0];
-    if (!listing) throw new SellerError("NOT_FOUND");
-    const hash = inputHash(data);
-    const previous = (
-      await tx.client.query<{ id: string; revision: number; hash: string }>(
-        "SELECT id,accepted_revision AS revision,input_hash AS hash FROM treido.moderation_actions WHERE actor_id=$1 AND request_id=$2",
-        [actor.id, data.requestId],
-      )
-    ).rows[0];
-    if (previous) {
-      if (previous.hash !== hash) throw new SellerError("CONFLICT");
-      return { id: previous.id, revision: previous.revision };
-    }
-    if (listing.revision !== data.expectedRevision)
-      throw new SellerError("CONFLICT");
-    if (data.reportId) {
-      const report = (
-        await tx.client.query<{
-          resourceId: string;
-          resourceKind: string;
-          state: string;
-        }>(
-          'SELECT resource_id AS "resourceId",resource_kind AS "resourceKind",state FROM treido.reports WHERE id=$1 FOR UPDATE',
-          [data.reportId],
-        )
-      ).rows[0];
-      if (
-        !report ||
-        report.resourceKind !== "listing" ||
-        report.resourceId !== data.listingId
-      )
-        throw new SellerError("INVALID_INPUT");
-      if (report.state !== "open") throw new SellerError("CONFLICT");
-    }
-    const id = randomUUID(),
-      revision = listing.revision + 1;
-    const inserted = await tx.client.query(
-      "INSERT INTO treido.moderation_actions(id,listing_id,actor_id,report_id,prior_state,next_state,prior_revision,accepted_revision,reason,request_id,input_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(actor_id,request_id) DO NOTHING RETURNING id",
-      [
-        id,
-        data.listingId,
-        actor.id,
-        data.reportId,
-        listing.state,
-        data.state,
-        listing.revision,
-        revision,
-        data.reason,
-        data.requestId,
-        hash,
-      ],
-    );
-    // Different listings have independent locks. A racing reused actor/retry key
-    // must be a conflict, with no second state/report update or raw SQL failure.
-    if (inserted.rowCount !== 1) throw new SellerError("CONFLICT");
-    await tx.client.query(
-      "UPDATE treido.listings SET moderation_state=$2,moderation_revision=$3 WHERE id=$1",
-      [data.listingId, data.state, revision],
-    );
-    if (data.reportId)
-      await tx.client.query(
-        "UPDATE treido.reports SET state='reviewed',revision=revision+1 WHERE id=$1",
+  const actor = await authorizeOperator(tx, identity, "moderation.write");
+  if (data.reportId) await authorizeOperator(tx, identity, "reports.read");
+  const listing = (
+    await tx.client.query<{ state: ModerationState; revision: number }>(
+      "SELECT moderation_state AS state,moderation_revision AS revision FROM treido.listings WHERE id=$1 FOR UPDATE",
+      [data.listingId],
+    )
+  ).rows[0];
+  if (!listing) throw new SellerError("NOT_FOUND");
+  const hash = inputHash(data);
+  const previous = (
+    await tx.client.query<{ id: string; revision: number; hash: string }>(
+      "SELECT id,accepted_revision AS revision,input_hash AS hash FROM treido.moderation_actions WHERE actor_id=$1 AND request_id=$2",
+      [actor.id, data.requestId],
+    )
+  ).rows[0];
+  if (previous) {
+    if (previous.hash !== hash) throw new SellerError("CONFLICT");
+    return { id: previous.id, revision: previous.revision };
+  }
+  if (listing.revision !== data.expectedRevision)
+    throw new SellerError("CONFLICT");
+  if (data.reportId) {
+    const report = (
+      await tx.client.query<{
+        resourceId: string;
+        resourceKind: string;
+        state: string;
+      }>(
+        'SELECT resource_id AS "resourceId",resource_kind AS "resourceKind",state FROM treido.reports WHERE id=$1 FOR UPDATE',
         [data.reportId],
-      );
-    return { id, revision };
-  });
+      )
+    ).rows[0];
+    if (
+      !report ||
+      report.resourceKind !== "listing" ||
+      report.resourceId !== data.listingId
+    )
+      throw new SellerError("INVALID_INPUT");
+    if (report.state !== "open") throw new SellerError("CONFLICT");
+  }
+  const id = randomUUID(),
+    revision = listing.revision + 1;
+  const inserted = await tx.client.query(
+    "INSERT INTO treido.moderation_actions(id,listing_id,actor_id,report_id,prior_state,next_state,prior_revision,accepted_revision,reason,request_id,input_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(actor_id,request_id) DO NOTHING RETURNING id",
+    [
+      id,
+      data.listingId,
+      actor.id,
+      data.reportId,
+      listing.state,
+      data.state,
+      listing.revision,
+      revision,
+      data.reason,
+      data.requestId,
+      hash,
+    ],
+  );
+  // Different listings have independent locks. A racing reused actor/retry key
+  // must be a conflict, with no second state/report update or raw SQL failure.
+  if (inserted.rowCount !== 1) throw new SellerError("CONFLICT");
+  await tx.client.query(
+    "UPDATE treido.listings SET moderation_state=$2,moderation_revision=$3 WHERE id=$1",
+    [data.listingId, data.state, revision],
+  );
+  if (data.reportId)
+    await tx.client.query(
+      "UPDATE treido.reports SET state='reviewed',revision=revision+1 WHERE id=$1",
+      [data.reportId],
+    );
+  return { id, revision };
 }
 
 export async function appealModeration(

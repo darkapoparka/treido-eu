@@ -24,13 +24,16 @@ export type ContactPreference = {
 };
 export const threadColumns =
   'id,seller_id AS "sellerId",listing_id AS "listingId",buyer_id AS "buyerId",state,next_sequence AS "nextSequence"';
-/** The contact row serializes blocks with sends across every listing for this pair. */
+/** The contact row serializes blocks with sends across every listing for this pair.
+ * Offer commands acquire an exclusive listing lock before the thread, avoiding
+ * SHARE-to-UPDATE upgrades when two conversations compete for the same item. */
 export async function authorizeConversation(
   tx: SellerTransaction,
   identity: VerifiedIdentity,
   threadId: string,
   mode: boolean | "contact" = false,
   scope?: InboxScope,
+  lockListingForOffer = false,
 ) {
   if (!validId(threadId) || (scope !== undefined && !parseInboxScope(scope)))
     throw new SellerError("INVALID_INPUT");
@@ -52,6 +55,12 @@ export async function authorizeConversation(
       : scope.sellerId === null
         ? "buyer"
         : "seller";
+  // Cart/first-save mutations take the buyer row before seller and listing rows.
+  // Seller acceptance must follow that order too, even though its actor differs.
+  if (lockListingForOffer)
+    await tx.client.query("SELECT id FROM treido.users WHERE id=$1 FOR SHARE", [
+      thread.buyerId,
+    ]);
   let mayReply = true,
     sellerStatus: string;
   if (side === "seller") {
@@ -93,7 +102,8 @@ export async function authorizeConversation(
   if (!contact) throw new SellerError("NOT_AVAILABLE");
   const listing = (
     await tx.client.query<{ publication: string; moderation: string }>(
-      "SELECT publication,moderation_state AS moderation FROM treido.listings WHERE id=$1 AND seller_id=$2 FOR SHARE",
+      "SELECT publication,moderation_state AS moderation FROM treido.listings WHERE id=$1 AND seller_id=$2 FOR " +
+        (lockListingForOffer ? "UPDATE" : "SHARE"),
       [thread.listingId, thread.sellerId],
     )
   ).rows[0];
@@ -109,7 +119,7 @@ export async function authorizeConversation(
       "SELECT " +
         threadColumns +
         " FROM treido.conversation_threads WHERE id=$1 FOR " +
-        (mode === true ? "UPDATE" : "SHARE"),
+        (mode === true || lockListingForOffer ? "UPDATE" : "SHARE"),
       [thread.id],
     )
   ).rows[0];

@@ -1,0 +1,32 @@
+.root {
+  display: grid;
+  gap: 12px;
+  margin-block: 12px 20px;
+}
+.root p {
+  margin: 0;
+}
+.root input,
+.root select {
+  min-height: 44px;
+  max-width: 100%;
+}
+.root > a {
+  justify-self: start;
+}
+.root :global(.primary) {
+  width: 100%;
+}
+.status {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.note {
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.from {
+  font-size: 24px;
+  font-weight: 600;
+}

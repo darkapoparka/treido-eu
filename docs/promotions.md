@@ -34,7 +34,7 @@ Promotion invoices/refunds use promotion purpose and campaign mapping, separate 
 
 Seller sees purchased interval, actual eligible impressions, clicks, inquiries and current serving/stop state. Deduplicate placement/request identity and exclude known test/operator/bot activity under a documented event policy. Inquiries and orders are attributed with clear windows and never asserted as caused by a promotion merely because they followed it.
 
-Marketing capability can manage a business campaign; billing/refund capability is separate. Operators can pause an unsafe campaign with a reason and audit, review delivery failures/refunds, and inspect aggregate delivery/capacity. No raw private buyer histories are exposed to sellers.
+Current `marketing.manage` capability manages a seller's campaign. Personal and business owners receive it through current ownership; managers and members require an explicit current grant, and it is not a manager default. A purchase additionally requires current `billing.manage` and verified recent authentication. Marketing never grants billing, payment setup or refund permission. Operators can pause an unsafe campaign with a reason and audit, review delivery failures/refunds, and inspect aggregate delivery/capacity. No raw private buyer histories are exposed to sellers.
 
 ## Acceptance — T26
 

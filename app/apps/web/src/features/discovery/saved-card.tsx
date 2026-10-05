@@ -3,7 +3,7 @@
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { SourceLink } from "./return-navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { formatMoney, type SavedListing } from "../catalog/types";
 import { IconButton, Sheet } from "./components";
 import { useDiscovery } from "./state";
@@ -13,13 +13,18 @@ export function SavedCard({
   seller,
   selected,
   onSelect,
+  saveControl,
+  pending = false,
 }: {
   product: SavedListing;
   seller?: string;
   selected?: boolean;
   onSelect?: () => void;
+  saveControl?: ReactNode;
+  pending?: boolean;
 }) {
   const intlLocale = useIntlLocale();
+  const inventoryText = useTranslations("inventory");
   const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -66,6 +71,7 @@ export function SavedCard({
             aria-label={ui("selectValue1", { value1: product.title ?? "" })}
             aria-pressed={selected}
             onClick={onSelect}
+            disabled={pending}
           >
             {photo}
           </button>
@@ -88,18 +94,21 @@ export function SavedCard({
           </SourceLink>
         )}
         {promotion && <span className="saved-promotion">{promotion}</span>}
-        <IconButton
-          className={`save-button ${(onSelect ? selected : saved) ? "saved-active" : ""}`}
-          icon={onSelect ? (selected ? "check" : "plus") : "heart"}
-          label={
-            onSelect
-              ? `${selected ? ui("remove") : ui("add")} ${product.title}`
-              : `${saved ? ui("unsave") : ui("save")} ${product.title}`
-          }
-          pressed={onSelect ? selected : saved}
-          filled={onSelect ? false : undefined}
-          onClick={onSelect ?? (() => state.toggleSaved(product.id))}
-        />
+        {saveControl ?? (
+          <IconButton
+            className={`save-button ${(onSelect ? selected : saved) ? "saved-active" : ""}`}
+            icon={onSelect ? (selected ? "check" : "plus") : "heart"}
+            label={
+              onSelect
+                ? `${selected ? ui("remove") : ui("add")} ${product.title}`
+                : `${saved ? ui("unsave") : ui("save")} ${product.title}`
+            }
+            pressed={onSelect ? selected : saved}
+            filled={onSelect ? false : undefined}
+            onClick={onSelect ?? (() => state.toggleSaved(product.id))}
+            disabled={pending}
+          />
+        )}
       </div>
       {seller && <span>{seller}</span>}
       {product.detailUnavailable ? (
@@ -120,7 +129,11 @@ export function SavedCard({
       )}
       {product.price && (
         <b>
-          {formatMoney(product.price, intlLocale)}
+          {product.priceFrom
+            ? inventoryText("from", {
+                price: formatMoney(product.price, intlLocale),
+              })
+            : formatMoney(product.price, intlLocale)}
           {native && product.compareAt && (
             <>
               {" "}
@@ -128,6 +141,11 @@ export function SavedCard({
             </>
           )}
         </b>
+      )}
+      {product.stockState && product.stockState !== "unknown" && (
+        <small className="saved-variant">
+          {inventoryText(product.stockState)}
+        </small>
       )}
       {product.variantLabel && (
         <small className="saved-variant">{product.variantLabel}</small>

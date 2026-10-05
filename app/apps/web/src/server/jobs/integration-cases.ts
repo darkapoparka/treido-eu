@@ -16,7 +16,7 @@ import {
 } from "./outbox.server";
 import { executeJob, markExecutorFailure } from "./execution.server";
 import { dispatchOutbox } from "./dispatch.server";
-import { JOB_EVENT, type JobAuthority, type JobEvent } from "./model";
+import { JOB_EVENT, type SellerJobIntent, type JobEvent } from "./model";
 
 export function defineJobIntegrationCases(
   get: () => {
@@ -46,7 +46,7 @@ export function defineJobIntegrationCases(
       applicationId: binding.applicationId,
     },
   });
-  async function create(authority: JobAuthority = "service") {
+  async function create(authority: SellerJobIntent["authority"] = "service") {
     const { database, owner } = get();
     const sellerId = await createBusinessSeller(database, owner, {
       name: "Job test",
@@ -54,22 +54,25 @@ export function defineJobIntegrationCases(
     });
     const resourceId = randomUUID(),
       operationKey = randomUUID();
-    const intent = await inTransaction(database, async (tx) => {
-      const { user } = await authorizeSeller(
-        tx,
-        owner,
-        sellerId,
-        "listing.write",
-      );
-      return {
-        kind: "system.probe" as const,
-        sellerId,
-        resourceId,
-        operationKey,
-        authority,
-        actorId: authority === "member" ? user.id : null,
-      };
-    });
+    const intent: SellerJobIntent = await inTransaction(
+      database,
+      async (tx) => {
+        const { user } = await authorizeSeller(
+          tx,
+          owner,
+          sellerId,
+          "listing.write",
+        );
+        return {
+          kind: "system.probe" as const,
+          sellerId,
+          resourceId,
+          operationKey,
+          authority,
+          actorId: authority === "member" ? user.id : null,
+        };
+      },
+    );
     const jobId = await inTransaction(database, (tx) => enqueueJob(tx, intent));
     return {
       jobId,

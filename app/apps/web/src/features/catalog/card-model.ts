@@ -14,4 +14,4 @@ export type ProductCardData = Pick<
   | "referenceStyle"
   | "referenceThumbnails"
   | "referenceImageTreatment"
->;
+> & { priceFrom?: boolean };

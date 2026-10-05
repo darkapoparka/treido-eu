@@ -1,4 +1,5 @@
 import "server-only";
+import { snapshotInventory } from "../inventory/queries.server";
 import { inTransaction, type SellerDatabase } from "../../server/db/database";
 import type { VerifiedIdentity } from "../../server/identity/clerk.server";
 import { inputHash } from "../sellers/persistence.server";
@@ -113,6 +114,13 @@ export async function publishListing(
           asset.height,
         ],
       );
+    await snapshotInventory(
+      tx,
+      data.sellerId,
+      data.listingId,
+      revision,
+      payload.priceMinor!,
+    );
     await tx.client.query(
       "UPDATE treido.listings SET publication='published',revision=$3,current_publication_revision=$3 WHERE seller_id=$1 AND id=$2",
       [data.sellerId, data.listingId, revision],

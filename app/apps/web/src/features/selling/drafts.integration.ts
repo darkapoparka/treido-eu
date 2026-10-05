@@ -1,3 +1,8 @@
+import { definePurchaseReviewIntegrationCases } from "../purchase-reviews/integration-cases";
+import { defineLaunchIntegrationCases } from "../seller-settings/launch-integration-cases";
+import { defineTeamIntegrationCases } from "../team/integration-cases";
+import { defineImportIntegrationCases } from "../catalogue-import/integration-cases";
+import { defineInventoryIntegrationCases } from "../inventory/integration-cases";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import {
@@ -63,12 +68,15 @@ import * as reviewApi from "../trust/moderation.server";
 import * as reportViews from "../trust/report-views.server";
 import { defineModerationIntegrationCases } from "../trust/integration-cases";
 import { definePublicationIntegrationCases } from "./publication-integration-cases";
+import { defineDiscoveryIntegrationCases } from "../catalog/discovery-integration-cases";
+import { defineLibraryIntegrationCases } from "../library/integration-cases";
 import { definePublishIntegrationCases } from "./publish-integration-cases";
 import { defineAdminProductIntegrationCases } from "../sellers/admin-products-integration-cases";
 import { readAdminProducts } from "../sellers/admin-products.server";
 import { defineProductManagementIntegrationCases } from "../sellers/admin-product-management-integration-cases";
 import {
   duplicateSellerProduct,
+  duplicateSellerProducts,
   withdrawSellerProducts,
 } from "../sellers/admin-product-management.server";
 
@@ -521,6 +529,135 @@ beforeAll(async () => {
       publicationSnapshotSql,
     ),
   ).toBe("already-applied");
+  const libraryMigration = await readFile(
+    resolve(process.cwd(), "apps/web/migrations/0012_buyer_library.sql"),
+    "utf8",
+  );
+  await expect(
+    applyReviewedMigration(
+      admin,
+      "0012_buyer_library",
+      libraryMigration + "\nSELECT 1/0;",
+    ),
+  ).rejects.toMatchObject({ code: "22012" });
+  expect(
+    (await admin.query("SELECT to_regclass('treido.buyer_libraries') AS value"))
+      .rows[0].value,
+  ).toBeNull();
+  expect(
+    await applyReviewedMigration(admin, "0012_buyer_library", libraryMigration),
+  ).toBe("applied");
+  expect(
+    await applyReviewedMigration(admin, "0012_buyer_library", libraryMigration),
+  ).toBe("already-applied");
+  for (const version of [
+    "0013_inventory_allocations",
+    "0014_buyer_cart",
+    "0015_structured_offers",
+  ]) {
+    const source = await readFile(
+      resolve(process.cwd(), `apps/web/migrations/${version}.sql`),
+      "utf8",
+    );
+    await expect(
+      applyReviewedMigration(admin, version, source + "\nSELECT 1/0;"),
+    ).rejects.toMatchObject({ code: "22012" });
+    expect(await applyReviewedMigration(admin, version, source)).toBe(
+      "applied",
+    );
+    expect(await applyReviewedMigration(admin, version, source)).toBe(
+      "already-applied",
+    );
+  }
+  const importSql = await readFile(
+    resolve(process.cwd(), "apps/web/migrations/0016_catalogue_imports.sql"),
+    "utf8",
+  );
+  await expect(
+    applyReviewedMigration(
+      admin,
+      "0016_catalogue_imports",
+      importSql + "\nSELECT 1/0;",
+    ),
+  ).rejects.toMatchObject({ code: "22012" });
+  expect(
+    (
+      await admin.query(
+        "SELECT to_regclass('treido.catalogue_imports') AS value",
+      )
+    ).rows[0].value,
+  ).toBeNull();
+  expect(
+    await applyReviewedMigration(admin, "0016_catalogue_imports", importSql),
+  ).toBe("applied");
+  expect(
+    await applyReviewedMigration(admin, "0016_catalogue_imports", importSql),
+  ).toBe("already-applied");
+  const stockBatchSql = await readFile(
+    resolve(
+      process.cwd(),
+      "apps/web/migrations/0017_stock_batches_offer_expiry.sql",
+    ),
+    "utf8",
+  );
+  await expect(
+    applyReviewedMigration(
+      admin,
+      "0017_stock_batches_offer_expiry",
+      stockBatchSql + "\nSELECT 1/0;",
+    ),
+  ).rejects.toMatchObject({ code: "22012" });
+  expect(
+    await applyReviewedMigration(
+      admin,
+      "0017_stock_batches_offer_expiry",
+      stockBatchSql,
+    ),
+  ).toBe("applied");
+  expect(
+    await applyReviewedMigration(
+      admin,
+      "0017_stock_batches_offer_expiry",
+      stockBatchSql,
+    ),
+  ).toBe("already-applied");
+  const teamSql = await readFile(
+    resolve(process.cwd(), "apps/web/migrations/0018_team_settings.sql"),
+    "utf8",
+  );
+  await expect(
+    applyReviewedMigration(
+      admin,
+      "0018_team_settings",
+      teamSql + "\nSELECT 1/0;",
+    ),
+  ).rejects.toMatchObject({ code: "22012" });
+  expect(
+    await applyReviewedMigration(admin, "0018_team_settings", teamSql),
+  ).toBe("applied");
+  expect(
+    await applyReviewedMigration(admin, "0018_team_settings", teamSql),
+  ).toBe("already-applied");
+  for (const version of [
+    "0019_profile_invitation_decisions",
+    "0020_media_retention",
+    "0021_purchase_reviews",
+    "0022_contact_operations",
+  ]) {
+    const source = await readFile(
+      resolve(process.cwd(), `apps/web/migrations/${version}.sql`),
+      "utf8",
+    );
+    await expect(
+      applyReviewedMigration(admin, version, source + "\nSELECT 1/0;"),
+    ).rejects.toMatchObject({ code: "22012" });
+    expect(await applyReviewedMigration(admin, version, source)).toBe(
+      "applied",
+    );
+    expect(await applyReviewedMigration(admin, version, source)).toBe(
+      "already-applied",
+    );
+  }
   await applyRuntimeGrants(admin, "treido_runtime");
   runtimeConfig = {
     host: "127.0.0.1",
@@ -1504,6 +1641,7 @@ if (process.env.TREIDO_ADMIN_BROWSER_HELPER) {
         readListingDraft,
         readAdminProducts,
         duplicateSellerProduct,
+        duplicateSellerProducts,
         withdrawSellerProducts,
         emptyDraft,
       },
@@ -1577,3 +1715,22 @@ if (process.env.TREIDO_INBOX_BROWSER_HELPER) {
     expect(result.checks).toBeGreaterThanOrEqual(10);
   }, 180000);
 }
+
+defineDiscoveryIntegrationCases(() => ({ database, admin, owner }));
+
+defineLibraryIntegrationCases(() => ({
+  database,
+  admin,
+  owner,
+  fresh: () => createDatabase(new Pool(runtimeConfig)),
+}));
+
+defineInventoryIntegrationCases(() => ({ database, admin, owner }));
+
+defineImportIntegrationCases(() => ({ database, admin, owner }));
+
+defineTeamIntegrationCases(() => ({ database, admin, owner }));
+
+defineLaunchIntegrationCases(() => ({ database, admin, owner }));
+
+definePurchaseReviewIntegrationCases(() => ({ database, admin, owner }));

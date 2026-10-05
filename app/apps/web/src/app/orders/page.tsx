@@ -1,6 +1,7 @@
-import { readCatalog } from "@/features/catalog/queries.server";
-import { OrdersPage } from "@/features/commerce/orders";
-export default async function Page() {
-  const catalog = await readCatalog();
-  return <OrdersPage catalog={catalog} />;
+import {
+  PaidOrdersPage,
+  type PaymentPageProps,
+} from "@/features/payments/pages.server";
+export default function Page(props: Omit<PaymentPageProps, "params">) {
+  return <PaidOrdersPage {...props} params={Promise.resolve({})} />;
 }

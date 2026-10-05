@@ -1,0 +1,216 @@
+.stack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.card {
+  background: var(--admin-panel, #fff);
+  border: 1px solid var(--admin-line, #ebebeb);
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+}
+.card h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+.card p {
+  line-height: 1.55;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tableWrap {
+  overflow: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+.table td,
+.table th {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--admin-line, #ebebeb);
+  vertical-align: top;
+}
+.table th {
+  font-weight: 500;
+  color: var(--admin-muted, #707070);
+}
+.table small {
+  display: block;
+  margin-top: 5px;
+}
+.table td:first-child {
+  overflow-wrap: anywhere;
+  max-width: 280px;
+}
+.muted {
+  font-size: 13px;
+  color: var(--admin-muted, #707070);
+}
+.dialog {
+  width: min(620px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--admin-line, #ebebeb);
+  border-radius: 16px;
+  color: var(--admin-text, #303030);
+  background: var(--admin-panel, #fff);
+  font: inherit;
+  overflow: auto;
+  box-shadow: 0 16px 48px #0003;
+}
+.dialog::backdrop {
+  background: #0006;
+}
+.dialog header,
+.dialog footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--admin-line, #ebebeb);
+}
+.dialog header h2 {
+  font-size: 16px;
+  margin: 0;
+}
+.dialog footer {
+  border: 0;
+  border-top: 1px solid var(--admin-line, #ebebeb);
+}
+.dialogBody {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+.form {
+  display: grid;
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.field input,
+.field select,
+.field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: var(--admin-panel, #fff);
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+  padding: 9px 10px;
+  min-width: 0;
+}
+.field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+.grants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.checkbox input {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  accent-color: #303030;
+}
+.notice {
+  background: var(--admin-surface, #f6f6f6);
+  border-radius: 8px;
+  padding: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.permissions {
+  padding-left: 18px;
+  line-height: 1.7;
+}
+.stack[hidden] {
+  display: none;
+}
+.links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.links a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.links a:hover {
+  border-color: #8a8a8a;
+}
+.links h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.compare {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 13px;
+}
+@media (max-width: 767px) {
+  .grants,
+  .links {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 16px;
+  }
+  .actions button,
+  .actions a,
+  .dialog button {
+    min-height: 44px;
+    white-space: normal;
+  }
+  .dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .table th,
+  .table td {
+    padding: 10px 8px;
+  }
+  .table {
+    min-width: 530px;
+  }
+  .dialog footer {
+    flex-wrap: wrap;
+  }
+}

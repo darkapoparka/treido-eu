@@ -57,3 +57,16 @@
   margin-top: 24px;
   color: inherit;
 }
+
+.category {
+  display: inline-block;
+  margin: 12px 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.recommendations {
+  margin: 28px 0;
+}
+.recommendations h2 {
+  margin-bottom: 16px;
+}

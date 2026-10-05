@@ -8,16 +8,38 @@ import {
 import { authorizeSeller } from "../../features/sellers/persistence.server";
 import { SellerError } from "../../features/sellers/errors";
 import { validId } from "../../features/selling/draft-model";
-import { jobColumns, type JobRow } from "./outbox.server";
+import {
+  jobColumns,
+  type JobRow,
+  type SellerJobRow,
+  type BuyerJobRow,
+  type AssistantJobRow,
+  type ClosureJobRow,
+  isAssistantJob,
+  isShippingJob,
+  type ShippingJobRow,
+} from "./outbox.server";
+import { authorizeSearchJob } from "../../features/saved-searches/job-authority.server";
 import {
   JOB_LIMITS,
   JobError,
   parseJobEvent,
   type JobEvent,
-  type JobKind,
+  type SellerJobKind,
+  type AssistantJobKind,
+  type ShippingJobKind,
 } from "./model";
 
-export type EffectContext = JobRow & { executionToken: string };
+import { authorizeShippingArtifact } from "./shipping-authority.server";
+import { authorizeLifecycleArtifact } from "./lifecycle-authority.server";
+
+export type AssistantEffectContext = AssistantJobRow & {
+  executionToken: string;
+};
+export type ClosureEffectContext = ClosureJobRow & { executionToken: string };
+export type ShippingEffectContext = ShippingJobRow & { executionToken: string };
+export type EffectContext = SellerJobRow & { executionToken: string };
+export type BuyerEffectContext = BuyerJobRow & { executionToken: string };
 export type EffectResult = {
   resultId: string;
   providerObjectId?: string;
@@ -25,14 +47,43 @@ export type EffectResult = {
   apply?: (tx: SellerTransaction) => Promise<void>;
 };
 export type JobHandlers = Partial<
-  Record<JobKind, (context: EffectContext) => Promise<EffectResult>>
->;
+  Record<SellerJobKind, (context: EffectContext) => Promise<EffectResult>>
+> & {
+  "buyer.saved-search"?: (context: BuyerEffectContext) => Promise<EffectResult>;
+  "account.closure"?: (context: ClosureEffectContext) => Promise<EffectResult>;
+} & Partial<
+    Record<
+      AssistantJobKind,
+      (context: AssistantEffectContext) => Promise<EffectResult>
+    >
+  > &
+  Partial<{
+    [K in ShippingJobKind]: (
+      context: ShippingEffectContext & { kind: K },
+    ) => Promise<EffectResult>;
+  }>;
 export type JobOutcome = {
   jobId: string;
   status: "completed" | "cancelled" | "stale";
 };
 
-async function currentAuthority(tx: SellerTransaction, job: JobRow) {
+async function currentAuthority(
+  tx: SellerTransaction,
+  job: JobRow,
+  executionToken?: string,
+) {
+  if (isShippingJob(job)) {
+    await authorizeShippingArtifact(tx, job, executionToken);
+    return;
+  }
+  if (job.kind === "account.closure" || isAssistantJob(job)) {
+    await authorizeLifecycleArtifact(tx, job, executionToken);
+    return;
+  }
+  if (job.kind === "buyer.saved-search") {
+    await authorizeSearchJob(tx, job);
+    return;
+  }
   if (job.authority === "service") return;
   const human = (
     await tx.client.query<{ subject: string }>(
@@ -41,6 +92,22 @@ async function currentAuthority(tx: SellerTransaction, job: JobRow) {
     )
   ).rows[0];
   if (!human) throw new SellerError("FORBIDDEN");
+  if (job.kind === "team.invitation") {
+    await authorizeSeller(
+      tx,
+      { subject: human.subject },
+      job.sellerId,
+      "team.manage",
+    );
+    return;
+  }
+  if (job.kind === "catalogue.import")
+    await authorizeSeller(
+      tx,
+      { subject: human.subject },
+      job.sellerId,
+      "import.run",
+    );
   await authorizeSeller(
     tx,
     { subject: human.subject },
@@ -70,8 +137,8 @@ async function claimExecution(
   return inTransaction(database, async (tx) => {
     const initial = (
       await tx.client.query<JobRow>(
-        `SELECT ${jobColumns} FROM treido.outbox_jobs WHERE id=$1 AND seller_id=$2`,
-        [event.jobId, event.sellerId],
+        `SELECT ${jobColumns} FROM treido.outbox_jobs WHERE id=$1 AND seller_id IS NOT DISTINCT FROM $2::uuid AND buyer_id IS NOT DISTINCT FROM $3::uuid`,
+        [event.jobId, event.sellerId, event.buyerId ?? null],
       )
     ).rows[0];
     if (!initial) throw new JobError("NOT_FOUND");
@@ -79,6 +146,12 @@ async function claimExecution(
     try {
       await currentAuthority(tx, initial);
     } catch (error) {
+      if (
+        initial.kind === "account.closure" ||
+        isAssistantJob(initial) ||
+        isShippingJob(initial)
+      )
+        throw error;
       if (!(error instanceof SellerError)) throw error;
       permitted = false;
     }
@@ -106,6 +179,13 @@ async function claimExecution(
       [job.id, token, JOB_LIMITS.executionSeconds, runId],
     );
     if (effect.rowCount !== 1) throw new JobError("BUSY");
+    // Accepted lifecycle authority is checked against this exact newly claimed lease.
+    if (
+      job.kind === "account.closure" ||
+      isAssistantJob(job) ||
+      isShippingJob(job)
+    )
+      await currentAuthority(tx, job, token);
     await tx.client.query(
       `UPDATE treido.outbox_jobs SET progress_at=clock_timestamp(),
       available_at=clock_timestamp()+make_interval(secs=>$2) WHERE id=$1`,
@@ -140,12 +220,35 @@ export async function executeJob(
   if (claimed.status !== "claimed")
     return { jobId: event.jobId, status: claimed.status };
   const context = claimed.context;
-  const handler = handlers[context.kind];
   try {
-    if (!handler) throw new JobError("NOT_AVAILABLE");
     // No database lock is held across the external effect. Repeated calls use
     // context.operationKey, including after lease expiry or explicit redrive.
-    const result = await handler(context);
+    let result: EffectResult;
+    if (context.kind === "buyer.saved-search") {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    } else if (context.kind === "account.closure") {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    } else if (context.kind === "shipping.input-expiry") {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    } else if (context.kind === "shipping.recipient-expiry") {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    } else if (isAssistantJob(context)) {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    } else {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    }
     if (
       !validId(result.resultId) ||
       (result.providerObjectId !== undefined &&
@@ -155,8 +258,14 @@ export async function executeJob(
     return await inTransaction(database, async (tx) => {
       let permitted = true;
       try {
-        await currentAuthority(tx, context);
+        await currentAuthority(tx, context, context.executionToken);
       } catch (error) {
+        if (
+          context.kind === "account.closure" ||
+          isAssistantJob(context) ||
+          isShippingJob(context)
+        )
+          throw error;
         if (!(error instanceof SellerError)) throw error;
         permitted = false;
       }
@@ -177,6 +286,14 @@ export async function executeJob(
         await cancelForAuthority(tx, job);
         return { jobId: job.id, status: "cancelled" };
       }
+      // Apply local completion while the original lease is still running.
+      // Feature callbacks may require that lease; all writes remain one transaction.
+      const live = await tx.client.query(
+        "SELECT job_id FROM treido.job_effects WHERE job_id=$1 AND state='running' AND execution_token=$2 AND execution_until>clock_timestamp() FOR UPDATE",
+        [context.id, context.executionToken],
+      );
+      if (live.rowCount !== 1) throw new JobError("STALE_LEASE");
+      await result.apply?.(tx);
       const written = await tx.client.query(
         `UPDATE treido.job_effects SET state='completed',
         result_id=$3,provider_object_id=$4,completed_at=clock_timestamp(),execution_token=NULL,execution_until=NULL
@@ -189,7 +306,6 @@ export async function executeJob(
         ],
       );
       if (written.rowCount !== 1) throw new JobError("STALE_LEASE");
-      await result.apply?.(tx);
       await tx.client.query(
         `UPDATE treido.outbox_jobs SET state='completed',completed_at=clock_timestamp(),
         progress_at=clock_timestamp(),dispatch_token=NULL,dispatch_until=NULL,last_error=NULL WHERE id=$1`,
@@ -226,9 +342,9 @@ export async function markExecutorFailure(
     throw new JobError("INVALID_INPUT");
   await database.pool.query(
     `UPDATE treido.outbox_jobs j SET state='dead',last_error='executor_unavailable',
-    dispatch_token=NULL,dispatch_until=NULL WHERE id=$1 AND seller_id=$2 AND generation=$3
+    dispatch_token=NULL,dispatch_until=NULL WHERE id=$1 AND seller_id IS NOT DISTINCT FROM $2::uuid AND generation=$3 AND buyer_id IS NOT DISTINCT FROM $4::uuid
     AND state IN ('pending','accepted') AND NOT EXISTS(SELECT 1 FROM treido.job_effects e
       WHERE e.job_id=j.id AND e.state='running' AND e.execution_until > clock_timestamp())`,
-    [event.jobId, event.sellerId, event.generation],
+    [event.jobId, event.sellerId, event.generation, event.buyerId ?? null],
   );
 }

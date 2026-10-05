@@ -13,7 +13,10 @@ import {
   memberships,
   sellerUsage,
 } from "../../server/db/schema";
-import type { VerifiedIdentity } from "../../server/identity/clerk.server";
+import {
+  hasVerifiedRecentAuthentication,
+  type VerifiedIdentity,
+} from "../../server/identity/clerk.server";
 import {
   checkSellerCapability,
   resolveSellerCapabilities,
@@ -21,6 +24,7 @@ import {
   type SellerCapability,
 } from "./capabilities";
 import { SellerError } from "./errors";
+import { canManageTeamMember } from "../team/policy.server";
 import { validId } from "../selling/draft-model";
 
 export type SellerContext = {
@@ -113,7 +117,7 @@ export async function authorizeSeller(
       userId: user.id,
       status: "active",
       session: "verified",
-      recentlyAuthenticated: false,
+      recentlyAuthenticated: hasVerifiedRecentAuthentication(identity),
     },
     sellerId,
     seller:
@@ -293,13 +297,20 @@ export function revokeSellerMembership(
 ) {
   if (!validId(input.userId)) throw new SellerError("INVALID_INPUT");
   return inTransaction(database, async (tx) => {
-    await authorizeSeller(tx, identity, input.sellerId, "team.manage", true);
+    const authorized = await authorizeSeller(
+      tx,
+      identity,
+      input.sellerId,
+      "team.manage",
+      true,
+    );
     const rows = await tx.client.query<{
       userId: string;
-      role: string;
+      role: "owner" | "manager" | "member";
+      grants: string[];
       status: string;
     }>(
-      'SELECT user_id AS "userId", role, status FROM treido.seller_memberships WHERE seller_id = $1 ORDER BY user_id FOR UPDATE',
+      'SELECT user_id AS "userId", role, grants, status FROM treido.seller_memberships WHERE seller_id = $1 ORDER BY user_id FOR UPDATE',
       [input.sellerId],
     );
     const target = rows.rows.find((row) => row.userId === input.userId);
@@ -312,6 +323,19 @@ export function revokeSellerMembership(
         .length <= 1
     )
       throw new SellerError("CONFLICT");
+    if (
+      target.userId !== authorized.user.id &&
+      !canManageTeamMember(authorized.authority, target)
+    )
+      throw new SellerError("FORBIDDEN");
+    await tx.client.query(
+      "UPDATE treido.seller_invitations SET status='cancelled',revision=revision+1 WHERE seller_id=$1 AND created_by=$2 AND status='pending'",
+      [input.sellerId, input.userId],
+    );
+    await tx.client.query(
+      "INSERT INTO treido.seller_team_state(seller_id,revision) VALUES($1,1) ON CONFLICT(seller_id) DO UPDATE SET revision=treido.seller_team_state.revision+1",
+      [input.sellerId],
+    );
     await tx.db
       .update(memberships)
       .set({ status: "revoked", revision: sql`${memberships.revision} + 1` })

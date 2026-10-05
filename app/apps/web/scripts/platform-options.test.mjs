@@ -202,3 +202,58 @@ test("the actual detached child survives its launcher exiting and keeps privileg
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("explains copied password masks without logging connection values", () => {
+  const DATABASE_URL = configuration.DATABASE_URL.replace(
+    "fixture-only",
+    "****************",
+  );
+  assert.throws(
+    () => platformOptions({ ...configuration, DATABASE_URL }),
+    (error) => {
+      assert.match(error.message, /DATABASE_URL contains a masked password/);
+      assert.match(error.message, /web \.env\.local/);
+      assert.ok(!error.message.includes(DATABASE_URL));
+      assert.ok(!error.message.includes("ep-fixture"));
+      return true;
+    },
+  );
+});
+
+test("accepts the explicit development-only unpooled runtime bridge", () => {
+  const bridge = {
+    ...configuration,
+    TREIDO_DB_LOGIN_ROLE: "treido_dev_bridge",
+    TREIDO_DB_LOCAL_BRIDGE: "true",
+    DATABASE_URL:
+      "postgresql://treido_dev_bridge:fixture-only@ep-fixture.eu-central-1.aws.neon.tech/neondb?sslmode=require&options=-c%20role%3Dtreido_runtime",
+  };
+  assert.equal(platformOptions(bridge).port, 6419);
+});
+
+test("rejects the runtime bridge on a pooled endpoint", () => {
+  const bridge = {
+    ...configuration,
+    TREIDO_DB_LOGIN_ROLE: "treido_dev_bridge",
+    TREIDO_DB_LOCAL_BRIDGE: "true",
+    DATABASE_URL:
+      "postgresql://treido_dev_bridge:fixture-only@ep-fixture-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&options=-c%20role%3Dtreido_runtime",
+  };
+  assert.throws(() => platformOptions(bridge));
+});
+
+test("derives the development bridge from the migration-only connection", () => {
+  const bridge = {
+    ...configuration,
+    TREIDO_DB_LOCAL_BRIDGE: "true",
+    DATABASE_URL:
+      "postgresql://treido_runtime:****************@ep-fixture.eu-central-1.aws.neon.tech/neondb?sslmode=require",
+    MIGRATION_DATABASE_URL:
+      "postgresql://treido_migration:bridgeSecret@ep-fixture.eu-central-1.aws.neon.tech/neondb?sslmode=verify-full",
+  };
+  const result = platformOptions(bridge);
+  const runtime = new URL(result.env.DATABASE_URL);
+  assert.equal(result.env.TREIDO_DB_LOGIN_ROLE, "treido_migration");
+  assert.equal(runtime.searchParams.get("options"), "-c role=treido_runtime");
+  assert.equal(result.env.MIGRATION_DATABASE_URL, "");
+});

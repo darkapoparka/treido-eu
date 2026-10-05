@@ -68,3 +68,10 @@ export function parseBulkWithdrawal(
   }
   return { sellerId: value.sellerId.toLowerCase(), items };
 }
+
+export type ProductDuplicateResult = {
+  listingId: string;
+  result: import("./errors").SellerResult<
+    import("../selling/draft-model").DraftAcknowledgement
+  >;
+};

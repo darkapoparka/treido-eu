@@ -41,6 +41,13 @@ export function AdminShell({
   const searchParams = useSearchParams();
   const { locale } = useLocale();
   const messaging = useTranslations("messaging");
+  const inventoryText = useTranslations("inventory");
+  const importText = useTranslations("catalogueImport");
+  const teamText = useTranslations("team");
+  const settingsText = useTranslations("sellerSettings");
+  const purchaseText = useTranslations("purchaseReviews");
+  const inquiryText = useTranslations("contactOperations");
+  const trustText = useTranslations("trustOperations");
   const bg = (parseLocale(searchParams.get("lang")) ?? locale) === "bg";
   const language = bg ? "bg" : "en";
   const SearchPanel = preview?.Search;
@@ -179,7 +186,33 @@ export function AdminShell({
               <AdminIcon name="home" />
               <span>{bg ? "Начало" : "Home"}</span>
             </Link>
-            {unavailableTool("orders", "Orders", "Поръчки")}
+            {seller?.capabilities.includes("order.read") ? (
+              <Link
+                href={base + "/orders" + suffix}
+                onClick={close}
+                aria-current={
+                  pathname.startsWith(base + "/orders") ? "page" : undefined
+                }
+              >
+                <AdminIcon name="orders" />
+                <span>{bg ? "Платени поръчки" : "Paid orders"}</span>
+              </Link>
+            ) : (
+              unavailableTool("orders", "Orders", "Поръчки")
+            )}
+            {seller?.capabilities.includes("listing.read") &&
+              seller.capabilities.includes("inbox.read") && (
+                <Link
+                  href={base + "/reservations" + suffix}
+                  onClick={close}
+                  aria-current={
+                    pathname.includes("/reservations") ? "page" : undefined
+                  }
+                >
+                  <AdminIcon name="orders" />
+                  <span>{purchaseText("reservations")}</span>
+                </Link>
+              )}
             {(!seller || seller.capabilities.includes("listing.read")) && (
               <Link
                 href={`${products}${suffix}`}
@@ -193,6 +226,18 @@ export function AdminShell({
               >
                 <AdminIcon name="product" />
                 <span>{bg ? "Продукти" : "Products"}</span>
+              </Link>
+            )}
+            {seller?.capabilities.includes("inbox.read") && (
+              <Link
+                href={base + "/inquiries" + suffix}
+                onClick={close}
+                aria-current={
+                  pathname.includes("/inquiries") ? "page" : undefined
+                }
+              >
+                <AdminIcon name="inbox" />
+                <span>{inquiryText("title")}</span>
               </Link>
             )}
             {(!seller || seller.capabilities.includes("inbox.read")) && (
@@ -209,13 +254,136 @@ export function AdminShell({
                 <span>{messaging("title")}</span>
               </Link>
             )}
+            {seller?.capabilities.includes("listing.read") && (
+              <Link
+                href={base + "/moderation" + suffix}
+                onClick={close}
+                aria-current={
+                  pathname.endsWith("/moderation") ? "page" : undefined
+                }
+              >
+                <AdminIcon name="content" />
+                <span>{trustText("sellerModeration")}</span>
+              </Link>
+            )}
+            {seller?.capabilities.includes("listing.read") && (
+              <Link
+                href={base + "/inventory" + suffix}
+                onClick={close}
+                aria-current={
+                  pathname.includes("/inventory") ? "page" : undefined
+                }
+              >
+                <AdminIcon name="product" />
+                <span>{inventoryText("catalogue")}</span>
+              </Link>
+            )}
+            {seller?.kind === "business" &&
+              seller.capabilities.includes("import.run") && (
+                <Link
+                  href={base + "/imports" + suffix}
+                  onClick={close}
+                  aria-current={
+                    pathname.includes("/imports") ? "page" : undefined
+                  }
+                >
+                  <AdminIcon name="content" />
+                  <span>{importText("title")}</span>
+                </Link>
+              )}
+            {seller?.kind === "business" &&
+              seller.capabilities.includes("team.manage") && (
+                <Link
+                  href={base + "/team" + suffix}
+                  onClick={close}
+                  aria-current={pathname.includes("/team") ? "page" : undefined}
+                >
+                  <AdminIcon name="customers" />
+                  <span>{teamText("title")}</span>
+                </Link>
+              )}
+            {seller?.kind === "business" &&
+              seller.capabilities.includes("profile.manage") && (
+                <Link
+                  href={base + "/settings/store" + suffix}
+                  onClick={close}
+                  aria-current={
+                    pathname.includes("/settings/store") ? "page" : undefined
+                  }
+                >
+                  <AdminIcon name="store" />
+                  <span>{settingsText("store")}</span>
+                </Link>
+              )}
+            <Link
+              href={"/app/invitations?lang=" + language}
+              onClick={close}
+              aria-current={
+                pathname.includes("/invitations") ? "page" : undefined
+              }
+            >
+              <AdminIcon name="customers" />
+              <span>{teamText("incoming")}</span>
+            </Link>
             {unavailableTool("customers", "Customers", "Клиенти")}
-            {unavailableTool("growth", "Growth", "Развитие")}
+            {seller?.capabilities.includes("marketing.manage") ? (
+              <Link
+                href={base + "/promotions" + suffix}
+                onClick={close}
+                aria-current={
+                  pathname === base + "/promotions" ||
+                  pathname.startsWith(base + "/promotions/")
+                    ? "page"
+                    : undefined
+                }
+              >
+                <AdminIcon name="growth" />
+                <span>{bg ? "Промоции" : "Promotions"}</span>
+              </Link>
+            ) : (
+              unavailableTool("growth", "Growth", "Развитие")
+            )}
             {unavailableTool("discount", "Discounts", "Отстъпки")}
             {unavailableTool("content", "Content", "Съдържание")}
             {unavailableTool("markets", "Markets", "Пазари")}
-            {unavailableTool("finance", "Finance", "Финанси")}
-            {unavailableTool("analytics", "Analytics", "Анализи")}
+            {seller?.capabilities.includes("billing.manage") ? (
+              <Link
+                href={base + "/billing" + suffix}
+                onClick={close}
+                aria-current={
+                  pathname === base + "/billing" ||
+                  pathname.startsWith(base + "/billing/")
+                    ? "page"
+                    : undefined
+                }
+              >
+                <AdminIcon name="finance" />
+                <span>{bg ? "План и фактури" : "Plan & invoices"}</span>
+              </Link>
+            ) : (
+              unavailableTool("finance", "Finance", "Финанси")
+            )}
+            {seller && (
+              <Link href={"/sell/start?lang=" + language} onClick={close}>
+                <AdminIcon name="content" />
+                <span>{bg ? "Първи стъпки" : "Getting started"}</span>
+              </Link>
+            )}
+            {seller?.capabilities.includes("analytics.read") ? (
+              <Link
+                href={base + "/insights" + suffix}
+                prefetch={false}
+                onClick={close}
+                aria-current={
+                  pathname.includes("/insights") ? "page" : undefined
+                }
+              >
+                <AdminIcon name="analytics" />
+                <span>{bg ? "Анализи" : "Analytics"}</span>
+              </Link>
+            ) : (
+              unavailableTool("analytics", "Analytics", "Анализи")
+            )}
             <p className={styles.navHeading}>
               {bg ? "Канали за продажба" : "Sales channels"}
             </p>
@@ -236,8 +404,8 @@ export function AdminShell({
           href={
             preview
               ? `${base}/settings/general${suffix}`
-              : seller?.kind === "business"
-                ? `${base}/onboarding${suffix}`
+              : seller
+                ? `${base}/settings${suffix}`
                 : `/app${suffix}`
           }
           onClick={close}
@@ -253,6 +421,22 @@ export function AdminShell({
             href={`${base}/notifications${suffix}`}
             onClick={close}
             aria-label={bg ? "Известия" : "Notifications"}
+          >
+            <AdminIcon name="bell" />
+          </Link>
+        ) : !seller || seller.capabilities.includes("inbox.read") ? (
+          <Link
+            className={styles.notifications}
+            href={
+              seller
+                ? base + "/notifications" + suffix
+                : "/notifications?lang=" + language
+            }
+            onClick={close}
+            aria-label={bg ? "Известия" : "Notifications"}
+            aria-current={
+              pathname.includes("/notifications") ? "page" : undefined
+            }
           >
             <AdminIcon name="bell" />
           </Link>

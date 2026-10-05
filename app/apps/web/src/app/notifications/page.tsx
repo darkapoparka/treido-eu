@@ -1,5 +1,1 @@
-import { Notifications } from "@/features/discovery/notifications";
-
-export default function Page() {
-  return <Notifications />;
-}
+export { BuyerNotificationsPage as default } from "@/features/notifications/pages.server";

@@ -1,3 +1,4 @@
+import { CaseDecisionCard } from "@/features/trust/case-form";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { pageLocale } from "@/features/locale/page-locale.server";
@@ -50,7 +51,12 @@ export default async function Page({
         </small>
       </section>
       <h2>{t("decisions")}</h2>
-      {!data.decisions.length && <p>{t("noDecisions")}</p>}
+      {data.formalDecision && (
+        <CaseDecisionCard decision={data.formalDecision} />
+      )}
+      {!data.decisions.length && !data.formalDecision && (
+        <p>{t("noDecisions")}</p>
+      )}
       {data.decisions.map((decision) => (
         <DecisionCard key={decision.id} decision={decision} />
       ))}

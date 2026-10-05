@@ -1,5 +1,7 @@
 // Isolated component review transport. Never imported by the application.
 import React from "react";
+import { NextIntlClientProvider } from "next-intl";
+import { messages } from "../apps/web/src/features/locale/messages";
 import { createRoot } from "react-dom/client";
 import { AdminShell } from "../apps/web/src/features/sellers/admin-shell";
 import { AdminHome } from "../apps/web/src/features/sellers/admin-home";
@@ -27,38 +29,44 @@ let initial = window.__initial;
 const root = createRoot(document.getElementById("root")!);
 function render() {
   root.render(
-    <AdminShell sellers={initial.sellers} unavailable={initial.unavailable}>
-      {initial.view === "home" ? (
-        <AdminHome
-          seller={initial.seller}
-          language={initial.language}
-          unavailable={initial.unavailable}
-        />
-      ) : initial.view === "products" ? (
-        <AdminProductList
-          seller={initial.seller}
-          data={initial.data}
-          language={initial.language}
-          unavailable={initial.unavailable}
-        />
-      ) : (
-        <Workspace
-          title={initial.language === "bg" ? "Добави продукт" : "Add product"}
-          back={`/app/sellers/${initial.seller!.sellerId}/listings?lang=${initial.language}`}
-          language={initial.language}
-        >
-          <DraftEditor
-            admin
-            initial={initial.draft}
-            sellerId={initial.seller!.sellerId}
-            requestId={initial.requestId}
-            actorSubject={initial.actor}
+    <NextIntlClientProvider
+      locale={initial.language}
+      messages={messages[initial.language]}
+      timeZone="Europe/Sofia"
+    >
+      <AdminShell sellers={initial.sellers} unavailable={initial.unavailable}>
+        {initial.view === "home" ? (
+          <AdminHome
+            seller={initial.seller}
             language={initial.language}
-            bufferKey={`admin-acceptance:${initial.seller!.sellerId}:${"id" in initial.draft ? initial.draft.id : "new"}`}
+            unavailable={initial.unavailable}
           />
-        </Workspace>
-      )}
-    </AdminShell>,
+        ) : initial.view === "products" ? (
+          <AdminProductList
+            seller={initial.seller}
+            data={initial.data}
+            language={initial.language}
+            unavailable={initial.unavailable}
+          />
+        ) : (
+          <Workspace
+            title={initial.language === "bg" ? "Добави продукт" : "Add product"}
+            back={`/app/sellers/${initial.seller!.sellerId}/listings?lang=${initial.language}`}
+            language={initial.language}
+          >
+            <DraftEditor
+              admin
+              initial={initial.draft}
+              sellerId={initial.seller!.sellerId}
+              requestId={initial.requestId}
+              actorSubject={initial.actor}
+              language={initial.language}
+              bufferKey={`admin-acceptance:${initial.seller!.sellerId}:${"id" in initial.draft ? initial.draft.id : "new"}`}
+            />
+          </Workspace>
+        )}
+      </AdminShell>
+    </NextIntlClientProvider>,
   );
 }
 window.__refreshAdmin = async () => {

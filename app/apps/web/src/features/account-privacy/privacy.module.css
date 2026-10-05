@@ -1,0 +1,109 @@
+.content {
+  padding: 0 22px 32px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.content section {
+  border-top: 1px solid #e6e6e6;
+  padding: 22px 0;
+}
+.content h2 {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+.content h3 {
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+.content p,
+.content li,
+.content label {
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.content ul {
+  padding-left: 22px;
+}
+.content button,
+.download {
+  min-height: 44px;
+  border: 1px solid #c8c8c8;
+  border-radius: 22px;
+  padding: 10px 18px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.content button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.content button:focus-visible,
+.download:focus-visible,
+.content input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+.choices {
+  display: grid;
+  gap: 12px;
+  border: 0;
+  padding: 0;
+  margin: 18px 0;
+}
+.choices label,
+.acknowledge {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.choices input,
+.acknowledge input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #111;
+}
+.card {
+  border-bottom: 1px solid #e6e6e6;
+  padding: 18px 0;
+}
+.facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.facts dt {
+  overflow-wrap: anywhere;
+}
+.facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.stamp {
+  font-size: 12px !important;
+  color: #5f5f5f;
+}
+.download {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.feedback {
+  border-radius: 12px;
+  background: #f4f4f4;
+  padding: 12px;
+}

@@ -1,0 +1,86 @@
+.root {
+  border-top: 1px solid var(--color-line, #e7e7e7);
+  padding-top: 16px;
+  margin-top: 16px;
+  min-width: 0;
+}
+.header,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.header {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.list {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+.card {
+  border: 1px solid var(--color-line, #e7e7e7);
+  border-radius: 20px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.card > header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card p {
+  margin: 8px 0;
+}
+.card small {
+  color: var(--color-muted, #767676);
+}
+.card .actions {
+  margin-top: 12px;
+}
+.notice {
+  border-radius: 12px;
+  background: var(--color-canvas, #fdfdfd);
+  padding: 12px;
+}
+.form {
+  display: grid;
+  gap: 16px;
+}
+.form label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.form input,
+.form select {
+  border: 1px solid var(--color-line, #e7e7e7);
+  border-radius: 12px;
+  padding: 10px 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  font: inherit;
+}
+.message {
+  border-inline-start: 3px solid currentColor;
+  padding-inline-start: 12px;
+}
+.message p {
+  margin: 4px 0;
+}
+@media (max-width: 767px) {
+  .actions button {
+    min-height: 44px;
+    white-space: normal;
+  }
+}

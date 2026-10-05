@@ -1,3 +1,8 @@
+import {
+  caseStorageReady,
+  messageHiddenSql,
+  messageReasonSql,
+} from "../trust/case-storage.server";
 import "server-only";
 import { inTransaction, type SellerDatabase } from "../../server/db/database";
 import type { VerifiedIdentity } from "../../server/identity/clerk.server";
@@ -69,10 +74,11 @@ export async function readInbox(
       filter: query.filter,
     });
     const position = cursorPosition(query.cursor, scope);
+    const moderationReady = await caseStorageReady(tx);
     const rows = (
       await tx.client.query<InboxItem>(
         `SELECT c.id,c.listing_id AS "listingId",CASE WHEN l.moderation_state='clear' THEN coalesce(d.payload->>'title','') ELSE NULL END AS title,
-        s.name AS "sellerName",s.kind AS "sellerKind",coalesce(last.body,'') AS "lastBody",
+        s.name AS "sellerName",s.kind AS "sellerKind",coalesce(last.body,'') AS "lastBody",last.offer_event_id IS NOT NULL AS "lastOffer",
         to_char(c.last_message_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "lastAt",
         unread.count AS unread,(contact.buyer_blocked OR contact.seller_blocked) AS blocked
        FROM treido.conversation_threads c JOIN treido.seller_accounts s ON s.id=c.seller_id
@@ -80,7 +86,7 @@ export async function readInbox(
        LEFT JOIN treido.listing_publications d ON d.seller_id=c.seller_id AND d.listing_id=c.listing_id AND d.revision=l.current_publication_revision
        JOIN treido.contact_preferences contact ON contact.seller_id=c.seller_id AND contact.buyer_id=c.buyer_id
        LEFT JOIN treido.conversation_read_cursors r ON r.thread_id=c.id AND r.user_id=$1
-       LEFT JOIN LATERAL (SELECT body FROM treido.messages WHERE thread_id=c.id ORDER BY sequence DESC LIMIT 1) last ON true
+       LEFT JOIN LATERAL (SELECT CASE WHEN ${messageHiddenSql(moderationReady, "last_message")} THEN '' ELSE last_message.body END AS body,offer_event_id FROM treido.messages last_message WHERE thread_id=c.id ORDER BY sequence DESC LIMIT 1) last ON true
        CROSS JOIN LATERAL (SELECT count(*)::int AS count FROM treido.messages m WHERE m.thread_id=c.id
          AND m.sequence>coalesce(r.last_sequence,0) AND CASE WHEN $2::uuid IS NULL THEN m.author_id<>c.buyer_id ELSE m.author_id=c.buyer_id END) unread
        WHERE CASE WHEN $2::uuid IS NULL THEN c.buyer_id=$1 ELSE c.seller_id=$2 AND c.buyer_id<>$1 END
@@ -128,6 +134,8 @@ export async function readConversation(
       { sellerId: query.sellerId },
     );
     const { thread, user, contact, side } = access;
+    const moderationReady = await caseStorageReady(tx);
+    const hidden = messageHiddenSql(moderationReady);
     const listing = (
       await tx.client.query<{ title: string; sellerName: string }>(
         `SELECT coalesce(d.payload->>'title','') AS title,s.name AS "sellerName" FROM treido.listings l JOIN treido.seller_accounts s ON s.id=l.seller_id LEFT JOIN treido.listing_publications d ON d.seller_id=l.seller_id AND d.listing_id=l.id AND d.revision=l.current_publication_revision WHERE l.id=$1 AND l.seller_id=$2`,
@@ -136,9 +144,10 @@ export async function readConversation(
     ).rows[0];
     const rows = (
       await tx.client.query<ConversationMessage>(
-        `SELECT m.id,m.sequence,m.body,CASE WHEN m.author_id=$2 THEN 'buyer' ELSE 'seller' END AS "from",m.author_id=$3 AS mine,
+        `SELECT m.id,m.sequence,CASE WHEN ${hidden} THEN '' ELSE m.body END AS body,${hidden} AS "moderationHidden",${messageReasonSql(moderationReady)} AS "moderationReason",CASE WHEN m.author_id=$2 THEN 'buyer' ELSE 'seller' END AS "from",m.author_id=$3 AS mine,
         to_char(m.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt",
-        (SELECT count(*)::int FROM treido.message_attachment_links a WHERE a.message_id=m.id) AS attachments
+        CASE WHEN ${hidden} THEN 0 ELSE (SELECT count(*)::int FROM treido.message_attachment_links a WHERE a.message_id=m.id) END AS attachments,
+        (SELECT jsonb_build_object('kind',e.kind,'unitPriceMinor',o.unit_price_minor,'quantity',o.quantity,'currency',o.currency) FROM treido.offer_events e JOIN treido.listing_offers o ON o.thread_id=e.thread_id AND o.id=e.offer_id WHERE e.thread_id=m.thread_id AND e.id=m.offer_event_id) AS offer
        FROM treido.messages m WHERE m.thread_id=$1 AND ($4::int IS NULL OR m.sequence<$4) ORDER BY m.sequence DESC LIMIT 51`,
         [thread.id, thread.buyerId, user.id, query.before],
       )
@@ -177,6 +186,16 @@ export async function markConversationRead(
   identity: VerifiedIdentity,
   input: unknown,
 ) {
+  return inTransaction(database, (tx) =>
+    markConversationReadInTransaction(tx, identity, input),
+  );
+}
+/** Shared by notification acknowledgments; caller owns the same transaction. */
+export async function markConversationReadInTransaction(
+  tx: import("../../server/db/database").SellerTransaction,
+  identity: VerifiedIdentity,
+  input: unknown,
+) {
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new SellerError("INVALID_INPUT");
   const value = input as Record<string, unknown>;
@@ -193,25 +212,23 @@ export async function markConversationRead(
     Number(value.sequence) < 0
   )
     throw new SellerError("INVALID_INPUT");
-  return inTransaction(database, async (tx) => {
-    const { thread, user } = await authorizeConversation(
-      tx,
-      identity,
-      query.threadId,
-      false,
-      { sellerId: query.sellerId },
-    );
-    if (Number(value.sequence) >= thread.nextSequence)
-      throw new SellerError("INVALID_INPUT");
-    const row = (
-      await tx.client.query<{ sequence: number }>(
-        `INSERT INTO treido.conversation_read_cursors(thread_id,user_id,last_sequence) VALUES($1,$2,$3)
+  const { thread, user } = await authorizeConversation(
+    tx,
+    identity,
+    query.threadId,
+    false,
+    { sellerId: query.sellerId },
+  );
+  if (Number(value.sequence) >= thread.nextSequence)
+    throw new SellerError("INVALID_INPUT");
+  const row = (
+    await tx.client.query<{ sequence: number }>(
+      `INSERT INTO treido.conversation_read_cursors(thread_id,user_id,last_sequence) VALUES($1,$2,$3)
        ON CONFLICT(thread_id,user_id) DO UPDATE SET last_sequence=greatest(treido.conversation_read_cursors.last_sequence,excluded.last_sequence),updated_at=clock_timestamp() RETURNING last_sequence AS sequence`,
-        [thread.id, user.id, value.sequence],
-      )
-    ).rows[0];
-    return row;
-  });
+      [thread.id, user.id, value.sequence],
+    )
+  ).rows[0];
+  return row;
 }
 export async function setContactBlocked(
   database: SellerDatabase,

@@ -3,7 +3,7 @@
 import { displayRating, displayCount } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { ProductCardData } from "../catalog/card-model";
 import { formatMoney } from "../catalog/types";
 import { SourceLink } from "./return-navigation";
@@ -37,6 +37,8 @@ export function ProductCard({
   compact = false,
   showPromotion = false,
   showRating = true,
+  showSave = true,
+  saveControl,
   mediaOnly = false,
   storeName,
   ratingStyle = "stars",
@@ -48,6 +50,8 @@ export function ProductCard({
   compact?: boolean;
   showPromotion?: boolean;
   showRating?: boolean;
+  showSave?: boolean;
+  saveControl?: ReactNode;
   mediaOnly?: boolean;
   storeName?: string;
   ratingStyle?: "stars" | "summary";
@@ -58,9 +62,11 @@ export function ProductCard({
   nativeIcons?: boolean;
 }) {
   const intlLocale = useIntlLocale();
+  const inventoryText = useTranslations("inventory");
   const ui = useTranslations("discoveryUI");
   const discovery = useDiscovery();
-  const reported = discovery.reportedProducts.includes(product.id);
+  const reported =
+    !saveControl && discovery.reportedProducts.includes(product.id);
   const markdown =
     product.referenceStyle === "android" &&
     !product.promotion &&
@@ -118,7 +124,12 @@ export function ProductCard({
           >
             {showMarkdown
               ? `${markdown}% off`
-              : (product.promotion ?? formatMoney(product.price, intlLocale))}
+              : (product.promotion ??
+                (product.priceFrom
+                  ? inventoryText("from", {
+                      price: formatMoney(product.price, intlLocale),
+                    })
+                  : formatMoney(product.price, intlLocale)))}
             {!showMarkdown &&
               product.referenceStyle === "android" &&
               product.compareAt && (
@@ -126,7 +137,11 @@ export function ProductCard({
               )}
           </span>
         )}
-        {!reported && <SaveButton product={product} native={nativeIcons} />}
+        {showSave &&
+          !reported &&
+          (saveControl ?? (
+            <SaveButton product={product} native={nativeIcons} />
+          ))}
       </div>
       {!compact && !mediaOnly && (
         <SourceLink
@@ -179,7 +194,11 @@ export function ProductCard({
               </span>
             )}
           <span>
-            {formatMoney(product.price, intlLocale)}{" "}
+            {product.priceFrom
+              ? inventoryText("from", {
+                  price: formatMoney(product.price, intlLocale),
+                })
+              : formatMoney(product.price, intlLocale)}{" "}
             {showPromotion && product.compareAt && (
               <del>{formatMoney(product.compareAt, intlLocale)}</del>
             )}

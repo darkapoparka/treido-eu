@@ -1,3 +1,6 @@
+import { readPublicInventory } from "@/features/inventory/queries.server";
+import type { PublicInventory } from "@/features/inventory/model";
+import { readListingMetadata } from "@/features/catalog/public-metadata.server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { readProductDetail } from "@/features/catalog/product-detail.server";
@@ -7,6 +10,11 @@ import { readPublishedListing } from "@/features/catalog/published.server";
 import { PublishedProductDetail } from "@/features/discovery/published-detail";
 import { validId } from "@/features/selling/draft-model";
 import { getDatabase } from "@/server/db/database";
+import {
+  publicDiscoveryKey,
+  readPublicDiscovery,
+} from "@/features/catalog/public-discovery.server";
+import type { PublicListingCard } from "@/features/catalog/public-discovery-model";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export async function generateMetadata({
@@ -14,27 +22,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  if (referencePreviewEnabled())
-    return { robots: { index: false, follow: false } };
-  try {
-    const listing = await readPublishedListing(
-      getDatabase(),
-      (await params).id,
-    );
-    if (!listing)
-      return { title: "Treido", robots: { index: false, follow: false } };
-    return {
-      title: listing.title + " | Treido",
-      description: listing.description.slice(0, 160),
-      robots: { index: false, follow: false },
-      openGraph: {
-        title: listing.title,
-        description: listing.description.slice(0, 160),
-      },
-    };
-  } catch {
-    return { title: "Treido", robots: { index: false, follow: false } };
-  }
+  return readListingMetadata((await params).id);
 }
 export default async function Page({
   params,
@@ -50,10 +38,35 @@ export default async function Page({
   if (!validId(id)) notFound();
   const listing = await readPublishedListing(getDatabase(), id);
   if (!listing) notFound();
+  let inventory: PublicInventory | null = null;
+  try {
+    inventory = await readPublicInventory(getDatabase(), id, listing.revision);
+  } catch {
+    console.error("Listing inventory unavailable.");
+  }
+  let moreFromSeller: PublicListingCard[] = [];
+  try {
+    moreFromSeller = (
+      await readPublicDiscovery(
+        getDatabase(),
+        { sort: "newest" },
+        {
+          key: publicDiscoveryKey(),
+          sellerId: listing.seller.id,
+          excludeId: listing.id,
+          limit: 4,
+        },
+      )
+    ).items;
+  } catch {
+    console.error("Related seller listings unavailable.");
+  }
   return (
     <PublishedProductDetail
       key={listing.id + "/" + listing.revision}
       listing={listing}
+      inventory={inventory}
+      moreFromSeller={moreFromSeller}
     />
   );
 }

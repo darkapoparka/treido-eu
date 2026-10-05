@@ -13,6 +13,10 @@ import {
   resolveLocale,
 } from "./features/locale/locale";
 
+function isPrivacyEntry(pathname: string) {
+  return /^\/account\/privacy(?:\/(?:data|download))?$/.test(pathname);
+}
+
 function requestHeaders(request: NextRequest) {
   const headers = new Headers(request.headers);
   const preference = resolveLocale({
@@ -34,7 +38,12 @@ const authenticate = clerkMiddleware(
       "x-treido-entry",
       request.nextUrl.pathname + request.nextUrl.search,
     );
-    return NextResponse.next({ request: { headers } });
+    const response = NextResponse.next({ request: { headers } });
+    if (isPrivacyEntry(request.nextUrl.pathname)) {
+      response.headers.set("Cache-Control", "private, no-store");
+      response.headers.append("Vary", "Cookie");
+    }
+    return response;
   },
   { signInUrl: "/sign-in", signUpUrl: "/sign-up" },
 );
@@ -44,8 +53,45 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
     /^\/(app|ops|messages|sign-in|sign-up)(\/|$)/.test(
       request.nextUrl.pathname,
     ) || request.nextUrl.pathname === "/sell";
-  if (!privateEntry || !validateBackendBindings(process.env).ok)
-    return NextResponse.next({ request: { headers: requestHeaders(request) } });
+  const reference =
+    process.env.SHOP_REFERENCE_PREVIEW === "1" &&
+    !process.env.VERCEL &&
+    process.env.VERCEL_ENV !== "production" &&
+    process.env.NODE_ENV !== "production";
+  const buyerEntry =
+    !reference &&
+    (request.nextUrl.pathname === "/" ||
+      /^\/(products|stores|search|saved|following|cart|notifications|minis)(\/|$)/.test(
+        request.nextUrl.pathname,
+      ));
+  const contactEntry =
+    !reference &&
+    /^\/(?:checkout\/reviews|reservations)(\/|$)/.test(
+      request.nextUrl.pathname,
+    );
+  const paymentEntry = /^\/(?:checkout\/payments|orders)(\/|$)/.test(
+    request.nextUrl.pathname,
+  );
+  const privacyEntry = !reference && isPrivacyEntry(request.nextUrl.pathname);
+  if (
+    !(
+      privateEntry ||
+      buyerEntry ||
+      contactEntry ||
+      paymentEntry ||
+      privacyEntry
+    ) ||
+    !validateBackendBindings(process.env).ok
+  ) {
+    const response = NextResponse.next({
+      request: { headers: requestHeaders(request) },
+    });
+    if (privacyEntry) {
+      response.headers.set("Cache-Control", "private, no-store");
+      response.headers.append("Vary", "Cookie");
+    }
+    return response;
+  }
   return authenticate(request, event);
 }
 export const config = {

@@ -65,7 +65,16 @@
     "previewEmpty": "No messages",
     "backInbox": "Back to inbox",
     "signIn": "Sign in",
-    "blocked": "Blocked"
+    "blocked": "Blocked",
+    "notificationUpdates": "Notifications",
+    "replyRecovered": "Your unsent text and original pending request are retained for this account and conversation.",
+    "replyUncertain": "The previous send is not acknowledged here. Its text is frozen. Retry that exact request before writing another message.",
+    "replyRejected": "The request was rejected. Keep its text and explicitly return to editing before preparing a new send.",
+    "replyRetry": "Recover or retry the same message",
+    "replyEditRejected": "Keep text and edit rejected request",
+    "replyAcknowledged": "The original sent message was recovered. No second message was sent.",
+    "replyInvalidRecovery": "The saved reply cannot be read safely. Sending is paused; no replacement request has been created. Keep this tab and review the conversation.",
+    "replyStorageFailed": "Recovery changes could not be saved to browser storage. Keep this tab open. New sends require their retry record to be saved first."
   },
   "bg": {
     "title": "Съобщения",
@@ -133,6 +142,15 @@
     "previewEmpty": "Няма съобщения",
     "backInbox": "Към съобщенията",
     "signIn": "Вход",
-    "blocked": "Блокиран"
+    "blocked": "Блокиран",
+    "notificationUpdates": "Известия",
+    "replyRecovered": "Неизпратеният текст и първоначалната заявка се пазят за този акаунт и разговор.",
+    "replyUncertain": "Предишното изпращане няма потвърждение тук. Текстът е заключен. Повтори точно същата заявка, преди да напишеш друго съобщение.",
+    "replyRejected": "Заявката е отхвърлена. Запази текста и изрично се върни към редактиране, преди да подготвиш ново изпращане.",
+    "replyRetry": "Възстанови или повтори същото съобщение",
+    "replyEditRejected": "Запази текста и редактирай отхвърлената заявка",
+    "replyAcknowledged": "Първоначалното изпратено съобщение е възстановено. Не е изпратено второ съобщение.",
+    "replyInvalidRecovery": "Запазеният отговор не може да бъде прочетен безопасно. Изпращането е спряно; не е създадена нова заявка. Запази този раздел и прегледай разговора.",
+    "replyStorageFailed": "Промените за възстановяване не могат да се запазят в браузъра. Остави този раздел отворен. Ново изпращане изисква първо да се запишат данните за повторен опит."
   }
 }
