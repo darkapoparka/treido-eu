@@ -14,11 +14,34 @@ test("keyboard navigation selects only leaves and searches Bulgarian labels", as
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 793 });
-  await page.goto("/sell?lang=en");
   const root = page
     .getByRole("button")
     .filter({ has: page.getByText("Electronics", { exact: true }) });
+  // focus() and raw keyboard events do not wait for enabled controls. Exercise
+  // the real hydration boundary, then require focus before sending Enter.
+  let resume!: () => void;
+  const scripts = new Promise<void>((resolve) => {
+    resume = resolve;
+  });
+  await page.route("**/_next/static/**", async (route) => {
+    if (route.request().resourceType() === "script") await scripts;
+    await route.continue();
+  });
+  const boundary = root.locator(
+    "xpath=ancestor::fieldset[@data-shop-interactive][1]",
+  );
+  try {
+    await page.goto("/sell?lang=en", { waitUntil: "commit" });
+    await expect(root).toBeDisabled();
+    await expect(boundary).toHaveAttribute("inert", "");
+    await expect(boundary).toHaveAttribute("data-shop-interactive", "false");
+  } finally {
+    resume();
+  }
+  await expect(root).toBeEnabled();
+  await expect(boundary).toHaveAttribute("data-shop-interactive", "true");
   await root.focus();
+  await expect(root).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(
     page.getByRole("heading", { name: "Electronics", exact: true }),
@@ -40,7 +63,9 @@ test("keyboard navigation selects only leaves and searches Bulgarian labels", as
   const phone = page
     .getByRole("button")
     .filter({ has: page.getByText("Телефони", { exact: true }) });
+  await expect(phone).toBeEnabled();
   await phone.focus();
+  await expect(phone).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("h1")).toBeFocused();
   await expect(page.getByLabel("Марка · задължително")).toBeVisible();
