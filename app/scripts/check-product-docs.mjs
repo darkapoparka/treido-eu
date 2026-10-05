@@ -84,6 +84,10 @@ export function localTarget(root, source, href) {
     ? path.resolve(root, path.dirname(source), decoded)
     : path.resolve(root, source);
   if (!inside(root, target)) throw new Error("Link escapes repository");
+  // QA evidence is deliberately local; its presence must not make a public
+  // documentation link pass here and then fail in a clean CI checkout.
+  if (path.relative(root, target).split(path.sep).includes(".qa"))
+    throw new Error("Link targets local QA evidence; use a code path instead");
   return { target, anchor: decodeURIComponent(fragment.join("#")) };
 }
 

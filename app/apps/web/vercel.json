@@ -5,7 +5,8 @@
   "buildCommand": "cd ../.. && corepack pnpm --filter @treido/web build && node scripts/ci/deploy-output.mjs",
   "git": {
     "deploymentEnabled": {
-      "codex/astra-review-2026-10-05": false
+      "codex/astra-review-2026-10-05": false,
+      "main": false
     }
   }
 }

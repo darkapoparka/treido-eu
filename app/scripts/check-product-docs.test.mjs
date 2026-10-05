@@ -71,6 +71,28 @@ test("traversal, encoded traversal, drive and file URLs are rejected", () => {
   assert.equal(inside(root, `${root}-other/file.md`), false);
 });
 
+test("local QA links fail before filesystem lookup in both local and clean checkouts", () => {
+  for (const href of [
+    ".qa/receipt.md",
+    "%2eqa/receipt.md",
+    "docs/../.qa/receipt.md#result",
+    "app/apps/web/.qa/result.md",
+  ]) {
+    assert.throws(
+      () => localTarget(root, "README.md", href),
+      /local QA evidence/,
+    );
+  }
+  assert.throws(
+    () => localTarget(root, "docs/guide.md", "../.qa/receipt.md"),
+    /local QA evidence/,
+  );
+  assert.equal(
+    localTarget(root, "README.md", "docs/audit/review.md").target,
+    path.join(root, "docs/audit/review.md"),
+  );
+});
+
 test("malformed percent encoding fails rather than bypassing validation", () => {
   assert.throws(() => localTarget(root, "README.md", "%ZZ.md"), URIError);
 });

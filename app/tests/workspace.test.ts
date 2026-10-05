@@ -7,6 +7,18 @@ const root = resolve(import.meta.dirname, "..");
 const web = createRequire(resolve(root, "apps/web/package.json"));
 const mobile = createRequire(resolve(root, "apps/mobile/package.json"));
 
+it("holds review and main Git deployments until a reviewed production release", () => {
+  const config = JSON.parse(
+    readFileSync(resolve(root, "apps/web/vercel.json"), "utf8"),
+  ) as { git?: { deploymentEnabled?: Record<string, boolean> } };
+  // Vercel enables unmatched branches and any matching true rule wins.
+  // The explicit map makes a source merge separate from production activation.
+  expect(config.git?.deploymentEnabled).toEqual({
+    "codex/astra-review-2026-10-05": false,
+    main: false,
+  });
+});
+
 describe("workspace resolution", () => {
   it("resolves one compatible React instance for both clients and renderers", () => {
     const reactPath = realpathSync(web.resolve("react"));
