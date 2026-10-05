@@ -74,3 +74,20 @@ Thumbs.db
 /shopify/downloads/
 **/__pycache__/
 *.pyc
+
+# Local reference/probe assets without qualified public-source rights.
+/apps/web/public/__probe-inter-400.ttf
+/apps/web/public/__probe-inter-600.ttf
+/apps/web/public/__probe-inter-700.ttf
+/apps/web/public/fonts/shop-chemical-geist.woff2
+/apps/web/public/reference-live/preferences/bear.png
+/apps/web/public/reference-live/preferences/bottle.png
+/apps/web/public/reference-live/preferences/camera.png
+/apps/web/public/reference-live/preferences/coat.png
+/apps/web/public/reference-live/preferences/game.png
+/apps/web/public/reference-live/preferences/lotion.png
+/apps/web/public/reference-live/preferences/man.png
+/apps/web/public/reference-live/preferences/robe.png
+/apps/web/public/reference-live/preferences/shoe.png
+/apps/web/public/reference-live/preferences/vest.png
+/apps/web/public/reference-live/preferences/woman.png
