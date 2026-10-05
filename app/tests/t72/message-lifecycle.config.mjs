@@ -13,7 +13,9 @@ export default defineConfig({
     include: [
       "tests/t72/launch.integration.ts",
       "tests/t72/message-lifecycle.integration.ts",
+      "tests/t72/message-dispatch.integration.ts",
       "tests/t72/billing-crash-recovery.test.ts",
+      "tests/t72/billing-legacy-recovery.integration.ts",
       "tests/t72/draft-acceptance.integration.ts",
     ],
     maxWorkers: 1,

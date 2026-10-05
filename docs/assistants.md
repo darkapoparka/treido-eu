@@ -24,11 +24,15 @@ Voice is a mode of Find for me, not another catalogue truth source. Room/outfit 
 
 ## Provider and runtime choice
 
-Planning direction: Vercel AI SDK server tool loop + Vercel AI Gateway + an available OpenAI model chosen against Treido evaluation/cost/latency data. Keep the current Shop interaction shell instead of introducing provider-owned chat UI. Fetch current official model IDs/capabilities and pin compatible package versions during T15a; no model names, prices or package APIs are inferred from older projects.
+The server adapter uses pinned Vercel AI SDK `ai@7.0.127` with AI Gateway for bounded structured text/photo generation and transcription. The existing feature commands, validated marketplace tools and durable run state remain the orchestration boundary. An OpenAI model is activated only through the intended account policy and Treido evaluation/cost/latency evidence. Keep the current Shop interaction shell instead of introducing provider-owned chat UI; model names, prices and account capabilities are checked against current provider facts.
 
 The official [AI SDK agent reference](https://ai-sdk.dev/docs/reference/ai-sdk-core/tool-loop-agent) supplies the reusable tool-loop pattern; [AI Gateway SDK/API guidance](https://vercel.com/docs/ai-gateway/sdks-and-apis) supplies routing options. Direct [OpenAI Agents SDK](https://developers.openai.com/api/docs/guides/agents/define-agents) is a supported alternative if later handoffs or OpenAI-specific capabilities justify it. Start with one orchestration stack and one server-owned tool contract. No reason exists to run two agent loops for every shopping query.
 
-Gateway/provider credentials remain server-side. Local and hosted authentication are qualified for the intended account/environment; declared account availability is not a working binding. No provider package or credential is installed/copied by this documentation task.
+Gateway/provider credentials remain server-side. Local and hosted authentication must be qualified for the intended account/environment; declared account availability is not a working binding. The SDK transport captures exact Gateway generation metadata before validating output, disables automatic retries, bounds bytes/time/tokens, and preserves unknown charge reservations when authoritative reconciliation is unavailable. Transcription without exact supported generation correlation cannot be treated as free or settled.
+
+Usage reconciliation is independent of proposal success: authoritative terminal usage for the exact generation, model and provider can settle a billed truncated, filtered or failed response while that response remains unusable as shopping output. Unknown or mismatched evidence retains the reservation. Additive `0051_assistant_voice_usage` lets the existing scheduler and executor reconcile voice runs through the same consent, policy, job-lease and exact-generation checks; it does not authorize another inference call.
+
+The execution route emits advisory progress followed by one validated final command acknowledgement. The browser validates frame order, actual bytes and UTF-8; cancellation/interrupted streams preserve the original durable request for recovery. Raw unvalidated model tokens are not rendered. Product-mode `/assistant` and `/minis/sol` map to Find for me, and `/minis/look` maps to Photo Match, retaining supported filters and the reference-only original rendering.
 
 ## Data and tool loop
 

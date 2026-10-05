@@ -17,7 +17,7 @@ import { mediaEffectAdapter } from "./media-adapter.server";
 import { billingEffectAdapter } from "./billing-adapter.server";
 import { ownSecurityEffect } from "./commands.server";
 export type ClosureExecutionProof = { jobId: string; executionToken: string };
-/** Exactly one external mutation per original effect. Restore/timeout uses provider GET/HEAD only. */
+/** Original effects remain durable; message DELETE retries retain the same immutable object and dispatch barrier. */
 export async function performLifecycleEffect(
   database: SellerDatabase,
   effect: EffectRow,
@@ -84,14 +84,18 @@ export async function performLifecycleEffect(
   );
   if (!claim?.claimed)
     return claim?.confirmed ? ("confirmed" as const) : ("pending" as const);
-  const currentImageLease = async () => {
+  let imageDispatched = false;
+  const currentImageLease = async (dispatch = false) => {
     if (!messageImage) return;
     await inTransaction(database, async (tx) => {
       await tx.client.query(
-        "SELECT treido.account_message_image_io($1::uuid,$2::uuid)",
+        dispatch
+          ? "SELECT treido.account_dispatch_message_image($1::uuid,$2::uuid)"
+          : "SELECT treido.account_message_image_io($1::uuid,$2::uuid)",
         [effect.id, token],
       );
     });
+    imageDispatched = true;
   };
   if (!adapter) {
     // Removal and its confirmation commit together; a crash cannot create another deletion command.
@@ -118,9 +122,12 @@ export async function performLifecycleEffect(
   let outcome: ProviderOutcome;
   try {
     currentSecurity();
+    // Reserve durable dispatch before the first provider IO. This also fences
+    // older workers using the existing account_message_image_io seam.
     await currentImageLease();
     if (messageImage) observation = await adapter.observe();
-    await currentImageLease();
+    // Recheck current authority before DELETE under the existing barrier.
+    await currentImageLease(true);
     outcome =
       observation?.state === "confirmed"
         ? observation
@@ -132,6 +139,21 @@ export async function performLifecycleEffect(
       state: "unknown",
       evidence: { kind: effect.kind, status: "unresolved" },
     };
+  }
+  if (imageDispatched) {
+    // Separate from acknowledgement: a lost lease cannot discard what the
+    // provider actually returned or imply that a rejected hold saved bytes.
+    await inTransaction(database, async (tx) => {
+      await tx.client.query(
+        "SELECT treido.account_observe_message_image($1::uuid,$2::uuid,$3,$4)",
+        [
+          effect.id,
+          token,
+          outcome.state,
+          inputHash({ operationKey: effect.operationKey, ...outcome.evidence }),
+        ],
+      );
+    });
   }
   await inTransaction(database, async (tx) => {
     await tx.client.query(

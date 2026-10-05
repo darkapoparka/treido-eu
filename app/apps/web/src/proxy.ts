@@ -14,7 +14,15 @@ import {
 } from "./features/locale/locale";
 
 function isPrivacyEntry(pathname: string) {
-  return /^\/account\/privacy(?:\/(?:data|download))?$/.test(pathname);
+  return /^\/account\/privacy(?:\/(?:data|download|preferences|security|closure|promotions))?$/.test(
+    pathname,
+  );
+}
+
+function isSessionApi(pathname: string) {
+  return /^\/api\/(?:seller-media|message-attachments|assistants\/(?:runs|media))(?:\/|$)/.test(
+    pathname,
+  );
 }
 
 function requestHeaders(request: NextRequest) {
@@ -66,20 +74,23 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
       ));
   const contactEntry =
     !reference &&
-    /^\/(?:checkout\/reviews|reservations)(\/|$)/.test(
-      request.nextUrl.pathname,
-    );
+    (request.nextUrl.pathname === "/checkout" ||
+      /^\/(?:checkout\/reviews|reservations)(\/|$)/.test(
+        request.nextUrl.pathname,
+      ));
   const paymentEntry = /^\/(?:checkout\/payments|orders)(\/|$)/.test(
     request.nextUrl.pathname,
   );
   const privacyEntry = !reference && isPrivacyEntry(request.nextUrl.pathname);
+  const sessionApi = !reference && isSessionApi(request.nextUrl.pathname);
   if (
     !(
       privateEntry ||
       buyerEntry ||
       contactEntry ||
       paymentEntry ||
-      privacyEntry
+      privacyEntry ||
+      sessionApi
     ) ||
     !validateBackendBindings(process.env).ok
   ) {
@@ -95,5 +106,11 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
   return authenticate(request, event);
 }
 export const config = {
-  matcher: ["/((?!api|_next|favicon.ico|robots.txt|sitemap.xml|fonts/).*)"],
+  matcher: [
+    "/((?!api|_next|favicon.ico|robots.txt|sitemap.xml|fonts/).*)",
+    "/api/seller-media/:path*",
+    "/api/message-attachments/:path*",
+    "/api/assistants/runs",
+    "/api/assistants/media/:path*",
+  ],
 };

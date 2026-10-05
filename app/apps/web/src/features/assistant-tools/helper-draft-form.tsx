@@ -56,7 +56,7 @@ export function HelperDraftForm({
             selection.draft.sellerId +
             "/listings/" +
             selection.draft.id +
-            "?lang=" +
+            "/edit?lang=" +
             locale
           }
         >

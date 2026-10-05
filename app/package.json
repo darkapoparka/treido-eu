@@ -27,7 +27,7 @@
     "ci:format": "prettier --check package.json apps/web/tsconfig.ci.json scripts/ci tests/workspace.test.ts ../.github/workflows/ci.yml",
     "ci:lint": "pnpm --filter @treido/web exec eslint src scripts/dev-preview.mjs scripts/preview-options.mjs scripts/preview-options.test.mjs --max-warnings=0 && eslint packages/contracts/src scripts/ci tests/workspace.test.ts --max-warnings=0",
     "ci:types": "pnpm --filter @treido/contracts typecheck && pnpm --filter @treido/web exec next typegen && pnpm --filter @treido/web exec tsc --noEmit --incremental false -p tsconfig.ci.json",
-    "test:ci": "node --test scripts/ci/production-output.test.mjs",
+    "test:ci": "node --test scripts/ci/production-output.test.mjs scripts/ci/dependency-output.test.mjs",
     "ci:verify-output": "node scripts/ci/production-output.mjs"
   },
   "devDependencies": {

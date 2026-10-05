@@ -57,24 +57,39 @@ beforeEach(() => {
     evidence: { status: "deleted" },
   });
 });
-it("observes and retries idempotent deletion only after the genuine effect claim and two current checks", async () => {
+it("observes and retries exact-object deletion only after a genuine claim and durable dispatch", async () => {
   expect(await performLifecycleEffect(database, effect, proof)).toBe(
     "confirmed",
   );
   expect(
-    calls.query.mock.calls.filter(([sql]) =>
-      sql.includes("account_message_image_io"),
+    calls.query.mock.calls.filter(
+      ([sql]) =>
+        sql.includes("account_message_image_io") ||
+        sql.includes("account_dispatch_message_image"),
     ),
   ).toHaveLength(2);
   expect(calls.query.mock.invocationCallOrder[0]).toBeLessThan(
     calls.observe.mock.invocationCallOrder[0],
   );
   expect(calls.execute).toHaveBeenCalledOnce();
+  expect(
+    calls.query.mock.calls.findIndex(([sql]) =>
+      sql.includes("account_dispatch_message_image"),
+    ),
+  ).toBeGreaterThan(0);
+  expect(
+    calls.query.mock.calls.findIndex(([sql]) =>
+      sql.includes("account_observe_message_image"),
+    ),
+  ).toBeLessThan(
+    calls.query.mock.calls.findIndex(([sql]) =>
+      sql.includes("account_record_effect"),
+    ),
+  );
 });
-it("a changed hold after observation prevents DELETE and cannot record erased", async () => {
-  let checks = 0;
+it("a failed final authority recheck prevents DELETE and cannot record erased", async () => {
   calls.query.mockImplementation(async (sql: string) => {
-    if (sql.includes("account_message_image_io") && ++checks === 2)
+    if (sql.includes("account_dispatch_message_image"))
       throw Error("Current hold");
     return {
       rows: sql.includes("account_claim_effect")
@@ -84,6 +99,11 @@ it("a changed hold after observation prevents DELETE and cannot record erased", 
   });
   expect(await performLifecycleEffect(database, effect, proof)).toBe("unknown");
   expect(calls.execute).not.toHaveBeenCalled();
+  expect(
+    calls.query.mock.calls.some(([sql]) =>
+      sql.includes("account_observe_message_image"),
+    ),
+  ).toBe(true);
   expect(
     calls.query.mock.calls.find(([sql]) =>
       sql.includes("account_record_effect"),
@@ -101,4 +121,23 @@ it("a denied job claim makes no storage IO, including HEAD", async () => {
   expect(await performLifecycleEffect(database, effect, proof)).toBe("pending");
   expect(calls.observe).not.toHaveBeenCalled();
   expect(calls.execute).not.toHaveBeenCalled();
+});
+
+it("retains the real provider fact before an expired acknowledgement rejects", async () => {
+  calls.query.mockImplementation(async (sql: string) => {
+    if (sql.includes("account_record_effect")) throw Error("Expired lease");
+    return {
+      rows: sql.includes("account_claim_effect")
+        ? [{ claim: { claimed: true, execute: false } }]
+        : [],
+    };
+  });
+  await expect(performLifecycleEffect(database, effect, proof)).rejects.toThrow(
+    "Expired lease",
+  );
+  expect(
+    calls.query.mock.calls.find(([sql]) =>
+      sql.includes("account_observe_message_image"),
+    )?.[1][2],
+  ).toBe("confirmed");
 });

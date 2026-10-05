@@ -41,7 +41,7 @@ beforeAll(async () => {
   vi.stubGlobal("fetch", async () => {
     throw Error("No external provider IO in native lifecycle tests");
   });
-  native = await startLaunchCluster({ messageLifecycle: true });
+  native = await startLaunchCluster({ messageImageDispatch: true });
   context = {
     database: createDatabase(native.runtime),
     admin: native.admin,
@@ -77,7 +77,7 @@ async function hold(f: Awaited<ReturnType<typeof fixture>>, imageId: string) {
 
 it("applies 0048 with finite execute seams and no runtime approval/tombstone authority", async () => {
   expect(native.state.migrations.at(-1)).toBe(
-    "0049_message_image_executor_fence.sql",
+    "0050_message_image_dispatch_barrier.sql",
   );
   const grants = (
     await native.runtime

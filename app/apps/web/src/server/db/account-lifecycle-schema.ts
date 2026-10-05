@@ -374,3 +374,46 @@ export const messageImageExecutionLeases = treido.table(
   },
   (table) => [primaryKey({ columns: [table.effectId, table.effectToken] })],
 );
+
+// Private immutable IO intent and append-only provider facts from additive0050.
+export const messageImageDeletionDispatches = treido.table(
+  "message_image_deletion_dispatches",
+  {
+    effectId: uuid("effect_id").primaryKey(),
+    effectToken: uuid("effect_token").notNull(),
+    attachmentId: uuid("attachment_id").notNull(),
+    storageScope: text("storage_scope").notNull(),
+    objectKey: text("object_key").notNull(),
+    dispatchedAt: timestamp("dispatched_at", {
+      withTimezone: true,
+      mode: "date",
+    })
+      .notNull()
+      .default(sql.raw("clock_timestamp()")),
+  },
+);
+export const messageImageDeletionObservations = treido.table(
+  "message_image_deletion_observations",
+  {
+    effectId: uuid("effect_id").notNull(),
+    effectToken: uuid("effect_token").notNull(),
+    evidenceHash: text("evidence_hash").notNull(),
+    state: text("state").notNull(),
+    observedAt: timestamp("observed_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .default(sql.raw("clock_timestamp()")),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.effectId, table.effectToken, table.evidenceHash],
+    }),
+    check(
+      "message_image_deletion_evidence_hash",
+      sql.raw("evidence_hash ~ '^[0-9a-f]{64}$'"),
+    ),
+    check(
+      "message_image_deletion_observation_state",
+      sql.raw("state IN('confirmed','unknown','blocked')"),
+    ),
+  ],
+);

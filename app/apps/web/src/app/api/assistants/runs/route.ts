@@ -11,6 +11,7 @@ import {
   INPUT_LIMITS,
 } from "../../../../features/assistant-runs/model";
 import { changeAssistantInput } from "../../../../features/assistant-runs/commands.server";
+import { assistantRunStream } from "../../../../features/assistant-runs/run-stream.server";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
@@ -31,17 +32,20 @@ export async function POST(request: Request) {
     const command = parseInputCommand(raw);
     if (command.operation.kind !== "execute")
       throw new SellerError("INVALID_INPUT");
-    const identity = await assistantInputIdentity(),
-      value = await changeAssistantInput(
-        getDatabase(),
-        identity,
-        command,
-        assistantInputIdentity,
-        request.signal,
-      );
-    return Response.json(
-      { ok: true, data: { subject: identity.subject, value } },
-      { headers: { "cache-control": "private, no-store" } },
+    const identity = await assistantInputIdentity();
+    return assistantRunStream(
+      async (signal) => {
+        const value = await changeAssistantInput(
+          getDatabase(),
+          identity,
+          command,
+          assistantInputIdentity,
+          signal,
+        );
+        return { ok: true, data: { subject: identity.subject, value } };
+      },
+      inputFailure,
+      request.signal,
     );
   } catch (error) {
     return Response.json(inputFailure(error), {

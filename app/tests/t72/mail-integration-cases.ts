@@ -56,6 +56,7 @@ export function defineMailIntegrationCases(
     const config = invitationMailConfig(
       {
         TREIDO_ENV: "test",
+        TREIDO_APP_ORIGIN: origin,
         RESEND_API_KEY: "re_SyntheticNotARealProviderCredential",
         TREIDO_INVITATION_MAIL_ENV: "test",
         TREIDO_INVITATION_MAIL_APPLICATION_ID: binding.applicationId,

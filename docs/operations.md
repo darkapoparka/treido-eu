@@ -25,7 +25,7 @@ These are proposals, not installed variables. Keep existing `SHOP_REFERENCE_PREV
 
 ## Selected resources and staged qualification
 
-D28 selects Vercel Node/Fluid, Neon PostgreSQL, Clerk, private R2, Resend and Sentry; D29 selects Inngest for effects. This is an engineering target, not an assertion that resources exist. Record non-secret account/project/environment/resource identities, owner, region/processor settings, callback origins, service limits and spending alerts when the consuming task binds them. Keep keys in approved secret storage. T04a initially needs only Clerk and Neon plus the application origin; an unbound mail/storage/job provider does not block pure policies or the auth/database slice.
+D28 selects Vercel Node/Fluid, Neon PostgreSQL, Clerk, Resend and Sentry; D29 selects Inngest for effects and D32 adopts the existing private Neon Object Storage adapter for launch integration. These engineering choices do not assert that production resources are qualified. Record non-secret account/project/environment/resource identities, owner, region/processor settings, callback origins, service limits and spending alerts when the consuming task binds them. Keep keys in approved secret storage. T04a initially needs only Clerk and Neon plus the application origin; an unbound mail/storage/job provider does not block pure policies or the auth/database slice.
 
 | Consumer | Required evidence before integration is called qualified |
 |---|---|

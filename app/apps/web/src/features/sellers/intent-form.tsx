@@ -38,7 +38,7 @@ export function SignupIntentForm({
         : result.data.intent === "personal"
           ? `/sell?lang=${language}`
           : result.data.intent === "buy"
-            ? "/"
+            ? `/?lang=${language}`
             : `/app?lang=${language}`,
     );
   }, [result, clerk, actorSubject, router, language]);

@@ -22,6 +22,7 @@ const jobs = {
 };
 const env = {
   TREIDO_ENV: "test",
+  TREIDO_APP_ORIGIN: jobs.origin,
   TREIDO_INVITATION_MAIL_ENV: "test",
   TREIDO_INVITATION_MAIL_APPLICATION_ID: jobs.applicationId,
   TREIDO_INVITATION_MAIL_JOB_ENV: jobs.environment,
@@ -96,6 +97,60 @@ describe("Resend invitation adapter (all HTTP mocked)", () => {
     expect(Object.keys(messages.en).sort()).toEqual(
       Object.keys(messages.bg).sort(),
     );
+  });
+  it("keeps invitation links on the browser app when the signed job callback is tunneled", () => {
+    const browserOrigin = "http://127.0.0.1:6419";
+    const callbackJobs = {
+      ...jobs,
+      origin: "https://restricted-callback.example.test",
+    };
+    const developmentEnv = {
+      ...env,
+      TREIDO_ENV: "development",
+      TREIDO_INVITATION_MAIL_ENV: "development",
+      TREIDO_APP_ORIGIN: browserOrigin,
+      TREIDO_INVITATION_MAIL_ORIGIN: browserOrigin,
+    };
+    const browserConfig = invitationMailConfig(developmentEnv, callbackJobs)!;
+    expect(browserConfig.origin).toBe(browserOrigin);
+    expect(
+      invitationMailPayload(
+        browserConfig,
+        {
+          id: deliveryId,
+          recipient: payload.to[0],
+          language: "en",
+          sellerName: "Owned development seller",
+          expiresAt: new Date("2026-10-12Z"),
+        },
+        deliveryId,
+      ).text,
+    ).toContain(`${browserOrigin}/app/invitations/${deliveryId}`);
+    expect(
+      invitationMailConfig(
+        {
+          ...developmentEnv,
+          TREIDO_INVITATION_MAIL_ORIGIN: callbackJobs.origin,
+        },
+        callbackJobs,
+      ),
+    ).toBeNull();
+    expect(
+      invitationMailConfig(
+        { ...developmentEnv, TREIDO_APP_ORIGIN: "" },
+        callbackJobs,
+      ),
+    ).toBeNull();
+    expect(
+      invitationMailConfig(
+        {
+          ...developmentEnv,
+          TREIDO_ENV: "production",
+          TREIDO_INVITATION_MAIL_ENV: "production",
+        },
+        callbackJobs,
+      ),
+    ).toBeNull();
   });
   it("uses a stable key, fixed API and bounded timeout, with no implicit retry", async () => {
     const request = vi

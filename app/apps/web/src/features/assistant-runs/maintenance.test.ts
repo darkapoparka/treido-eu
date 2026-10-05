@@ -73,6 +73,8 @@ it("only already emitted, originally owned usage is eligible; expiry cannot act 
   ).rejects.toThrow("FORBIDDEN");
   expect(query.mock.calls[3][0]).toContain("r.emission_started_at IS NOT NULL");
   expect(query.mock.calls[3][0]).toContain("b.application_id=$3");
+  expect(query.mock.calls[3][0]).toContain("r.provider_id IS NOT NULL");
+  expect(query.mock.calls[3][0]).not.toContain("r.mode<>'voice'");
   query
     .mockReset()
     .mockResolvedValueOnce({ rows: [{ ready: true }] })

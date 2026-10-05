@@ -5,6 +5,7 @@ import { SellerFollowButton } from "../library/controls";
 import { useState, useTransition, type FormEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useLocale as useNavigationLocale } from "../locale/provider";
 import {
   categoryRoots,
   getCategory,
@@ -79,6 +80,7 @@ function MarketplaceContent({
     t = useTranslations("marketplace"),
     router = useRouter();
   const libraryCopy = useTranslations("library");
+  const { messages: navigationMessages } = useNavigationLocale();
   const cartText = useTranslations("buyerCart");
   const pathname = usePathname(),
     params = useSearchParams();
@@ -181,6 +183,12 @@ function MarketplaceContent({
           <Icon name="storefront" />
         </SourceLink>
         {!seller && <BrowseScopeControl />}
+        {home && (
+          <SourceLink className="pill" href={"/deals?lang=" + locale}>
+            <Icon name="tag" filled />
+            {navigationMessages.navigation.deals}
+          </SourceLink>
+        )}
         <SourceLink className="pill" href={"/cart?lang=" + locale}>
           {cartText("title")}
         </SourceLink>
@@ -200,6 +208,12 @@ function MarketplaceContent({
           <Icon name="storefront" />
           {libraryCopy("following")}
         </SourceLink>
+        {home && (
+          <SourceLink className="pill" href={"/minis?lang=" + locale}>
+            <Icon name="minis" filled />
+            {navigationMessages.navigation.minis}
+          </SourceLink>
+        )}
         <SourceLink className="pill" href={"/messages?lang=" + locale}>
           <Icon name="chat-round" />
           {t("messages")}

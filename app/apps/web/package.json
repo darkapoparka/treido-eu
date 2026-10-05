@@ -19,6 +19,7 @@
     "@opentelemetry/api": "1.9.1",
     "@stripe/stripe-js": "10.0.0",
     "@treido/contracts": "workspace:*",
+    "ai": "7.0.127",
     "aws4fetch": "1.0.20",
     "drizzle-orm": "0.45.3",
     "inngest": "4.21.0",

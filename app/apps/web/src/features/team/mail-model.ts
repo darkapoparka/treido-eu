@@ -40,6 +40,8 @@ export function invitationMailConfig(
     .filter(Boolean)
     .map(normalizeRecipient);
   const environment = env.TREIDO_ENV;
+  // Invitation links go to the browser app, never the path-restricted job callback.
+  const origin = env.TREIDO_APP_ORIGIN ?? "";
   if (
     !sender ||
     sender.split("@")[1] !== domain ||
@@ -50,7 +52,8 @@ export function invitationMailConfig(
     env.TREIDO_INVITATION_MAIL_ENV !== environment ||
     env.TREIDO_INVITATION_MAIL_APPLICATION_ID !== jobs.applicationId ||
     env.TREIDO_INVITATION_MAIL_JOB_ENV !== jobs.environment ||
-    env.TREIDO_INVITATION_MAIL_ORIGIN !== jobs.origin ||
+    !origin ||
+    env.TREIDO_INVITATION_MAIL_ORIGIN !== origin ||
     env.TREIDO_INVITATION_MAIL_PURPOSE !== MAIL_PURPOSE ||
     !/^[a-z][a-z0-9-]{1,79}$/.test(jobs.applicationId) ||
     !/^[a-z][a-z0-9-]{1,63}$/.test(jobs.environment) ||
@@ -69,9 +72,9 @@ export function invitationMailConfig(
   )
     return null;
   try {
-    const url = new URL(jobs.origin);
+    const url = new URL(origin);
     if (
-      url.origin !== jobs.origin ||
+      url.origin !== origin ||
       url.username ||
       url.password ||
       (environment === "production" || environment === "preview"
@@ -89,7 +92,7 @@ export function invitationMailConfig(
     environment: environment as InvitationMailConfig["environment"],
     applicationId: jobs.applicationId,
     jobEnvironment: jobs.environment,
-    origin: jobs.origin,
+    origin,
     sender,
     domain,
     domainId: env.TREIDO_INVITATION_MAIL_DOMAIN_ID!,

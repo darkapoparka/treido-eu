@@ -9,6 +9,10 @@ import {
 
 try {
   const options = platformOptions(process.env, process.argv.slice(2));
+  if (!options.mediaConfigured)
+    console.log(
+      "Local auth/database development only: media providers are unbound; media operations remain unavailable.",
+    );
   await assertPlatformPortFree(options.port);
   const { child } = await spawnPlatformRuntime(options);
   if (options.background) {

@@ -1,4 +1,6 @@
 * text=auto eol=lf
+# Migration 0050 was applied with these exact bytes; retain its checksum.
+apps/web/migrations/0050_message_image_dispatch_barrier.sql -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 *.png binary
 *.jpg binary
 

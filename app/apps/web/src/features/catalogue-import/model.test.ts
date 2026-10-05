@@ -1,7 +1,29 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { existsSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { parseCsv, csvCell, csvDocument, CSV_COLUMNS } from "./csv";
-import { validateImportRow, importCommand } from "./model";
+import { validateImportRow, importCommand, type ImportView } from "./model";
 import { parseWorkspaceContinuation } from "../sellers/workspace-continuation";
+const navigation = vi.hoisted(() => ({ locale: "bg" }));
+vi.mock("next-intl", () => ({
+  useLocale: () => navigation.locale,
+  useTranslations: () => (key: string) => key,
+}));
+vi.mock("@clerk/nextjs", () => ({ useClerk: () => ({ user: null }) }));
+vi.mock("../messaging/use-inbox-refresh", () => ({
+  useInboxRefresh: (initial: ImportView) => ({
+    data: initial,
+    status: "ready",
+    refresh: vi.fn(),
+  }),
+}));
+vi.mock("./actions", () => ({
+  readCatalogueImportAction: vi.fn(),
+  changeCatalogueImportAction: vi.fn(),
+  exportImportReportAction: vi.fn(),
+}));
+import { CatalogueImportDetail } from "./detail";
 const row = {
   external_id: "phone-1",
   title: "Телефон",
@@ -22,6 +44,63 @@ const row = {
   sku: "PHONE-1",
   options_json: '{"Color":"Blue"}',
 };
+describe("imported draft navigation", () => {
+  it.each(["bg", "en"])(
+    "opens the created draft at the existing editor route in %s",
+    (locale) => {
+      navigation.locale = locale;
+      const sellerId = "10000000-0000-4000-8000-000000000001";
+      const draftId = "10000000-0000-4000-8000-000000000002";
+      const initial: ImportView = {
+        id: "10000000-0000-4000-8000-000000000003",
+        sellerId,
+        name: "Seller-uploaded catalogue.csv",
+        state: "completed",
+        revision: 1,
+        total: 1,
+        created: 1,
+        ready: 0,
+        invalid: 0,
+        selected: 0,
+        error: null,
+        createdAt: "2026-10-05T00:00:00.000Z",
+        rows: [
+          {
+            ...validateImportRow(row, 1),
+            selected: false,
+            state: "created",
+            listingId: draftId,
+          },
+        ],
+        after: 0,
+        nextAfter: null,
+        rowLimit: 1000,
+        draftsRemaining: 10,
+        canManage: true,
+        uploaded: [0],
+        sourceBytes: 100,
+        sourceHash: "a".repeat(64),
+      };
+      const markup = renderToStaticMarkup(
+        createElement(CatalogueImportDetail, {
+          initial,
+          actorSubject: "test-seller",
+        }),
+      );
+      const base = `/app/sellers/${sellerId}/listings/${draftId}`;
+      expect(markup).toContain(`href="${base}/edit?lang=${locale}"`);
+      expect(markup).not.toContain(`href="${base}?lang=${locale}"`);
+      expect(
+        existsSync(
+          new URL(
+            "../../app/app/sellers/[sellerId]/listings/[draftId]/edit/page.tsx",
+            import.meta.url,
+          ),
+        ),
+      ).toBe(true);
+    },
+  );
+});
 describe("business CSV parsing and row contracts", () => {
   it("round trips Bulgarian, quoted commas, escaped quotes, BOM and multiline fields", () => {
     const csv = csvDocument(CSV_COLUMNS, [

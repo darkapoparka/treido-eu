@@ -7,6 +7,7 @@ import { readPrivatePage } from "@/features/sellers/page-context.server";
 import { readSignupIntent } from "@/features/sellers/setup.server";
 import { listOwnedSellers } from "@/features/sellers/persistence.server";
 import { startPersonalAction } from "@/features/sellers/actions";
+import { SessionExit } from "@/features/sellers/session-exit";
 import { getDatabase } from "@/server/db/database";
 import styles from "@/features/sellers/workspace.module.css";
 import admin from "@/features/sellers/admin.module.css";
@@ -86,6 +87,7 @@ export default async function MySellingPage({
             : "You have no seller accounts yet. Start with your first draft."}
         </p>
       )}
+      <SessionExit actorSubject={identity.subject} language={language} />
     </AdminHome>
   );
 }

@@ -5,7 +5,10 @@ import type { Locale } from "./locale";
 export async function clerkLocalization(locale: Locale) {
   if (locale === "bg") {
     const { bgBG } = await import("@clerk/localizations/bg-BG");
-    return bgBG;
+    return {
+      ...bgBG,
+      formFieldInputPlaceholder__signUpPassword: "Създайте парола",
+    };
   }
   const { enUS } = await import("@clerk/localizations/en-US");
   return enUS;

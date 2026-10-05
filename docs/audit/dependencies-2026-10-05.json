@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-05T03:53:15.618Z",
+  "checkedAt": "2026-10-05T18:26:19.7445901Z",
   "source": "Current manifest declarations and byte hashes; full dependency audit remains failed.",
-  "scope": "T71 exact root test-type addition; existing native/web runtime pins and historical evidence retained.",
+  "scope": "T71 test-type addition and October 5 owner-directed AI SDK integration; other native/web runtime pins and historical evidence retained.",
   "declarations": [
     {
       "manifest": "app/package.json",
@@ -338,6 +338,12 @@
       "section": "devDependencies",
       "name": "typescript",
       "pin": "6.0.3"
+    },
+    {
+      "manifest": "app/apps/web/package.json",
+      "section": "dependencies",
+      "name": "ai",
+      "pin": "7.0.127"
     }
   ],
   "runtime": {
@@ -346,8 +352,8 @@
     "declaredPackageManager": "pnpm@12.3.4"
   },
   "manifestHashes": {
-    "app/package.json": "1e99dc18e25bbc54c2e3af8af2be6e5f8d053ea82f1c86bfff2855247570b6fa",
-    "app/apps/web/package.json": "1a7c3bdb402913a93894732e5dcb7ae2093a8a36140835e99e1be58d91abe338",
+    "app/package.json": "7ed9100bd5ba0b21d3e7464e2f5a741c346d7b61ed3786cca5d4654ab4ce1e7f",
+    "app/apps/web/package.json": "5b5308a10b77fdc3943e20aff866aad25d22e239e718e7b1405a6f4882488ef6",
     "app/apps/mobile/package.json": "e7bc2dcee0a74273f4e0500708fb510bff0e30512ed7aa5382ab70455c84e023",
     "app/packages/contracts/package.json": "5ddb35d7de699d52eb1e1d9fbf1e15c91b6106ab81f089a62f866e83d5d39673"
   },
@@ -356,5 +362,5 @@
   "latestRegistryRechecked": false,
   "installedTreeRequalified": false,
   "auditPassed": false,
-  "qualificationNote": "T71 records separate exact frozen-install and scoped decoder-consumer checks. Neither is complete native/runtime or production acceptance."
+  "qualificationNote": "T71 frozen-install and scoped consumer checks remain separate from the AI SDK adapter checks and pending final hosted build. Raw audit remains failed; current declarations do not establish production acceptance."
 }

@@ -356,7 +356,7 @@ export function CatalogueImportDetail({
                                 sellerId +
                                 "/listings/" +
                                 row.listingId +
-                                "?lang=" +
+                                "/edit?lang=" +
                                 locale
                               }
                             >

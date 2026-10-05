@@ -24,4 +24,18 @@ export async function applyMessageImageLifecycleGrants(client, role) {
       `REVOKE ALL ON treido.message_image_execution_leases FROM PUBLIC, ${r}`,
     );
   }
+  if (
+    (
+      await client.query(
+        "SELECT to_regclass('treido.message_image_deletion_dispatches') AS name",
+      )
+    ).rows[0].name
+  ) {
+    await client.query(
+      `REVOKE ALL ON treido.message_image_deletion_dispatches,treido.message_image_deletion_observations FROM PUBLIC, ${r}`,
+    );
+    await client.query(
+      `GRANT EXECUTE ON FUNCTION treido.account_dispatch_message_image(uuid,uuid),treido.account_observe_message_image(uuid,uuid,text,text) TO ${r}`,
+    );
+  }
 }

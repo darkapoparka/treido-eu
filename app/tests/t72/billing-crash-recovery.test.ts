@@ -52,9 +52,14 @@ beforeAll(async () => {
   console.log("Owned native billing crash fixture:", native.state.directory);
 }, 90000);
 afterAll(async () => {
-  await native?.stop();
-  vi.unstubAllGlobals();
-});
+  try {
+    await native?.stop();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+  // Match the fixture's finite 60s pg_ctl shutdown plus its 12s query bound
+  // and pool-drain margin. A measured Windows checkpoint took 11.1s.
+}, 75000);
 beforeEach(() => {
   adapters.recent = true;
 });

@@ -1,5 +1,12 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import {
+  createGateway,
+  generateText,
+  jsonSchema,
+  Output,
+  transcribe,
+} from "ai";
 import { requireBackendBindings } from "../../server/config/backend-bindings.server";
 import { SellerError } from "../sellers/errors";
 import {
@@ -94,8 +101,8 @@ export async function boundedProviderJson(
     throw new SellerError("NOT_AVAILABLE");
   }
 }
-/** Fixed official REST endpoints; no retries, external URLs, fallback models,
- * provider tools or client credentials. Tests supply an explicit isolated transport. */
+/** AI SDK schema generation and fixed official usage/transcription endpoints.
+ * No retries, external URLs, fallback models, provider tools or client keys. */
 export function createGatewayAdapter(
   policy: RuntimePolicy,
   key: string,
@@ -144,29 +151,53 @@ export function createGatewayAdapter(
       if (input.mode === "voice") {
         if (!input.bytes || input.mediaType !== "audio/wav")
           throw new SellerError("INVALID_INPUT");
-        const response = await transport(
-          GATEWAY + "/v4/ai/transcription-model",
-          {
-            method: "POST",
-            redirect: "error",
-            cache: "no-store",
-            signal: abort,
-            headers: {
-              ...headers,
-              "ai-gateway-protocol-version": "0.0.1",
-              "ai-transcription-model-specification-version": "4",
-              "ai-model-id": model,
-            },
-            body: JSON.stringify({
-              audio: input.bytes.toString("base64"),
-              mediaType: "audio/wav",
-            }),
+        let capturedId: string | null = null;
+        const sdk = createGateway({
+          apiKey: key,
+          fetch: async (url, init) => {
+            const target = url instanceof Request ? url.url : String(url);
+            if (
+              target !== GATEWAY + "/v4/ai/transcription-model" ||
+              init?.method !== "POST"
+            )
+              throw new SellerError("NOT_AVAILABLE");
+            const response = await transport(url, {
+              ...init,
+              redirect: "error",
+              cache: "no-store",
+              signal: abort,
+            });
+            const raw = record(await boundedProviderJson(response));
+            const metadata = record(raw.providerMetadata ?? {});
+            const gateway = record(metadata.gateway ?? {});
+            // Only the exact Gateway correlation is eligible for later lookup.
+            // Transcripts, provider IDs, headers and estimates are never proof.
+            if (generation(gateway.generationId)) {
+              capturedId = gateway.generationId;
+              await onGeneration(capturedId);
+            }
+            if (
+              raw.error ||
+              (Array.isArray(raw.warnings) && raw.warnings.length)
+            )
+              throw new SellerError("NOT_AVAILABLE");
+            return Response.json(raw);
           },
-        );
-        const result = record(await boundedProviderJson(response));
+        });
+        const result = await transcribe({
+          model: sdk.transcriptionModel(model),
+          audio: input.bytes,
+          maxRetries: 0,
+          abortSignal: abort,
+          providerOptions: {
+            gateway: {
+              only: policy.config.providers,
+              disallowPromptTraining: true,
+            },
+          },
+        });
         if (
-          result.error ||
-          (Array.isArray(result.warnings) && result.warnings.length) ||
+          result.warnings.length ||
           typeof result.durationInSeconds !== "number" ||
           !Number.isFinite(result.durationInSeconds) ||
           result.durationInSeconds <= 0 ||
@@ -179,8 +210,7 @@ export function createGatewayAdapter(
         } catch {
           throw new SellerError("NOT_AVAILABLE");
         }
-        // No documented transcription generation ID is invented. Its spending
-        // remains conservatively reserved until independently qualified evidence.
+        // Without exact metadata, spending remains conservatively reserved.
         return {
           proposal: providerProposal(
             {
@@ -193,7 +223,7 @@ export function createGatewayAdapter(
             "voice",
             input.criteria,
           ),
-          generationId: null,
+          generationId: capturedId,
         };
       }
       if (
@@ -209,98 +239,114 @@ export function createGatewayAdapter(
       });
       if (Buffer.byteLength(system + prompt, "utf8") > policy.config.inputBytes)
         throw new SellerError("INVALID_INPUT");
-      const content =
-        input.mode === "photo"
-          ? [
-              { type: "text", text: prompt },
-              {
-                type: "image_url",
-                image_url: {
-                  url:
-                    "data:image/webp;base64," + input.bytes!.toString("base64"),
-                  detail: "auto",
-                },
-              },
-            ]
-          : prompt;
-      const response = await transport(GATEWAY + "/v1/chat/completions", {
-        method: "POST",
-        redirect: "error",
-        cache: "no-store",
-        signal: abort,
-        headers,
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content },
-          ],
-          stream: false,
-          max_tokens: policy.config.outputTokens,
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              name: "shopping_input",
-              strict: true,
-              schema: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  criteria: { type: "string" },
-                  itemType: { type: ["string", "null"] },
-                  colour: { type: ["string", "null"] },
-                  style: { type: ["string", "null"] },
-                  transcript: { type: "null" },
-                },
-                required: [
-                  "criteria",
-                  "itemType",
-                  "colour",
-                  "style",
-                  "transcript",
-                ],
-              },
-            },
-          },
-          providerOptions: { gateway: { only: policy.config.providers } },
-        }),
+      let capturedId: string | null = null;
+      const sdk = createGateway({
+        apiKey: key,
+        fetch: async (url, init) => {
+          // The SDK cannot expand this run into metadata lookups, remote files,
+          // another origin, another model or another provider operation.
+          const target = url instanceof Request ? url.url : String(url);
+          if (
+            target !== GATEWAY + "/v4/ai/language-model" ||
+            init?.method !== "POST"
+          )
+            throw new SellerError("NOT_AVAILABLE");
+          const response = await transport(url, {
+            ...init,
+            redirect: "error",
+            cache: "no-store",
+            signal: abort,
+          });
+          const raw = record(await boundedProviderJson(response));
+          const metadata = record(raw.providerMetadata ?? {});
+          const gateway = record(metadata.gateway ?? {});
+          const id = generation(gateway.generationId)
+            ? gateway.generationId
+            : null;
+          // Capture the charge correlation before SDK parsing/schema validation,
+          // including refusals, truncated output and malformed model results.
+          if (id) {
+            capturedId = id;
+            await onGeneration(id);
+          }
+          const modelResponse = record(raw.response ?? {});
+          if (
+            !id ||
+            raw.error ||
+            modelResponse.modelId !==
+              policy.config.responseModels[input.mode] ||
+            !Array.isArray(raw.content) ||
+            raw.content.some(
+              (part) =>
+                !["text", "reasoning"].includes(record(part).type as string),
+            ) ||
+            (Array.isArray(raw.warnings) && raw.warnings.length)
+          )
+            throw new SellerError("NOT_AVAILABLE");
+          return Response.json(raw);
+        },
       });
-      const result = record(await boundedProviderJson(response));
-      const id = generation(result.id) ? result.id : null;
-      if (id) await onGeneration(id);
+      const result = await generateText({
+        model: sdk(model),
+        system,
+        messages: [
+          {
+            role: "user",
+            content:
+              input.mode === "photo"
+                ? [
+                    { type: "text", text: prompt },
+                    {
+                      type: "file",
+                      data: input.bytes!,
+                      mediaType: "image/webp",
+                    },
+                  ]
+                : [{ type: "text", text: prompt }],
+          },
+        ],
+        output: Output.object({
+          name: "shopping_input",
+          schema: jsonSchema<Interpretation>({
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              criteria: { type: "string" },
+              itemType: { type: ["string", "null"] },
+              colour: { type: ["string", "null"] },
+              style: { type: ["string", "null"] },
+              transcript: { type: "null" },
+            },
+            required: ["criteria", "itemType", "colour", "style", "transcript"],
+          }),
+        }),
+        maxOutputTokens: policy.config.outputTokens,
+        maxRetries: 0,
+        abortSignal: abort,
+        providerOptions: {
+          gateway: {
+            only: policy.config.providers,
+            disallowPromptTraining: true,
+            zeroDataRetention: true,
+          },
+        },
+      });
       if (
-        !id ||
-        result.error ||
-        result.model !== policy.config.responseModels[input.mode] ||
-        !Array.isArray(result.choices) ||
-        result.choices.length !== 1
+        !capturedId ||
+        result.finishReason !== "stop" ||
+        result.toolCalls.length
       )
         throw new SellerError("NOT_AVAILABLE");
-      const choice = record(result.choices[0]),
-        message = record(choice.message);
-      if (
-        choice.finish_reason !== "stop" ||
-        message.refusal ||
-        message.tool_calls ||
-        typeof message.content !== "string"
-      )
-        throw new SellerError("NOT_AVAILABLE");
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(message.content);
-      } catch {
-        throw new SellerError("NOT_AVAILABLE");
-      }
       return {
-        proposal: providerProposal(parsed, input.mode, input.criteria),
-        generationId: id,
+        proposal: providerProposal(result.output, input.mode, input.criteria),
+        generationId: capturedId,
       };
     },
     async lookupUsage(
       id: string,
       inputMode: InputMode,
     ): Promise<UsageObservation | null> {
-      if (!generation(id) || inputMode === "voice") return null;
+      if (!generation(id) || !policy.config.models[inputMode]) return null;
       const response = await transport(
         GATEWAY + "/v1/generation?id=" + encodeURIComponent(id),
         {
@@ -321,13 +367,15 @@ export function createGatewayAdapter(
         data.model !== policy.config.models[inputMode] ||
         data.is_byok !== false ||
         !policy.config.providers.includes(data.provider_name as string) ||
-        data.finish_reason !== "stop" ||
         typeof data.total_cost !== "number" ||
         !Number.isFinite(data.total_cost) ||
         data.total_cost < 0 ||
         data.total_cost > 10000
       )
         throw new SellerError("NOT_AVAILABLE");
+      // The authenticated generation lookup returns completed generation costs.
+      // A refused/truncated output is unusable, but its exact accepted charge
+      // still settles. Proposal validation and billing evidence are independent.
       const minor = usdUsageMinor(data.total_cost);
       if (!Number.isSafeInteger(minor)) throw new SellerError("NOT_AVAILABLE");
       const observation = {

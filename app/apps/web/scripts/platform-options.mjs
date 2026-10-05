@@ -9,8 +9,13 @@ export class PlatformConfigurationError extends Error {}
 
 /** Declared configuration only. A valid shape is not provider acceptance. */
 export function platformOptions(env = process.env, args = []) {
-  if (args.length > 1 || args.some((arg) => arg !== "--background"))
-    throw new PlatformConfigurationError("Use --background or no arguments.");
+  if (
+    new Set(args).size !== args.length ||
+    args.some((arg) => !["--background", "--allow-unbound-media"].includes(arg))
+  )
+    throw new PlatformConfigurationError(
+      "Use --background and/or --allow-unbound-media, or no arguments.",
+    );
   if (env.VERCEL || env.NODE_ENV === "production")
     throw new PlatformConfigurationError(
       "The development platform is local-only.",
@@ -26,6 +31,7 @@ export function platformOptions(env = process.env, args = []) {
   const backend = validateBackendBindings(resolvedEnv);
   const jobs = validateJobBindings(resolvedEnv);
   const media = validateMediaBindings(resolvedEnv);
+  const allowUnboundMedia = args.includes("--allow-unbound-media");
   if (
     !backend.ok &&
     backend.issues.some((issue) => issue.code === "MASKED_CREDENTIAL")
@@ -36,7 +42,7 @@ export function platformOptions(env = process.env, args = []) {
   const invalid = new Set([
     ...(backend.ok ? [] : backend.issues.map((issue) => issue.variable)),
     ...(jobs.ok ? [] : jobs.missing),
-    ...(media.ok ? [] : media.variables),
+    ...(media.ok || allowUnboundMedia ? [] : media.variables),
   ]);
   if (invalid.size)
     throw new PlatformConfigurationError(
@@ -74,6 +80,7 @@ export function platformOptions(env = process.env, args = []) {
     : {};
   return {
     background,
+    mediaConfigured: media.ok,
     output,
     port,
     origin: origin.origin,

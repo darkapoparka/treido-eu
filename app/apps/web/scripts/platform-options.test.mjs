@@ -77,6 +77,7 @@ test("detached output cannot overwrite the reference or foreground output", () =
 for (const args of [
   ["--unsafe"],
   ["--background", "--background"],
+  ["--allow-unbound-media", "--allow-unbound-media"],
   ["--background", "--port", "6418"],
 ])
   test("rejects unsupported arguments " + args.join(" "), () =>
@@ -124,6 +125,47 @@ test("errors name missing variables, never their values", () => {
     },
   );
 });
+
+test("only the explicit local option permits absent media without creating bindings", () => {
+  const env = { ...configuration };
+  for (const key of Object.keys(env))
+    if (key.startsWith("TREIDO_R2_") || key.startsWith("R2_")) delete env[key];
+  assert.throws(() => platformOptions(env), /Missing or invalid variables/);
+  const result = platformOptions(env, [
+    "--background",
+    "--allow-unbound-media",
+  ]);
+  assert.equal(result.port, 6419);
+  assert.equal(result.background, true);
+  assert.equal(result.mediaConfigured, false);
+  assert.equal(result.env.SHOP_REFERENCE_PREVIEW, "0");
+  assert.equal(result.env.MIGRATION_DATABASE_URL, "");
+  assert.ok(!Object.keys(result.env).some((key) => key.includes("R2")));
+  assert.equal(env.R2_ACCESS_KEY_ID, undefined);
+});
+
+for (const override of [
+  { VERCEL: "1" },
+  { VERCEL_ENV: "production" },
+  { NODE_ENV: "production" },
+  { TREIDO_ENV: "production" },
+  { TREIDO_APP_ORIGIN: "https://platform.example.com" },
+  { DATABASE_URL: "" },
+  { CLERK_SECRET_KEY: "" },
+  { INNGEST_SIGNING_KEY: "" },
+])
+  test(
+    "unbound media option retains the boundary for " +
+      Object.keys(override).join(","),
+    () => {
+      assert.throws(() =>
+        platformOptions(
+          { ...configuration, ...override, R2_SECRET_ACCESS_KEY: "" },
+          ["--allow-unbound-media"],
+        ),
+      );
+    },
+  );
 test("an occupied listener is not taken over", async () => {
   const server = createServer();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));

@@ -28,11 +28,12 @@ const proposal = {
   transcript: null,
 };
 const completion = (change: Record<string, unknown> = {}) => ({
-  id: isolatedGeneration,
-  model: "isolated-text-response",
-  choices: [
-    { finish_reason: "stop", message: { content: JSON.stringify(proposal) } },
-  ],
+  providerMetadata: { gateway: { generationId: isolatedGeneration } },
+  response: { modelId: "isolated-text-response" },
+  content: [{ type: "text", text: JSON.stringify(proposal) }],
+  finishReason: { unified: "stop", raw: "stop" },
+  usage: { inputTokens: { total: 10 }, outputTokens: { total: 20 } },
+  warnings: [],
   ...change,
 });
 beforeEach(() => {
@@ -50,7 +51,7 @@ it("a key-shaped value without the reviewed fingerprint emits nothing", () => {
   ).toThrow("NOT_AVAILABLE");
   expect(transport).not.toHaveBeenCalled();
 });
-it("uses one fixed nonstreaming REST POST with strict schema and provider allowlist", async () => {
+it("uses the real AI SDK for one fixed bounded schema POST with provider allowlist", async () => {
   transport.mockResolvedValue(json(completion()));
   const result = await createGatewayAdapter(
     isolatedPolicy,
@@ -64,7 +65,7 @@ it("uses one fixed nonstreaming REST POST with strict schema and provider allowl
   expect(transport).toHaveBeenCalledTimes(1);
   expect(capture).toHaveBeenCalledWith(isolatedGeneration);
   expect(transport.mock.calls[0][0]).toBe(
-    "https://ai-gateway.vercel.sh/v1/chat/completions",
+    "https://ai-gateway.vercel.sh/v4/ai/language-model",
   );
   const init = transport.mock.calls[0][1]!,
     body = JSON.parse(String(init.body));
@@ -74,22 +75,33 @@ it("uses one fixed nonstreaming REST POST with strict schema and provider allowl
     cache: "no-store",
   });
   expect(body).toMatchObject({
-    model: "isolated/text",
-    stream: false,
-    max_tokens: 200,
-    providerOptions: { gateway: { only: ["isolated"] } },
+    maxOutputTokens: 200,
   });
-  expect(body.response_format.json_schema).toMatchObject({
-    strict: true,
+  expect(body.providerOptions).toEqual({
+    gateway: {
+      only: ["isolated"],
+      disallowPromptTraining: true,
+      zeroDataRetention: true,
+    },
+  });
+  expect(new Headers(init.headers).get("ai-language-model-id")).toBe(
+    "isolated/text",
+  );
+  expect(new Headers(init.headers).get("ai-language-model-streaming")).toBe(
+    "false",
+  );
+  expect(body.responseFormat).toMatchObject({
+    type: "json",
+    name: "shopping_input",
     schema: { additionalProperties: false },
   });
   expect(body).not.toHaveProperty("tools");
   expect(body).not.toHaveProperty("models");
-  expect(body.messages).toHaveLength(2);
+  expect(body.prompt).toHaveLength(2);
 });
 it("returns only sanitized WebP as data content, never a source URL or arbitrary file", async () => {
   transport.mockResolvedValue(
-    json(completion({ model: "isolated-photo-response" })),
+    json(completion({ response: { modelId: "isolated-photo-response" } })),
   );
   await createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
     {
@@ -102,9 +114,18 @@ it("returns only sanitized WebP as data content, never a source URL or arbitrary
     capture,
   );
   const body = JSON.parse(String(transport.mock.calls[0][1]!.body));
-  expect(body.messages[1].content[1].image_url.url).toBe(
-    "data:image/webp;base64,AQI=",
-  );
+  expect(body.providerOptions).toEqual({
+    gateway: {
+      only: ["isolated"],
+      disallowPromptTraining: true,
+      zeroDataRetention: true,
+    },
+  });
+  expect(body.prompt[1].content[1]).toMatchObject({
+    type: "file",
+    mediaType: "image/webp",
+    data: { type: "data", data: "AQI=" },
+  });
   await expect(
     createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
       { mode: "photo", criteria: base, prompt: "", mediaType: "image/webp" },
@@ -140,19 +161,110 @@ it("actual recorded voice uses the dedicated documented protocol and keeps billi
   expect(transport.mock.calls[0][0]).toBe(
     "https://ai-gateway.vercel.sh/v4/ai/transcription-model",
   );
-  expect(transport.mock.calls[0][1]!.headers).toMatchObject({
-    "ai-gateway-protocol-version": "0.0.1",
-    "ai-transcription-model-specification-version": "4",
-    "ai-model-id": "isolated/voice",
-  });
-  expect(JSON.parse(String(transport.mock.calls[0][1]!.body))).toEqual({
+  const sentHeaders = new Headers(transport.mock.calls[0][1]!.headers);
+  expect(sentHeaders.get("ai-transcription-model-specification-version")).toBe(
+    "4",
+  );
+  expect(sentHeaders.get("ai-model-id")).toBe("isolated/voice");
+  const body = JSON.parse(String(transport.mock.calls[0][1]!.body));
+  expect(body).toMatchObject({
     audio: "AQI=",
     mediaType: "audio/wav",
+  });
+  expect(body.providerOptions).toEqual({
+    gateway: { only: ["isolated"], disallowPromptTraining: true },
   });
   expect(result.generationId).toBeNull();
   expect(result.proposal.transcript).toBe("Черна камера");
   expect(capture).not.toHaveBeenCalled();
 });
+it.each([isolatedGeneration, "ambiguous-provider-id", null])(
+  "voice captures only exact Gateway generation metadata: %s",
+  async (id) => {
+    transport.mockResolvedValue(
+      json({
+        text: "Camera",
+        segments: [],
+        language: "en",
+        durationInSeconds: 1,
+        warnings: [],
+        providerMetadata: { gateway: { generationId: id } },
+        id: isolatedGeneration,
+      }),
+    );
+    const result = await createGatewayAdapter(
+      isolatedPolicy,
+      isolatedKey,
+      transport,
+    ).interpret(
+      {
+        mode: "voice",
+        criteria: base,
+        prompt: "",
+        bytes: Buffer.from([1, 2]),
+        mediaType: "audio/wav",
+      },
+      capture,
+    );
+    expect(result.generationId).toBe(id === isolatedGeneration ? id : null);
+    expect(capture).toHaveBeenCalledTimes(id === isolatedGeneration ? 1 : 0);
+    expect(transport).toHaveBeenCalledTimes(1);
+  },
+);
+it("voice persists the exact charge ID before rejecting an invalid transcript without retry", async () => {
+  transport.mockResolvedValue(
+    json({
+      text: "",
+      segments: [],
+      language: "en",
+      durationInSeconds: 1,
+      warnings: [],
+      providerMetadata: { gateway: { generationId: isolatedGeneration } },
+    }),
+  );
+  await expect(
+    createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
+      {
+        mode: "voice",
+        criteria: base,
+        prompt: "",
+        bytes: Buffer.from([1, 2]),
+        mediaType: "audio/wav",
+      },
+      capture,
+    ),
+  ).rejects.toThrow();
+  expect(capture).toHaveBeenCalledWith(isolatedGeneration);
+  expect(transport).toHaveBeenCalledTimes(1);
+});
+it.each(["isolated/voice", "foreign/voice"])(
+  "voice settlement requires exact approved model: %s",
+  async (model) => {
+    transport.mockResolvedValue(
+      json({
+        data: {
+          id: isolatedGeneration,
+          model,
+          provider_name: "isolated",
+          is_byok: false,
+          finish_reason: "stop",
+          total_cost: 0.006,
+          created_at: "2026-10-05",
+        },
+      }),
+    );
+    const operation = createGatewayAdapter(
+      isolatedPolicy,
+      isolatedKey,
+      transport,
+    ).lookupUsage(isolatedGeneration, "voice");
+    if (model === "isolated/voice") {
+      const usage = await operation;
+      expect(usage?.minor).toBe(1);
+      expect(verifiedUsage(usage!)).toBe(true);
+    } else await expect(operation).rejects.toThrow("NOT_AVAILABLE");
+  },
+);
 it.each([
   ["condition=new", "lang=bg"],
   ["minPrice=10", "lang=bg"],
@@ -174,16 +286,14 @@ it.each([
     transport.mockResolvedValue(
       json(
         completion({
-          model: "isolated-photo-response",
-          choices: [
+          response: { modelId: "isolated-photo-response" },
+          content: [
             {
-              finish_reason: "stop",
-              message: {
-                content: JSON.stringify({
-                  ...proposal,
-                  criteria: original + "&" + added,
-                }),
-              },
+              type: "text",
+              text: JSON.stringify({
+                ...proposal,
+                criteria: original + "&" + added,
+              }),
             },
           ],
         }),
@@ -212,13 +322,11 @@ it("photo visual keywords retain the original human hard criteria through the pr
   transport.mockResolvedValue(
     json(
       completion({
-        model: "isolated-photo-response",
-        choices: [
+        response: { modelId: "isolated-photo-response" },
+        content: [
           {
-            finish_reason: "stop",
-            message: {
-              content: JSON.stringify({ ...proposal, criteria: proposed }),
-            },
+            type: "text",
+            text: JSON.stringify({ ...proposal, criteria: proposed }),
           },
         ],
       }),
@@ -248,42 +356,33 @@ it("photo visual keywords retain the original human hard criteria through the pr
 });
 it("refusal, truncated/foreign-model/tool output and hard-filter relaxation never yield a proposal or retry", async () => {
   for (const bad of [
-    completion({ model: "unapproved-response" }),
+    completion({ response: { modelId: "unapproved-response" } }),
     completion({
-      choices: [
+      finishReason: { unified: "length", raw: "length" },
+    }),
+    completion({
+      finishReason: { unified: "content-filter", raw: "content-filter" },
+      content: [],
+    }),
+    completion({
+      content: [
         {
-          finish_reason: "length",
-          message: { content: JSON.stringify(proposal) },
+          type: "tool-call",
+          toolName: "purchase",
+          toolCallId: "forged",
+          input: "{}",
         },
       ],
     }),
     completion({
-      choices: [
+      content: [
         {
-          finish_reason: "stop",
-          message: { refusal: "declined", content: null },
-        },
-      ],
-    }),
-    completion({
-      choices: [
-        {
-          finish_reason: "stop",
-          message: { tool_calls: [], content: JSON.stringify(proposal) },
-        },
-      ],
-    }),
-    completion({
-      choices: [
-        {
-          finish_reason: "stop",
-          message: {
-            content: JSON.stringify({
-              ...proposal,
-              criteria: "q=Sony",
-              listingId: "invented",
-            }),
-          },
+          type: "text",
+          text: JSON.stringify({
+            ...proposal,
+            criteria: "q=Sony",
+            listingId: "invented",
+          }),
         },
       ],
     }),
@@ -385,4 +484,164 @@ it("decimal conversion avoids binary cent overstatement and retains conservative
   expect(usdUsageMinor(1e-7)).toBe(1);
   expect(usdUsageMinor(0)).toBe(0);
   expect(() => usdUsageMinor(Infinity)).toThrow("NOT_AVAILABLE");
+});
+it.each(["text", "photo", "voice"] as const)(
+  "%s BYOK or unproven credential usage is never accepted as a system-funded charge",
+  async (mode) => {
+    const adapter = createGatewayAdapter(
+      isolatedPolicy,
+      isolatedKey,
+      transport,
+    );
+    for (const is_byok of [true, undefined, null, "false"]) {
+      transport.mockReset().mockResolvedValue(
+        json({
+          data: {
+            id: isolatedGeneration,
+            model: isolatedPolicy.config.models[mode],
+            provider_name: "isolated",
+            is_byok,
+            total_cost: 0,
+            finish_reason: "stop",
+          },
+        }),
+      );
+      await expect(
+        adapter.lookupUsage(isolatedGeneration, mode),
+      ).rejects.toThrow("NOT_AVAILABLE");
+      expect(transport).toHaveBeenCalledTimes(1);
+      expect(transport.mock.calls[0][1]?.method).toBe("GET");
+      expect(capture).not.toHaveBeenCalled();
+    }
+  },
+);
+it.each(["length", "content_filter", "error"])(
+  "exact completed billed %s generations settle without another inference",
+  async (finish_reason) => {
+    transport.mockResolvedValue(
+      json({
+        data: {
+          id: isolatedGeneration,
+          model: "isolated/text",
+          provider_name: "isolated",
+          is_byok: false,
+          total_cost: 0.006,
+          created_at: 1,
+          finish_reason,
+        },
+      }),
+    );
+    const usage = await createGatewayAdapter(
+      isolatedPolicy,
+      isolatedKey,
+      transport,
+    ).lookupUsage(isolatedGeneration, "text");
+    expect(usage?.minor).toBe(1);
+    expect(verifiedUsage(usage!)).toBe(true);
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(transport.mock.calls[0][1]?.method).toBe("GET");
+  },
+);
+it("malformed structured output still captures its original charge ID before parsing fails", async () => {
+  transport.mockResolvedValue(
+    json(completion({ content: [{ type: "text", text: "{broken" }] })),
+  );
+  await expect(
+    createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
+      { mode: "text", criteria: base, prompt: "camera" },
+      capture,
+    ),
+  ).rejects.toThrow();
+  expect(capture).toHaveBeenCalledExactlyOnceWith(isolatedGeneration);
+  expect(transport).toHaveBeenCalledTimes(1);
+});
+it("a missing Gateway generation ID never uses the provider response ID as a guessed billing correlation", async () => {
+  transport.mockResolvedValue(
+    json(
+      completion({
+        providerMetadata: {},
+        response: { modelId: "isolated-text-response", id: isolatedGeneration },
+      }),
+    ),
+  );
+  await expect(
+    createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
+      { mode: "text", criteria: base, prompt: "camera" },
+      capture,
+    ),
+  ).rejects.toThrow("NOT_AVAILABLE");
+  expect(capture).not.toHaveBeenCalled();
+  expect(transport).toHaveBeenCalledTimes(1);
+});
+it.each([429, 503])(
+  "retryable HTTP %s cannot cause a second paid SDK POST",
+  async (status) => {
+    transport.mockResolvedValue(json({ error: "unavailable" }, status));
+    await expect(
+      createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
+        { mode: "text", criteria: base, prompt: "camera" },
+        capture,
+      ),
+    ).rejects.toThrow();
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(capture).not.toHaveBeenCalled();
+  },
+);
+it.each(["text", "photo", "voice"] as const)(
+  "no compliant privacy route for %s fails without a fabricated proposal or retry",
+  async (mode) => {
+    transport.mockResolvedValue(
+      json(
+        {
+          error: "No compliant providers available for the requested model",
+          type: "no_providers_available",
+          statusCode: 400,
+        },
+        400,
+      ),
+    );
+    await expect(
+      createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
+        {
+          mode,
+          criteria: base,
+          prompt: "Camera",
+          ...(mode === "text"
+            ? {}
+            : {
+                bytes: Buffer.from([1, 2]),
+                mediaType: mode === "photo" ? "image/webp" : "audio/wav",
+              }),
+        },
+        capture,
+      ),
+    ).rejects.toThrow("NOT_AVAILABLE");
+    expect(capture).not.toHaveBeenCalled();
+    expect(transport).toHaveBeenCalledTimes(1);
+    const body = JSON.parse(String(transport.mock.calls[0][1]!.body));
+    expect(body.providerOptions).toEqual({
+      gateway: {
+        only: ["isolated"],
+        disallowPromptTraining: true,
+        ...(mode === "voice" ? {} : { zeroDataRetention: true }),
+      },
+    });
+  },
+);
+it("unsupported-schema warnings fail closed while keeping the accepted charge correlation", async () => {
+  transport.mockResolvedValue(
+    json(
+      completion({
+        warnings: [{ type: "unsupported-setting", setting: "responseFormat" }],
+      }),
+    ),
+  );
+  await expect(
+    createGatewayAdapter(isolatedPolicy, isolatedKey, transport).interpret(
+      { mode: "text", criteria: base, prompt: "camera" },
+      capture,
+    ),
+  ).rejects.toThrow("NOT_AVAILABLE");
+  expect(capture).toHaveBeenCalledExactlyOnceWith(isolatedGeneration);
+  expect(transport).toHaveBeenCalledTimes(1);
 });

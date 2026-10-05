@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
   // Node resolve the pnpm link without Turbopack rejecting the workspace link.
   serverExternalPackages: ["inngest"],
   devIndicators: false,
+  // Clerk resumes requests through a same-origin rewrite. Keep the literal
+  // loopback origin so development does not proxy 127.0.0.1 back to localhost.
+  ...(process.env.TREIDO_ENV === "development" &&
+  process.env.NODE_ENV !== "production" &&
+  !process.env.VERCEL &&
+  !process.env.VERCEL_ENV
+    ? { skipProxyUrlNormalize: true }
+    : {}),
   // Keep audit type generation away from the running preview's protected config.
   // Production checks use fresh route types, not stale dev/audit output.
   // Compiler strictness is inherited unchanged from the existing tsconfig.

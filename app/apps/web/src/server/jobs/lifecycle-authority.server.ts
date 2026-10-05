@@ -111,7 +111,7 @@ export async function authorizeLifecycleArtifact(
           "SELECT r.id FROM treido.assistant_runs r JOIN treido.assistant_run_reservations b ON b.run_id=r.id AND b.user_id=r.user_id WHERE r.id=$1 AND r.user_id=$2 AND b.application_id=$3 AND b.environment=$4 AND " +
             (job.kind === "assistant.run-expiry"
               ? "r.expires_at<=clock_timestamp()"
-              : "r.emission_started_at IS NOT NULL AND r.provider_id IS NOT NULL AND r.mode<>'voice'") +
+              : "r.emission_started_at IS NOT NULL AND r.provider_id IS NOT NULL") +
             " FOR UPDATE OF r",
           [
             job.resourceId,

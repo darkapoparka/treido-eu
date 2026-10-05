@@ -3,10 +3,10 @@ import type { AssistantResult } from "../assistant-tools/actions";
 import { changeAssistantInputAction } from "./actions";
 import {
   parseInputCommand,
-  parseInputResponse,
   type InputCommand,
   type InputChange,
 } from "./model";
+import { readAssistantRunResponse } from "./run-stream";
 const inflight = new Map<string, AbortController>();
 const scope = (command: InputCommand) => command.actorKey + ":" + command.mode;
 export function stopInputRequest(
@@ -33,14 +33,8 @@ export async function submitAssistantInput(
       redirect: "error",
       signal: AbortSignal.any([controller.signal, AbortSignal.timeout(25000)]),
     });
-    if (
-      !response.ok ||
-      !response.headers.get("content-type")?.startsWith("application/json")
-    )
-      throw Error();
-    const raw = await response.text();
-    if (raw.length > 4000) throw Error();
-    return parseInputResponse(JSON.parse(raw));
+    // Keep the cancellation handle until the final frame has been consumed.
+    return await readAssistantRunResponse(response);
   } finally {
     if (inflight.get(key) === controller) inflight.delete(key);
   }

@@ -11,7 +11,6 @@ import { createServer } from "node:net";
 import { applyReviewedMigration } from "../../apps/web/scripts/identity-draft-migration.mjs";
 import { applyRuntimeGrants } from "../../apps/web/scripts/runtime-grants.mjs";
 const root = path.resolve(import.meta.dirname, "../../..");
-const evidence = path.join(root, ".qa/t72/native");
 const requireWeb = createRequire(path.join(root, "app/apps/web/package.json"));
 const { Pool } = requireWeb("pg");
 const embeddedRequire = createRequire(requireWeb.resolve("embedded-postgres"));
@@ -39,7 +38,20 @@ const pgctl = (args) =>
       code === 0 ? resolve() : reject(Error("Owned pg_ctl failed: " + code)),
     );
   });
-export async function startLaunchCluster({ messageLifecycle = false } = {}) {
+export async function startLaunchCluster({
+  messageLifecycle = false,
+  messageImageDispatch = false,
+  privacyEvidence = false,
+  evidenceDirectory,
+} = {}) {
+  const evidence = evidenceDirectory
+    ? path.resolve(evidenceDirectory)
+    : path.join(
+        root,
+        messageImageDispatch || privacyEvidence
+          ? ".qa/launch-privacy-20261005/native"
+          : ".qa/t72/native",
+      );
   if (process.version !== "v24.20.0") throw Error("Pinned Node required");
   const stat = statfsSync(root);
   if (stat.bavail * stat.bsize < 1073741824 || os.freemem() < 1610612736)
@@ -94,7 +106,10 @@ export async function startLaunchCluster({ messageLifecycle = false } = {}) {
     await admin?.end();
     await bootstrap?.end();
     if (state.started && !state.stopped) {
-      await pgctl(["stop", "-D", directory, "-m", "fast", "-w", "-t", "30"]);
+      // The measured Windows shutdown checkpoint can exceed30s on this
+      // shared disk. Keep a finite cleanup wait without changing test or
+      // startup deadlines, assertions, persistence or shutdown mode.
+      await pgctl(["stop", "-D", directory, "-m", "fast", "-w", "-t", "60"]);
       state.stopped = true;
       await persist();
     }
@@ -138,15 +153,19 @@ export async function startLaunchCluster({ messageLifecycle = false } = {}) {
       .filter(
         (f) =>
           /^\d{4}_[a-z_]+\.sql$/.test(f) &&
-          Number(f.slice(0, 4)) <= (messageLifecycle ? 49 : 47),
+          Number(f.slice(0, 4)) <=
+            (messageImageDispatch ? 50 : messageLifecycle ? 49 : 47),
       )
       .sort();
     if (
-      files.length !== (messageLifecycle ? 49 : 47) ||
+      files.length !==
+        (messageImageDispatch ? 50 : messageLifecycle ? 49 : 47) ||
       files.at(-1) !==
-        (messageLifecycle
-          ? "0049_message_image_executor_fence.sql"
-          : "0047_billing_change_recovery.sql")
+        (messageImageDispatch
+          ? "0050_message_image_dispatch_barrier.sql"
+          : messageLifecycle
+            ? "0049_message_image_executor_fence.sql"
+            : "0047_billing_change_recovery.sql")
     )
       throw Error("Unexpected migration inventory");
     const client = await admin.connect();

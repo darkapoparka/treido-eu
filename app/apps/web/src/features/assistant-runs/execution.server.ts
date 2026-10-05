@@ -179,7 +179,7 @@ export async function reconcileAssistantUsage(
         [runId],
       )
     ).rows[0];
-    if (!row || !row.providerId || row.mode === "voice") return null;
+    if (!row || !row.providerId) return null;
     const policy = requirePolicy(await runtimePolicy(tx));
     const original = (
       await tx.client.query<{ config: unknown }>(
