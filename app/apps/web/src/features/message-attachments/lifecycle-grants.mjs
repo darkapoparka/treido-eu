@@ -12,4 +12,16 @@ export async function applyMessageImageLifecycleGrants(client, role) {
   await client.query(
     `GRANT EXECUTE ON FUNCTION treido.account_message_image_review(uuid,uuid,uuid),treido.account_message_image_io(uuid,uuid),treido.account_message_image_available(uuid,uuid,uuid) TO ${r}`,
   );
+  // Older isolated packets deliberately stop before0049.
+  if (
+    (
+      await client.query(
+        "SELECT to_regclass('treido.message_image_execution_leases') AS name",
+      )
+    ).rows[0].name
+  ) {
+    await client.query(
+      `REVOKE ALL ON treido.message_image_execution_leases FROM PUBLIC, ${r}`,
+    );
+  }
 }

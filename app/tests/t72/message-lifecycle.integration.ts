@@ -77,7 +77,7 @@ async function hold(f: Awaited<ReturnType<typeof fixture>>, imageId: string) {
 
 it("applies 0048 with finite execute seams and no runtime approval/tombstone authority", async () => {
   expect(native.state.migrations.at(-1)).toBe(
-    "0048_message_image_lifecycle.sql",
+    "0049_message_image_executor_fence.sql",
   );
   const grants = (
     await native.runtime
@@ -855,4 +855,79 @@ it("optional-data removal cannot execute from an unclaimed accepted effect with 
       )
     ).rows[0],
   ).toEqual({ state: "prepared", first_attempt_at: null });
+});
+
+it.each(["io", "receipt"])(
+  "replacement closure executor cannot inherit an earlier effect lease: %s",
+  async (operation) => {
+    const f = await fixture();
+    await f.image();
+    await f.approve();
+    const proof = await f.accept(await f.review());
+    const effect = proof.effects[0];
+    const lease = await claim(effect.id, proof);
+    expect(lease.result.claimed).toBe(true);
+    // A separate administrator connection models expiry and genuine redelivery;
+    // the original effect's lease has not expired or been handed to the new job.
+    await native.admin.query(
+      "UPDATE treido.job_effects SET execution_until=clock_timestamp()-interval '1 second' WHERE job_id=$1",
+      [proof.jobId],
+    );
+    await native.admin.query(
+      "UPDATE treido.job_effects SET execution_token=$2,execution_until=clock_timestamp()+interval '5 minutes' WHERE job_id=$1",
+      [proof.jobId, randomUUID()],
+    );
+    const request =
+      operation === "io"
+        ? native.runtime.query(
+            "SELECT treido.account_message_image_io($1,$2)",
+            [effect.id, lease.token],
+          )
+        : native.runtime.query(
+            "SELECT treido.account_record_effect($1,$2,'confirmed',$3,'provider')",
+            [effect.id, lease.token, "a".repeat(64)],
+          );
+    await expect(request).rejects.toMatchObject({ code: "23514" });
+    expect(
+      (
+        await native.admin.query(
+          "SELECT state FROM treido.account_lifecycle_effects WHERE id=$1",
+          [effect.id],
+        )
+      ).rows[0].state,
+    ).toBe("attempting");
+  },
+);
+
+it("original image executor provenance is immutable and unavailable to runtime SQL", async () => {
+  const f = await fixture();
+  await f.image();
+  await f.approve();
+  const proof = await f.accept(await f.review());
+  const effect = proof.effects[0];
+  const lease = await claim(effect.id, proof);
+  expect(lease.result.claimed).toBe(true);
+  expect(
+    (
+      await native.admin.query(
+        "SELECT job_id,execution_token FROM treido.message_image_execution_leases WHERE effect_id=$1 AND effect_token=$2",
+        [effect.id, lease.token],
+      )
+    ).rows,
+  ).toEqual([{ job_id: proof.jobId, execution_token: proof.executionToken }]);
+  for (const statement of [
+    "SELECT * FROM treido.message_image_execution_leases",
+    "INSERT INTO treido.message_image_execution_leases(effect_id,effect_token,job_id,execution_token) VALUES(gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid())",
+    "UPDATE treido.message_image_execution_leases SET execution_token=gen_random_uuid()",
+    "DELETE FROM treido.message_image_execution_leases",
+  ])
+    await expect(native.runtime.query(statement)).rejects.toMatchObject({
+      code: "42501",
+    });
+  await expect(
+    native.admin.query(
+      "UPDATE treido.message_image_execution_leases SET execution_token=$1 WHERE effect_id=$2",
+      [randomUUID(), effect.id],
+    ),
+  ).rejects.toMatchObject({ code: "23514" });
 });

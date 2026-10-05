@@ -138,14 +138,14 @@ export async function startLaunchCluster({ messageLifecycle = false } = {}) {
       .filter(
         (f) =>
           /^\d{4}_[a-z_]+\.sql$/.test(f) &&
-          Number(f.slice(0, 4)) <= (messageLifecycle ? 48 : 47),
+          Number(f.slice(0, 4)) <= (messageLifecycle ? 49 : 47),
       )
       .sort();
     if (
-      files.length !== (messageLifecycle ? 48 : 47) ||
+      files.length !== (messageLifecycle ? 49 : 47) ||
       files.at(-1) !==
         (messageLifecycle
-          ? "0048_message_image_lifecycle.sql"
+          ? "0049_message_image_executor_fence.sql"
           : "0047_billing_change_recovery.sql")
     )
       throw Error("Unexpected migration inventory");

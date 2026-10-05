@@ -359,3 +359,18 @@ export const accountEffectObservations = treido.table(
     ),
   ],
 );
+
+// Private immutable successful-claim executor evidence from additive0049.
+export const messageImageExecutionLeases = treido.table(
+  "message_image_execution_leases",
+  {
+    effectId: uuid("effect_id").notNull(),
+    effectToken: uuid("effect_token").notNull(),
+    jobId: uuid("job_id").notNull(),
+    executionToken: uuid("execution_token").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .default(sql.raw("clock_timestamp()")),
+  },
+  (table) => [primaryKey({ columns: [table.effectId, table.effectToken] })],
+);
