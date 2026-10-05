@@ -383,3 +383,118 @@ test("an allowed Sharp runtime cannot carry captured fonts or nested links", asy
     /Unexpected link/,
   );
 });
+
+async function inngestLink(t, mode = "valid") {
+  const { workspace, output } = await fixture(t);
+  const target = join(
+    workspace,
+    "node_modules/.pnpm/inngest@4.21.0_peer_fixture/node_modules/inngest",
+  );
+  const alternate =
+    mode === "escaped"
+      ? join((await fixture(t)).workspace, "inngest")
+      : mode === "private"
+        ? join(workspace, ".local/inngest")
+        : mode === "wrong-store"
+          ? join(workspace, "packages/inngest")
+          : mode === "wrong-store-version"
+            ? join(
+                workspace,
+                "node_modules/.pnpm/inngest@4.20.0_peer_fixture/node_modules/inngest",
+              )
+            : mode === "different-importer"
+              ? join(
+                  workspace,
+                  "node_modules/.pnpm/inngest@4.21.0_other_peers/node_modules/inngest",
+                )
+              : target;
+  for (const directory of new Set([target, alternate])) {
+    await mkdir(directory, { recursive: true });
+    await writeFile(
+      join(directory, "package.json"),
+      JSON.stringify({
+        name: mode === "wrong-name" ? "unreviewed" : "inngest",
+        version: mode === "wrong-version" ? "4.20.0" : "4.21.0",
+      }),
+    );
+  }
+  await writeFile(
+    join(workspace, "apps/web/package.json"),
+    JSON.stringify({
+      dependencies:
+        mode === "undeclared"
+          ? {}
+          : {
+              inngest: mode === "unpinned" ? "^4.21.0" : "4.21.0",
+            },
+    }),
+  );
+  const importer = join(workspace, "apps/web/node_modules");
+  await mkdir(importer, { recursive: true });
+  await symlink(
+    mode === "different-importer" ? target : alternate,
+    join(importer, "inngest"),
+    "junction",
+  );
+  const outputModules = join(output, "node_modules");
+  await mkdir(outputModules, { recursive: true });
+  await symlink(
+    alternate,
+    join(
+      outputModules,
+      mode === "other-link" ? "inngest-custom" : "inngest-71afd24a7f197285",
+    ),
+    "junction",
+  );
+  return { workspace, output, target };
+}
+
+test("accepts only the pinned Inngest runtime used by the actual web importer", async (t) => {
+  const { workspace, output } = await inngestLink(t);
+  assert.deepEqual(await auditProductionOutput(output, workspace), {
+    tracesChecked: 1,
+    issues: [],
+  });
+});
+
+for (const mode of [
+  "undeclared",
+  "unpinned",
+  "wrong-version",
+  "wrong-name",
+  "escaped",
+  "private",
+  "wrong-store",
+  "wrong-store-version",
+  "different-importer",
+  "other-link",
+]) {
+  test(`rejects an Inngest-shaped runtime link with ${mode}`, async (t) => {
+    const { workspace, output } = await inngestLink(t, mode);
+    await assert.rejects(
+      auditProductionOutput(output, workspace),
+      /Unexpected link/,
+    );
+  });
+}
+
+test("an allowed Inngest runtime cannot conceal private media, traces or nested links", async (t) => {
+  const { workspace, output, target } = await inngestLink(t);
+  await writeFile(join(target, "capture.woff2"), "unqualified font");
+  await writeFile(
+    join(target, "runtime.js.nft.json"),
+    JSON.stringify({
+      files: [relative(target, join(workspace, ".local/archive.png"))],
+    }),
+  );
+  const result = await auditProductionOutput(output, workspace);
+  assert.match(result.issues.join("\n"), /Unqualified font/);
+  assert.match(result.issues.join("\n"), /Private reference dependency/);
+  const privateTarget = join(workspace, ".local/archive");
+  await mkdir(privateTarget, { recursive: true });
+  await symlink(privateTarget, join(target, "nested"), "junction");
+  await assert.rejects(
+    auditProductionOutput(output, workspace),
+    /Unexpected link/,
+  );
+});

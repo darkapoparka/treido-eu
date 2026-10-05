@@ -103,7 +103,7 @@ T04f/T06b add native PostgreSQL cases to `pnpm test:database`: reviewed job/medi
 
 The production output checker now accepts the exact manifest-pinned owned Sharp runtime junction required for bounded raster processing, alongside the existing exact pg exception. It still rejects another target/version/peer pin, private/escaped packages, nested junctions, and unqualified fonts/video. Focused positive/negative tests qualify the allowance. A green build or native/component check does not qualify connected provider access, public publication, file rights or retention.
 
-The root [CI workflow](../.github/workflows/ci.yml) runs on pushes to `main`/`codex/**`, pull requests and manual dispatch. Its Ubuntu 24.04 job installs the exact Node version from `app/.node-version` and pnpm version from `app/package.json`, verifies both, then runs a fresh `pnpm install --frozen-lockfile --package-import-method=copy`. Action revisions are pinned to full commit hashes. Checkout has read-only repository permissions and does not persist credentials; package-manager caches are disabled. It requires no provider secrets, private reference archives, browser installation or emulator.
+The root [CI workflow](../.github/workflows/ci.yml) runs on pushes to `main`/`codex/**`, pull requests and manual dispatch. Its Ubuntu 24.04 job installs the exact Node version from `app/.node-version` and pnpm version from `app/package.json`, verifies both, then runs a fresh `pnpm install --frozen-lockfile --package-import-method=copy`. Action revisions are pinned to full commit hashes. Checkout has read-only repository permissions and does not persist credentials; package-manager caches are disabled. It requires no provider secrets, private reference archives or emulator. T71 adds fresh loopback PostgreSQL regressions and a pinned Chromium installation for its explicit component-session fixture; neither uses a real account or qualifies live providers.
 
 Run its package commands from `app/`:
 
@@ -114,6 +114,9 @@ Run its package commands from `app/`:
 | `pnpm test:unit --maxWorkers=1 --no-file-parallelism` | Existing Vitest selection, including web/contracts/workspace tests; does not cover every historical MJS script or native journey |
 | `pnpm test:tooling` | Maintained preview-launcher environment/port boundary tests |
 | `pnpm test:ci` | Production-output confinement, missing/malformed build traces and unqualified font/video rejection |
+| `pnpm exec eslint tests/t71 --max-warnings=0` | The portable native/database/browser regression harnesses, in addition to the existing CI lint scope |
+| `pnpm exec vitest run --config tests/t71/native.config.mjs --configLoader native` | Fresh restricted-runtime PostgreSQL tests for invitation authority, closure cleanup consistency, numeric discovery and billing scheduling, plus issuer-policy checks; no shared database or provider requests |
+| `pnpm exec playwright install --with-deps chromium` and `node tests/t71/session-browser.mjs` | Install the lockfile-pinned browser and exercise actual private buyer components through deferred identity/action fixtures; not real signed-in Clerk journeys |
 | `pnpm ci:types` | Contracts TypeScript, Next route type generation and strict web TypeScript using `tsconfig.ci.json` |
 | `pnpm --filter @treido/web build` | Direct Next production build using the same isolated output/type configuration; bypasses Turbo so the job's output environment is passed directly |
 | `pnpm ci:verify-output` | Completed build ID, dependency traces confined to `app/`, known private reference directory rejection and emitted font/video policy |
@@ -142,3 +145,7 @@ The validator checks documented declarations, not whether a latest tag changed o
 ### Stock, offers and importer component journeys
 
 The native PostgreSQL suite includes `stock, cart and offers` and `durable business CSV` groups. Optional `TREIDO_STOCK_BROWSER=1` and `TREIDO_IMPORT_BROWSER=1` exercise the actual buyer/merchant components through the existing local, test-only action transport. These checks verify persisted stock/cart/offer commands, CSV upload/review/correction/selection, real draft/stock creation, cancellation/recovery and account-change hiding. They use synthetic verified identities, never a production authentication bypass, and do not qualify live Clerk, photo storage or the signed cloud executor. Run the relevant group after its implementation batch; root tasks.md owns counts and actual outcomes.
+
+### T71 hosted source qualification
+
+The c788d9e review's clean Linux checkout passed 1,799 units (one original optional skip), all existing lint/type steps and the production build, then exposed an unqualified Inngest external runtime link in the production-output checker. The follow-through adds a narrowly importer-bound allowance: exact declared and installed SDK identity/version, canonical ownership inside the workspace's pnpm virtual store, and the same target used by the web importer. Nested/unreviewed links and captured media/private traces remain rejected. Twelve new positive/adversarial cases bring the output-policy suite to 45. This is a packaging qualification, not authorization for Inngest's real provider binding or an audit waiver. The [Astra remediation report](audit/2026-10-05-astra-remediation.md) distinguishes each hosted observation from local and fixture-only evidence.

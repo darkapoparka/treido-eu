@@ -48,3 +48,7 @@ pnpm audit --audit-level=moderate
 ```
 
 Keep the audit unsuppressed. A local test result does not authorize a merge or deployment. See the repository's October 5 Astra remediation report and the final T71 receipt in `tasks.md` for exact tested-source evidence, remaining findings and publication status. Historical T61 receipts are retained and are not re-labelled as measurements of T71.
+
+## Hosted regression coverage
+
+The root CI workflow now lints this packet, executes its isolated PostgreSQL configuration, installs Chromium through the existing pinned Playwright CLI, and runs the deterministic session-browser script. The steps are required, not optional or continue-on-error. Existing types, production build/output isolation, reference-denial checks and the unsuppressed dependency audit remain in place. No provider secret, personal browser profile, private evidence archive or shared database is required. A workflow declaration is not a successful run: the owning T71 receipt and PR record the separately observed exact-head result.

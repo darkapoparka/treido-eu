@@ -65,7 +65,9 @@ jobs:
           pnpm exec eslint scripts/check-product-docs.mjs scripts/check-product-docs.test.mjs --max-warnings=0
 
       - name: Focused web, contracts and tooling lint
-        run: pnpm ci:lint
+        run: |
+          pnpm ci:lint
+          pnpm exec eslint tests/t71 --max-warnings=0
 
       - name: Unit tests
         run: pnpm test:unit --maxWorkers=1 --no-file-parallelism
@@ -75,6 +77,17 @@ jobs:
 
       - name: CI boundary tests
         run: pnpm test:ci
+
+      # Fresh loopback PostgreSQL and explicit synthetic identities only.
+      - name: Isolated PostgreSQL regressions
+        run: pnpm exec vitest run --config tests/t71/native.config.mjs --configLoader native
+
+      - name: Install privacy-test browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Real components with deferred test adapters; not live Clerk acceptance.
+      - name: Browser session privacy regressions
+        run: node tests/t71/session-browser.mjs
 
       - name: Shared and web types
         run: pnpm ci:types

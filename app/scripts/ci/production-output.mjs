@@ -119,6 +119,50 @@ async function isPinnedSharpLink(path, name, output, workspace) {
   return installed.name === "sharp" && installed.version === version;
 }
 
+async function isPinnedInngestLink(path, name, output, workspace) {
+  if (
+    dirname(path) !== resolve(output, "node_modules") ||
+    !/^inngest-[a-f0-9]{16}$/.test(name)
+  )
+    return false;
+  const manifest = JSON.parse(
+    await readFile(resolve(workspace, "apps/web/package.json"), "utf8"),
+  );
+  const version = manifest.dependencies?.inngest;
+  if (typeof version !== "string" || !/^\d+\.\d+\.\d+$/.test(version))
+    return false;
+  const target = await realpath(path);
+  // pnpm hashes long peer contexts. Bind to the web importer's actual frozen
+  // installation rather than guessing a platform-specific virtual-store hash.
+  const expected = await realpath(
+    resolve(workspace, "apps/web/node_modules/inngest"),
+  );
+  const inside = relative(workspace, target);
+  const store = relative(
+    resolve(workspace, "node_modules/.pnpm"),
+    target,
+  ).split(sep);
+  if (
+    target !== expected ||
+    isAbsolute(inside) ||
+    inside === ".." ||
+    inside.startsWith(`..${sep}`) ||
+    inside.split(sep).some((part) => privateDirectories.has(part)) ||
+    store.length !== 3 ||
+    !(
+      store[0] === `inngest@${version}` ||
+      store[0].startsWith(`inngest@${version}_`)
+    ) ||
+    store[1] !== "node_modules" ||
+    store[2] !== "inngest"
+  )
+    return false;
+  const installed = JSON.parse(
+    await readFile(resolve(target, "package.json"), "utf8"),
+  );
+  return installed.name === "inngest" && installed.version === version;
+}
+
 async function isHostedFunctionLink(path, name, output) {
   // Vercel permits route aliases between .func directories in its generated
   // function tree. Resolve both sides so parent links cannot escape that tree.
@@ -166,13 +210,13 @@ async function filesUnder(directory, output, workspace, visited = new Set()) {
         );
         continue;
       }
-      // Next 16 Turbopack links this external server package into its output.
-      // Only exact owned, manifest-pinned pg and raster-processing Sharp packages
-      // are allowed. Traversal
-      // still rejects nested links and checks its emitted files for private media.
+      // Next 16 Turbopack emits external runtime packages as links. Only the
+      // qualified, manifest-pinned pg, Sharp and importer-bound Inngest packages
+      // are allowed. Nested links and captured media are still rejected.
       if (
         !(await isPinnedPostgresLink(path, entry.name, output, workspace)) &&
-        !(await isPinnedSharpLink(path, entry.name, output, workspace))
+        !(await isPinnedSharpLink(path, entry.name, output, workspace)) &&
+        !(await isPinnedInngestLink(path, entry.name, output, workspace))
       )
         throw new Error(`Unexpected link in production output: ${path}`);
       files.push(...(await filesUnder(path, output, workspace, visited)));
