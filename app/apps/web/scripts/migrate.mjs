@@ -149,6 +149,7 @@ async function main() {
         "0045_invitation_mail",
         "0046_message_attachments",
         "0047_billing_change_recovery",
+        "0048_message_image_lifecycle",
       ]) {
         const source = await readFile(
           new URL(`../migrations/${version}.sql`, import.meta.url),

@@ -115,6 +115,7 @@ export type PersonalSnapshot = {
   excluded: readonly string[];
 };
 export const SNAPSHOT_EXCLUSIONS = [
+  "communication text, counterpart and business communication, private image bytes, filenames, object keys and delivery URLs",
   "identity-provider credentials, sessions, bank and identity-document data",
   "other people's messages, addresses, contact details and restricted case evidence",
   "shared business records, legal evidence and raw provider payloads",

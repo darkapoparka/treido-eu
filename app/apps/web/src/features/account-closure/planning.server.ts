@@ -11,6 +11,10 @@ import {
 import { removalDelay } from "./policy";
 import { readObligations } from "./obligations.server";
 import { reviewedCleanupResources } from "./acceptance-resources.server";
+import {
+  reviewMessageImages,
+  messageImageTargets,
+} from "./message-images.server";
 import type {
   FrozenTarget,
   LifecycleBinding,
@@ -52,6 +56,12 @@ export async function buildPlan(
   ).rows[0];
   if (!request) throw new ClosureError("CONFLICT");
   const cleanupResources = await reviewedCleanupResources(tx, userId, policy);
+  const messageImages = await reviewMessageImages(
+    tx,
+    userId,
+    policyId,
+    binding.id,
+  );
   const obligations = await readObligations(tx, userId);
   assertNoObligations(obligations);
   const personalSellers = (
@@ -71,6 +81,7 @@ export async function buildPlan(
     target: { sessionId: session.id },
     dueSeconds: 0,
   }));
+  targets.push(...messageImageTargets(messageImages));
   const mediaDelay = removalDelay(policy, "personalMedia");
   if (mediaDelay !== null) {
     if (!binding.mediaScope || !binding.mediaUnversioned)
@@ -187,6 +198,7 @@ export async function buildPlan(
     obligations,
     targets,
     cleanupResources,
+    messageImages,
     personalSellers,
     businessMemberships,
     createdAt: clock.now.toISOString(),

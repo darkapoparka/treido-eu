@@ -3,6 +3,7 @@ import { AwsClient } from "aws4fetch";
 import { requireBackendBindings } from "../../server/config/backend-bindings.server";
 import { validateMediaBindings } from "../../server/media/bindings";
 import { requireMediaStorage } from "../../server/media/storage.server";
+import { createAttachmentStorage } from "../message-attachments/storage.server";
 import { ClosureError } from "./model";
 import type { EffectRow, LifecycleBinding } from "./storage.server";
 import type { ProviderOutcome } from "./clerk-adapter.server";
@@ -17,13 +18,15 @@ export function mediaEffectAdapter(
     binding.applicationId !== backend.identity.applicationId
   )
     throw new ClosureError("BINDING_REQUIRED");
-  const storage = requireMediaStorage(),
+  const base = requireMediaStorage(),
+    messageImage = effect.target.ownerKind === "message-image",
+    storage = messageImage ? createAttachmentStorage(base) : base,
     configured = validateMediaBindings(process.env);
   if (
     !configured.ok ||
     !binding.mediaUnversioned ||
     !binding.mediaScope ||
-    storage.scope !== binding.mediaScope ||
+    base.scope !== binding.mediaScope ||
     effect.target.storageScope !== storage.scope
   )
     throw new ClosureError("BINDING_REQUIRED");

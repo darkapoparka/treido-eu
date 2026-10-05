@@ -14,6 +14,7 @@ import {
   type AttachmentStorage,
 } from "./storage.server";
 import { checksumOf } from "./raster.server";
+import { imageTombstoned } from "./lifecycle-access.server";
 export async function deliverAttachment(
   database: SellerDatabase,
   identity: VerifiedIdentity,
@@ -31,6 +32,8 @@ export async function deliverAttachment(
         { sellerId: data.sellerId },
       );
       const asset = await assetRow(tx, data.id, data.threadId);
+      if (await imageTombstoned(tx, asset.id))
+        throw new SellerError("NOT_FOUND");
       storageMatches(asset, storage);
       if (
         asset.state !== "ready" ||

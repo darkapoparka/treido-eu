@@ -1,6 +1,7 @@
 import { applyBillingRecoveryGrants } from "../src/features/seller-billing/recovery-runtime-grants.mjs";
 import { applyInvitationMailGrants } from "../src/features/team/runtime-grants.mjs";
 import { applyMessageAttachmentGrants } from "../src/features/message-attachments/runtime-grants.mjs";
+import { applyMessageImageLifecycleGrants } from "../src/features/message-attachments/lifecycle-grants.mjs";
 import { applyOrderShippingGrants } from "../src/features/order-shipping/runtime-grants.mjs";
 import { applyShippingRetentionGrants } from "../src/features/order-aftercare/shipping-retention-grants.mjs";
 import { applyShippingIntegrationGrants } from "../src/server/jobs/shipping-grants.mjs";
@@ -126,6 +127,11 @@ export async function applyRuntimeGrants(client, role) {
   );
   if (attachments.rows[0]?.ready)
     await applyMessageAttachmentGrants(client, role);
+  const imageLifecycle = await client.query(
+    "SELECT to_regclass('treido.message_image_lifecycle_policies') IS NOT NULL AS ready",
+  );
+  if (imageLifecycle.rows[0]?.ready)
+    await applyMessageImageLifecycleGrants(client, role);
   const recovery = await client.query(
     "SELECT to_regclass('treido.billing_recovery_requests') IS NOT NULL AS ready",
   );

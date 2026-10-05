@@ -1,0 +1,203 @@
+diff --git a/lib/guard.js b/lib/guard.js
+new file mode 100644
+--- /dev/null
++++ b/lib/guard.js
+@@ -0,0 +1,53 @@
++'use strict';
++
++const { MAX_LENGTH } = require('./constants');
++
++// Local GHSA-vfj7-8cjw-p6xm mitigation, not an upstream release.
++const MAX_DEPTH = 100;
++const MAX_NODES = 2 * MAX_LENGTH + 3;
++const MAX_EXPANSION = 10000;
++const MAX_OUTPUT = 1000000;
++
++const fail = reason => {
++  throw new SyntaxError('Braces safety limit: ' + reason);
++};
++
++// Follow only child edges: normal parser parent/prev references are cyclic.
++// Count visits, not unique objects, to also bound shared-subtree amplification.
++const validate = ast => {
++  const active = new Set();
++  const stack = [{ node: ast, depth: -1, index: -1 }];
++  let count = 0;
++  while (stack.length) {
++    const frame = stack[stack.length - 1];
++    const node = frame.node;
++    if (frame.index === -1) {
++      if (!node || typeof node !== 'object') fail('invalid AST node');
++      if (frame.depth > MAX_DEPTH) fail('AST depth');
++      if (++count > MAX_NODES) fail('AST node visits');
++      if (active.has(node)) fail('AST child cycle');
++      active.add(node);
++      if (node.nodes !== undefined && !Array.isArray(node.nodes)) fail('invalid children');
++      if (node.nodes && node.nodes.length > MAX_NODES) fail('AST node visits');
++      frame.index = 0;
++    }
++    if (node.nodes && frame.index < node.nodes.length) {
++      stack.push({ node: node.nodes[frame.index++], depth: frame.depth + 1, index: -1 });
++    } else {
++      active.delete(node);
++      stack.pop();
++    }
++  }
++};
++
++const expansion = values => {
++  if (values.length > MAX_EXPANSION) fail('expansion count');
++  let length = 0;
++  for (const value of values) {
++    length += value.length;
++    if (length > MAX_OUTPUT) fail('expansion characters');
++  }
++  return values;
++};
++
++module.exports = { MAX_DEPTH, MAX_EXPANSION, MAX_OUTPUT, fail, validate, expansion };
+diff --git a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js
++++ b/lib/parse.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
+ const stringify = require('./stringify');
++const guard = require('./guard');
+ 
+ /**
+@@ -145,4 +146,5 @@
+     if (value === CHAR_LEFT_PARENTHESES) {
++      if (stack.length > guard.MAX_DEPTH) guard.fail('pattern depth');
+       block = push({ type: 'paren', nodes: [] });
+       stack.push(block);
+       push({ type: 'text', value });
+@@ -197,4 +199,5 @@
+     if (value === CHAR_LEFT_CURLY_BRACE) {
++      if (stack.length > guard.MAX_DEPTH) guard.fail('pattern depth');
+       depth++;
+ 
+       const dollar = prev.value && prev.value.slice(-1) === '$' || block.dollar === true;
+diff --git a/lib/compile.js b/lib/compile.js
+--- a/lib/compile.js
++++ b/lib/compile.js
+@@ -2,7 +2,9 @@
+ 
+ const fill = require('fill-range');
+ const utils = require('./utils');
++const guard = require('./guard');
+ 
+ const compile = (ast, options = {}) => {
++  guard.validate(ast);
+   const walk = (node, parent = {}) => {
+     const invalidBlock = utils.isInvalidBrace(parent);
+diff --git a/lib/stringify.js b/lib/stringify.js
+--- a/lib/stringify.js
++++ b/lib/stringify.js
+@@ -1,7 +1,9 @@
+ 'use strict';
+ 
+ const utils = require('./utils');
++const guard = require('./guard');
+ 
+ module.exports = (ast, options = {}) => {
++  guard.validate(ast);
+   const stringify = (node, parent = {}) => {
+     const invalidBlock = options.escapeInvalid && utils.isInvalidBrace(parent);
+diff --git a/lib/expand.js b/lib/expand.js
+--- a/lib/expand.js
++++ b/lib/expand.js
+@@ -2,23 +2,35 @@
+ 
+ const fill = require('fill-range');
+ const stringify = require('./stringify');
+ const utils = require('./utils');
++const guard = require('./guard');
+ 
+ const append = (queue = '', stash = '', enclose = false) => {
+   const result = [];
++  let length = 0;
++  const push = value => {
++    const values = Array.isArray(value) ? utils.flatten(value) : [value];
++    if (result.length + values.length > guard.MAX_EXPANSION) guard.fail('expansion count');
++    for (const item of values) {
++      length += item.length;
++      if (length > guard.MAX_OUTPUT) guard.fail('expansion characters');
++      result.push(item);
++    }
++  };
+ 
+   queue = [].concat(queue);
+   stash = [].concat(stash);
+ 
+-  if (!stash.length) return queue;
++  if (!stash.length) return guard.expansion(utils.flatten(queue));
+   if (!queue.length) {
+-    return enclose ? utils.flatten(stash).map(ele => `{${ele}}`) : stash;
++    const values = guard.expansion(utils.flatten(stash));
++    return guard.expansion(enclose ? values.map(ele => `{${ele}}`) : values);
+   }
+ 
+   for (const item of queue) {
+     if (Array.isArray(item)) {
+       for (const value of item) {
+-        result.push(append(value, stash, enclose));
++        push(append(value, stash, enclose));
+       }
+     } else {
+       for (let ele of stash) {
+@@ -25,5 +37,8 @@
+         if (enclose === true && typeof ele === 'string') ele = `{${ele}}`;
+-        result.push(Array.isArray(ele) ? append(item, ele, enclose) : item + ele);
++        if (typeof ele === 'string' && item.length + ele.length > guard.MAX_OUTPUT) {
++          guard.fail('expansion characters');
++        }
++        push(Array.isArray(ele) ? append(item, ele, enclose) : item + ele);
+       }
+     }
+   }
+@@ -33,4 +48,5 @@
+ const expand = (ast, options = {}) => {
++  guard.validate(ast);
+   const rangeLimit = options.rangeLimit === undefined ? 1000 : options.rangeLimit;
+ 
+   const walk = (node, parent = {}) => {
+@@ -40,6 +56,8 @@
+     let q = parent.queue;
+ 
++    let parentDepth = 0;
+     while (p.type !== 'brace' && p.type !== 'root' && p.parent) {
++      if (++parentDepth > guard.MAX_DEPTH + 1) guard.fail('AST parent depth or cycle');
+       p = p.parent;
+       q = p.queue;
+     }
+@@ -62,6 +80,13 @@
+       }
+ 
++      // Keep rangeLimit semantics, but rangeLimit:false cannot bypass the hard cap.
++      const step = Math.abs(Number(args[2] || options.step || 1));
++      if (utils.isInteger(args[0]) && utils.isInteger(args[1]) &&
++          Math.floor(Math.abs(Number(args[1]) - Number(args[0])) / step) + 1 > guard.MAX_EXPANSION) {
++        guard.fail('expansion count');
++      }
+       let range = fill(...args, options);
++      if (Array.isArray(range)) guard.expansion(range);
+       if (range.length === 0) {
+         range = stringify(node, options);
+       }
+@@ -76,6 +101,8 @@
+     let block = node;
+ 
++    parentDepth = 0;
+     while (block.type !== 'brace' && block.type !== 'root' && block.parent) {
++      if (++parentDepth > guard.MAX_DEPTH + 1) guard.fail('AST parent depth or cycle');
+       block = block.parent;
+       queue = block.queue;
+     }
+@@ -108,5 +135,5 @@
+   };
+ 
+-  return utils.flatten(walk(ast));
++  return guard.expansion(utils.flatten(walk(ast)));
+ };
+ 

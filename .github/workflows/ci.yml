@@ -82,8 +82,8 @@ jobs:
       - name: Isolated PostgreSQL regressions
         run: pnpm exec vitest run --config tests/t71/native.config.mjs --configLoader native
 
-      - name: Launch feature database regressions
-        run: pnpm exec vitest run --config tests/t72/native.config.mjs --configLoader native
+      - name: Launch, lifecycle, draft and billing recovery database regressions
+        run: pnpm exec vitest run --config tests/t72/message-lifecycle.config.mjs --configLoader native
 
       - name: Billing recovery database constraints
         run: node tests/t72/billing-native.mjs
@@ -97,6 +97,9 @@ jobs:
 
       - name: Private attachment browser regressions
         run: node tests/t72/attachment-browser.mjs
+
+      - name: Lifecycle disclosure browser regressions
+        run: node tests/t72/message-lifecycle-browser.mjs
 
       - name: Shared and web types
         run: pnpm ci:types

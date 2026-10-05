@@ -3,6 +3,7 @@ import {
   messageHiddenSql,
 } from "../trust/case-storage.server";
 import "server-only";
+import { imageTombstoned } from "../message-attachments/lifecycle-access.server";
 import {
   publishedJoins,
   publishedEligibility,
@@ -214,6 +215,8 @@ export async function readParticipantAttachment(
   if (!validId(attachmentId)) throw new SellerError("INVALID_INPUT");
   return inTransaction(database, async (tx) => {
     await authorizeConversation(tx, identity, threadId);
+    if (await imageTombstoned(tx, attachmentId))
+      throw new SellerError("NOT_FOUND");
     const hidden = messageHiddenSql(await caseStorageReady(tx));
     const suppressed = await tx.client.query(
       `SELECT m.id FROM treido.message_attachment_links link JOIN treido.messages m ON m.id=link.message_id WHERE link.attachment_id=$1 AND m.thread_id=$2 AND ${hidden}`,

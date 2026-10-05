@@ -118,6 +118,24 @@ export async function readClosure(
         )
       ).rows[0];
       summaries.push({
+        messageImages: plan.payload.messageImages
+          ? {
+              version: plan.payload.messageImages.version,
+              description: plan.payload.messageImages.rule.description,
+              handling: plan.payload.messageImages.rule.handling,
+              delaySeconds: plan.payload.messageImages.rule.delay_seconds,
+              removedObjects: plan.payload.messageImages.resources.filter(
+                (resource) =>
+                  resource.retentionReason === null &&
+                  plan.payload.messageImages?.rule.handling === "remove",
+              ).length,
+              retainedObjects: plan.payload.messageImages.resources.filter(
+                (resource) =>
+                  resource.retentionReason !== null ||
+                  plan.payload.messageImages?.rule.handling === "retain",
+              ).length,
+            }
+          : null,
         id: plan.id,
         hash: plan.hash,
         state: plan.state,
@@ -147,6 +165,25 @@ export async function readClosure(
         [user.id, CLOSURE_LIMITS.history],
       )
     ).rows;
+    const imageExtension = (
+      await tx.client.query<{ ready: boolean }>(
+        "SELECT to_regprocedure('treido.account_message_image_available(uuid,uuid,uuid)') IS NOT NULL AS ready",
+      )
+    ).rows[0]?.ready;
+    const imageAvailable =
+      imageExtension && binding && policy
+        ? (
+            await tx.client.query<{ available: boolean }>(
+              "SELECT treido.account_message_image_available($1,$2,$3) AS available",
+              [user.id, policy.id, binding.id],
+            )
+          ).rows[0]?.available
+        : !(
+            await tx.client.query(
+              "SELECT id FROM treido.message_attachments WHERE created_by=$1 LIMIT 1",
+              [user.id],
+            )
+          ).rowCount;
     const view: ClosureView = {
       actorKey: actorKey(identity),
       revision: preference?.revision ?? 0,
@@ -169,7 +206,8 @@ export async function readClosure(
         user.status === "active" &&
         binding?.closureEnabled === true &&
         binding.securityEnabled &&
-        policy !== null,
+        policy !== null &&
+        imageAvailable === true,
       historyLimited: plans.length > CLOSURE_LIMITS.history,
     };
     requireRecent(identity);

@@ -39,6 +39,9 @@ export async function performLifecycleEffect(
   };
   currentSecurity();
   if (effect.state === "confirmed") return "confirmed" as const;
+  const messageImage =
+    effect.kind === "media.delete" &&
+    effect.target.ownerKind === "message-image";
   const binding = await inTransaction(database, (tx) =>
     approvedBinding(tx, effect.bindingId),
   );
@@ -51,7 +54,7 @@ export async function performLifecycleEffect(
           ? await billingEffectAdapter(database, binding, effect)
           : await clerkEffectAdapter(binding, effect);
   let observation: ProviderOutcome | null = null;
-  if (adapter) {
+  if (adapter && !messageImage) {
     try {
       observation = await adapter.observe();
     } catch {
@@ -81,6 +84,15 @@ export async function performLifecycleEffect(
   );
   if (!claim?.claimed)
     return claim?.confirmed ? ("confirmed" as const) : ("pending" as const);
+  const currentImageLease = async () => {
+    if (!messageImage) return;
+    await inTransaction(database, async (tx) => {
+      await tx.client.query(
+        "SELECT treido.account_message_image_io($1::uuid,$2::uuid)",
+        [effect.id, token],
+      );
+    });
+  };
   if (!adapter) {
     // Removal and its confirmation commit together; a crash cannot create another deletion command.
     await inTransaction(database, async (tx) => {
@@ -106,10 +118,13 @@ export async function performLifecycleEffect(
   let outcome: ProviderOutcome;
   try {
     currentSecurity();
+    await currentImageLease();
+    if (messageImage) observation = await adapter.observe();
+    await currentImageLease();
     outcome =
       observation?.state === "confirmed"
         ? observation
-        : claim.execute
+        : claim.execute || messageImage
           ? await adapter.execute()
           : await adapter.observe();
   } catch {

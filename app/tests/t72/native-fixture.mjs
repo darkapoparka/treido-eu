@@ -39,7 +39,7 @@ const pgctl = (args) =>
       code === 0 ? resolve() : reject(Error("Owned pg_ctl failed: " + code)),
     );
   });
-export async function startLaunchCluster() {
+export async function startLaunchCluster({ messageLifecycle = false } = {}) {
   if (process.version !== "v24.20.0") throw Error("Pinned Node required");
   const stat = statfsSync(root);
   if (stat.bavail * stat.bsize < 1073741824 || os.freemem() < 1610612736)
@@ -136,12 +136,17 @@ export async function startLaunchCluster() {
     });
     const files = (await fs.readdir(path.join(root, "app/apps/web/migrations")))
       .filter(
-        (f) => /^\d{4}_[a-z_]+\.sql$/.test(f) && Number(f.slice(0, 4)) <= 47,
+        (f) =>
+          /^\d{4}_[a-z_]+\.sql$/.test(f) &&
+          Number(f.slice(0, 4)) <= (messageLifecycle ? 48 : 47),
       )
       .sort();
     if (
-      files.length !== 47 ||
-      files.at(-1) !== "0047_billing_change_recovery.sql"
+      files.length !== (messageLifecycle ? 48 : 47) ||
+      files.at(-1) !==
+        (messageLifecycle
+          ? "0048_message_image_lifecycle.sql"
+          : "0047_billing_change_recovery.sql")
     )
       throw Error("Unexpected migration inventory");
     const client = await admin.connect();

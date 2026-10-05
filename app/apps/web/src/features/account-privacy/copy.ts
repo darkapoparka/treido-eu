@@ -8,7 +8,7 @@ export const privacyCopy = {
       "Review your Treido data, download a supported current snapshot, or request account closure. No paid plan is required.",
     data: "Personal data export",
     scope:
-      "This download covers the selected supported categories, with up to 50 records per category. It is a current snapshot, not your complete historical record.",
+      "Selected categories contain up to 50 records and 32 KiB each; the download is at most 256 KiB. App account includes your own personal communication and image metadata, sharing that limit with account records. Message text, business communication, image bytes, filenames, storage keys and URLs are excluded. This current snapshot is free on every plan.",
     exclusions:
       "It excludes other people's private messages, addresses and case evidence, credentials, provider payloads, shared business records and device-only preferences. Provider-held and other unsupported data need a separate reviewed process.",
     export: "Prepare private download",
@@ -103,7 +103,7 @@ export const privacyCopy = {
       "Прегледайте данните си в Treido, изтеглете текуща справка от поддържаните категории или поискайте закриване на профила. Не е нужен платен план.",
     data: "Износ на лични данни",
     scope:
-      "Файлът съдържа избраните поддържани категории с до 50 записа от всяка. Това е текуща справка, а не пълната ви история.",
+      "Избраните категории съдържат до 50 записа и 32 KiB всяка; файлът е до 256 KiB. Профилът включва метаданни за Вашите лични съобщения и снимки в общия лимит с останалите записи за профила. Текст, бизнес комуникация, изображения, имена на файлове, ключове за съхранение и адреси са изключени. Тази текуща справка е безплатна при всеки план.",
     exclusions:
       "Не включва чужди лични съобщения, адреси и доказателства по сигнали, данни за достъп, отговори от доставчици, споделени бизнес записи или настройки само на устройството. Данните при доставчици и другите неподдържани категории изискват отделно разглеждане.",
     export: "Подгответе лично изтегляне",

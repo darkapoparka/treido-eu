@@ -17,6 +17,7 @@ import {
 } from "./model";
 import type { SettingsMode } from "./actions";
 import { useAccountSettings } from "./use-settings";
+import { MessageImageNotice } from "./message-image-notice";
 const stateLabels = {
   en: {
     reviewed: "Ready for confirmation",
@@ -222,6 +223,7 @@ function PlanControl({
         {t.state}: {stateLabels[locale][plan.state]}
       </h2>
       <Policy value={plan.policy} locale={locale} />
+      <MessageImageNotice locale={locale} review={plan.messageImages} />
       {plan.state === "reviewed" && plan.reviewExpired && <p>{t.expired}</p>}
       {plan.state === "reviewed" && (
         <>
@@ -357,6 +359,7 @@ function CurrentSettings({
               ? t.sessionNotice
               : t.preferenceNotice}
         </p>
+        {mode === "closure" && <MessageImageNotice locale={locale} />}
         <div className={s.controls}>
           <button
             disabled={state.busy}

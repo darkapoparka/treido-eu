@@ -28,8 +28,13 @@ type Receipt = {
   invoiceId: string | null;
   idempotencyKey: string;
   state: string;
+  claimToken: string;
+  claimExpired: boolean;
 };
-const receiptColumns = `id,intent_id AS "intentId",input_hash AS "inputHash",operation,invoice_id AS "invoiceId",idempotency_key AS "idempotencyKey",state`;
+// PostgreSQL retains microseconds here; a JS Date would collapse distinct attempts.
+// Expiry permits another deliberate cancellation attempt, never money-slot release.
+const claimLease = "interval '2 minutes'";
+const receiptColumns = `id,intent_id AS "intentId",input_hash AS "inputHash",operation,invoice_id AS "invoiceId",idempotency_key AS "idempotencyKey",state,updated_at::text AS "claimToken",updated_at<=clock_timestamp()-${claimLease} AS "claimExpired"`;
 /** Deliberate current-human command. Jobs never issue void/payment/update POSTs. */
 export async function manageBillingRecovery(
   database: SellerDatabase,
@@ -71,23 +76,39 @@ export async function manageBillingRecovery(
       )
     ).rows[0];
     if (prior) {
-      if (prior.inputHash !== hash) throw new SellerError("CONFLICT");
+      if (prior.inputHash !== hash || prior.intentId !== row.id)
+        throw new SellerError("CONFLICT");
       if (
         prior.operation === "abandon" &&
         prior.invoiceId &&
-        prior.state === "reconciling"
+        ["creating", "ready", "reconciling"].includes(row.state) &&
+        (prior.state === "reconciling" ||
+          (prior.state === "creating" && prior.claimExpired))
       ) {
         // Explicit cancellation retry may re-read and void the SAME invoice with
         // the SAME key. It cannot create/update/pay a subscription. Concurrent
-        // repeats see 'creating' and do not send another provider request.
+        // repeats see an unexpired 'creating' claim and perform no provider I/O.
+        // The locked receipt serializes retries; keep its immutable input/key.
+        // A monotonic microsecond also protects against equal/backward clock ticks.
         await tx.client.query(
-          "UPDATE treido.billing_recovery_requests SET state='creating',updated_at=clock_timestamp() WHERE id=$1 AND state='reconciling'",
-          [prior.id],
+          `UPDATE treido.billing_recovery_requests SET state='creating',updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 microsecond') WHERE id=$1 AND updated_at::text=$2 AND (state='reconciling' OR (state='creating' AND updated_at<=clock_timestamp()-${claimLease}))`,
+          [prior.id, prior.claimToken],
         );
-        prior.state = "creating";
-        return { row, receipt: prior, write: true };
+        // Read on this same transaction while still holding the receipt lock.
+        const receipt = (
+          await tx.client.query<Receipt>(
+            `SELECT ${receiptColumns} FROM treido.billing_recovery_requests WHERE seller_id=$1 AND actor_id=$2 AND request_id=$3 FOR UPDATE`,
+            [command.sellerId, access.user.id, command.requestId],
+          )
+        ).rows[0];
+        return {
+          row,
+          receipt,
+          actorId: access.user.id,
+          write: receipt.state === "creating",
+        };
       }
-      return { row, receipt: prior, write: false };
+      return { row, receipt: prior, actorId: access.user.id, write: false };
     }
     if (row.revision !== command.expectedRevision)
       throw new SellerError("CONFLICT");
@@ -150,7 +171,7 @@ export async function manageBillingRecovery(
     ).rows[0];
     if (command.operation !== "escalate" && row.state !== "expired")
       await enqueueBillingObservation(tx, row, command.requestId);
-    return { row, receipt, write };
+    return { row, receipt, actorId: access.user.id, write };
   });
   if (source.write) {
     // A claimed cancellation retries only its original invoice and key, after READ.
@@ -183,6 +204,7 @@ export async function manageBillingRecovery(
         source.row.subscriptionId!,
       );
       if (
+        invoice.id !== source.receipt.invoiceId ||
         !matchingChangeInvoice(
           invoice,
           customer.providerId,
@@ -214,12 +236,48 @@ export async function manageBillingRecovery(
             command.sellerId,
             "billing.manage",
           );
+          if (!hasVerifiedRecentAuthentication(identity))
+            throw new SellerError("FORBIDDEN");
+          // Serialize with claims/completion in the same seller-first lock order.
+          await tx.client.query(
+            "SELECT seller_id FROM treido.seller_usage WHERE seller_id=$1 FOR UPDATE",
+            [command.sellerId],
+          );
+          await tx.client.query(
+            "SELECT treido.lock_billing_registry(NULL,$1,$2,$3,$4,$5,$6)",
+            [
+              customer.id,
+              command.sellerId,
+              binding.platformAccount,
+              binding.livemode,
+              binding.environment,
+              binding.applicationId,
+            ],
+          );
           const receipt = await tx.client.query(
-            "SELECT id FROM treido.billing_recovery_requests WHERE id=$1 AND intent_id=$2 AND seller_id=$3 AND invoice_id=$4 AND state='creating'",
-            [source.receipt.id, source.row.id, command.sellerId, invoice.id],
+            `SELECT r.id FROM treido.billing_recovery_requests r JOIN treido.billing_intents i ON i.id=r.intent_id AND i.seller_id=r.seller_id
+             WHERE r.id=$1 AND r.intent_id=$2 AND r.seller_id=$3 AND r.invoice_id=$4 AND r.state='creating'
+             AND r.updated_at::text=$5 AND r.updated_at>clock_timestamp()-${claimLease}
+             AND r.operation='abandon' AND r.input_hash=$6 AND r.idempotency_key=$7
+             AND i.state IN ('creating','ready','reconciling') AND i.operation='change' AND i.change_invoice_id=r.invoice_id
+             AND i.subscription_id=$8 AND i.customer_binding_id=$9 AND i.parameter_hash=$10 FOR SHARE OF i,r`,
+            [
+              source.receipt.id,
+              source.row.id,
+              command.sellerId,
+              invoice.id,
+              source.receipt.claimToken,
+              source.receipt.inputHash,
+              source.receipt.idempotencyKey,
+              source.row.subscriptionId,
+              customer.id,
+              source.row.parameterHash,
+            ],
           );
           if (receipt.rowCount !== 1) throw new SellerError("CONFLICT");
         });
+        if (!hasVerifiedRecentAuthentication(identity))
+          throw new SellerError("FORBIDDEN");
         // Stripe's documented cancellation of a pending update. No pay() or update() replay.
         await stripe.invoices.voidInvoice(
           invoice.id,
@@ -231,18 +289,33 @@ export async function manageBillingRecovery(
       // Could already be paid, lost permission, or be an unknown provider result.
       // The original intent continues blocking replacement until an authoritative read.
     }
-    await inTransaction(database, async (tx) => {
+    const current = await inTransaction(database, async (tx) => {
       await tx.client.query(
         "SELECT seller_id FROM treido.seller_usage WHERE seller_id=$1 FOR UPDATE",
         [command.sellerId],
       );
-      await tx.client.query(
-        "UPDATE treido.billing_recovery_requests SET state='reconciling',updated_at=clock_timestamp() WHERE id=$1 AND state='creating'",
-        [source.receipt.id],
+      const row = (
+        await tx.client.query<BillingIntent>(
+          `SELECT ${intentColumns} FROM treido.billing_intents WHERE id=$1 AND seller_id=$2 FOR UPDATE`,
+          [source.row.id, command.sellerId],
+        )
+      ).rows[0];
+      const acknowledged = await tx.client.query(
+        `UPDATE treido.billing_recovery_requests SET state='reconciling',updated_at=GREATEST(clock_timestamp(),updated_at+interval '1 microsecond') WHERE id=$1 AND state IN ('creating') AND updated_at::text=$2 AND updated_at>clock_timestamp()-${claimLease} RETURNING id`,
+        [source.receipt.id, source.receipt.claimToken],
       );
-      await enqueueBillingObservation(tx, source.row);
+      // A late attempt must neither overwrite a new claim nor enqueue/retire it.
+      if (acknowledged.rowCount === 1) await enqueueBillingObservation(tx, row);
+      const receipt = (
+        await tx.client.query<Receipt>(
+          `SELECT ${receiptColumns} FROM treido.billing_recovery_requests WHERE seller_id=$1 AND actor_id=$2 AND request_id=$3`,
+          [command.sellerId, source.actorId, command.requestId],
+        )
+      ).rows[0];
+      return { row, receipt };
     });
-    source.receipt.state = "reconciling";
+    source.row = current.row;
+    source.receipt = current.receipt;
   }
   return {
     receiptId: source.receipt.id,

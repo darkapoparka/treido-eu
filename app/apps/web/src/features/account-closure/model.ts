@@ -150,6 +150,7 @@ export type SessionSummary = {
   device: string;
 };
 export type PlanSummary = {
+  messageImages?: import("./message-image-summary").MessageImageSummary | null;
   id: string;
   hash: string;
   state: PlanState;

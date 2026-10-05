@@ -41,7 +41,8 @@ export async function acceptReviewedClosure(
       error instanceof Error &&
       "code" in error &&
       error.code === "23514" &&
-      error.message.startsWith("Changed closure cleanup resources")
+      (error.message.startsWith("Changed closure cleanup resources") ||
+        error.message.startsWith("Changed message image resources"))
     )
       throw new ClosureError("CONFLICT");
     throw error;

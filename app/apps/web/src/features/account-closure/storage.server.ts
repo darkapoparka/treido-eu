@@ -16,6 +16,7 @@ import {
 } from "./model";
 import { parsePolicy } from "./policy";
 import type { CleanupResource } from "./acceptance-resources.server";
+import type { MessageImageReview } from "./message-images.server";
 export function actorKey(identity: VerifiedIdentity) {
   return createHmac("sha256", publicDiscoveryKey())
     .update("account-lifecycle-v1:" + identity.subject)
@@ -94,6 +95,7 @@ export type PlanPayload = {
   obligations: Obligations;
   targets: FrozenTarget[];
   cleanupResources?: CleanupResource[];
+  messageImages?: MessageImageReview | null;
   personalSellers: { id: string; status: string; revision: number }[];
   businessMemberships: { sellerId: string; role: string }[];
   createdAt: string;

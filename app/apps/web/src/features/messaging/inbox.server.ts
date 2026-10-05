@@ -153,6 +153,24 @@ export async function readConversation(
         [thread.id, thread.buyerId, user.id, query.before],
       )
     ).rows;
+    const lifecycleReady = (
+      await tx.client.query<{ ready: boolean }>(
+        "SELECT to_regclass('treido.message_image_tombstones') IS NOT NULL AS ready",
+      )
+    ).rows[0]?.ready;
+    if (lifecycleReady) {
+      const ids = rows.flatMap((row) => row.attachmentIds ?? []);
+      const removed = new Set(
+        (
+          await tx.client.query<{ id: string }>(
+            "SELECT attachment_id AS id FROM treido.message_image_tombstones WHERE attachment_id=ANY($1::uuid[])",
+            [ids],
+          )
+        ).rows.map((row) => row.id),
+      );
+      for (const row of rows)
+        row.attachmentIds = row.attachmentIds?.filter((id) => !removed.has(id));
+    }
     const messages = rows.slice(0, inboxLimits.messages).reverse();
     const read = (
       await tx.client.query<{ sequence: number }>(

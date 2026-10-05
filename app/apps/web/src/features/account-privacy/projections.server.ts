@@ -12,6 +12,7 @@ import { ownAssistantInputExport } from "../assistant-runs/export.server";
 import { readAftercareOwnExport } from "../order-aftercare/queries.server";
 import { readFeedbackOwnExport } from "../order-feedback/queries.server";
 import { readShippingOwnExport } from "../order-shipping/recipient.server";
+import { ownCommunicationMetadata } from "./communication-export.server";
 type Query = Pick<PoolClient, "query">;
 /** Fixed, explicit columns. Nothing reads provider payloads, private counterpart evidence or tables wholesale. */
 export const EXPORT_SQL: Record<ExportCategory, string> = {
@@ -192,6 +193,7 @@ export async function projectExport(
           ).rows;
     if (category === "account") {
       rows = rows.concat(await readOwnAccountLifecycleExport(client, userId));
+      rows = rows.concat(await ownCommunicationMetadata(client, userId));
     }
     if (category === "purchases") {
       const purchases = await projectPurchaseData(client, userId, rows);

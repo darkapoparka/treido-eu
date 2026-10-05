@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import { inTransaction, type SellerDatabase } from "../../server/db/database";
 import { assetRow, storageMatches } from "./commands.server";
 import type { AttachmentStorage } from "./storage.server";
-/** Bounded retry sweep; no listing registry/bucket enumeration. Linked images remain immutable and live. */
+import { imageTombstoned } from "./lifecycle-access.server";
+/** Expired intake and raw sources; linked processed bytes require reviewed closure. */
 export async function purgeAttachmentObjects(
   database: SellerDatabase,
   storage: AttachmentStorage,
@@ -23,6 +24,7 @@ export async function purgeAttachmentObjects(
   for (const candidate of candidates) {
     const token = await inTransaction(database, async (tx) => {
       const asset = await assetRow(tx, candidate.id);
+      if (await imageTombstoned(tx, asset.id)) return null;
       storageMatches(asset, storage);
       const object = (
         await tx.client.query<{ kind: string }>(
@@ -37,6 +39,7 @@ export async function purgeAttachmentObjects(
           [asset.id],
         )
       ).rowCount;
+      if (linked && object.kind !== "source") return null;
       // Sources in active processing and completed-message ready bytes cannot be orphaned.
       if (
         (object.kind === "ready" &&
