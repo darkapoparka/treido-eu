@@ -4,7 +4,6 @@ test("production keeps reference pages and assets unavailable", async ({
   request,
 }) => {
   for (const path of [
-    "/profile",
     "/products/shea-butter",
     "/products/not-a-reference-product",
     "/api/products/shea-butter/context?cart=rice-bundle&cover=rice-bundle",
@@ -16,6 +15,22 @@ test("production keeps reference pages and assets unavailable", async ({
     const response = await request.get(path);
     expect(response.status(), path).toBe(404);
     expect(await response.text(), path).not.toContain("mira@example.test");
+  }
+});
+
+test("migrated profile and account entries redirect to real privacy routes", async ({
+  request,
+}) => {
+  for (const path of ["/profile", "/account"]) {
+    for (const locale of ["bg", "en"]) {
+      const route = `${path}?lang=${locale}`;
+      const response = await request.get(route, { maxRedirects: 0 });
+      expect(response.status(), route).toBe(307);
+      expect(response.headers().location, route).toBe(
+        "/account/privacy/preferences?lang=" + locale,
+      );
+      expect(await response.text(), route).not.toContain("mira@example.test");
+    }
   }
 });
 
