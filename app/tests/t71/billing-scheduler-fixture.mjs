@@ -15,8 +15,15 @@ const root = path.resolve(import.meta.dirname, "../../..");
 const requireWeb = createRequire(path.join(root, "app/apps/web/package.json"));
 const { Pool } = requireWeb("pg");
 const embeddedRequire = createRequire(requireWeb.resolve("embedded-postgres"));
+if (process.arch !== "x64" || !["win32", "linux"].includes(process.platform))
+  throw Error("This isolated PostgreSQL packet requires Windows or Linux x64");
 const binaries = await import(
-  pathToFileURL(embeddedRequire.resolve("@embedded-postgres/windows-x64")).href
+  pathToFileURL(
+    embeddedRequire.resolve(
+      "@embedded-postgres/" +
+        (process.platform === "win32" ? "windows-x64" : "linux-x64"),
+    ),
+  ).href
 );
 const { default: EmbeddedPostgres } = await import(
   pathToFileURL(requireWeb.resolve("embedded-postgres")).href

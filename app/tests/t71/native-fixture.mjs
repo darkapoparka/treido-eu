@@ -15,6 +15,8 @@ const evidence = path.join(root, ".qa/t71/native");
 const requireWeb = createRequire(path.join(root, "app/apps/web/package.json"));
 const { Pool } = requireWeb("pg");
 const embeddedRequire = createRequire(requireWeb.resolve("embedded-postgres"));
+if (process.arch !== "x64" || !["win32", "linux"].includes(process.platform))
+  throw Error("This isolated PostgreSQL packet requires Windows or Linux x64");
 const binaries = await import(
   pathToFileURL(
     embeddedRequire.resolve(

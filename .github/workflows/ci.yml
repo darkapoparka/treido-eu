@@ -110,7 +110,8 @@ jobs:
       - name: Production output isolation
         run: pnpm ci:verify-output
 
-      # The smoke spec uses APIRequestContext; no browser or private assets needed.
+      # HTTP reference denial plus unconfigured device preparation in Chromium.
+      # No provider secret or private reference archive is loaded.
       - name: Production reference denial
         run: pnpm test:smoke:web --workers=1 --reporter=line
         env:
