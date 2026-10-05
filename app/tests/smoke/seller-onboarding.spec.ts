@@ -48,6 +48,8 @@ test("business onboarding validates locally, reports issues and clears sensitive
     page.getByRole("heading", { name: "Check your catalogue file" }),
   ).toBeVisible();
   const input = page.getByLabel("Choose a UTF-8 CSV", { exact: true });
+  // Unlike click(), setInputFiles() does not wait for enabled controls.
+  await expect(input).toBeEnabled();
   await input.setInputFiles(
     file([item, { ...item, external_id: "t72-phone-2" }]),
   );
@@ -56,6 +58,8 @@ test("business onboarding validates locally, reports issues and clears sensitive
       .getByRole("status")
       .filter({ hasText: "2 of 2 rows pass file validation." }),
   ).toBeVisible();
+  // Unlike click(), setInputFiles() does not wait for enabled controls.
+  await expect(input).toBeEnabled();
   await input.setInputFiles(
     file([
       item,
@@ -112,6 +116,8 @@ test("a late file read cannot replace the newly chosen CSV and rows are paginate
     };
   });
   const input = page.getByLabel("Choose a UTF-8 CSV", { exact: true });
+  // Unlike click(), setInputFiles() does not wait for enabled controls.
+  await expect(input).toBeEnabled();
   await input.setInputFiles(
     file([{ ...item, title: "Old delayed item" }], "slow.csv"),
   );
@@ -120,6 +126,8 @@ test("a late file read cannot replace the newly chosen CSV and rows are paginate
       typeof (window as Window & { releaseOldFile?: () => void })
         .releaseOldFile === "function",
   );
+  // Unlike click(), setInputFiles() does not wait for enabled controls.
+  await expect(input).toBeEnabled();
   await input.setInputFiles(
     file(
       Array.from({ length: 26 }, (_, index) => ({
@@ -167,12 +175,18 @@ test("Bulgarian preparation errors stay readable at narrow and desktop widths", 
 }) => {
   await page.goto("/sell/start?kind=business&lang=bg");
   const input = page.getByLabel("Избери CSV файл с UTF-8", { exact: true });
+  // Unlike click(), setInputFiles() does not wait for enabled controls.
+  await expect(input).toBeEnabled();
   await input.setInputFiles({
     name: "bad.csv",
     mimeType: "text/csv",
     buffer: Buffer.from([0xc3, 0x28]),
   });
-  await expect(page.getByRole("alert")).toContainText("UTF-8");
+  await expect(
+    page.locator("[data-seller-csv-preflight]").getByRole("alert"),
+  ).toContainText("UTF-8");
+  // Unlike click(), setInputFiles() does not wait for enabled controls.
+  await expect(input).toBeEnabled();
   await input.setInputFiles(
     file([
       {
@@ -233,4 +247,55 @@ test("real support routes are bilingual and never simulate a sent support chat",
             : "Не е изпратено съобщение",
         );
     }
+});
+
+test("catalogue file choice is disabled until its real page hydrates", async ({
+  page,
+}) => {
+  let resume!: () => void;
+  const scripts = new Promise<void>((resolve) => {
+    resume = resolve;
+  });
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  await page.route("**/_next/static/**", async (route) => {
+    if (route.request().resourceType() === "script") await scripts;
+    await route.continue();
+  });
+  const input = page.getByLabel("Избери CSV файл с UTF-8", { exact: true });
+  try {
+    await page.goto("/sell/start?kind=business&lang=bg", {
+      waitUntil: "commit",
+    });
+    await expect(input).toBeDisabled();
+    await expect(
+      page.locator("fieldset[data-shop-interactive]"),
+    ).toHaveAttribute("data-shop-interactive", "false");
+  } finally {
+    resume();
+  }
+  await expect(input).toBeEnabled();
+  await expect(page.locator("fieldset[data-shop-interactive]")).toHaveAttribute(
+    "data-shop-interactive",
+    "true",
+  );
+  await input.setInputFiles({
+    name: "bad.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from([0xc3, 0x28]),
+  });
+  await expect(
+    page.locator("[data-seller-csv-preflight]").getByRole("alert"),
+  ).toContainText("UTF-8");
+  await expect(
+    page.locator("[data-seller-csv-preflight]").getByRole("status"),
+  ).toHaveText("");
+  await page
+    .getByRole("button", { name: "Изчисти файла", exact: true })
+    .click();
+  await expect(input).toBeFocused();
+  await expect(
+    page.locator("[data-seller-csv-preflight]").getByRole("alert"),
+  ).toHaveCount(0);
+  expect(errors).toEqual([]);
 });
