@@ -47,3 +47,29 @@ The review then found and repaired another real delivery defect: selecting five 
 The API/backend contracts now describe the actual attachment and recovery implementation rather than saying the inbox cannot upload images. Linked message images remain retained evidence; communication-retention/account-closure handling is still a specific gap, not reported as completed. Read-only local environment inspection found no expected runtime database URL, media credentials, invitation sender/API configuration or payment keys; existing Clerk/Inngest entries were preserved. No credential value was exposed or written, and absence in that file is not a claim that the owner's external accounts do not exist.
 
 Source publication keeps the review/main automatic deployment hold. Hosted checks, original-task closure decisions and the exact resulting commit are recorded only after their observed outcome.
+
+
+## Final hosted qualification and original-task closure
+
+The94-file feature implementation was committed in5c3ba3b39c4890b155a31f0927ff6b283187917f;9478996 and dc6b9bd complete its browser-test follow-through. [Run37291128428/job111701505583](https://github.com/darkapoparka/treido-eu/actions/runs/37291128428/job/111701505583) finished October5 at09:40:45UTC on application/test head dc6b9bd68b4427d450298c248d7bdba88d4a40e8. It checked synthetic PR merge74b7c7b42c5bf502b5151998e7cebab85f4d84b1 against unchanged main, not an actual merge.
+
+| Exact published-source check | Observed result |
+|---|---|
+| Fresh frozen install, documentation and configured zero-warning lint | PASS;16 documentation-checker tests |
+| Unit suite | PASS:1,870 assertions,144 files,one original optional skip |
+| Launcher/output-policy suites | PASS:43 and45 respectively |
+| T71 PostgreSQL/policy packet | PASS:21 database cases and6 policy cases; the six overlap units |
+| T72 launch PostgreSQL packet | PASS:14 database cases, including both mail fairness regressions |
+| Standalone billing constraints | PASS:actual PostgreSQL, frozen invoice, grants, pending-money and terminal guards |
+| Deferred component-browser packets | PASS:5 session scenarios plus4 image scenarios,zero page errors |
+| Fresh route generation, shared/web strict compilation, production build | PASS |
+| Actual output audit | PASS:160 dependency traces,zero issues |
+| Ordinary production smoke | PASS:all14 cases |
+| Attempted reference-opt-in production smoke | PASS:all14 cases again |
+| Unsuppressed dependency audit | FAIL:two high findings,node-forge and braces; no patched versions reported |
+
+The initial5c3ba3b smoke attempt assigned a file before React became interactive; ordinary users already had a disabled/inert fieldset. Waiting for enabled input and scoping the product alert retained the strict malformed-UTF8 assertion. The following9478996 run passed the original13 smoke cases; the new delayed-script regression failed only on a selector that matched both streamed fieldsets. dc6b9bd checks the input's nearest fieldset, and all14 cases pass in both modes. No functional gate, negative assertion, ordinary test or audit policy was removed.
+
+T28a is now formally DONE: the rights-cleared bilingual seller guide, actual template and on-device validation/issue export, support information and truthful acquisition/funnel definitions meet the original acceptance. Five production-browser cases cover local-only file handling, stale-file races, error/clear/focus behavior, pagination, Bulgarian320–1920px/200% text, support availability and delayed hydration;13 preflight unit tests also pass. No messages were sent, no staff response promised, no consenting catalogue fabricated and no analytics collection falsely claimed. T28b remains separate and open. The root tracker therefore records16DONE/66,50open—not66complete.
+
+Current private email/storage/financial bindings and real signed-in journey acceptance remain unqualified. Linked images are retained message evidence and communication-retention/closure handling remains unfinished. The existing Clerk/Neon development qualification was not discarded; missing ordinary local configuration is not a finding that those accounts do not exist. Historical189 database checks retain their own source scope, and the local1,926-unit count includes56 excluded concurrent Studio tests. All applications, migrations, other writers' changes and private evidence remain preserved. Main remains unmerged and automatic Git deployments stay disabled while the audit and release gates remain unresolved.
