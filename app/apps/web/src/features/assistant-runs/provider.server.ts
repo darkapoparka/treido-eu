@@ -18,6 +18,12 @@ import {
   type Interpretation,
 } from "./model";
 import { requirePolicy, type RuntimePolicy } from "./policy.server";
+import {
+  gatewayAuthenticationFromEnvironment,
+  qualifyGatewayAuthentication,
+  verifyGatewayOidcHeaders,
+  type GatewayAuthentication,
+} from "./gateway-auth.server";
 const GATEWAY = "https://ai-gateway.vercel.sh";
 const generation = (id: unknown): id is string =>
   typeof id === "string" && /^gen_[0-9A-HJKMNP-TV-Z]{26}$/.test(id);
@@ -105,26 +111,15 @@ export async function boundedProviderJson(
  * No retries, external URLs, fallback models, provider tools or client keys. */
 export function createGatewayAdapter(
   policy: RuntimePolicy,
-  key: string,
+  credential: string | GatewayAuthentication,
   transport: typeof fetch = fetch,
 ) {
   requirePolicy(policy);
-  if (
-    !policy.config.providerEnabled ||
-    !key ||
-    key.length > 4096 ||
-    /\s/.test(key)
-  )
-    throw new SellerError("NOT_AVAILABLE");
-  // This fingerprint must be part of the independently approved immutable
-  // account/project/application association; it is never generated as approval,
-  // returned to clients or logged. A key-shaped environment value alone fails.
-  const fingerprint = createHash("sha256")
-    .update("treido-gateway-binding-v1\0")
-    .update(key)
-    .digest("hex");
-  if (fingerprint !== policy.config.gatewayCredentialFingerprint)
-    throw new SellerError("NOT_AVAILABLE");
+  if (!policy.config.providerEnabled) throw new SellerError("NOT_AVAILABLE");
+  const authentication = qualifyGatewayAuthentication(policy, credential);
+  const key =
+    authentication.mode === "api-key" ? authentication.key : undefined;
+  const settings = key ? { apiKey: key } : {};
   const headers = {
     Authorization: `Bearer ${key}`,
     "Content-Type": "application/json",
@@ -153,7 +148,7 @@ export function createGatewayAdapter(
           throw new SellerError("INVALID_INPUT");
         let capturedId: string | null = null;
         const sdk = createGateway({
-          apiKey: key,
+          ...settings,
           fetch: async (url, init) => {
             const target = url instanceof Request ? url.url : String(url);
             if (
@@ -161,6 +156,13 @@ export function createGatewayAdapter(
               init?.method !== "POST"
             )
               throw new SellerError("NOT_AVAILABLE");
+            await verifyGatewayOidcHeaders(
+              policy,
+              authentication,
+              init?.headers,
+              transport,
+              abort,
+            );
             const response = await transport(url, {
               ...init,
               redirect: "error",
@@ -241,7 +243,7 @@ export function createGatewayAdapter(
         throw new SellerError("INVALID_INPUT");
       let capturedId: string | null = null;
       const sdk = createGateway({
-        apiKey: key,
+        ...settings,
         fetch: async (url, init) => {
           // The SDK cannot expand this run into metadata lookups, remote files,
           // another origin, another model or another provider operation.
@@ -251,6 +253,13 @@ export function createGatewayAdapter(
             init?.method !== "POST"
           )
             throw new SellerError("NOT_AVAILABLE");
+          await verifyGatewayOidcHeaders(
+            policy,
+            authentication,
+            init?.headers,
+            transport,
+            abort,
+          );
           const response = await transport(url, {
             ...init,
             redirect: "error",
@@ -347,6 +356,82 @@ export function createGatewayAdapter(
       inputMode: InputMode,
     ): Promise<UsageObservation | null> {
       if (!generation(id) || !policy.config.models[inputMode]) return null;
+      if (authentication.mode === "vercel-oidc") {
+        const signal = AbortSignal.timeout(15000);
+        const sdk = createGateway({
+          fetch: async (url, init) => {
+            const target = url instanceof Request ? url.url : String(url);
+            if (
+              target !==
+                GATEWAY + "/v1/generation?id=" + encodeURIComponent(id) ||
+              init?.method !== "GET"
+            )
+              throw new SellerError("NOT_AVAILABLE");
+            await verifyGatewayOidcHeaders(
+              policy,
+              authentication,
+              init?.headers,
+              transport,
+              signal,
+            );
+            const response = await transport(url, {
+              ...init,
+              redirect: "error",
+              cache: "no-store",
+              signal,
+            });
+            if (response.status === 404) {
+              await response.body?.cancel();
+              return Response.json({ error: "pending" }, { status: 404 });
+            }
+            return Response.json(await boundedProviderJson(response));
+          },
+        });
+        try {
+          const data = await sdk.getGenerationInfo({ id });
+          if (
+            data.id !== id ||
+            data.model !== policy.config.models[inputMode] ||
+            data.isByok !== false ||
+            !policy.config.providers.includes(data.providerName) ||
+            !Number.isFinite(data.totalCost) ||
+            data.totalCost < 0 ||
+            data.totalCost > 10000
+          )
+            throw new SellerError("NOT_AVAILABLE");
+          const minor = usdUsageMinor(data.totalCost);
+          if (!Number.isSafeInteger(minor))
+            throw new SellerError("NOT_AVAILABLE");
+          const observation = {
+            id,
+            model: data.model,
+            minor,
+            proofHash: createHash("sha256")
+              .update(
+                JSON.stringify([
+                  id,
+                  data.model,
+                  data.providerName,
+                  data.totalCost,
+                  data.createdAt,
+                  data.finishReason,
+                ]),
+              )
+              .digest("hex"),
+          };
+          usageProofs.add(observation);
+          return observation;
+        } catch (error) {
+          if (
+            error &&
+            typeof error === "object" &&
+            "statusCode" in error &&
+            error.statusCode === 404
+          )
+            return null;
+          throw error;
+        }
+      }
       const response = await transport(
         GATEWAY + "/v1/generation?id=" + encodeURIComponent(id),
         {
@@ -411,5 +496,8 @@ export function gatewayAdapter(policy: RuntimePolicy) {
       process.env.VERCEL_PROJECT_ID !== policy.config.gatewayProjectId)
   )
     throw new SellerError("NOT_AVAILABLE");
-  return createGatewayAdapter(policy, process.env.AI_GATEWAY_API_KEY ?? "");
+  return createGatewayAdapter(
+    policy,
+    gatewayAuthenticationFromEnvironment(policy),
+  );
 }

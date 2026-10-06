@@ -3,6 +3,7 @@ export type JobBindings = {
   environment: string;
   origin: string;
   repairServiceId: string;
+  repairScheduler?: "inngest-cron" | "external-minute";
 };
 export function validateJobBindings(
   env: Readonly<Record<string, string | undefined>>,
@@ -30,6 +31,13 @@ export function validateJobBindings(
   if (read("TREIDO_INNGEST_PURPOSE") !== read("TREIDO_ENV"))
     missing.add("TREIDO_INNGEST_PURPOSE");
   const production = read("TREIDO_ENV") === "production";
+  const repairScheduler = read("TREIDO_REPAIR_SCHEDULER") || "inngest-cron";
+  if (
+    !["inngest-cron", "external-minute"].includes(repairScheduler) ||
+    (repairScheduler === "external-minute" &&
+      (!production || read("VERCEL_ENV") !== "production"))
+  )
+    missing.add("TREIDO_REPAIR_SCHEDULER");
   if (!/^signkey-[a-z]+-[a-f0-9]{64}$/.test(read("INNGEST_SIGNING_KEY")))
     missing.add("INNGEST_SIGNING_KEY");
   if (read("INNGEST_DEV") && !["false", "0"].includes(read("INNGEST_DEV")))
@@ -102,6 +110,7 @@ export function validateJobBindings(
           environment: read("INNGEST_ENV"),
           origin: callbackOrigin,
           repairServiceId: read("TREIDO_OUTBOX_SERVICE_ID"),
+          repairScheduler: repairScheduler as JobBindings["repairScheduler"],
         },
       };
 }

@@ -85,6 +85,9 @@ jobs:
       - name: Launch, lifecycle, draft and billing recovery database regressions
         run: pnpm exec vitest run --config tests/t72/message-lifecycle.config.mjs --configLoader native
 
+      - name: Maintenance due-work database regressions
+        run: pnpm exec vitest run --config tests/t72/repair-due.config.mjs --configLoader native
+
       - name: Billing recovery database constraints
         run: node tests/t72/billing-native.mjs
 

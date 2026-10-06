@@ -15,5 +15,16 @@ export async function applyLifecycleJobGrants(client, role) {
       "GRANT EXECUTE ON FUNCTION treido." + signature + " TO " + r,
     );
   }
+  const repair = await client.query(
+    "SELECT to_regprocedure('treido.repair_any_due_v1()') IS NOT NULL AS ready",
+  );
+  if (repair.rows[0]?.ready) {
+    await client.query(
+      "REVOKE ALL ON FUNCTION treido.repair_any_due_v1() FROM PUBLIC",
+    );
+    await client.query(
+      "GRANT EXECUTE ON FUNCTION treido.repair_any_due_v1() TO " + r,
+    );
+  }
   // Queue primitive, hash/trigger and private assistant mutations are never granted.
 }

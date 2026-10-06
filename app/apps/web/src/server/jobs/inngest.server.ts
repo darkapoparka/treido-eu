@@ -33,6 +33,8 @@ import { schedulePaymentRepair } from "../../features/payments/jobs.server";
 import { scheduleSavedSearches } from "../../features/saved-searches/jobs.server";
 import { observeJob } from "./observations.server";
 import { jobObservationTime, jobObservationDuration } from "./observations";
+import { withRepairDueCheckpoint } from "./repair-due.server";
+import { REPAIR_EVENT, validRepairWakeup } from "./repair-wakeup.server";
 
 const quietLogger = { info() {}, warn() {}, error() {}, debug() {} };
 export function createJobExecutor(
@@ -139,81 +141,101 @@ export function createJobExecutor(
   const repair = client.createFunction(
     {
       id: "outbox-repair-v1",
-      triggers: { cron: "* * * * *" },
+      triggers:
+        bindings.repairScheduler === "external-minute"
+          ? { event: REPAIR_EVENT }
+          : { cron: "* * * * *" },
       retries: 2,
       concurrency: { limit: 1 },
     },
-    async ({ step }) => {
-      await step.run("schedule-seller-billing-observation-v1", () =>
-        scheduleBillingRepair(database()),
-      );
-      await step.run("schedule-promotion-observation-v1", async () => {
-        const db = database();
-        if (!(await inTransaction(db, promotionStorageReady))) return 0;
-        return schedulePromotionRepair(db);
-      });
-      await step.run("schedule-order-refund-observation-v2", () =>
-        scheduleOrderRefundRepair(database()),
-      );
-      await step.run("schedule-payment-observation-v1", () =>
-        schedulePaymentRepair(database()),
-      );
-      await step.run("schedule-buyer-search-matches-v1", () =>
-        scheduleSavedSearches(database()),
-      );
-      await step.run("schedule-owned-assistant-maintenance-v1", () =>
-        scheduleLifecycleMaintenance(database(), "assistant"),
-      );
-      await step.run("schedule-accepted-account-closure-v1", () =>
-        scheduleLifecycleMaintenance(database(), "closure"),
-      );
-      await step.run("schedule-original-shipping-retention-v1", () =>
-        scheduleLifecycleMaintenance(database(), "shipping"),
-      );
-      const dispatched = await step.run("lease-and-handoff-v1", () =>
-        dispatchOutbox(database(), bindings, (event) => client.send(event)),
-      );
-      await step.run("expire-inventory-reservations-v1", () =>
-        expireInventoryAllocations(database()),
-      );
-      await step.run("expire-negotiated-offers-v1", () =>
-        expireOffers(database()),
-      );
-      await step.run("expire-private-csv-uploads-v1", () =>
-        expireImportUploads(database()),
-      );
-      await step.run("reconcile-invitation-mail-v1", async () => {
-        const db = database();
-        const ready = await db.pool.query(
-          "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='treido' AND table_name='invitation_deliveries' AND column_name='mail_binding') AS ready",
+    async ({ event, step }) => {
+      if (
+        bindings.repairScheduler === "external-minute" &&
+        (event.name !== REPAIR_EVENT ||
+          !validRepairWakeup(event.data, bindings))
+      )
+        throw new NonRetriableError(
+          "Treido repair wake-up authority was rejected.",
         );
-        if (!ready.rows[0]?.ready) return { available: false, checked: 0 };
-        return maintainInvitationMail(
-          db,
-          invitationMailConfig(process.env, bindings),
-        );
-      });
-      await step.run("cleanup-private-message-images-v1", () =>
-        maintainMessageAttachments(database()),
+      return withRepairDueCheckpoint(
+        (read) => step.run("repair-due-work-v1", read),
+        database,
+        async () => {
+          await step.run("schedule-seller-billing-observation-v1", () =>
+            scheduleBillingRepair(database()),
+          );
+          await step.run("schedule-promotion-observation-v1", async () => {
+            const db = database();
+            if (!(await inTransaction(db, promotionStorageReady))) return 0;
+            return schedulePromotionRepair(db);
+          });
+          await step.run("schedule-order-refund-observation-v2", () =>
+            scheduleOrderRefundRepair(database()),
+          );
+          await step.run("schedule-payment-observation-v1", () =>
+            schedulePaymentRepair(database()),
+          );
+          await step.run("schedule-buyer-search-matches-v1", () =>
+            scheduleSavedSearches(database()),
+          );
+          await step.run("schedule-owned-assistant-maintenance-v1", () =>
+            scheduleLifecycleMaintenance(database(), "assistant"),
+          );
+          await step.run("schedule-accepted-account-closure-v1", () =>
+            scheduleLifecycleMaintenance(database(), "closure"),
+          );
+          await step.run("schedule-original-shipping-retention-v1", () =>
+            scheduleLifecycleMaintenance(database(), "shipping"),
+          );
+          const dispatched = await step.run("lease-and-handoff-v1", () =>
+            dispatchOutbox(database(), bindings, (event) => client.send(event)),
+          );
+          await step.run("expire-inventory-reservations-v1", () =>
+            expireInventoryAllocations(database()),
+          );
+          await step.run("expire-negotiated-offers-v1", () =>
+            expireOffers(database()),
+          );
+          await step.run("expire-private-csv-uploads-v1", () =>
+            expireImportUploads(database()),
+          );
+          await step.run("reconcile-invitation-mail-v1", async () => {
+            const db = database();
+            const ready = await db.pool.query(
+              "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='treido' AND table_name='invitation_deliveries' AND column_name='mail_binding') AS ready",
+            );
+            if (!ready.rows[0]?.ready) return { available: false, checked: 0 };
+            return maintainInvitationMail(
+              db,
+              invitationMailConfig(process.env, bindings),
+            );
+          });
+          await step.run("cleanup-private-message-images-v1", () =>
+            maintainMessageAttachments(database()),
+          );
+          await step.run("expire-business-invitations-v1", () =>
+            expireTeamInvitations(database()),
+          );
+          await step.run("cleanup-registered-photo-objects-v1", async () => {
+            let storage;
+            try {
+              storage = requireMediaStorage();
+            } catch (error) {
+              if (
+                error instanceof SellerError &&
+                error.code === "NOT_AVAILABLE"
+              )
+                return { status: "unavailable" as const };
+              throw error;
+            }
+            return {
+              status: "processed" as const,
+              ...(await cleanupMediaObjects(database(), storage)),
+            };
+          });
+          return dispatched;
+        },
       );
-      await step.run("expire-business-invitations-v1", () =>
-        expireTeamInvitations(database()),
-      );
-      await step.run("cleanup-registered-photo-objects-v1", async () => {
-        let storage;
-        try {
-          storage = requireMediaStorage();
-        } catch (error) {
-          if (error instanceof SellerError && error.code === "NOT_AVAILABLE")
-            return { status: "unavailable" as const };
-          throw error;
-        }
-        return {
-          status: "processed" as const,
-          ...(await cleanupMediaObjects(database(), storage)),
-        };
-      });
-      return dispatched;
     },
   );
   const http = serve({
@@ -224,6 +246,8 @@ export function createJobExecutor(
   });
   return {
     http,
+    sendRepairWakeup: (event: Parameters<typeof client.send>[0]) =>
+      client.send(event),
     dispatch: () =>
       dispatchOutbox(database(), bindings, (event) => client.send(event)),
   };

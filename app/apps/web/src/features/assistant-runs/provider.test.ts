@@ -1,4 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
+import { generateKeyPairSync, sign } from "node:crypto";
 vi.mock("server-only", () => ({}));
 import {
   createGatewayAdapter,
@@ -12,6 +13,7 @@ import {
   isolatedGeneration,
 } from "./test-fixtures";
 import { criteria } from "./model";
+import { oidcBindingFingerprint } from "./gateway-auth.server";
 const transport = vi.fn<typeof fetch>(),
   capture = vi.fn(),
   base = "q=Sony&seller=business&maxPrice=100&lang=bg";
@@ -20,6 +22,74 @@ const json = (value: unknown, status = 200) =>
     status,
     headers: { "content-type": "application/json" },
   });
+const oidc = {
+  mode: "vercel-oidc",
+  issuer: "https://oidc.vercel.com",
+  audience: "https://vercel.com/isolated",
+  subject: "owner:isolated:project:treido:environment:production",
+} as const;
+const oidcPolicy = {
+  ...isolatedPolicy,
+  environment: "production",
+  config: { ...isolatedPolicy.config },
+};
+oidcPolicy.config.gatewayCredentialFingerprint = oidcBindingFingerprint(
+  oidcPolicy,
+  oidc,
+);
+const oidcPair = generateKeyPairSync("rsa", { modulusLength: 2048 });
+const oidcJwk = {
+  ...oidcPair.publicKey.export({ format: "jwk" }),
+  kid: "isolated-provider-key",
+  alg: "RS256",
+  use: "sig",
+};
+function oidcToken(change: Record<string, unknown> = {}) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = Buffer.from(
+    JSON.stringify({ typ: "JWT", alg: "RS256", kid: oidcJwk.kid }),
+  ).toString("base64url");
+  const body = Buffer.from(
+    JSON.stringify({
+      iss: oidc.issuer,
+      aud: oidc.audience,
+      sub: oidc.subject,
+      owner: "isolated",
+      project: "treido",
+      owner_id: oidcPolicy.config.gatewayAccountId,
+      project_id: oidcPolicy.config.gatewayProjectId,
+      environment: "production",
+      iat: now - 1,
+      nbf: now - 1,
+      exp: now + 3600,
+      ...change,
+    }),
+  ).toString("base64url");
+  return `${header}.${body}.${sign("RSA-SHA256", Buffer.from(`${header}.${body}`), oidcPair.privateKey).toString("base64url")}`;
+}
+const oidcUsage = (change: Record<string, unknown> = {}) => ({
+  data: {
+    id: isolatedGeneration,
+    model: "isolated/text",
+    provider_name: "isolated",
+    is_byok: false,
+    total_cost: 0.006,
+    upstream_inference_cost: 0,
+    usage: 0.006,
+    created_at: "2026-10-06T07:00:00.000Z",
+    streamed: false,
+    finish_reason: "stop",
+    latency: 1,
+    generation_time: 1,
+    native_tokens_prompt: 1,
+    native_tokens_completion: 1,
+    native_tokens_reasoning: 0,
+    native_tokens_cached: 0,
+    native_tokens_cache_creation: 0,
+    billable_web_search_calls: 0,
+    ...change,
+  },
+});
 const proposal = {
   criteria: base,
   itemType: "camera",
@@ -395,6 +465,133 @@ it("refusal, truncated/foreign-model/tool output and hard-filter relaxation neve
       ),
     ).rejects.toThrow("NOT_AVAILABLE");
     expect(transport).toHaveBeenCalledTimes(1);
+  }
+});
+it("OIDC generation and duplicate usage reads retain exact authority through SDK token rotation", async () => {
+  const first = oidcToken(),
+    second = oidcToken({ iat: Math.floor(Date.now() / 1000) - 2 });
+  const inferenceHeaders: string[] = [],
+    usageHeaders: string[] = [];
+  vi.stubEnv("AI_GATEWAY_API_KEY", undefined);
+  vi.stubEnv("VERCEL_OIDC_TOKEN", first);
+  transport.mockImplementation(async (url, init) => {
+    const target = String(url);
+    if (target === oidc.issuer + "/.well-known/openid-configuration")
+      return json({
+        issuer: oidc.issuer,
+        jwks_uri: oidc.issuer + "/.well-known/jwks",
+      });
+    if (target === oidc.issuer + "/.well-known/jwks")
+      return json({ keys: [oidcJwk] });
+    const headers = new Headers(init?.headers);
+    expect(headers.get("ai-gateway-auth-method")).toBe("oidc");
+    if (target === "https://ai-gateway.vercel.sh/v4/ai/language-model") {
+      expect(init?.method).toBe("POST");
+      inferenceHeaders.push(headers.get("authorization")!);
+      return json(completion());
+    }
+    if (
+      target ===
+      "https://ai-gateway.vercel.sh/v1/generation?id=" + isolatedGeneration
+    ) {
+      expect(init?.method).toBe("GET");
+      usageHeaders.push(headers.get("authorization")!);
+      return json(oidcUsage());
+    }
+    throw new Error("Unexpected isolated endpoint");
+  });
+  try {
+    const adapter = createGatewayAdapter(oidcPolicy, oidc, transport);
+    const output = await adapter.interpret(
+      { mode: "text", criteria: base, prompt: "camera" },
+      capture,
+    );
+    expect(output.generationId).toBe(isolatedGeneration);
+    vi.stubEnv("VERCEL_OIDC_TOKEN", second);
+    const usage = await adapter.lookupUsage(isolatedGeneration, "text");
+    expect(usage?.minor).toBe(1);
+    expect(verifiedUsage(usage!)).toBe(true);
+    expect(await adapter.lookupUsage(isolatedGeneration, "text")).toEqual(
+      usage,
+    );
+    expect(inferenceHeaders).toEqual([`Bearer ${first}`]);
+    expect(usageHeaders).toEqual([`Bearer ${second}`, `Bearer ${second}`]);
+    expect(
+      transport.mock.calls.filter(([, init]) => init?.method === "POST"),
+    ).toHaveLength(1);
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+it("wrong OIDC project or SDK key fallback never reaches inference or usage transport", async () => {
+  try {
+    vi.stubEnv("AI_GATEWAY_API_KEY", undefined);
+    vi.stubEnv("VERCEL_OIDC_TOKEN", oidcToken({ project_id: "prj_foreign" }));
+    const adapter = createGatewayAdapter(oidcPolicy, oidc, transport);
+    await expect(
+      adapter.interpret(
+        { mode: "text", criteria: base, prompt: "camera" },
+        capture,
+      ),
+    ).rejects.toThrow();
+    await expect(
+      adapter.lookupUsage(isolatedGeneration, "text"),
+    ).rejects.toThrow();
+    expect(transport).not.toHaveBeenCalled();
+    vi.stubEnv("AI_GATEWAY_API_KEY", isolatedKey);
+    vi.stubEnv("VERCEL_OIDC_TOKEN", oidcToken());
+    await expect(
+      adapter.interpret(
+        { mode: "text", criteria: base, prompt: "camera" },
+        capture,
+      ),
+    ).rejects.toThrow();
+    expect(transport).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+it("OIDC delayed usage stays pending and foreign model/provider/BYOK cost never settles", async () => {
+  vi.stubEnv("AI_GATEWAY_API_KEY", undefined);
+  vi.stubEnv("VERCEL_OIDC_TOKEN", oidcToken());
+  let payload: unknown = { error: "pending" },
+    status = 404;
+  transport.mockImplementation(async (url, init) => {
+    const target = String(url);
+    if (target === oidc.issuer + "/.well-known/openid-configuration")
+      return json({
+        issuer: oidc.issuer,
+        jwks_uri: oidc.issuer + "/.well-known/jwks",
+      });
+    if (target === oidc.issuer + "/.well-known/jwks")
+      return json({ keys: [oidcJwk] });
+    expect(target).toBe(
+      "https://ai-gateway.vercel.sh/v1/generation?id=" + isolatedGeneration,
+    );
+    expect(init?.method).toBe("GET");
+    return json(payload, status);
+  });
+  try {
+    const adapter = createGatewayAdapter(oidcPolicy, oidc, transport);
+    expect(await adapter.lookupUsage(isolatedGeneration, "text")).toBeNull();
+    status = 200;
+    for (const change of [
+      { model: "foreign/text" },
+      { provider_name: "foreign" },
+      { is_byok: true },
+      { total_cost: -1 },
+    ]) {
+      payload = oidcUsage(change);
+      await expect(
+        adapter.lookupUsage(isolatedGeneration, "text"),
+      ).rejects.toThrow("NOT_AVAILABLE");
+    }
+    expect(capture).not.toHaveBeenCalled();
+    expect(
+      transport.mock.calls.every(([, init]) => init?.method === "GET"),
+    ).toBe(true);
+  } finally {
+    vi.unstubAllEnvs();
   }
 });
 it("bounded streamed JSON refuses a false small length, invalid MIME or provider error", async () => {

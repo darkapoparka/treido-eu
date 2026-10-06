@@ -1,11 +1,28 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 vi.mock("server-only", () => ({}));
+const sdk = vi.hoisted(() => ({
+  registration: undefined as ReturnType<typeof vi.spyOn> | undefined,
+}));
+vi.mock("inngest", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("inngest")>();
+  return {
+    ...actual,
+    Inngest: vi.fn(function (
+      options: ConstructorParameters<typeof actual.Inngest>[0],
+    ) {
+      const client = new actual.Inngest(options);
+      sdk.registration = vi.spyOn(client, "createFunction");
+      return client;
+    }),
+  };
+});
 import { validateJobIntent, parseJobEvent } from "./model";
 import { validateJobBindings } from "./bindings";
 import { authorizedService, boundedJson } from "./http.server";
 import { createJobExecutor } from "./inngest.server";
 import type { NextRequest } from "next/server";
+import { REPAIR_EVENT } from "./repair-wakeup.server";
 
 const configuration = {
   TREIDO_ENV: "test",
@@ -69,6 +86,85 @@ describe("job authority and provider boundary", () => {
     expect(JSON.stringify(unbound)).not.toContain(
       configuration.INNGEST_SIGNING_KEY,
     );
+  });
+  it("defaults to the existing cron and requires production purpose for the optional timer", () => {
+    const result = validateJobBindings(configuration);
+    if (result.ok) expect(result.bindings.repairScheduler).toBe("inngest-cron");
+    const production = {
+      ...configuration,
+      TREIDO_ENV: "production",
+      TREIDO_INNGEST_PURPOSE: "production",
+      TREIDO_APP_ORIGIN: "https://treido.eu",
+      INNGEST_SERVE_ORIGIN: "",
+      VERCEL_ENV: "production",
+      TREIDO_REPAIR_SCHEDULER: "external-minute",
+    };
+    expect(validateJobBindings(production).ok).toBe(true);
+    for (const override of [
+      { TREIDO_REPAIR_SCHEDULER: "unknown" },
+      { VERCEL_ENV: "preview" },
+      { VERCEL_ENV: "" },
+      { TREIDO_ENV: "test", TREIDO_INNGEST_PURPOSE: "test" },
+    ])
+      expect(validateJobBindings({ ...production, ...override }).ok).toBe(
+        false,
+      );
+  });
+  it("registers only the selected timer trigger, retaining repair and executor retry budgets", async () => {
+    const checked = validateJobBindings(configuration);
+    if (!checked.ok) throw Error("Invalid fixture");
+    const db = vi.fn(() => {
+      throw Error("Database must not be reached");
+    });
+    try {
+      createJobExecutor(checked.bindings, {}, db);
+      const spy = sdk.registration!;
+      expect(spy.mock.calls[0][0]).toMatchObject({
+        id: "durable-job-v1",
+        retries: 4,
+      });
+      expect(spy.mock.calls[1][0]).toEqual({
+        id: "outbox-repair-v1",
+        triggers: { cron: "* * * * *" },
+        retries: 2,
+        concurrency: { limit: 1 },
+      });
+      createJobExecutor(
+        { ...checked.bindings, repairScheduler: "external-minute" },
+        {},
+        db,
+      );
+      const external = sdk.registration!;
+      expect(external.mock.calls[1][0]).toEqual({
+        id: "outbox-repair-v1",
+        triggers: { event: REPAIR_EVENT },
+        retries: 2,
+        concurrency: { limit: 1 },
+      });
+      const handler = external.mock.calls[1][1] as unknown as (
+        input: unknown,
+      ) => Promise<unknown>;
+      const step = { run: vi.fn() };
+      await expect(
+        handler({
+          event: {
+            name: REPAIR_EVENT,
+            id: "apparently-valid",
+            data: {
+              schemaVersion: 1,
+              applicationId: "wrong",
+              environment: checked.bindings.environment,
+              minute: Math.floor(Date.now() / 60000),
+            },
+          },
+          step,
+        }),
+      ).rejects.toThrow("authority was rejected");
+      expect(step.run).not.toHaveBeenCalled();
+      expect(db).not.toHaveBeenCalled();
+    } finally {
+      sdk.registration?.mockRestore();
+    }
   });
   it("advertises the explicit HTTPS callback while retaining the local browser origin", () => {
     const result = validateJobBindings(configuration);
