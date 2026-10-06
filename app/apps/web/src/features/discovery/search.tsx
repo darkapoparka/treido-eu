@@ -3,6 +3,7 @@ import { displayRating, displayCount } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
+import { SearchComposer, SearchFilterStrip } from "./buyer-chrome";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import {
@@ -411,7 +412,7 @@ export function Search({
   // Input identity is stable through text/photo entry, suggestions, pending
   // navigation and results. Keyboard focus must not jump to a replacement node.
   const searchForm = (
-    <form
+    <SearchComposer
       ref={formRef}
       role="search"
       aria-label={text.products}
@@ -504,7 +505,7 @@ export function Search({
       >
         <Icon name="arrow" />
       </button>
-    </form>
+    </SearchComposer>
   );
   return (
     <ShopSurface
@@ -534,7 +535,7 @@ export function Search({
       )}
       {searchForm}
       {!suggestions && !photoEditing && (
-        <div className="filter-chips">
+        <SearchFilterStrip>
           {showResults && !history && (
             <IconButton
               icon="filter-circles"
@@ -600,7 +601,7 @@ export function Search({
               </button>
             </>
           )}
-        </div>
+        </SearchFilterStrip>
       )}
       {photoEditing && (
         <IconButton

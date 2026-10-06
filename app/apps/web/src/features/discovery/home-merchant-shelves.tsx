@@ -7,6 +7,7 @@ import { ProductCard, StoreRow } from "./components";
 import { SourceLink } from "./return-navigation";
 import { ReviewStars } from "./rating-stars";
 import { Icon } from "./icons";
+import { HomeMerchantCard } from "./home-merchant-card";
 import "./home-merchant-shelves.css";
 
 /** Android merchant shelves share the existing product and navigation owners. */
@@ -49,13 +50,31 @@ export function HomeMerchantShelves({
           .filter((item) => item.storeId === id)
           .slice(0, 3);
         return (
-          <section
-            className={`android-merchant-card ${product ? "android-still-interested" : ""}`}
+          <HomeMerchantCard
+            className={product ? "android-still-interested" : ""}
             key={id}
-            data-merchant-id={id}
-            aria-label={store.name}
+            id={id}
+            name={store.name}
+            header={<StoreRow store={store} onMore={() => onMore(id)} />}
+            footer={
+              <SourceLink
+                href={product ? `/products/${product.id}` : `/stores/${id}`}
+                className="merchant-shop-all"
+                aria-label={
+                  product
+                    ? `View ${product.title} again`
+                    : `Shop all at ${store.name}`
+                }
+              >
+                <strong>
+                  {product ? ui("stillInterested") : ui("shopAll")}
+                </strong>
+                <span>
+                  <Icon name="arrow" />
+                </span>
+              </SourceLink>
+            }
           >
-            <StoreRow store={store} onMore={() => onMore(id)} />
             {hidden.includes(id) ? (
               <div className="hidden-shop">
                 <Icon name="eye-off" />
@@ -99,21 +118,7 @@ export function HomeMerchantShelves({
                 ))}
               </div>
             )}
-            <SourceLink
-              href={product ? `/products/${product.id}` : `/stores/${id}`}
-              className="merchant-shop-all"
-              aria-label={
-                product
-                  ? `View ${product.title} again`
-                  : `Shop all at ${store.name}`
-              }
-            >
-              <strong>{product ? ui("stillInterested") : ui("shopAll")}</strong>
-              <span>
-                <Icon name="arrow" />
-              </span>
-            </SourceLink>
-          </section>
+          </HomeMerchantCard>
         );
       })}
     </div>

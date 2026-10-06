@@ -1,0 +1,28 @@
+/* BUY-01/02 Home adaptation: shared merchant geometry with readable genuine
+   listing copy. These selectors never affect the captured Home adapter. */
+.public-home .public-home-merchant {
+  height: auto;
+  min-height: 358px;
+}
+.public-home .public-home-merchant .product-rail {
+  display: flex;
+  height: auto;
+  flex: none;
+  margin-bottom: 16px;
+}
+.public-home .public-home-merchant .product-rail > div {
+  width: 150px;
+  flex: 0 0 150px;
+}
+.public-home-merchant .product-card {
+  width: 150px;
+}
+.public-home-merchant .merchant-shop-all {
+  min-height: 40px;
+}
+.public-home-personal {
+  min-width: 0;
+}
+.public-home-personal > h3 {
+  margin: 4px 0 16px;
+}

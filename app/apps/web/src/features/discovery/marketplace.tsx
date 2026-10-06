@@ -2,7 +2,13 @@
 import { PublicServiceInfo } from "../seller-settings/public-info";
 import { LibraryProvider } from "../library/provider";
 import { SellerFollowButton } from "../library/controls";
-import { useState, useTransition, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type FormEvent,
+} from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useLocale as useNavigationLocale } from "../locale/provider";
@@ -25,10 +31,16 @@ import type {
 import { ShopSurface } from "./hydration-boundary";
 import { BrowseScopeControl } from "./browse-scope";
 import { FloatingNav, IconButton, consumeSheetHistory } from "./components";
-import { SourceLink } from "./return-navigation";
+import { ContextualCloseLink, SourceLink } from "./return-navigation";
+import {
+  HomeShortcuts,
+  SearchComposer,
+  SearchFilterStrip,
+} from "./buyer-chrome";
 import { Icon } from "./icons";
 import { optionLabel } from "../selling/copy";
 import { PublicListingGrid } from "./public-listing-grid";
+import { PublicHome } from "./public-home";
 import {
   PurchaseFeedback,
   type PurchaseFeedbackData,
@@ -39,6 +51,7 @@ import {
   withoutDiscoveryFilters,
 } from "./marketplace-navigation";
 import s from "./marketplace.module.css";
+import chrome from "./buyer-chrome.module.css";
 
 export function Marketplace(props: Parameters<typeof MarketplaceContent>[0]) {
   const items = props.page?.items ?? [];
@@ -103,6 +116,35 @@ function MarketplaceContent({
     input.maxPriceMinor !== null ||
     Object.keys(input.attributes).length
   );
+  const globalSearch = !home && !seller;
+  const resultsMode = !!input.q || hasFilters;
+  const searchForm = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const form = searchForm.current;
+    if (!globalSearch || resultsMode || !viewport || !form) return;
+    const surface = form.closest("[data-marketplace]");
+    const sync = () => {
+      const inset = form.contains(document.activeElement)
+        ? Math.max(0, innerHeight - viewport.height - viewport.offsetTop)
+        : 0;
+      form.style.setProperty("--search-keyboard-inset", `${inset}px`);
+      surface?.toggleAttribute("data-buyer-keyboard", inset > 80);
+    };
+    sync();
+    viewport.addEventListener("resize", sync);
+    viewport.addEventListener("scroll", sync);
+    form.addEventListener("focusin", sync);
+    form.addEventListener("focusout", sync);
+    return () => {
+      viewport.removeEventListener("resize", sync);
+      viewport.removeEventListener("scroll", sync);
+      form.removeEventListener("focusin", sync);
+      form.removeEventListener("focusout", sync);
+      form.style.removeProperty("--search-keyboard-inset");
+      surface?.removeAttribute("data-buyer-keyboard");
+    };
+  }, [globalSearch, resultsMode]);
   function navigate(next: URLSearchParams) {
     next.delete("cursor");
     next.set("lang", locale);
@@ -150,6 +192,7 @@ function MarketplaceContent({
     navigate(next);
   };
   const chips = [
+    ...(home && input.q ? [{ key: "q", label: input.q }] : []),
     ...(category ? [{ key: "category", label: category.labels[locale] }] : []),
     ...(input.condition
       ? [{ key: "condition", label: optionLabel(input.condition, locale) }]
@@ -170,81 +213,146 @@ function MarketplaceContent({
   ];
   return (
     <ShopSurface
-      className={"shop-page " + (home ? "home-page " : "") + s.page}
+      className={
+        "shop-page " +
+        (home
+          ? "home-page " + chrome.home + " "
+          : globalSearch
+            ? "search-page " + chrome.search + " "
+            : "") +
+        s.page
+      }
       data-marketplace
       data-seller-id={seller?.id}
+      data-marketplace-search-mode={
+        globalSearch ? (resultsMode ? "results" : "root") : undefined
+      }
     >
-      <header className={"home-shortcuts " + s.shortcuts}>
-        <SourceLink
-          href={"/app?lang=" + locale}
-          className="avatar"
-          aria-label={t("selling")}
-        >
-          <Icon name="storefront" />
-        </SourceLink>
-        {!seller && <BrowseScopeControl />}
-        {home && (
+      {home && <h1 className="sr-only">{t("home")}</h1>}
+      {home ? (
+        <HomeShortcuts>
+          <SourceLink
+            href={"/profile?lang=" + locale}
+            aria-label={navigationMessages.navigation.profile}
+            className="avatar"
+          >
+            <svg
+              className="android-guest-avatar"
+              viewBox="0 0 40 40"
+              aria-hidden="true"
+            >
+              <circle cx="20" cy="14" r="6" fill="white" />
+              <path d="M8 32c1-9 23-9 24 0a17 17 0 0 1-24 0Z" fill="white" />
+            </svg>
+          </SourceLink>
+          <SourceLink
+            href={"/notifications?lang=" + locale}
+            className="icon-button"
+            aria-label={navigationMessages.navigation.notifications}
+          >
+            <Icon name="bell" filled />
+          </SourceLink>
+          <BrowseScopeControl />
           <SourceLink className="pill" href={"/deals?lang=" + locale}>
             <Icon name="tag" filled />
             {navigationMessages.navigation.deals}
           </SourceLink>
-        )}
-        <SourceLink className="pill" href={"/cart?lang=" + locale}>
-          {cartText("title")}
-        </SourceLink>
-        <SourceLink
-          className="pill"
-          href={"/saved?lang=" + locale}
-          preserveDiscoveryContext={false}
-        >
-          <Icon name="heart" />
-          {libraryCopy("saved")}
-        </SourceLink>
-        <SourceLink
-          className="pill"
-          href={"/following?lang=" + locale}
-          preserveDiscoveryContext={false}
-        >
-          <Icon name="storefront" />
-          {libraryCopy("following")}
-        </SourceLink>
-        {home && (
+          <SourceLink
+            className="pill"
+            href={"/following?lang=" + locale}
+            preserveDiscoveryContext={false}
+          >
+            <span className="following-shortcut-icon">
+              <Icon name="badge-check" filled />
+            </span>
+            {libraryCopy("following")}
+          </SourceLink>
+          <SourceLink
+            className="pill"
+            href={"/saved?lang=" + locale}
+            preserveDiscoveryContext={false}
+          >
+            <Icon name="heart" filled />
+            {libraryCopy("saved")}
+          </SourceLink>
           <SourceLink className="pill" href={"/minis?lang=" + locale}>
             <Icon name="minis" filled />
             {navigationMessages.navigation.minis}
           </SourceLink>
-        )}
-        <SourceLink className="pill" href={"/messages?lang=" + locale}>
-          <Icon name="chat-round" />
-          {t("messages")}
-        </SourceLink>
-        <SourceLink className="pill" href={"/app?lang=" + locale}>
-          <Icon name="plus" />
-          {t("sell")}
-        </SourceLink>
-        {seller && (
-          <IconButton
-            icon="share"
-            label={t("share")}
-            onClick={async () => {
-              try {
-                const url = location.origin + sellerHref;
-                if (navigator.share)
-                  await navigator.share({ title: seller.name, url });
-                else {
-                  await navigator.clipboard.writeText(url);
-                  setShareStatus(t("copied"));
+        </HomeShortcuts>
+      ) : seller ? (
+        <HomeShortcuts className={s.shortcuts}>
+          <SourceLink
+            href={"/app?lang=" + locale}
+            className="avatar"
+            aria-label={t("selling")}
+          >
+            <Icon name="storefront" />
+          </SourceLink>
+          {!seller && <BrowseScopeControl />}
+          {home && (
+            <SourceLink className="pill" href={"/deals?lang=" + locale}>
+              <Icon name="tag" filled />
+              {navigationMessages.navigation.deals}
+            </SourceLink>
+          )}
+          <SourceLink className="pill" href={"/cart?lang=" + locale}>
+            {cartText("title")}
+          </SourceLink>
+          <SourceLink
+            className="pill"
+            href={"/saved?lang=" + locale}
+            preserveDiscoveryContext={false}
+          >
+            <Icon name="heart" />
+            {libraryCopy("saved")}
+          </SourceLink>
+          <SourceLink
+            className="pill"
+            href={"/following?lang=" + locale}
+            preserveDiscoveryContext={false}
+          >
+            <Icon name="storefront" />
+            {libraryCopy("following")}
+          </SourceLink>
+          {home && (
+            <SourceLink className="pill" href={"/minis?lang=" + locale}>
+              <Icon name="minis" filled />
+              {navigationMessages.navigation.minis}
+            </SourceLink>
+          )}
+          <SourceLink className="pill" href={"/messages?lang=" + locale}>
+            <Icon name="chat-round" />
+            {t("messages")}
+          </SourceLink>
+          <SourceLink className="pill" href={"/app?lang=" + locale}>
+            <Icon name="plus" />
+            {t("sell")}
+          </SourceLink>
+          {seller && (
+            <IconButton
+              icon="share"
+              label={t("share")}
+              onClick={async () => {
+                try {
+                  const url = location.origin + sellerHref;
+                  if (navigator.share)
+                    await navigator.share({ title: seller.name, url });
+                  else {
+                    await navigator.clipboard.writeText(url);
+                    setShareStatus(t("copied"));
+                  }
+                } catch (error) {
+                  if (!(
+                    error instanceof DOMException && error.name === "AbortError"
+                  ))
+                    setShareStatus(t("shareFailed"));
                 }
-              } catch (error) {
-                if (!(
-                  error instanceof DOMException && error.name === "AbortError"
-                ))
-                  setShareStatus(t("shareFailed"));
-              }
-            }}
-          />
-        )}
-      </header>
+              }}
+            />
+          )}
+        </HomeShortcuts>
+      ) : null}
       {seller && (
         <section className={s.sellerHeader}>
           <span
@@ -336,41 +444,98 @@ function MarketplaceContent({
         </section>
       ) : (
         <>
-          {home && <h1 className={s.heading}>{t("home")}</h1>}
-          <div className={s.toolbar}>
-            <form
-              className="search-form"
-              onSubmit={search}
-              role="search"
-              action={destination}
+          {globalSearch && !resultsMode && (
+            <ContextualCloseLink
+              href={"/?lang=" + locale}
+              className={chrome.close}
+              aria-label={navigationMessages.navigation.back}
             >
-              <Icon name="search" />
-              <input
-                key={input.q}
-                name="q"
-                type="search"
-                maxLength={120}
-                defaultValue={input.q}
-                placeholder={t(seller ? "searchStore" : "placeholder")}
-                aria-label={t("search")}
-              />
-              <button
-                type="submit"
-                className="icon-button"
-                aria-label={t("submit")}
+              <Icon name="close" />
+            </ContextualCloseLink>
+          )}
+          {!home && (
+            <div className={globalSearch ? s.searchToolbar : s.toolbar}>
+              <SearchComposer
+                ref={searchForm}
+                className={
+                  "search-form " +
+                  (globalSearch
+                    ? (resultsMode ? "top-search " : "search-composer ") +
+                      chrome.composer
+                    : "")
+                }
+                onSubmit={search}
+                role="search"
+                action={destination}
               >
-                <Icon name="arrow" />
+                <Icon name="search" />
+                <input
+                  key={input.q}
+                  name="q"
+                  type="search"
+                  maxLength={120}
+                  defaultValue={input.q}
+                  placeholder={t(seller ? "searchStore" : "placeholder")}
+                  aria-label={t("search")}
+                />
+                <button
+                  type="submit"
+                  className="icon-button"
+                  aria-label={t("submit")}
+                >
+                  <Icon name="arrow" />
+                </button>
+              </SearchComposer>
+              {!globalSearch && (
+                <IconButton
+                  icon="filter-circles"
+                  label={t("filters")}
+                  onClick={() => setFiltersOpen(true)}
+                  aria-expanded={filtersOpen}
+                  aria-haspopup="dialog"
+                />
+              )}
+            </div>
+          )}
+          {globalSearch && !resultsMode && <h1>{t("search")}</h1>}
+          {globalSearch && (
+            <SearchFilterStrip className={chrome.strip}>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={t("filters")}
+                aria-expanded={filtersOpen}
+                aria-haspopup="dialog"
+                onClick={() => setFiltersOpen(true)}
+              >
+                <Icon name="filter-circles" />
               </button>
-            </form>
-            <IconButton
-              icon="filter-circles"
-              label={t("filters")}
-              onClick={() => setFiltersOpen(true)}
-              aria-expanded={filtersOpen}
-              aria-haspopup="dialog"
-            />
-          </div>
-          {!!categories.length && (
+              <BrowseScopeControl />
+              {!!categories.length && (
+                <nav aria-label={t("browse")}>
+                  {categories.map((item) => (
+                    <SourceLink
+                      key={item.id}
+                      className="pill"
+                      preserveDiscoveryContext={false}
+                      startAtTop
+                      href={marketplaceHref(destination, {
+                        ...input,
+                        category: item.id,
+                        attributes: {},
+                      })}
+                    >
+                      {item.labels[locale]}
+                      {countFor(item.id) > 0 && (
+                        <span className={s.count}>{countFor(item.id)}</span>
+                      )}
+                    </SourceLink>
+                  ))}
+                </nav>
+              )}
+            </SearchFilterStrip>
+          )}
+          {!home && !globalSearch && !!categories.length && (
             <nav className={s.categories} aria-label={t("browse")}>
               {categories.map((item) => (
                 <SourceLink
@@ -445,32 +610,34 @@ function MarketplaceContent({
               </button>
             </div>
           )}
-          <div className={s.resultsHeading}>
-            <h2>
-              {unavailable
-                ? t("search")
-                : home && !input.q && !hasFilters
-                  ? t("latest")
-                  : t("results", { count: page?.total ?? 0 })}
-            </h2>
-            <label className={s.sort}>
-              <span className="sr-only">{t("sort")}</span>
-              <select
-                value={input.sort}
-                onChange={(event) => {
-                  const next = discoverySearchParams(input);
-                  next.set("sort", event.target.value);
-                  navigate(next);
-                }}
-              >
-                {discoverySorts.map((sort) => (
-                  <option value={sort} key={sort}>
-                    {t(sort)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          {(!home || chips.length > 0) && (
+            <div className={s.resultsHeading}>
+              <h2>
+                {unavailable
+                  ? t("search")
+                  : home && !input.q && !hasFilters
+                    ? t("latest")
+                    : t("results", { count: page?.total ?? 0 })}
+              </h2>
+              <label className={s.sort}>
+                <span className="sr-only">{t("sort")}</span>
+                <select
+                  value={input.sort}
+                  onChange={(event) => {
+                    const next = discoverySearchParams(input);
+                    next.set("sort", event.target.value);
+                    navigate(next);
+                  }}
+                >
+                  {discoverySorts.map((sort) => (
+                    <option value={sort} key={sort}>
+                      {t(sort)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <div
             role="status"
             aria-live="polite"
@@ -501,10 +668,14 @@ function MarketplaceContent({
                 </button>
               </div>
             ) : page?.items.length ? (
-              <PublicListingGrid
-                items={page.items}
-                placements={page.placements}
-              />
+              home ? (
+                <PublicHome page={page} />
+              ) : (
+                <PublicListingGrid
+                  items={page.items}
+                  placements={page.placements}
+                />
+              )
             ) : (
               <div className="empty-state">
                 <Icon name="search" />
@@ -562,7 +733,11 @@ function MarketplaceContent({
           )}
         </>
       )}
-      <FloatingNav back={!home} marketplace />
+      <FloatingNav
+        back={globalSearch ? resultsMode || pending : !home}
+        marketplace
+        nativeIcons={!seller}
+      />
     </ShopSurface>
   );
 }

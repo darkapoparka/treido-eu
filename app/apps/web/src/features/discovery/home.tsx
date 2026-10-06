@@ -3,6 +3,7 @@ import { displayCount, displayRating } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { ShopSurface } from "./hydration-boundary";
+import { HomeShortcuts } from "./buyer-chrome";
 /* eslint-disable @next/next/no-img-element */
 import { rememberSourceReturn, SourceLink } from "./return-navigation";
 import { useEffect, useRef, useState } from "react";
@@ -99,7 +100,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
                 : "welcome"
       }
     >
-      <header className="home-shortcuts">
+      <HomeShortcuts>
         <SourceLink
           href="/profile"
           aria-label={text.profile}
@@ -155,7 +156,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
           <Icon name="minis" filled />
           {text.minis}
         </SourceLink>
-      </header>
+      </HomeShortcuts>
       {tracking && (
         <SourceLink href="/orders" className="delivery-card">
           <img

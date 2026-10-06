@@ -1,0 +1,182 @@
+/* Real-data Shop chrome. Reference font faces and captured-state selectors
+   stay in their guarded owners; this module changes geometry only. */
+.home {
+  padding-top: 56px;
+  background: #fcfcfc;
+}
+.home > :global(.home-shortcuts) {
+  position: fixed;
+  top: 8px;
+  left: max(16px, calc((100vw - 760px) / 2 + 16px));
+  right: max(0px, calc((100vw - 760px) / 2));
+  height: 40px;
+  width: auto;
+  padding: 0 16px 0 0;
+  margin: 0;
+  gap: 4px;
+  z-index: 50;
+  border: 0;
+  background: #fcfcfc;
+}
+.home :global(.home-shortcuts .avatar) {
+  display: grid;
+  place-items: center;
+  border: 1px solid #a696eb;
+  background: linear-gradient(140deg, #cabbff, #a288fb);
+}
+.home :global(.home-shortcuts .pill),
+.home :global(.home-shortcuts .icon-button) {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 12px;
+  gap: 4px;
+  border: 1px solid #efefef;
+  background: white;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px #00000003;
+}
+.home :global(.home-shortcuts .icon-button) {
+  width: 40px;
+  padding: 0;
+}
+.home :global(.home-shortcuts svg) {
+  width: 18px;
+  height: 18px;
+}
+.home :global(.home-shortcuts .android-guest-avatar) {
+  width: 40px;
+  height: 40px;
+}
+.search {
+  position: relative;
+  padding-top: 16px;
+  padding-bottom: 180px;
+  background: #fcfcfc;
+}
+.search > h1 {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+  letter-spacing: -0.85px;
+  margin: 0 56px 26px 0;
+}
+.close {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  z-index: 5;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fcfcfc;
+  border-radius: 50%;
+  background: white;
+  box-shadow:
+    inset 0 0 0 1px #f0f0f0,
+    0 1px 2px #00000008;
+}
+.close svg {
+  width: 24px;
+  height: 24px;
+}
+.composer:global(.search-composer) {
+  bottom: max(
+    calc(80px + env(safe-area-inset-bottom)),
+    calc(16px + var(--search-keyboard-inset, 0px))
+  );
+  min-height: 56px;
+  padding: 7px;
+  gap: 10px;
+  border: 1px solid #ebebeb;
+  background: #fff;
+  box-shadow: none;
+}
+.composer > input {
+  min-width: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 20px;
+}
+.composer:global(.top-search) {
+  margin: 0 0 12px;
+}
+.composer > button > svg {
+  width: 20px;
+  height: 20px;
+}
+.strip {
+  align-items: center;
+  padding-right: 16px;
+}
+.strip > * {
+  flex-shrink: 0;
+}
+.strip > nav {
+  display: contents;
+}
+.strip :global(.pill) {
+  flex-shrink: 0;
+}
+.home:global(.shop-page) :global(.floating-dock),
+.search:global(.shop-page) :global(.floating-dock) {
+  bottom: 8px;
+}
+.home:global(.shop-page) :global(.floating-nav),
+.search:global(.shop-page) :global(.floating-nav) {
+  width: 212px;
+  height: 56px;
+  padding: 6px;
+  gap: 6px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 4px #0000000a;
+}
+.home:global(.shop-page) :global(.floating-nav a),
+.search:global(.shop-page) :global(.floating-nav a) {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+}
+.home:global(.shop-page) :global(.floating-nav svg),
+.search:global(.shop-page) :global(.floating-nav svg) {
+  width: 24px;
+  height: 24px;
+}
+.home:global(.shop-page) :global(.floating-nav a[aria-current="page"]),
+.search:global(.shop-page) :global(.floating-nav a[aria-current="page"]) {
+  background: #f1f2f3;
+}
+.home:global(.shop-page) :global(.dock-back),
+.search:global(.shop-page) :global(.dock-back) {
+  width: 56px;
+  height: 56px;
+  position: fixed;
+  left: auto;
+  right: calc(50% + 116px);
+  border: 1px solid #eef0f1;
+  box-shadow: 0 2px 4px #00000008;
+}
+.home:global(.shop-page) :global(.floating-dock)::before,
+.home:global(.shop-page) :global(.floating-dock)::after,
+.search:global(.shop-page) :global(.floating-dock)::before,
+.search:global(.shop-page) :global(.floating-dock)::after {
+  display: none;
+}
+.search[data-buyer-keyboard] :global(.floating-dock) {
+  display: none;
+}
+@media (max-width: 359px) {
+  .home:global(.shop-page) :global(.floating-nav),
+  .search:global(.shop-page) :global(.floating-nav) {
+    width: 188px;
+    padding: 5px;
+    gap: 0;
+  }
+  .home:global(.shop-page) :global(.dock-back),
+  .search:global(.shop-page) :global(.dock-back) {
+    width: 44px;
+    height: 44px;
+    right: calc(50% + 104px);
+    bottom: 6px;
+  }
+}
