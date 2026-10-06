@@ -4,7 +4,7 @@ import styles from "./workspace.module.css";
 export function Workspace({
   title,
   children,
-  back = "/app",
+  back,
   language = "en",
 }: {
   title: string;
@@ -15,7 +15,7 @@ export function Workspace({
   return (
     <main lang={language} className={`account-page ${styles.page}`}>
       <header className={styles.header}>
-        <Link href={back} className={styles.link}>
+        <Link href={back ?? `/app?lang=${language}`} className={styles.link}>
           {language === "bg" ? "Назад" : "Back"}
         </Link>
         <Link href={`/?lang=${language}`} className={styles.link}>
