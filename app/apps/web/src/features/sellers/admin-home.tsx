@@ -20,7 +20,7 @@ export function AdminHome({
   const base = seller ? `/app/sellers/${seller.sellerId}` : "/app";
   const products = seller ? `${base}/listings` : "/app/products";
   const create = !seller
-    ? "/sell"
+    ? `/sell?lang=${language}`
     : seller.capabilities.includes("listing.write")
       ? `${products}/new?lang=${language}`
       : `${products}?lang=${language}`;
@@ -52,7 +52,7 @@ export function AdminHome({
             </p>
             <Link
               className={styles.primary}
-              href={unavailable ? "/sell" : create}
+              href={unavailable ? `/sell?lang=${language}` : create}
             >
               {unavailable
                 ? bg

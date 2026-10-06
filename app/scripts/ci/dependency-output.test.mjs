@@ -120,3 +120,73 @@ test("deployment guard never invokes dependency walker after failed confinement"
   assert.match(child.stdout, /Missing production BUILD_ID/);
   assert.doesNotMatch(child.stderr, /DENIED_WALKER_INVOKED/);
 });
+
+async function ciFixture(t, { buildId = true, dependencyWalker } = {}) {
+  const directory = await fixture(t);
+  const scripts = join(directory, "scripts/ci");
+  const output = join(directory, "apps/web/.qa/treido-ci");
+  await mkdir(scripts, { recursive: true });
+  await mkdir(output, { recursive: true });
+  await writeFile(join(output, "page.js.nft.json"), '{"files":[]}');
+  if (buildId) await writeFile(join(output, "BUILD_ID"), "synthetic-ci-build");
+  for (const file of ["production-output.mjs", "dependency-output.mjs"])
+    await writeFile(
+      join(scripts, file),
+      dependencyWalker && file === "dependency-output.mjs"
+        ? dependencyWalker
+        : await readFile(new URL(file, import.meta.url)),
+    );
+  return {
+    output,
+    run: () =>
+      spawnSync(process.execPath, [join(scripts, "production-output.mjs")], {
+        encoding: "utf8",
+        timeout: 10000,
+      }),
+  };
+}
+
+test("CI entry checks clean dependency output after confinement", async (t) => {
+  const { run } = await ciFixture(t);
+  const child = run();
+  assert.equal(child.error, undefined);
+  assert.equal(child.status, 0, child.stderr);
+  assert.match(child.stdout, /"dependencyOutput"/);
+  assert.match(child.stdout, /"tracesChecked": 1/);
+  assert.match(child.stdout, /"findings": \[\]/);
+});
+
+test("CI entry rejects an emitted forbidden package absent from traces", async (t) => {
+  const { output, run } = await ciFixture(t);
+  await mkdir(join(output, "node_modules/braces"), { recursive: true });
+  await writeFile(join(output, "node_modules/braces/index.js"), "export {};");
+  const child = run();
+  assert.equal(child.error, undefined);
+  assert.equal(child.status, 1, child.stderr);
+  assert.match(child.stdout, /"dependencyOutput"/);
+  assert.match(child.stdout, /"kind": "package path"/);
+});
+
+test("CI entry refuses the dependency walk after failed confinement", async (t) => {
+  const { run } = await ciFixture(t, {
+    buildId: false,
+    dependencyWalker:
+      'export async function auditDependencyOutput(){throw Error("DENIED_WALKER_INVOKED");}',
+  });
+  const child = run();
+  assert.equal(child.error, undefined);
+  assert.equal(child.status, 1);
+  assert.match(child.stdout, /Missing production BUILD_ID/);
+  assert.doesNotMatch(child.stdout + child.stderr, /DENIED_WALKER_INVOKED/);
+});
+
+test("CI entry cannot pass when a dependency walker reports zero traces", async (t) => {
+  const { run } = await ciFixture(t, {
+    dependencyWalker:
+      "export async function auditDependencyOutput(){return {tracesChecked:0,findings:[]};}",
+  });
+  const child = run();
+  assert.equal(child.error, undefined);
+  assert.equal(child.status, 1);
+  assert.match(child.stdout, /"tracesChecked": 0/);
+});

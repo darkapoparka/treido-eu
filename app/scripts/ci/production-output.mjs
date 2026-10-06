@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import process from "node:process";
 import { URL, fileURLToPath } from "node:url";
+import { auditDependencyOutput } from "./dependency-output.mjs";
 
 const privateDirectories = new Set([
   ".local",
@@ -279,4 +280,11 @@ if (
   const result = await auditProductionOutput(output, workspace);
   log(JSON.stringify(result, null, 2));
   if (result.issues.length) process.exitCode = 1;
+  else {
+    // Match the deployment guard: confinement must pass before following links.
+    const dependencyOutput = await auditDependencyOutput(output);
+    log(JSON.stringify({ dependencyOutput }, null, 2));
+    if (!dependencyOutput.tracesChecked || dependencyOutput.findings.length)
+      process.exitCode = 1;
+  }
 }

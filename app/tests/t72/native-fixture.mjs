@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
+import { trackPoolDisconnects } from "./pool-disconnects.mjs";
 import { applyReviewedMigration } from "../../apps/web/scripts/identity-draft-migration.mjs";
 import { applyRuntimeGrants } from "../../apps/web/scripts/runtime-grants.mjs";
 const root = path.resolve(import.meta.dirname, "../../..");
@@ -89,6 +90,12 @@ export async function startLaunchCluster({
     onError: () => {},
   });
   let bootstrap, admin, runtime;
+  const disconnects = new Map();
+  const fixturePool = (options) => {
+    const pool = new Pool(options);
+    disconnects.set(pool, trackPoolDisconnects(pool));
+    return pool;
+  };
   const state = {
     directory: exact,
     port,
@@ -102,9 +109,9 @@ export async function startLaunchCluster({
       JSON.stringify(state, null, 2),
     );
   const stop = async () => {
-    await runtime?.end();
-    await admin?.end();
-    await bootstrap?.end();
+    for (const pool of [runtime, admin, bootstrap]) {
+      if (pool) await disconnects.get(pool)();
+    }
     if (state.started && !state.stopped) {
       // The measured Windows shutdown checkpoint can exceed30s on this
       // shared disk. Keep a finite cleanup wait without changing test or
@@ -130,7 +137,7 @@ export async function startLaunchCluster({
     ]);
     state.started = true;
     await persist();
-    bootstrap = new Pool({
+    bootstrap = fixturePool({
       host: "127.0.0.1",
       port,
       user: "postgres",
@@ -141,7 +148,7 @@ export async function startLaunchCluster({
     await bootstrap.query(
       "CREATE DATABASE t72_isolated WITH ENCODING 'UTF8' TEMPLATE template0 LC_COLLATE 'C' LC_CTYPE 'C'",
     );
-    admin = new Pool({
+    admin = fixturePool({
       host: "127.0.0.1",
       port,
       user: "postgres",
@@ -186,7 +193,7 @@ export async function startLaunchCluster({
         `CREATE ROLE treido_runtime LOGIN PASSWORD '${runtimePassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION`,
       );
       await applyRuntimeGrants(client, "treido_runtime");
-      runtime = new Pool({
+      runtime = fixturePool({
         host: "127.0.0.1",
         port,
         user: "treido_runtime",

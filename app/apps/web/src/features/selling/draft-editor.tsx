@@ -402,7 +402,7 @@ export function DraftEditor({
             {bg ? "Прегледай запазения артикул" : "Review saved item"}
           </Link>
         )}
-        <Link href="/app" className={styles.link}>
+        <Link href={`/app?lang=${language}`} className={styles.link}>
           {bg ? "Моите продажби" : "My selling"}
         </Link>
         {notice === "CONFLICT" && draft && (
@@ -416,7 +416,7 @@ export function DraftEditor({
         )}
         {notice === "UNAUTHENTICATED" && (
           <Link
-            href={`/sign-in?returnTo=${encodeURIComponent(draft ? `/app/sellers/${draft.sellerId}/listings/${draft.id}/edit` : "/sell")}`}
+            href={`/sign-in?returnTo=${encodeURIComponent(draft ? `/app/sellers/${draft.sellerId}/listings/${draft.id}/edit?lang=${language}` : `/sell?lang=${language}`)}`}
             className={styles.link}
           >
             {bg ? "Вход" : "Sign in"}
