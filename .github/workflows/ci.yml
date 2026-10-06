@@ -98,6 +98,9 @@ jobs:
       - name: Private attachment browser regressions
         run: node tests/t72/attachment-browser.mjs
 
+      - name: Seller photo hydration browser regressions
+        run: node tests/media-picker-browser.mjs
+
       - name: Lifecycle disclosure browser regressions
         run: node tests/t72/message-lifecycle-browser.mjs
 

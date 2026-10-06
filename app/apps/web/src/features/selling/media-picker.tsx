@@ -6,7 +6,7 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import {
   listMediaAction,
   createMediaIntentAction,
@@ -47,10 +47,12 @@ export function MediaPicker({
   const upload = useRef<AbortController | null>(null);
   const attempt = useRef<UploadAttempt | null>(null);
   const clerk = useClerk();
+  const { isLoaded, user } = useUser();
+  const actorReady = isLoaded && user?.id === actorSubject;
   const bg = language === "bg";
   const current = useCallback(
-    () => mounted.current && clerk.user?.id === actorSubject,
-    [clerk, actorSubject],
+    () => mounted.current && actorReady && clerk.user?.id === actorSubject,
+    [clerk, actorSubject, actorReady],
   );
   const deny = useCallback((code: string) => {
     if (code === "FORBIDDEN" || code === "NOT_FOUND") {
@@ -70,18 +72,22 @@ export function MediaPicker({
     else deny(result.code);
   }, [draftId, sellerId, current, deny]);
   useEffect(() => {
+    // Clerk's object is stable while its user hydrates. The subscribed user
+    // readiness reruns this effect; callbacks from prior runs stay cancelled.
+    let active = true;
     mounted.current = true;
     if (draftId && current())
       void listMediaAction({ sellerId, draftId })
         .then((result) => {
-          if (!current()) return;
+          if (!active || !current()) return;
           if (result.ok) setAssets(result.data);
           else deny(result.code);
         })
         .catch(() => {
-          if (current()) setNotice("NOT_AVAILABLE");
+          if (active && current()) setNotice("NOT_AVAILABLE");
         });
     return () => {
+      active = false;
       mounted.current = false;
       upload.current?.abort();
       attempt.current = null;
@@ -270,7 +276,7 @@ export function MediaPicker({
               ? "До 12 снимки, JPEG, PNG или WebP, до 12 MiB всяка."
               : "Up to 12 photos: JPEG, PNG or WebP, up to 12 MiB each."}
       </p>
-      {!!assets.length && !blocked && (
+      {actorReady && !!assets.length && !blocked && (
         <ol className={styles.photoList}>
           {assets.map((asset, index) => (
             <li key={asset.id} className={styles.photo}>
@@ -359,7 +365,7 @@ export function MediaPicker({
           ))}
         </ol>
       )}
-      {draftId && available && !blocked && (
+      {actorReady && draftId && available && !blocked && (
         <label
           className={`${styles.link} ${styles.photoUpload}`}
           aria-disabled={
@@ -387,7 +393,7 @@ export function MediaPicker({
           {(messages[notice] ?? messages.NOT_AVAILABLE)[bg ? 1 : 0]}
         </p>
       )}
-      {!blocked && draftId && (
+      {actorReady && !blocked && draftId && (
         <div className={styles.photoControls}>
           {retryAvailable && !busy && (
             <button
