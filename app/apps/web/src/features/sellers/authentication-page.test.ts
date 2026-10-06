@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mock = vi.hoisted(() => ({
   configured: vi.fn(),
   locale: vi.fn(),
@@ -25,7 +25,9 @@ beforeEach(() => {
   mock.configured.mockReturnValue(false);
   mock.locale.mockImplementation(async (explicit) => explicit ?? "en");
   mock.translate.mockResolvedValue((key: string) => key);
+  vi.stubEnv("TREIDO_APP_ORIGIN", "http://127.0.0.1:6419");
 });
+afterEach(() => vi.unstubAllEnvs());
 describe("localized real authentication entry", () => {
   it("renders the unavailable state in the explicit language", async () => {
     const page = await AuthenticationPage({
@@ -84,6 +86,150 @@ describe("localized real authentication entry", () => {
     expect(page.props.signUpForceRedirectUrl).toBe("/app/intent?lang=bg");
     expect(page.props.localization.locale).toBe("bg-BG");
     expect(page.props.children.props.title).toBe("createYourTreidoAccount");
+  });
+  it.each(["sign-in", "sign-up"] as const)(
+    "retains the validated Bulgarian OAuth callback target on %s",
+    async (mode) => {
+      mock.configured.mockReturnValue(true);
+      const page = await AuthenticationPage({
+        mode,
+        searchParams: Promise.resolve({
+          [`${mode.replace("-", "_")}_force_redirect_url`]:
+            "http://127.0.0.1:6419/app/intent?lang=bg",
+        }),
+      });
+      expect(page.props.signInForceRedirectUrl).toBe("/app/intent?lang=bg");
+      expect(page.props.signUpForceRedirectUrl).toBe("/app/intent?lang=bg");
+      expect(page.props.localization.locale).toBe("bg-BG");
+      expect(page.props.children.props.children.props.forceRedirectUrl).toBe(
+        "/app/intent?lang=bg",
+      );
+      for (const href of [page.props.signInUrl, page.props.signUpUrl]) {
+        const link = new URL(href, "https://treido.invalid");
+        expect(link.searchParams.get("lang")).toBe("bg");
+        expect(link.searchParams.get("returnTo")).toBe("/app/intent?lang=bg");
+      }
+    },
+  );
+  it("prefers an explicit valid returnTo and language over callback parameters", async () => {
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({
+        returnTo: "/sell?intent=business&lang=bg",
+        lang: "en",
+        sign_in_force_redirect_url: "http://127.0.0.1:6419/app/intent?lang=bg",
+      }),
+    });
+    expect(page.props.signInForceRedirectUrl).toBe(
+      "/sell?intent=business&lang=en",
+    );
+  });
+  it("lets an explicit language override the callback language", async () => {
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-up",
+      searchParams: Promise.resolve({
+        lang: "en",
+        sign_up_force_redirect_url: "http://127.0.0.1:6419/app/intent?lang=bg",
+      }),
+    });
+    expect(page.props.signUpForceRedirectUrl).toBe("/app/intent?lang=en");
+  });
+  it("discards invalid returnTo before considering a validated callback", async () => {
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({
+        returnTo: "https://outside.invalid/app?lang=en",
+        sign_in_force_redirect_url: "http://127.0.0.1:6419/app/intent?lang=bg",
+      }),
+    });
+    expect(page.props.signInForceRedirectUrl).toBe("/app/intent?lang=bg");
+  });
+  it("does not recover callback URLs without an explicit configured origin", async () => {
+    vi.stubEnv("TREIDO_APP_ORIGIN", "");
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({
+        sign_in_force_redirect_url: "http://127.0.0.1:6419/app/intent?lang=bg",
+      }),
+    });
+    expect(page.props.signInForceRedirectUrl).toBe("/app?lang=en");
+  });
+  it("uses the existing buyer parser and back destination for a callback", async () => {
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({
+        sign_in_force_redirect_url:
+          "http://127.0.0.1:6419/account/privacy/preferences?lang=bg",
+      }),
+    });
+    expect(page.props.children.props.back).toBe(
+      "/account/privacy/preferences?lang=bg",
+    );
+  });
+  it("accepts only the configured production origin, independently of development", async () => {
+    vi.stubEnv("TREIDO_APP_ORIGIN", "https://treido.eu");
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({
+        sign_in_force_redirect_url: "https://treido.eu/app/intent?lang=bg",
+      }),
+    });
+    expect(page.props.signInForceRedirectUrl).toBe("/app/intent?lang=bg");
+    const development = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({
+        sign_in_force_redirect_url: "http://127.0.0.1:6419/app/intent?lang=bg",
+      }),
+    });
+    expect(development.props.signInForceRedirectUrl).toBe("/app?lang=en");
+  });
+  it.each(
+    [
+      "https://outside.invalid/app/intent?lang=bg",
+      "https://treido.eu/app/intent?lang=bg",
+      "http://localhost:6419/app/intent?lang=bg",
+      "http://2130706433:6419/app/intent?lang=bg",
+      "http://127.0.0.1:6420/app/intent?lang=bg",
+      "https://127.0.0.1:6419/app/intent?lang=bg",
+      "//127.0.0.1:6419/app/intent?lang=bg",
+      "javascript:alert(1)",
+      "data:text/html,anything",
+      "http://user:pass@127.0.0.1:6419/app/intent?lang=bg",
+      "http://@127.0.0.1:6419/app/intent?lang=bg",
+      "http://127.0.0.1:6419/app/intent?lang=bg#section",
+      "http://127.0.0.1:6419/app\\intent?lang=bg",
+      "http://127.0.0.1:6419/app/intent?lang=bg\n",
+      "http://127.0.0.1:6419/api/internal?lang=bg",
+      "http://127.0.0.1:6419/app?lang=bg&role=owner",
+      "http://127.0.0.1:6419/app/intent?lang=bg&returnTo=https://outside.invalid",
+      "http://127.0.0.1:6419/untrusted/../app/intent?lang=bg",
+      "http://127.0.0.1:6419/%61pp/intent?lang=bg",
+      ["http://127.0.0.1:6419/app/intent?lang=bg"],
+    ].map((callback) => ({ callback })),
+  )("rejects an untrusted callback target: $callback", async ({ callback }) => {
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({ sign_in_force_redirect_url: callback }),
+    });
+    expect(page.props.signInForceRedirectUrl).toBe("/app?lang=en");
+    expect(mock.locale).toHaveBeenCalledWith(null);
+  });
+  it("does not infer a destination from the other authentication mode", async () => {
+    mock.configured.mockReturnValue(true);
+    const page = await AuthenticationPage({
+      mode: "sign-in",
+      searchParams: Promise.resolve({
+        sign_up_force_redirect_url: "http://127.0.0.1:6419/app/intent?lang=bg",
+      }),
+    });
+    expect(page.props.signInForceRedirectUrl).toBe("/app?lang=en");
   });
   it.each([
     "https://outside.invalid/?lang=bg",
