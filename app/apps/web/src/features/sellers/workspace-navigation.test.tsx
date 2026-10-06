@@ -1,15 +1,12 @@
-import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Workspace } from "./workspace";
 
 function backHref(props: { language?: "bg" | "en"; back?: string }) {
   const markup = renderToStaticMarkup(
-    createElement(Workspace, {
-      title: "Test workspace",
-      children: null,
-      ...props,
-    }),
+    <Workspace title="Test workspace" {...props}>
+      {null}
+    </Workspace>,
   );
   const label = props.language === "bg" ? "Назад" : "Back";
   const links = [

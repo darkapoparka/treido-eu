@@ -52,7 +52,7 @@ export default async function SellPage({
       >
         <Workspace
           title={language === "bg" ? "Продай артикул" : "Sell an item"}
-          back="/"
+          back={`/?lang=${language}`}
           language={language}
         >
           <DraftEditor
