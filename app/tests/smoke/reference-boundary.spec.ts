@@ -18,18 +18,24 @@ test("production keeps reference pages and assets unavailable", async ({
   }
 });
 
-test("migrated profile and account entries redirect to real privacy routes", async ({
+test("real profile and account entries stay honest when identity is unavailable", async ({
   request,
 }) => {
   for (const path of ["/profile", "/account"]) {
     for (const locale of ["bg", "en"]) {
       const route = `${path}?lang=${locale}`;
       const response = await request.get(route, { maxRedirects: 0 });
-      expect(response.status(), route).toBe(307);
-      expect(response.headers().location, route).toBe(
-        "/account/privacy/preferences?lang=" + locale,
+      expect(response.status(), route).toBe(200);
+      const html = await response.text();
+      expect(html, route).toContain("buyer-public");
+      expect(html, route).toContain(
+        locale === "bg"
+          ? "Профилът временно не е достъпен"
+          : "Account temporarily unavailable",
       );
-      expect(await response.text(), route).not.toContain("mira@example.test");
+      expect(html, route).toContain("/account/privacy/preferences");
+      expect(html, route).not.toContain("mira@example.test");
+      expect(html, route).not.toContain('src="/api/reference-media/');
     }
   }
 });
@@ -43,7 +49,7 @@ test("real marketplace and review routes stay available without reference data",
     const response = await request.get(route);
     expect(response.status(), route).toBe(200);
     const html = await response.text();
-    expect(html, route).toContain("data-marketplace");
+    expect(html, route).toContain("buyer-public");
     expect(html, route).toContain("Listings are temporarily unavailable");
     expect(html, route).not.toContain("mira@example.test");
     expect(html, route).not.toContain("/products/shea-butter");

@@ -30,7 +30,7 @@ test("reference cookies and locale choices cannot replace the real marketplace",
   });
   expect(response.status()).toBe(200);
   const html = await response.text();
-  expect(html).toContain("data-marketplace");
+  expect(html).toContain("buyer-public");
   expect(html).toContain("Обявите временно не са достъпни");
   expect(html).not.toContain('id="preferred-language"');
   expect(html).not.toContain("mira@example.test");
