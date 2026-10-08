@@ -87,15 +87,15 @@ await build({
         if (id === "\0t71:next/navigation")
           return `const router={push:()=>{},replace:()=>{},refresh:()=>{window.__refreshes=(window.__refreshes??0)+1}};export const useRouter=()=>router;export const useSearchParams=()=>new URLSearchParams();export const usePathname=()=>location.pathname;`;
         if (id === "\0t71:next/link" || id === "\0t71:links")
-          return `import React from'react';export function SourceLink({href,prefetch,preserveDiscoveryContext,startAtTop,...p}){return React.createElement('a',{href,...p})}export default SourceLink;export const useSourceReturn=()=>{};`;
+          return `import React from'react';export function SourceLink({href,prefetch,preserveDiscoveryContext,startAtTop,...p}){return React.createElement('a',{href,...p})}export default SourceLink;export const useSourceReturn=()=>{};export const rememberSourcePosition=()=>null;export const bindSourceDestination=()=>{};`;
         if (id === "\0t71:next-intl")
-          return `export const useLocale=()=> 'en';export const useTranslations=()=> (key)=>key;`;
+          return `export const useLocale=()=> 'en';export const useTranslations=()=> (key)=>key;export const useFormatter=()=>({number:value=>new Intl.NumberFormat('en').format(value)});`;
         if (id === "\0t71:surface")
           return `import React from'react';export const ShopSurface=p=>React.createElement('main',p);export const useSurfaceReady=()=>true;`;
         if (id === "\0t71:reviews")
           return `export const CreateReviewButton=()=>null;export const BuyerReviewLinks=()=>null;`;
         if (id === "\0t71:components")
-          return `import React from'react';export const FloatingNav=()=>null;export const consumeSheetHistory=()=>false;export const IconButton=({label,onClick,disabled,...p})=>React.createElement('button',{onClick,disabled,'aria-label':label},label);export const Sheet=({children,title})=>React.createElement('section',{},title,children);`;
+          return `import React from'react';export const FloatingNav=()=>null;export const ProductCard=()=>null;export const consumeSheetHistory=()=>false;export const IconButton=({label,onClick,disabled,...p})=>React.createElement('button',{onClick,disabled,'aria-label':label},label);export const Sheet=({children,title})=>React.createElement('section',{},title,children);`;
       },
     },
     {
@@ -281,7 +281,10 @@ try {
     await page.evaluate(() => window.dispatchEvent(new Event("online")));
     const oldRead = await next(readKind, "A");
     if (surface === "cart")
-      await page.getByRole("button", { name: "remove", exact: true }).click();
+      await page
+        .getByRole("button", { name: "remove", exact: true })
+        .first()
+        .click();
     else if (surface === "following")
       await page.getByRole("button", { name: "unfollow", exact: true }).click();
     else
@@ -306,7 +309,10 @@ try {
     await settle(await next(readKind, "B"));
     await marker(surface, "B");
     if (surface === "cart")
-      await page.getByRole("button", { name: "remove", exact: true }).click();
+      await page
+        .getByRole("button", { name: "remove", exact: true })
+        .first()
+        .click();
     else if (surface === "following")
       await page.getByRole("button", { name: "unfollow", exact: true }).click();
     else
@@ -326,7 +332,10 @@ try {
     await page.evaluate(() => window.dispatchEvent(new Event("online")));
     const delayed = await next(readKind, "A");
     if (surface === "cart")
-      await page.getByRole("button", { name: "remove", exact: true }).click();
+      await page
+        .getByRole("button", { name: "remove", exact: true })
+        .first()
+        .click();
     else if (surface === "following")
       await page.getByRole("button", { name: "unfollow", exact: true }).click();
     else
