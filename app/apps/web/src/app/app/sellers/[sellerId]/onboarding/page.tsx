@@ -9,10 +9,11 @@ import {
 } from "@/features/sellers/page-context.server";
 import {
   readSellerReadiness,
-  readSellerSetup,
+  readSellerSetupReview,
 } from "@/features/sellers/setup.server";
 import { parseSetupStep } from "@/features/sellers/setup-model";
 import { BusinessSetupForm } from "@/features/sellers/setup-form";
+import { OwnDeclarationDecisionNotice } from "@/features/seller-declarations/own-decision";
 import {
   SetupChecklist,
   OperationReadiness,
@@ -39,7 +40,7 @@ export default async function ResumeBusinessSetup({
   );
   const database = getDatabase();
   const setup = await readPrivatePage(() =>
-    readSellerSetup(database, identity, sellerId),
+    readSellerSetupReview(database, identity, sellerId),
   );
   const step = requested ?? setup.lastStep;
   const titles = {
@@ -74,6 +75,10 @@ export default async function ResumeBusinessSetup({
           <p className={styles.status}>
             {declarationLabel(setup.declarationStatus, bg)}
           </p>
+          <OwnDeclarationDecisionNotice
+            decision={setup.declarationDecision}
+            language={language}
+          />
           <SetupChecklist setup={setup} language={language} />
           <OperationReadiness
             readiness={await readPrivatePage(() =>

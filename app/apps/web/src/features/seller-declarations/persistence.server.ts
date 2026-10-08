@@ -23,6 +23,7 @@ import {
   type DeclarationQueue,
   type DeclarationReviewAcknowledgement,
   type DeclarationReviewView,
+  type OwnDeclarationDecision,
 } from "./model";
 
 type Snapshot = TraderDeclaration & {
@@ -306,29 +307,38 @@ export function readOwnDeclarationDecision(
   database: SellerDatabase,
   identity: VerifiedIdentity,
   sellerId: string,
-) {
+): Promise<OwnDeclarationDecision | null> {
+  return inTransaction(database, (tx) =>
+    readOwnDeclarationDecisionInTransaction(tx, identity, sellerId),
+  );
+}
+
+/** Current declaration authority on the caller's existing transaction and locks. */
+export async function readOwnDeclarationDecisionInTransaction(
+  tx: SellerTransaction,
+  identity: VerifiedIdentity,
+  sellerId: string,
+): Promise<OwnDeclarationDecision | null> {
   if (!validId(sellerId)) throw new SellerError("INVALID_INPUT");
-  return inTransaction(database, async (tx) => {
-    const { seller } = await authorizeSeller(
-      tx,
-      identity,
-      sellerId,
-      "declaration.manage",
-    );
-    if (seller.kind !== "business") throw new SellerError("NOT_FOUND");
-    const result = (
-      await tx.client.query<ReviewRow>(
-        `SELECT ${reviewColumns} FROM treido.seller_declaration_reviews WHERE seller_id=$1 AND reviewed_declaration_id=(SELECT id FROM treido.seller_declarations WHERE seller_id=$1 ORDER BY revision DESC LIMIT 1)`,
-        [sellerId],
-      )
-    ).rows[0];
-    return result
-      ? {
-          decision: result.decision,
-          reason: result.reason,
-          revision: result.revision,
-          reviewedAt: result.reviewedAt.toISOString(),
-        }
-      : null;
-  });
+  const { seller } = await authorizeSeller(
+    tx,
+    identity,
+    sellerId,
+    "declaration.manage",
+  );
+  if (seller.kind !== "business") throw new SellerError("NOT_FOUND");
+  const result = (
+    await tx.client.query<ReviewRow>(
+      `SELECT ${reviewColumns} FROM treido.seller_declaration_reviews WHERE seller_id=$1 AND reviewed_declaration_id=(SELECT id FROM treido.seller_declarations WHERE seller_id=$1 ORDER BY revision DESC LIMIT 1)`,
+      [sellerId],
+    )
+  ).rows[0];
+  return result
+    ? {
+        decision: result.decision,
+        reason: result.reason,
+        revision: result.revision,
+        reviewedAt: result.reviewedAt.toISOString(),
+      }
+    : null;
 }

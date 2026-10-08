@@ -7,7 +7,11 @@ import {
   createBusinessSeller,
   ensurePersonalSeller,
 } from "../sellers/persistence.server";
-import { readSellerSetup, saveSellerSetup } from "../sellers/setup.server";
+import {
+  readSellerSetup,
+  readSellerSetupReview,
+  saveSellerSetup,
+} from "../sellers/setup.server";
 import {
   readDeclarationQueue,
   readDeclarationReview,
@@ -177,6 +181,14 @@ it("accepts current submitted facts once, retains the immutable source and persi
     revision: 2,
     reason: own.input.reason,
   });
+  expect(
+    (await readSellerSetupReview(database, own.owner.identity, own.sellerId))
+      .declarationDecision,
+  ).toMatchObject({
+    decision: "accepted",
+    revision: 2,
+    reason: own.input.reason,
+  });
 });
 it("rejection records a correction; seller resubmission reopens review without reviving an old decision", async () => {
   const own = await submission(),
@@ -191,6 +203,10 @@ it("rejection records a correction; seller resubmission reopens review without r
     (await readSellerSetup(database, own.owner.identity, own.sellerId))
       .declarationStatus,
   ).toBe("rejected");
+  expect(
+    (await readSellerSetupReview(database, own.owner.identity, own.sellerId))
+      .declarationDecision,
+  ).toMatchObject({ decision: "rejected", revision: 2, reason: input.reason });
   await saveSellerSetup(database, own.owner.identity, {
     sellerId: own.sellerId,
     expectedRevision: 2,
@@ -220,6 +236,54 @@ it("rejection records a correction; seller resubmission reopens review without r
       own.sellerId,
     ),
   ).toBeNull();
+  expect(
+    (await readSellerSetupReview(database, own.owner.identity, own.sellerId))
+      .declarationDecision,
+  ).toBeNull();
+});
+it("setup review projects no private reason to a read-only member and rechecks current membership", async () => {
+  const own = await submission(),
+    reviewer = await operator(),
+    member = await human();
+  await reviewSellerDeclaration(database, reviewer.identity, own.input);
+  await native.admin.query(
+    "INSERT INTO treido.seller_memberships(seller_id,user_id,role,grants) VALUES($1,$2,'member','[\"seller.read\"]'::jsonb)",
+    [own.sellerId, member.id],
+  );
+  const view = await readSellerSetupReview(
+    database,
+    member.identity,
+    own.sellerId,
+  );
+  expect(view.canEditDeclaration).toBe(false);
+  expect(view.declaration).toBeNull();
+  expect(view.declarationDecision).toBeNull();
+  expect(JSON.stringify(view)).not.toContain(own.input.reason);
+  const other = await human();
+  await expect(
+    readSellerSetupReview(database, other.identity, own.sellerId),
+  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  await native.admin.query(
+    "UPDATE treido.seller_memberships SET status='revoked',revision=revision+1 WHERE seller_id=$1 AND user_id=$2",
+    [own.sellerId, member.id],
+  );
+  await expect(
+    readSellerSetupReview(database, member.identity, own.sellerId),
+  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  const ownerView = await readSellerSetupReview(
+    database,
+    own.owner.identity,
+    own.sellerId,
+  );
+  expect(Object.keys(ownerView.declarationDecision!).sort()).toEqual([
+    "decision",
+    "reason",
+    "reviewedAt",
+    "revision",
+  ]);
+  expect(JSON.stringify(ownerView.declarationDecision)).not.toContain(
+    reviewer.id,
+  );
 });
 it("rejects foreign humans, seller role trust and a revoked operator on fresh commands and receipt replays", async () => {
   const own = await submission(),

@@ -6,6 +6,12 @@ import {
 } from "../sellers/setup-model";
 
 export type DeclarationDecision = "accepted" | "rejected";
+export type OwnDeclarationDecision = {
+  decision: DeclarationDecision;
+  reason: string;
+  revision: number;
+  reviewedAt: string;
+};
 export type ReviewDeclarationInput = {
   sellerId: string;
   declarationId: string;

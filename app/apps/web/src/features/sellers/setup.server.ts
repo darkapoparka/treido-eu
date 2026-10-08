@@ -24,6 +24,7 @@ import {
 import { SellerError } from "./errors";
 import { validId } from "../selling/draft-model";
 import { readFreeCatalogueLimits } from "./free-catalogue.server";
+import { readOwnDeclarationDecisionInTransaction } from "../seller-declarations/persistence.server";
 import { evaluateSellerReadiness, type SellerReadiness } from "./readiness";
 import {
   BUSINESS_SETUP_VERSION,
@@ -68,63 +69,88 @@ export function readSellerSetup(
   identity: VerifiedIdentity,
   sellerId: string,
 ): Promise<BusinessSetupView> {
+  return inTransaction(database, (tx) =>
+    sellerSetupProjection(tx, identity, sellerId),
+  );
+}
+
+/** The onboarding review includes private reasons only for current declaration managers. */
+export function readSellerSetupReview(
+  database: SellerDatabase,
+  identity: VerifiedIdentity,
+  sellerId: string,
+) {
   return inTransaction(database, async (tx) => {
-    const { seller, context } = await authorizeSeller(
-      tx,
-      identity,
-      sellerId,
-      "seller.read",
-    );
-    if (seller.kind !== "business") throw new SellerError("NOT_FOUND");
-    const { progress, profile, declaration } = await setupRecords(tx, sellerId);
-    const [privateDeclaration] = context.capabilities.includes(
-      "declaration.manage",
-    )
-      ? await tx.db
-          .select()
-          .from(sellerDeclarations)
-          .where(eq(sellerDeclarations.sellerId, sellerId))
-          .orderBy(desc(sellerDeclarations.revision))
-          .limit(1)
-      : [];
-    const [firstDraft] = context.capabilities.includes("listing.read")
-      ? await tx.db
-          .select({ id: drafts.listingId })
-          .from(drafts)
-          .where(eq(drafts.sellerId, sellerId))
-          .limit(1)
-      : [];
+    const setup = await sellerSetupProjection(tx, identity, sellerId);
     return {
-      sellerId,
-      revision: progress?.revision ?? 0,
-      lastStep: progress?.lastStep ?? "details",
-      profile: {
-        name: seller.name,
-        description: profile?.description ?? "",
-        locality: profile?.locality ?? "",
-      },
-      declaration: context.capabilities.includes("declaration.manage")
-        ? privateDeclaration
-          ? {
-              country: "BG",
-              legalName: privateDeclaration.legalName,
-              registrationNumber: privateDeclaration.registrationNumber,
-              contactEmail: privateDeclaration.contactEmail,
-              contactAddress: privateDeclaration.contactAddress,
-              accurate: privateDeclaration.accurate,
-            }
-          : { ...emptyDeclaration }
+      ...setup,
+      declarationDecision: setup.canEditDeclaration
+        ? await readOwnDeclarationDecisionInTransaction(tx, identity, sellerId)
         : null,
-      declarationStatus: declarationReadiness(declaration ?? null),
-      canEditProfile: context.capabilities.includes("profile.manage"),
-      canEditDeclaration: context.capabilities.includes("declaration.manage"),
-      hasDraft: context.capabilities.includes("listing.read")
-        ? Boolean(firstDraft)
-        : null,
-      canCreateDraft: context.capabilities.includes("listing.write"),
-      savedAt: progress?.updatedAt.toISOString() ?? null,
     };
   });
+}
+
+async function sellerSetupProjection(
+  tx: SellerTransaction,
+  identity: VerifiedIdentity,
+  sellerId: string,
+): Promise<BusinessSetupView> {
+  const { seller, context } = await authorizeSeller(
+    tx,
+    identity,
+    sellerId,
+    "seller.read",
+  );
+  if (seller.kind !== "business") throw new SellerError("NOT_FOUND");
+  const { progress, profile, declaration } = await setupRecords(tx, sellerId);
+  const [privateDeclaration] = context.capabilities.includes(
+    "declaration.manage",
+  )
+    ? await tx.db
+        .select()
+        .from(sellerDeclarations)
+        .where(eq(sellerDeclarations.sellerId, sellerId))
+        .orderBy(desc(sellerDeclarations.revision))
+        .limit(1)
+    : [];
+  const [firstDraft] = context.capabilities.includes("listing.read")
+    ? await tx.db
+        .select({ id: drafts.listingId })
+        .from(drafts)
+        .where(eq(drafts.sellerId, sellerId))
+        .limit(1)
+    : [];
+  return {
+    sellerId,
+    revision: progress?.revision ?? 0,
+    lastStep: progress?.lastStep ?? "details",
+    profile: {
+      name: seller.name,
+      description: profile?.description ?? "",
+      locality: profile?.locality ?? "",
+    },
+    declaration: context.capabilities.includes("declaration.manage")
+      ? privateDeclaration
+        ? {
+            country: "BG",
+            legalName: privateDeclaration.legalName,
+            registrationNumber: privateDeclaration.registrationNumber,
+            contactEmail: privateDeclaration.contactEmail,
+            contactAddress: privateDeclaration.contactAddress,
+            accurate: privateDeclaration.accurate,
+          }
+        : { ...emptyDeclaration }
+      : null,
+    declarationStatus: declarationReadiness(declaration ?? null),
+    canEditProfile: context.capabilities.includes("profile.manage"),
+    canEditDeclaration: context.capabilities.includes("declaration.manage"),
+    hasDraft: context.capabilities.includes("listing.read")
+      ? Boolean(firstDraft)
+      : null,
+    canCreateDraft: context.capabilities.includes("listing.write"),
+    savedAt: progress?.updatedAt.toISOString() ?? null,
+  };
 }
 
 export type SaveSellerSetupInput = {
