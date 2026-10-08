@@ -70,6 +70,8 @@ Measure real user outcomes and p75 page performance for major mobile journeys. E
 
 Configure database backups and restore procedures, object retention and migration rollback/forward-fix plans. Perform a restore drill on an isolated target, then reconcile external payment/provider effects: a database restore cannot undo a charge or payout. Define recovery objectives and an operator owner before production; no invented SLA in marketing.
 
+Applied migration receipts use the exact SQL bytes. [Git attributes](../app/.gitattributes) preserve the historical 0047 and 0050 source bytes, including their original line endings, across Windows and Linux checkouts. Keep those sources and their stored checksums unchanged; implement SQL changes in a new numbered migration rather than normalizing an applied file or accepting a different checksum.
+
 The operating console has restricted queues for listing reports/declarations, order/return cases, unresolved payments/refunds/transfers, billing/promotion exceptions, failed imports/uploads/notifications and exhausted jobs. Each action requires a capability and records a reason/audit trail; no unrestricted impersonation or manual paid-success flag. Access/support needs are explicit assignments in T27, not a generic dashboard that exposes every private record.
 
 Account export/closure applies reviewed retention and protects open order/payment/legal obligations. Export is human-owned and independent of subscription; redact others' private data. Revoke access, remove unnecessary uploads/AI media and expire download links. Inform the user of retained categories/purposes and expected handling. Review model/media retention, prompt logging and provider data-processing settings before AI exposure.
