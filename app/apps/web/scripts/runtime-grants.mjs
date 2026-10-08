@@ -1,5 +1,6 @@
 import { applyBillingRecoveryGrants } from "../src/features/seller-billing/recovery-runtime-grants.mjs";
 import { applyInvitationMailGrants } from "../src/features/team/runtime-grants.mjs";
+import { applySellerDeclarationReviewGrants } from "../src/features/seller-declarations/runtime-grants.mjs";
 import { applyMessageAttachmentGrants } from "../src/features/message-attachments/runtime-grants.mjs";
 import { applyMessageImageLifecycleGrants } from "../src/features/message-attachments/lifecycle-grants.mjs";
 import { applyOrderShippingGrants } from "../src/features/order-shipping/runtime-grants.mjs";
@@ -141,4 +142,9 @@ export async function applyRuntimeGrants(client, role) {
     "SELECT to_regclass('treido.billing_recovery_requests') IS NOT NULL AS ready",
   );
   if (recovery.rows[0]?.ready) await applyBillingRecoveryGrants(client, role);
+  const declarationReviews = await client.query(
+    "SELECT to_regclass('treido.seller_declaration_reviews') IS NOT NULL AS ready",
+  );
+  if (declarationReviews.rows[0]?.ready)
+    await applySellerDeclarationReviewGrants(client, role);
 }

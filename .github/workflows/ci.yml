@@ -67,7 +67,7 @@ jobs:
       - name: Focused web, contracts and tooling lint
         run: |
           pnpm ci:lint
-          pnpm exec eslint tests/t71 tests/t72 tests/smoke/seller-onboarding.spec.ts --max-warnings=0
+          pnpm exec eslint tests/t71 tests/t72 tests/smoke/seller-onboarding.spec.ts tests/smoke/declaration-review.spec.ts --max-warnings=0
 
       - name: Unit tests
         run: pnpm test:unit --maxWorkers=1 --no-file-parallelism
@@ -88,6 +88,9 @@ jobs:
       - name: Maintenance due-work database regressions
         run: pnpm exec vitest run --config tests/t72/repair-due.config.mjs --configLoader native
 
+      - name: Independent seller declaration review database regressions
+        run: pnpm exec vitest run --config apps/web/src/features/seller-declarations/native.config.mjs --configLoader native
+
       - name: Billing recovery database constraints
         run: node tests/t72/billing-native.mjs
 
@@ -106,6 +109,9 @@ jobs:
 
       - name: Lifecycle disclosure browser regressions
         run: node tests/t72/message-lifecycle-browser.mjs
+
+      - name: Independent declaration review browser regressions
+        run: node tests/declarations/browser.mjs
 
       - name: Shared and web types
         run: pnpm ci:types

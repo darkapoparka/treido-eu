@@ -9,11 +9,27 @@ import {
   localTarget,
   stripFences,
   validateTasks,
+  validSkillMetadata,
 } from "./check-product-docs.mjs";
 
 const root = path.resolve("virtual-doc-root");
 const queue = (rows, headings = "") =>
   `# Tasks\n${headings}\n## Executable work packages\n\n| ID | State | Prerequisites |\n|---|---|---|\n${rows}\n`;
+
+test("skill frontmatter accepts Windows archive line endings without relaxing metadata", () => {
+  const valid = "---\nname: treido-task\ndescription: Task workflow.\n---\n";
+  assert.equal(validSkillMetadata(valid, "treido-task"), true);
+  assert.equal(
+    validSkillMetadata(valid.replaceAll("\n", "\r\n"), "treido-task"),
+    true,
+  );
+  for (const malformed of [
+    valid.replace("name: treido-task", "name: other"),
+    valid.replace("description: Task workflow.", "description:"),
+    valid.slice(4),
+  ])
+    assert.equal(validSkillMetadata(malformed, "treido-task"), false);
+});
 
 test("fenced examples do not become file links or headings", () => {
   const source = "# Real\n```md\n[bad](missing.md)\n# Fake\n```\n[good](ok.md)";

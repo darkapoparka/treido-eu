@@ -76,6 +76,25 @@ it("retains only the exact operator destination without granting operator access
   ])
     expect(parseWorkspaceContinuation(value)).toBeNull();
 });
+it("retains declaration review destinations without accepting decision or actor authority", () => {
+  const id = "cf081b46-5730-4978-b8eb-d50825a7b508";
+  for (const route of ["/ops/declarations", `/ops/declarations/${id}`]) {
+    expect(parseWorkspaceContinuation(route + "?lang=en")).toBe(
+      route + "?lang=en",
+    );
+    for (const suffix of [
+      "?decision=accepted",
+      "?actorId=" + id,
+      "?role=operator",
+      "?lang=bg&lang=en",
+      "/accept",
+      "/../declarations",
+      "#confirm",
+    ])
+      expect(parseWorkspaceContinuation(route + suffix)).toBeNull();
+  }
+  expect(parseWorkspaceContinuation("/ops/declarations/foreign")).toBeNull();
+});
 it("resumes only an exact saved review route with canonical resource IDs", () => {
   const route =
     "/app/sellers/b3db8275-e48a-4f4c-8a9e-b2805ab04631/listings/cf081b46-5730-4978-b8eb-d50825a7b508/review";

@@ -56,6 +56,8 @@ overrides:
   # Reviewed launch security fixes; only replace the affected installed versions.
   "source-map-js@1.2.1": 1.2.2
   "compression@1.8.1": 1.8.2
+  # GHSA-pqg4-j6r4-53mv: reject line terminators following shell comments.
+  "shell-quote@1.10.0": 1.11.0
 patchedDependencies:
   query-string@7.1.3: patches/query-string@7.1.3.patch
   node-forge@1.4.0: patches/node-forge@1.4.0.patch

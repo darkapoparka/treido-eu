@@ -106,15 +106,20 @@ export async function createPayableQuote(
         ? command.source.sellerId
         : (await readAcceptedOfferQuoteSource(tx, identity, command.source))
             .sellerId;
-    await approvedPolicy(tx, command.policyId, bindings);
-    return { sellerId, mapping: await sellerBinding(tx, sellerId, bindings) };
+    const policy = await approvedPolicy(tx, command.policyId, bindings);
+    return {
+      sellerId,
+      mapping: await sellerBinding(tx, sellerId, bindings),
+      settlementMerchant: policy.settlementMerchant,
+    };
   });
   if (initial.prior) return { id: initial.prior.id };
   const stripe = await verifiedStripe(bindings, true);
   const account = await stripe.accounts.retrieve(
     initial.mapping!.connectedAccount,
   );
-  if (!accountReadiness(account).ready) throw new SellerError("NOT_AVAILABLE");
+  if (!accountReadiness(account, initial.settlementMerchant).ready)
+    throw new SellerError("NOT_AVAILABLE");
   return inTransaction(database, async (tx) => {
     const user = await authorizeHuman(tx, identity, false);
     await tx.client.query(
@@ -127,7 +132,8 @@ export async function createPayableQuote(
     const mapping = await sellerBinding(tx, initial.sellerId!, bindings);
     if (
       mapping.id !== initial.mapping!.id ||
-      mapping.connectedAccount !== account.id
+      mapping.connectedAccount !== account.id ||
+      policy.settlementMerchant !== initial.settlementMerchant
     )
       throw new SellerError("CONFLICT");
     const pending = await tx.client.query(

@@ -153,7 +153,9 @@ async function main() {
         "0049_message_image_executor_fence",
         "0050_message_image_dispatch_barrier",
         "0051_assistant_voice_usage",
+        "0052_repair_due",
         "0053_category_navigation",
+        "0054_seller_declaration_reviews",
       ]) {
         const source = await readFile(
           new URL(`../migrations/${version}.sql`, import.meta.url),

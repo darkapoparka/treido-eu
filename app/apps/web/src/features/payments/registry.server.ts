@@ -83,20 +83,9 @@ export async function approvedListing(
   );
   if (row.rows[0]?.id !== policyId) throw new SellerError("NOT_AVAILABLE");
 }
-export function accountReadiness(account: Stripe.Account) {
+export function connectAccountFacts(account: Stripe.Account) {
   const requirements = account.requirements;
   return {
-    ready:
-      account.country === "BG" &&
-      account.default_currency === "eur" &&
-      account.charges_enabled === true &&
-      account.payouts_enabled === true &&
-      account.details_submitted === true &&
-      account.capabilities?.transfers === "active" &&
-      account.capabilities?.card_payments === "active" &&
-      !requirements?.disabled_reason &&
-      !requirements?.currently_due?.length &&
-      !requirements?.past_due?.length,
     chargesEnabled: account.charges_enabled === true,
     payoutsEnabled: account.payouts_enabled === true,
     detailsSubmitted: account.details_submitted === true,
@@ -107,5 +96,35 @@ export function accountReadiness(account: Stripe.Account) {
     pendingVerification: requirements?.pending_verification ?? [],
     disabledReason: requirements?.disabled_reason ?? null,
     checkedAt: new Date().toISOString(),
+  };
+}
+export function accountReadiness(
+  account: Stripe.Account,
+  settlementMerchant: unknown,
+) {
+  const policy =
+    settlementMerchant === "platform" || settlementMerchant === "seller"
+      ? settlementMerchant
+      : null;
+  const requirements = account.requirements;
+  return {
+    ...connectAccountFacts(account),
+    settlementMerchant: policy,
+    policyQualified: policy !== null,
+    ready:
+      policy !== null &&
+      account.country === "BG" &&
+      account.default_currency === "eur" &&
+      account.payouts_enabled === true &&
+      account.details_submitted === true &&
+      account.capabilities?.transfers === "active" &&
+      // Destination recipients do not process the platform's charge. Seller
+      // settlement uses on_behalf_of and requires current merchant acceptance.
+      (policy === "platform" ||
+        (account.charges_enabled === true &&
+          account.capabilities?.card_payments === "active")) &&
+      !requirements?.disabled_reason &&
+      !requirements?.currently_due?.length &&
+      !requirements?.past_due?.length,
   };
 }

@@ -23,6 +23,15 @@ export function stripFences(markdown) {
     .join("\n");
 }
 
+export function validSkillMetadata(body, name) {
+  const normalized = body.replaceAll("\r\n", "\n");
+  return (
+    normalized.startsWith("---") &&
+    normalized.includes(`\nname: ${name}\n`) &&
+    /^description:[ \t]+\S/m.test(normalized)
+  );
+}
+
 export function linksIn(markdown) {
   const clean = stripFences(markdown);
   const inline = [
@@ -237,11 +246,7 @@ export async function checkRepository(directory) {
   }
   for (const name of skills) {
     const body = await load(path.join(root, `.agents/skills/${name}/SKILL.md`));
-    if (
-      !body.startsWith("---") ||
-      !body.includes(`\nname: ${name}\n`) ||
-      !/^description:\s+\S/m.test(body)
-    )
+    if (!validSkillMetadata(body, name))
       errors.push(`Invalid skill metadata: ${name}`);
     if (!rootAgents.includes(name))
       errors.push(`Skill missing root routing: ${name}`);

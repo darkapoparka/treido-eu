@@ -11,7 +11,7 @@ import { SellerError } from "../sellers/errors";
 import { libraryActorKey } from "../library/cursor.server";
 import { parseResource } from "./model";
 import { paymentBindings, verifiedStripe } from "./bindings.server";
-import { sellerBinding, accountReadiness } from "./registry.server";
+import { sellerBinding, connectAccountFacts } from "./registry.server";
 
 export async function readConnectReadiness(
   database: SellerDatabase,
@@ -32,7 +32,14 @@ export async function readConnectReadiness(
       throw new SellerError("CONFLICT");
     // Only safe current capability/requirement facts leave the server. No bank,
     // representative, identity document, email or provider link is retained.
-    return accountReadiness(account);
+    // A seller can have different reviewed sale policies. Capability facts do
+    // not select a settlement merchant or authorize a payable checkout.
+    return {
+      ...connectAccountFacts(account),
+      settlementMerchant: null,
+      policyQualified: false,
+      ready: false,
+    };
   });
 }
 export async function createConnectOnboarding(

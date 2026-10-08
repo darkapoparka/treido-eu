@@ -14,7 +14,7 @@ export async function OperationsNav({
   active,
 }: {
   language: "bg" | "en";
-  active?: "reports" | "appeals" | "insights" | "aftercare";
+  active?: "reports" | "appeals" | "insights" | "aftercare" | "declarations";
 }) {
   const t = await getTranslations({
     locale: language,
@@ -28,6 +28,14 @@ export async function OperationsNav({
         aria-current={active === "reports" ? "page" : undefined}
       >
         {t("reports")}
+      </Link>
+      <Link
+        className={w.button}
+        href={"/ops/declarations?lang=" + language}
+        prefetch={false}
+        aria-current={active === "declarations" ? "page" : undefined}
+      >
+        {language === "bg" ? "Декларации" : "Declarations"}
       </Link>
       <Link
         className={w.button}

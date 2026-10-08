@@ -25,7 +25,8 @@ export function parseWorkspaceContinuation(value: unknown): string | null {
       path,
     );
   const inquiry = /^\/app\/sellers\/([^/]+)\/inquiries\/([^/]+)$/.exec(path);
-  const operation = /^\/ops\/(?:reports|appeals|listings)\/([^/]+)$/.exec(path);
+  const operation =
+    /^\/ops\/(?:reports|appeals|listings|declarations)\/([^/]+)$/.exec(path);
   const purchaseReview = /^\/checkout\/reviews\/([^/]+)$/.exec(path);
   const payableQuote = /^\/checkout\/payments\/([^/]+)$/.exec(path);
   const paidOrder = /^\/orders\/([^/]+)$/.exec(path);
@@ -56,6 +57,7 @@ export function parseWorkspaceContinuation(value: unknown): string | null {
       "/app/onboarding",
       "/ops",
       "/ops/appeals",
+      "/ops/declarations",
     ].includes(path) &&
     (!purchaseReview || !validId(purchaseReview[1])) &&
     (!payableQuote || !validId(payableQuote[1])) &&

@@ -98,8 +98,12 @@ export async function beginPayment(
   const preliminary = await inTransaction(database, async (tx) => {
     const user = await authorizeHuman(tx, identity, false);
     const row = (
-      await tx.client.query<{ sellerId: string; allocationId: string }>(
-        `SELECT seller_id AS "sellerId",allocation_id AS "allocationId" FROM treido.payable_quotes WHERE id=$1 AND buyer_id=$2`,
+      await tx.client.query<{
+        sellerId: string;
+        allocationId: string;
+        settlementMerchant: unknown;
+      }>(
+        `SELECT seller_id AS "sellerId",allocation_id AS "allocationId",terms_snapshot->>'settlementMerchant' AS "settlementMerchant" FROM treido.payable_quotes WHERE id=$1 AND buyer_id=$2`,
         [command.id, user.id],
       )
     ).rows[0];
@@ -110,7 +114,8 @@ export async function beginPayment(
   const account = await stripe.accounts.retrieve(
     preliminary.mapping.connectedAccount,
   );
-  if (!accountReadiness(account).ready) throw new SellerError("NOT_AVAILABLE");
+  if (!accountReadiness(account, preliminary.settlementMerchant).ready)
+    throw new SellerError("NOT_AVAILABLE");
   const prepared = await inTransaction(database, async (tx) => {
     const user = await authorizeHuman(tx, identity, false);
     const { allocation } = await lockAllocation(tx, preliminary.allocationId);
@@ -144,6 +149,7 @@ export async function beginPayment(
       mapping.id !== quote.bindingId ||
       mapping.connectedAccount !== account.id ||
       policy.settlementMerchant !== quote.terms.settlementMerchant ||
+      quote.terms.settlementMerchant !== preliminary.settlementMerchant ||
       allocation.buyerId !== user.id ||
       allocation.state !== "active"
     )
