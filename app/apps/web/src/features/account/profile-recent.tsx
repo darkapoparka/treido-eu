@@ -9,13 +9,28 @@ import { KitschWordmark } from "../discovery/kitsch-wordmark";
 import { findMini, miniHref } from "../discovery/mini-model";
 import { useDiscovery } from "../discovery/state";
 import { recentStoreCover } from "../discovery/recent-store-media";
+import type { SearchCatalog } from "../catalog/search-catalog";
+import { ListingSaveButton } from "../library/controls";
 
-export function ProfileRecent({ catalog }: { catalog: Catalog }) {
+export function ProfileRecent({
+  catalog,
+  publicData = false,
+}: {
+  catalog: Catalog | SearchCatalog;
+  publicData?: boolean;
+}) {
   const t = useTranslations("account");
   const state = useDiscovery();
-  const miniIds = state.recentActivity === "minis" ? state.visitedMinis : [];
+  const miniIds =
+    !publicData && state.recentActivity === "minis" ? state.visitedMinis : [];
   // Recent Minis precede, rather than erase, the earlier product/store history.
-  const items = state.viewedItems;
+  const items = state.viewedItems.filter(
+    (item) =>
+      !publicData ||
+      (item.kind === "product"
+        ? catalog.products.some((product) => product.id === item.id)
+        : catalog.stores.some((store) => store.id === item.id)),
+  );
   if (!miniIds.length && !items.length) return null;
   return (
     <>
@@ -50,14 +65,23 @@ export function ProfileRecent({ catalog }: { catalog: Catalog }) {
                 compact
                 product={{
                   ...product,
-                  promotion: item.promotion ?? product.promotion,
+                  promotion: publicData
+                    ? undefined
+                    : (item.promotion ?? product.promotion),
                 }}
+                saveControl={
+                  publicData ? (
+                    <ListingSaveButton id={product.id} title={product.title} />
+                  ) : undefined
+                }
               />
             ) : null;
           }
           const store = catalog.stores.find((s) => s.id === item.id);
           if (!store) return null;
-          const capturedCover = recentStoreCover(store.id, "profile");
+          const capturedCover = publicData
+            ? null
+            : recentStoreCover(store.id, "profile");
           const image = capturedCover
             ? `/api/reference-media/${capturedCover}`
             : (store.coverImage ??
@@ -73,7 +97,11 @@ export function ProfileRecent({ catalog }: { catalog: Catalog }) {
               {image && <img src={image} alt="" />}
               {!capturedCover && (
                 <span>
-                  {store.id === "kitsch" ? <KitschWordmark /> : store.name}
+                  {!publicData && store.id === "kitsch" ? (
+                    <KitschWordmark />
+                  ) : (
+                    store.name
+                  )}
                 </span>
               )}
             </Link>

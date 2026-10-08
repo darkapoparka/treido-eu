@@ -1,7 +1,5 @@
-import {
-  readCatalog,
-  referencePreviewEnabled,
-} from "@/features/catalog/queries.server";
+import { readCatalog } from "@/features/catalog/queries.server";
+import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.server";
 import { GiftSense } from "@/features/discovery/minis";
 import { NativeMiniSignIn } from "@/features/discovery/native-minis";
 import { redirect } from "next/navigation";
@@ -12,7 +10,7 @@ export default async function Page({
 }: {
   searchParams: Promise<{ lang?: string | string[] }>;
 }) {
-  if (!referencePreviewEnabled()) {
+  if (!(await readBuyerReferenceMode())) {
     await connection();
     redirect(
       "/minis/gift-finder?lang=" +

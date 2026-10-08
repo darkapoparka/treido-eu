@@ -1,7 +1,5 @@
-import {
-  readCatalog,
-  referencePreviewEnabled,
-} from "@/features/catalog/queries.server";
+import { readCatalog } from "@/features/catalog/queries.server";
+import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.server";
 import { SecurityPage } from "@/features/account/pages";
 import { pageLocale } from "@/features/locale/page-locale.server";
 import { connection } from "next/server";
@@ -11,7 +9,7 @@ export default async function Page({
 }: {
   searchParams: Promise<{ lang?: string | string[] }>;
 }) {
-  if (!referencePreviewEnabled()) {
+  if (!(await readBuyerReferenceMode())) {
     await connection();
     redirect(
       "/account/privacy/security?lang=" +

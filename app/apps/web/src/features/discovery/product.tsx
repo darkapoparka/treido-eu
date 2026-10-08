@@ -2,7 +2,7 @@
 import { displayCount } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ShopSurface } from "./hydration-boundary";
+import { ProductSurface } from "./product-shell";
 /* eslint-disable @next/next/no-img-element */
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
@@ -289,7 +289,8 @@ export function ProductDetail({ data }: { data: ProductDetailPageView }) {
         ]
       : [description];
   return (
-    <ShopSurface
+    <ProductSurface
+      shopPresentation={product.referenceStyle === "android"}
       className={`shop-page product-page ${cart ? "cart-visible" : ""} ${photos.length ? "" : styles.detailsOnly} ${product.referenceStyle === "android" ? "android-live android-product" : ""}`}
       data-product-id={product.id}
       data-native-photo={
@@ -705,6 +706,6 @@ export function ProductDetail({ data }: { data: ProductDetailPageView }) {
         }}
         onViewCart={() => setCart(true)}
       />
-    </ShopSurface>
+    </ProductSurface>
   );
 }

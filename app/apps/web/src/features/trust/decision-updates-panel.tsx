@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useInboxRefresh } from "../messaging/use-inbox-refresh";
 import { readDecisionUpdatesAction } from "./decision-update-actions";
@@ -14,9 +14,13 @@ import m from "../messaging/messaging.module.css";
 export function DecisionUpdatesPanel({
   initial,
   actorSubject,
+  shop = false,
+  leading,
 }: {
   initial: DecisionUpdates;
   actorSubject: string;
+  shop?: boolean;
+  leading?: (successfullyEmpty: boolean) => ReactNode;
 }) {
   const { actorKey, sellerId } = initial,
     t = useTranslations("trustCases"),
@@ -47,8 +51,15 @@ export function DecisionUpdatesPanel({
       language
     );
   }
-  return (
-    <section className={s.card} aria-label={t("decisionUpdates")}>
+  // Keep the authority/refresh owner mounted, while the original buyer empty
+  // screen owns a successfully empty feed. Studio's default remains unchanged.
+  const successfullyEmpty =
+    shop && status === "ready" && data.available && !data.items.length;
+  const panel = successfullyEmpty ? null : (
+    <section
+      className={shop ? "account-panel buyer-decision-updates" : s.card}
+      aria-label={t("decisionUpdates")}
+    >
       <h2>{t("decisionUpdates")}</h2>
       <p>{t("updatesNote")}</p>
       {status !== "ready" ? (
@@ -127,5 +138,15 @@ export function DecisionUpdatesPanel({
         </button>
       )}
     </section>
+  );
+  // The buyer source-empty body observes this current read in the same render,
+  // rather than remembering initial data or waiting for an effect callback.
+  return leading ? (
+    <>
+      {leading(successfullyEmpty)}
+      {panel}
+    </>
+  ) : (
+    panel
   );
 }

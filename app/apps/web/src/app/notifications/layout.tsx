@@ -1,6 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { backendConfigured } from "@/features/sellers/backend-status.server";
-import { referencePreviewEnabled } from "@/features/catalog/queries.server";
+import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.server";
 import { pageLocale } from "@/features/locale/page-locale.server";
 import { clerkLocalization } from "@/features/locale/clerk-localization.server";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function NotificationsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  if (!backendConfigured() || referencePreviewEnabled()) return children;
+  if (!backendConfigured() || (await readBuyerReferenceMode())) return children;
   return (
     <ClerkProvider
       localization={await clerkLocalization(await pageLocale(undefined))}

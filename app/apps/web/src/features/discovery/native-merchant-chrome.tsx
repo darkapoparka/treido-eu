@@ -19,20 +19,24 @@ export function MerchantShell({
   store,
   kind,
   catalogLayout,
+  publicData = false,
   children,
 }: {
   store: Store;
   kind: "store" | "info" | "reviews" | "collection" | "search";
   catalogLayout?: "native-listings";
+  publicData?: boolean;
   children: ReactNode;
 }) {
   const theme = merchantPresentation(store);
   return (
     <ShopSurface
-      className={`shop-page android-live native-merchant native-merchant-${kind}`}
+      className={`shop-page android-live native-merchant native-merchant-${kind}${publicData ? " buyer-public" : ""}`}
       data-merchant={store.name}
       data-catalog-layout={catalogLayout}
-      data-merchant-source={theme.source ?? "captured"}
+      data-merchant-source={
+        publicData ? "published" : (theme.source ?? "captured")
+      }
       data-merchant-tone={
         /^#fff(?:fff)?$/i.test(theme.foreground) ? "dark" : "light"
       }
@@ -55,7 +59,7 @@ export function MerchantShell({
         } as CSSProperties
       }
     >
-      <BrowseScopeUnavailable storefront />
+      {!publicData && <BrowseScopeUnavailable storefront />}
       {children}
     </ShopSurface>
   );
@@ -87,9 +91,11 @@ export function MerchantPhoto({
 export function MerchantHeader({
   store,
   profile = false,
+  followControl,
 }: {
   store: Store;
   profile?: boolean;
+  followControl?: ReactNode;
 }) {
   const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
@@ -158,15 +164,17 @@ export function MerchantHeader({
             <span>{ui("searchThisStore")}</span>
           </SourceLink>
         )}
-        <button
-          className="pill native-merchant-follow"
-          aria-pressed={following}
-          aria-label={following ? ui("unfollow") : ui("follow")}
-          data-following={following}
-          onClick={() => state.toggleFollow(followId)}
-        >
-          {following ? <MerchantFollowIcon /> : ui("follow")}
-        </button>
+        {followControl ?? (
+          <button
+            className="pill native-merchant-follow"
+            aria-pressed={following}
+            aria-label={following ? ui("unfollow") : ui("follow")}
+            data-following={following}
+            onClick={() => state.toggleFollow(followId)}
+          >
+            {following ? <MerchantFollowIcon /> : ui("follow")}
+          </button>
+        )}
         {profile && (
           <IconButton
             native

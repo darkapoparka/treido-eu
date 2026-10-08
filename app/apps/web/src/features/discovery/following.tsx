@@ -3,7 +3,9 @@
 import { useCaption } from "../locale/use-caption";
 import { useTranslations } from "next-intl";
 import { SourceLink } from "./return-navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLocale } from "next-intl";
+import type { LibraryFollow } from "../library/model";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Catalog, Store } from "../catalog/types";
 import { CartOverlay } from "../commerce/checkout";
@@ -11,6 +13,125 @@ import { FloatingNav, IconButton, ProductCard, Sheet } from "./components";
 import { ShopSurface } from "./hydration-boundary";
 import { useDiscovery } from "./state";
 import "./following.css";
+
+function FollowingManagementRow({
+  href,
+  logo,
+  name,
+  control,
+}: {
+  href?: string;
+  logo?: string;
+  name: string;
+  control: ReactNode;
+}) {
+  return (
+    <div className="following-management-row">
+      {href ? (
+        <SourceLink href={href}>
+          {logo ? (
+            <img src={logo} alt="" />
+          ) : (
+            <span className="following-logo-fallback" aria-hidden="true">
+              {name[0]}
+            </span>
+          )}
+          <span>{name}</span>
+        </SourceLink>
+      ) : (
+        <span>{name}</span>
+      )}
+      {control}
+    </div>
+  );
+}
+function FollowingEmpty({
+  title,
+  note,
+  href,
+  action,
+}: {
+  title: ReactNode;
+  note: ReactNode;
+  href: string;
+  action: ReactNode;
+}) {
+  return (
+    <section className="following-empty">
+      <h2>{title}</h2>
+      <p>{note}</p>
+      <SourceLink className="primary" href={href}>
+        {action}
+      </SourceLink>
+    </section>
+  );
+}
+function FollowingManagement({ children }: { children: ReactNode }) {
+  return <div className="following-management">{children}</div>;
+}
+function FollowingHeading({
+  title,
+  children,
+}: {
+  title: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <header className="following-heading">
+      <h1>{title}</h1>
+      {children}
+    </header>
+  );
+}
+
+/** Existing management presentation, with authenticated follows rather than local replay state. */
+export function BuyerFollowing({
+  follows,
+  ready,
+  state,
+  control,
+  pagination,
+}: {
+  follows: LibraryFollow[];
+  ready: boolean;
+  state: ReactNode;
+  control: (id: string) => ReactNode;
+  pagination?: ReactNode;
+}) {
+  const ui = useTranslations("discoveryUI"),
+    t = useTranslations("library"),
+    locale = useLocale();
+  return (
+    <ShopSurface className="shop-page following-page android-live android-following buyer-public">
+      <FollowingHeading title={ui("following")} />
+      {!ready ? (
+        state
+      ) : follows.length ? (
+        <FollowingManagement>
+          {follows.map((row) => (
+            <FollowingManagementRow
+              key={row.id}
+              href={
+                row.seller ? "/stores/" + row.id + "?lang=" + locale : undefined
+              }
+              name={row.seller?.name ?? t("unavailableSeller")}
+              control={control(row.id)}
+            />
+          ))}
+        </FollowingManagement>
+      ) : (
+        <FollowingEmpty
+          title={t("emptyFollowing")}
+          note={t("emptyFollowingNote")}
+          href={"/search?lang=" + locale}
+          action={t("goShopping")}
+        />
+      )}
+      {pagination}
+      <FloatingNav back />
+    </ShopSurface>
+  );
+}
 
 function PostIdentity({ store, added }: { store: Store; added: string }) {
   return (
@@ -128,8 +249,7 @@ export function Following({ catalog }: { catalog: Catalog }) {
     <ShopSurface
       className={`shop-page following-page ${native ? "android-live android-following" : ""}`}
     >
-      <header className="following-heading">
-        <h1>{manage ? ui("followingList") : ui("following")}</h1>
+      <FollowingHeading title={manage ? ui("followingList") : ui("following")}>
         {!manage && stores.length > 0 && (
           <button
             ref={manageButton}
@@ -140,34 +260,27 @@ export function Following({ catalog }: { catalog: Catalog }) {
             {ui("manage")}
           </button>
         )}
-      </header>
+      </FollowingHeading>
       {manage ? (
-        <div className="following-management">
+        <FollowingManagement>
           {stores.map((store) => {
             const followed = state.followed.includes(store.id);
             return (
-              <div className="following-management-row" key={store.id}>
-                <SourceLink href={`/stores/${store.id}`}>
-                  {store.logo ? (
-                    <img src={store.logo} alt="" />
-                  ) : (
-                    <span
-                      className="following-logo-fallback"
-                      aria-hidden="true"
-                    >
-                      {store.name[0]}
-                    </span>
-                  )}
-                  <span>{store.name}</span>
-                </SourceLink>
-                <button
-                  type="button"
-                  aria-pressed={followed}
-                  onClick={() => state.toggleFollow(store.id)}
-                >
-                  {followed ? ui("following") : ui("follow")}
-                </button>
-              </div>
+              <FollowingManagementRow
+                key={store.id}
+                href={`/stores/${store.id}`}
+                logo={store.logo}
+                name={store.name}
+                control={
+                  <button
+                    type="button"
+                    aria-pressed={followed}
+                    onClick={() => state.toggleFollow(store.id)}
+                  >
+                    {followed ? ui("following") : ui("follow")}
+                  </button>
+                }
+              />
             );
           })}
           {!stores.length && (
@@ -175,12 +288,12 @@ export function Following({ catalog }: { catalog: Catalog }) {
               {ui("youReNotFollowingAnyBrandsYet")}
             </p>
           )}
-        </div>
+        </FollowingManagement>
       ) : stores.length === 0 ? (
         <>
-          <section className="following-empty">
-            <h2>
-              {native ? (
+          <FollowingEmpty
+            title={
+              native ? (
                 ui("youReNotFollowingAnyBrandsYet_badbe3")
               ) : (
                 <>
@@ -188,10 +301,10 @@ export function Following({ catalog }: { catalog: Catalog }) {
                   <br />
                   {ui("anyBrandsYet")}
                 </>
-              )}
-            </h2>
-            <p>
-              {native ? (
+              )
+            }
+            note={
+              native ? (
                 ui("hereAreNewProductsFromBrandsYouMightLike")
               ) : (
                 <>
@@ -199,21 +312,17 @@ export function Following({ catalog }: { catalog: Catalog }) {
                   <br />
                   {ui("youMightLike")}
                 </>
-              )}
-            </p>
-            <SourceLink
-              className="primary"
-              href={
-                native
-                  ? state.viewedProducts.length
-                    ? "/?home=recent"
-                    : "/"
-                  : "/explore"
-              }
-            >
-              {ui("goShopping")}
-            </SourceLink>
-          </section>
+              )
+            }
+            href={
+              native
+                ? state.viewedProducts.length
+                  ? "/?home=recent"
+                  : "/"
+                : "/explore"
+            }
+            action={ui("goShopping")}
+          />
           {native ? (
             <LiveFollowingPosts catalog={catalog} />
           ) : (

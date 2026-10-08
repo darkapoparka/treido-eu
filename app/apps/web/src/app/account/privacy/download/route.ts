@@ -1,7 +1,7 @@
 import { getDatabase } from "../../../../server/db/database";
 import { requireVerifiedIdentity } from "../../../../server/identity/clerk.server";
 import { backendConfigured } from "../../../../features/sellers/backend-status.server";
-import { referencePreviewEnabled } from "../../../../features/catalog/queries.server";
+import { readBuyerReferenceMode } from "../../../../features/catalog/buyer-data-mode.server";
 import { SellerError } from "../../../../features/sellers/errors";
 import {
   parseDownloadQuery,
@@ -19,7 +19,7 @@ const headers = {
 };
 export async function GET(request: Request) {
   try {
-    if (referencePreviewEnabled() || !backendConfigured())
+    if ((await readBuyerReferenceMode()) || !backendConfigured())
       throw new PrivacyError("NOT_AVAILABLE");
     const input = parseDownloadQuery(new URL(request.url).searchParams),
       identity = await requireVerifiedIdentity();

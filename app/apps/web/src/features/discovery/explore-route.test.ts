@@ -1,36 +1,50 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 const boundary = vi.hoisted(() => ({
-  reference: vi.fn(),
-  catalogue: vi.fn(),
+  data: vi.fn(),
 }));
-vi.mock("../catalog/queries.server", () => ({
-  referencePreviewEnabled: boundary.reference,
-  readCatalog: boundary.catalogue,
+vi.mock("../catalog/buyer-entry.server", () => ({
+  readBuyerExploreData: boundary.data,
 }));
-vi.mock("./marketplace-page.server", () => ({
-  MarketplacePage: "marketplace-page",
+vi.mock("./explore", () => ({ Explore: "shop-explore" }));
+vi.mock("../locale/request.server", () => ({
+  readLocaleRequest: async () => ({ locale: "bg" }),
 }));
-vi.mock("./explore", () => ({ Explore: "captured-explore" }));
+vi.mock("next/navigation", () => ({
+  redirect: (href: string) => {
+    throw new Error(`REDIRECT:${href}`);
+  },
+}));
 import Page from "../../app/explore/page";
 
 beforeEach(() => vi.clearAllMocks());
 
-it("opens real categorized discovery without invoking the reference catalogue", async () => {
-  boundary.reference.mockReturnValue(false);
-  const source = { lang: "bg", seller: "business", condition: "good" };
-  const page = await Page({ searchParams: Promise.resolve(source) });
-  expect(page.type).toBe("marketplace-page");
-  expect(page.props.raw).toEqual(source);
-  expect(boundary.catalogue).not.toHaveBeenCalled();
-});
-
-it("preserves the captured Explore only behind the explicit reference guard", async () => {
-  boundary.reference.mockReturnValue(true);
-  const catalogue = { products: [], stores: [] };
-  boundary.catalogue.mockResolvedValue(catalogue);
-  const page = await Page({ searchParams: Promise.resolve({ lang: "en" }) });
-  expect(page.type).toBe("captured-explore");
-  expect(page.props.catalog).toBe(catalogue);
-  expect(boundary.catalogue).toHaveBeenCalledTimes(1);
+it.each([
+  { catalog: { products: [], stores: [] } },
+  { publicView: { input: { locale: "bg" }, unavailable: true } },
+])(
+  "uses the same actual Explore owner for reference/public data (%j)",
+  async (data) => {
+    boundary.data.mockResolvedValue(data);
+    const source = { lang: "bg", seller: "business", condition: "good" };
+    const page = await Page({ searchParams: Promise.resolve(source) });
+    expect(page.type).toBe("shop-explore");
+    expect(page.props).toEqual(data);
+    expect(boundary.data).toHaveBeenCalledWith(source);
+  },
+);
+it("query category entry canonicalizes to the same category results route without loading previews", async () => {
+  await expect(
+    Page({
+      searchParams: Promise.resolve({
+        category: "nav:electronics/mobile",
+        seller: "personal",
+        condition: "good",
+        lang: "bg",
+      }),
+    }),
+  ).rejects.toThrow(
+    "REDIRECT:/explore/nav%3Aelectronics%2Fmobile?category=nav%3Aelectronics%2Fmobile&seller=personal&condition=good&lang=bg",
+  );
+  expect(boundary.data).not.toHaveBeenCalled();
 });

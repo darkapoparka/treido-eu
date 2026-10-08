@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { discoveryDestination } from "./browse-scope-route";
+import { canonicalResultsDestination } from "./marketplace-navigation";
 import { localeDestination, parseLocale } from "../locale/locale";
 import {
   Suspense,
@@ -293,7 +294,7 @@ function SourceLinkContent({
   startAtTop = false,
   ...props
 }: Omit<SourceLinkProps, "preserveDiscoveryContext">) {
-  const href = baseHref;
+  const href = canonicalResultsDestination(baseHref);
   const element = useRef<HTMLAnchorElement>(null);
   const id =
     sourceKey ??
@@ -341,9 +342,11 @@ function SourceLinkContent({
 }
 
 /** A route's Close action returns to its owned entry; false leaves its fallback. */
-export function useContextualClose() {
+export function useContextualClose(entryQuery?: string) {
   const router = useRouter();
   const pathname = usePathname();
+  // Query-owned entries such as seller-scope choices bind an actual source
+  // without adding search-param subscriptions to unrelated Close owners.
   useEffect(() => {
     if (pendingReturn?.destination !== pathname) return;
     // Bind the return to this actual destination entry. Forward restores the
@@ -362,7 +365,7 @@ export function useContextualClose() {
       location.href,
     );
     pendingReturn = null;
-  }, [pathname]);
+  }, [pathname, entryQuery]);
   return () => {
     const token = window.history.state?.shopSourceReturnToken;
     if (!readReturnPosition(token)) return false;

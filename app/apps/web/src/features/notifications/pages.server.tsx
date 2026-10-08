@@ -4,10 +4,10 @@ import "server-only";
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { pageLocale } from "../locale/page-locale.server";
-import { referencePreviewEnabled } from "../catalog/queries.server";
+import { readBuyerReferenceMode } from "../catalog/buyer-data-mode.server";
 import { Notifications } from "../discovery/notifications";
-import { ShopSurface } from "../discovery/hydration-boundary";
-import { FloatingNav } from "../discovery/components";
+import { readBuyerNotifications } from "./buyer-view.server";
+import { BuyerNotificationPanels } from "./buyer-panels";
 import { backendConfigured } from "../sellers/backend-status.server";
 import {
   requirePageIdentity,
@@ -19,7 +19,6 @@ import { NotificationPanel } from "./panel";
 import { notificationsHref, parseNotificationQuery } from "./model";
 import s from "../purchase-reviews/reviews.module.css";
 import a from "../sellers/admin.module.css";
-import n from "./notifications.module.css";
 type Query = {
   lang?: string;
   filter?: string;
@@ -82,16 +81,21 @@ export async function BuyerNotificationsPage({
   searchParams: Promise<Query>;
 }) {
   await connection();
-  if (referencePreviewEnabled()) return <Notifications />;
-  const query = await searchParams,
-    language = await pageLocale(query.lang),
-    t = await getTranslations({ locale: language, namespace: "notifications" });
+  if (await readBuyerReferenceMode()) return <Notifications />;
+  const query = await searchParams;
+  await pageLocale(query.lang);
+  const view = await readPrivatePage(() => readBuyerNotifications(query));
+  if (view.state !== "ready")
+    return <Notifications publicData state={view.state} />;
   return (
-    <ShopSurface className={"shop-page " + n.page}>
-      <h1>{t("title")}</h1>
-      {await content(null, query, language)}
-      <FloatingNav back marketplace />
-    </ShopSurface>
+    <Notifications publicData>
+      <BuyerNotificationPanels
+        key={view.feed.actorKey + ":" + JSON.stringify(view.feed.query)}
+        feed={view.feed}
+        decisions={view.decisions}
+        subject={view.subject}
+      />
+    </Notifications>
   );
 }
 export async function SellerNotificationsPage({

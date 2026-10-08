@@ -5,11 +5,11 @@ import { recordPromotionMetricAction } from "../promotions/metric-actions";
 /** visible-v1: half the existing card visible for one continuous second in a
  * foreground document. The server independently requires current approved policy
  * and this human's explicit optional choice; rendering never grants consent. */
-export function useSponsoredObservation(
+export function useSponsoredObservation<T extends HTMLElement = HTMLDivElement>(
   token: string | undefined,
   listingId: string,
 ) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<T>(null);
   const impression = useRef<{
     token: string;
     request: Promise<unknown>;
@@ -66,7 +66,7 @@ export function useSponsoredObservation(
     };
   }, [token]);
   const onClick = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
+    (event: MouseEvent<T>) => {
       if (!token || !(event.target instanceof Element)) return;
       const anchor = event.target.closest<HTMLAnchorElement>("a[href]");
       if (!anchor || !event.currentTarget.contains(anchor)) return;

@@ -6,6 +6,7 @@ import { foldDiscoveryText, discoveryTerms } from "./public-discovery-model";
 import { buildPublicDiscoveryQuery } from "./public-discovery-sql";
 import {
   readPublicDiscovery,
+  readPublicExplore,
   readPublicSeller,
 } from "./public-discovery.server";
 import type { SellerDatabase } from "../../server/db/database";
@@ -39,6 +40,41 @@ function database(row = result()) {
   return { db: { pool: { query } } as unknown as SellerDatabase, query };
 }
 describe("public discovery", () => {
+  it("Explore samples all departments without truncating them to a results page or producing a results cursor", async () => {
+    const { db, query } = database(result(102));
+    const page = await readPublicExplore(db, { sort: "newest" }, { key });
+    expect(page.items).toHaveLength(102);
+    expect(page.nextCursor).toBeNull();
+    const scopes = JSON.parse(query.mock.calls[0][1].at(-1));
+    expect(
+      new Set(scopes.map((scope: { categoryId: string }) => scope.categoryId))
+        .size,
+    ).toBe(17);
+    expect(
+      new Set(scopes.map((scope: { leafId: string }) => scope.leafId)).size,
+    ).toBe(152);
+    expect(scopes).toHaveLength(152);
+    expect(query.mock.calls[0][0]).toContain('"previewPosition"<=6');
+  });
+  it("Explore samples only the selected category's immediate branches, keeping normal Search pagination intact", async () => {
+    const { db, query } = database(result(25));
+    await readPublicExplore(
+      db,
+      { category: "cat:electronics", sort: "newest" },
+      { key },
+    );
+    const scopes = JSON.parse(query.mock.calls[0][1].at(-1));
+    expect(
+      scopes.every(
+        (scope: { categoryId: string; leafId: string }) =>
+          scope.categoryId.startsWith("nav:electronics/") &&
+          scope.leafId.startsWith("cat:electronics/"),
+      ),
+    ).toBe(true);
+    expect(
+      (await readPublicDiscovery(db, {}, { key })).nextCursor,
+    ).toBeTruthy();
+  });
   it("normalizes Bulgarian, Latin, punctuation and all query words without inventing translations", () => {
     expect(foldDiscoveryText("  СОФИЯ Телефон  ")).toBe("sofia telefon");
     expect(foldDiscoveryText("Щипка Жълта")).toBe("shtipka zhalta");

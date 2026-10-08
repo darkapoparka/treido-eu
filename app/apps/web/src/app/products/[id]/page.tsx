@@ -4,7 +4,7 @@ import { readListingMetadata } from "@/features/catalog/public-metadata.server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { readProductDetail } from "@/features/catalog/product-detail.server";
-import { referencePreviewEnabled } from "@/features/catalog/queries.server";
+import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.server";
 import { ProductDetail } from "@/features/discovery/product";
 import { readPublishedListing } from "@/features/catalog/published.server";
 import { PublishedProductDetail } from "@/features/discovery/published-detail";
@@ -30,7 +30,7 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (referencePreviewEnabled()) {
+  if (await readBuyerReferenceMode()) {
     const detail = await readProductDetail(id);
     if (!detail) notFound();
     return <ProductDetail key={detail.view.product.id} data={detail} />;

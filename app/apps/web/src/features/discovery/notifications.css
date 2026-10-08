@@ -50,3 +50,15 @@
     font-size: 26px;
   }
 }
+.notifications-page.buyer-public .buyer-notification-list {
+  list-style: none;
+  padding: 0;
+}
+.notifications-page.buyer-public
+  .buyer-notification-row
+  + .buyer-notification-row {
+  border-top: 1px solid #f0f0f0;
+}
+.notifications-page.buyer-public .buyer-notification-row {
+  padding: 16px;
+}

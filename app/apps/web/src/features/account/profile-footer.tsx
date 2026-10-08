@@ -6,7 +6,13 @@ import { SourceLink } from "../discovery/return-navigation";
 import { AccountIcon } from "./icons";
 
 /** Display-only source app version; never the version of Treido's services. */
-export function ProfileFooter({ native = false }: { native?: boolean }) {
+export function ProfileFooter({
+  native = false,
+  publicData = false,
+}: {
+  native?: boolean;
+  publicData?: boolean;
+}) {
   const t = useTranslations("account");
   return (
     <footer className="profile-footer">
@@ -14,23 +20,39 @@ export function ProfileFooter({ native = false }: { native?: boolean }) {
         <LanguagePickerButton />
       </div>
       <p>
-        {t("referenceVersion", {
-          version: native ? "3.4.0 (493466)" : "2.266.0-release.377556",
-        })}
+        {publicData
+          ? "Treido"
+          : t("referenceVersion", {
+              version: native ? "3.4.0 (493466)" : "2.266.0-release.377556",
+            })}
       </p>
       <p>
-        <Link href="https://shop.app/terms-of-service">{t("terms")}</Link>
-        <SourceLink href="/about">{t("licenses")}</SourceLink>
+        <Link
+          href={publicData ? "/terms" : "https://shop.app/terms-of-service"}
+        >
+          {t("terms")}
+        </Link>
+        <SourceLink href={publicData ? "/fonts/buyer/NOTICE" : "/about"}>
+          {t("licenses")}
+        </SourceLink>
       </p>
-      <p className="profile-powered">
-        {t("poweredBy")}{" "}
-        <b>
-          <AccountIcon name="clipboard" />
-          shopify
-        </b>
-        <span aria-hidden="true">|</span>
-        <Link href="https://www.shopify.com">{t("startSelling")}</Link>
-      </p>
+      {publicData ? (
+        <p className="profile-powered">
+          <SourceLink href="/privacy">{t("dataPrivacy")}</SourceLink>
+          <span aria-hidden="true">|</span>
+          <SourceLink href="/sell">{t("startSelling")}</SourceLink>
+        </p>
+      ) : (
+        <p className="profile-powered">
+          {t("poweredBy")}{" "}
+          <b>
+            <AccountIcon name="clipboard" />
+            shopify
+          </b>
+          <span aria-hidden="true">|</span>
+          <Link href="https://www.shopify.com">{t("startSelling")}</Link>
+        </p>
+      )}
     </footer>
   );
 }

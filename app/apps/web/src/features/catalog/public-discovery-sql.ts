@@ -3,7 +3,7 @@ import {
   publicInventoryJoin,
   publicInventoryPrice,
 } from "../inventory/public-sql";
-import { getCategory, getChildren } from "@treido/contracts/categories";
+import { getBrowseLeafIds } from "@treido/contracts/categories";
 import { DISCOVERY_LIMITS, type DiscoveryInput } from "./discovery-input";
 import {
   bulgarianSearchLetters,
@@ -44,6 +44,8 @@ export type DiscoveryQueryOptions = {
   excludeId?: string;
   position?: DiscoveryPosition | null;
   limit?: number;
+  /** Application-owned Explore branches, each sampled independently. */
+  previewCategories?: readonly string[];
 };
 
 /** One SQL snapshot supplies results, count and facets; no per-card queries. */
@@ -63,11 +65,7 @@ export function buildPublicDiscoveryQuery(
   if (input.condition)
     where.push(`p.payload->>'condition'=${bind(input.condition)}`);
   if (input.category) {
-    const category = getCategory(input.category);
-    const ids =
-      category?.kind === "root"
-        ? getChildren(category.id).map((leaf) => leaf.id)
-        : [input.category];
+    const ids = getBrowseLeafIds(input.category);
     where.push(`p.category_id=ANY(${bind(ids)}::text[])`);
   }
   if (input.minPriceMinor !== null)
@@ -138,10 +136,35 @@ export function buildPublicDiscoveryQuery(
       after = `(${metric}${ascending ? ">" : "<"}${anchor} OR (${metric}=${anchor} AND ${tie}))`;
     } else after = tie;
   }
-  const limit = Math.min(
+  const pageLimit = Math.min(
     DISCOVERY_LIMITS.pageSize,
     Math.max(1, Math.trunc(options.limit ?? DISCOVERY_LIMITS.pageSize)),
   );
+  const previews = options.previewCategories;
+  if (
+    previews &&
+    (!previews.length ||
+      previews.length > 17 ||
+      new Set(previews).size !== previews.length)
+  )
+    throw new Error("Invalid Explore preview scope.");
+  const previewScope = previews?.flatMap((categoryId, ordinal) => {
+    const leaves = getBrowseLeafIds(categoryId);
+    if (!leaves.length) throw new Error("Invalid Explore preview category.");
+    return leaves.map((leafId) => ({ categoryId, leafId, ordinal }));
+  });
+  const limit = previews ? previews.length * 6 : pageLimit;
+  const pageSql = previewScope
+    ? `preview_scope AS (
+      SELECT * FROM jsonb_to_recordset(${bind(JSON.stringify(previewScope))}::jsonb)
+        AS branches("categoryId" text,"leafId" text,ordinal integer)
+    ), preview_ranked AS (
+      SELECT matched.*,preview_scope.ordinal AS "previewOrder",
+        row_number() OVER(PARTITION BY preview_scope."categoryId" ORDER BY ${order}) AS "previewPosition"
+      FROM matched JOIN preview_scope ON preview_scope."leafId"=matched."categoryId"
+    ), page AS (SELECT * FROM preview_ranked WHERE "previewPosition"<=6)`
+    : `page AS (SELECT * FROM matched WHERE ${after} ORDER BY ${order} LIMIT ${bind(limit + 1)})`;
+  const pageOrder = previews ? '"previewOrder","previewPosition"' : order;
   const sql = `WITH matched AS MATERIALIZED (
     SELECT l.id,s.id AS "sellerId",s.name AS "sellerName",s.kind AS "sellerKind",p.revision,
       p.payload->>'title' AS title,${price} AS "priceMinor",p.category_id AS "categoryId",
@@ -154,9 +177,9 @@ export function buildPublicDiscoveryQuery(
     ${publicInventoryJoin}
     JOIN treido.categories category ON category.registry_version=p.registry_version AND category.id=p.category_id
     WHERE ${where.join(" AND ")}
-  ), page AS (SELECT * FROM matched WHERE ${after} ORDER BY ${order} LIMIT ${bind(limit + 1)})
+  ), ${pageSql}
   SELECT (SELECT count(*)::int FROM matched) AS total,
-    coalesce((SELECT jsonb_agg(to_jsonb(page) ORDER BY ${order}) FROM page),'[]'::jsonb) AS items,
+    coalesce((SELECT jsonb_agg(to_jsonb(page) ORDER BY ${pageOrder}) FROM page),'[]'::jsonb) AS items,
     coalesce((SELECT jsonb_agg(f ORDER BY f.count DESC,f.value) FROM
       (SELECT "categoryId" AS value,count(*)::int AS count FROM matched GROUP BY "categoryId" ORDER BY count DESC,"categoryId" LIMIT 152) f),'[]'::jsonb) AS categories,
     coalesce((SELECT jsonb_agg(f ORDER BY f.count DESC,f.value) FROM

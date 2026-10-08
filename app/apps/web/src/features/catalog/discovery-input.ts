@@ -1,8 +1,8 @@
 import {
-  getCategory,
+  getBrowseCategory,
   itemConditions,
   validateCategoryAttributeValue,
-  type CategoryId,
+  type BrowseCategoryId,
   type ItemCondition,
   type AttributeDefinition,
 } from "@treido/contracts/categories";
@@ -34,7 +34,7 @@ export type DiscoveryAttribute =
   | { width: number; height: number; depth: number; unit: "mm" | "cm" | "m" };
 export type DiscoveryInput = Readonly<{
   q: string;
-  category: CategoryId | null;
+  category: BrowseCategoryId | null;
   seller: BrowseScope;
   condition: ItemCondition | null;
   location: string;
@@ -154,7 +154,7 @@ export function readDiscoveryInput(source: DiscoveryParams) {
     if (params.getAll(name).length > 1) adjusted.add(name);
     return params.get(name);
   };
-  const category = getCategory(first("category") ?? "");
+  const category = getBrowseCategory(first("category") ?? "");
   if (params.has("category") && !category) adjusted.add("category");
   const rawCondition = first("condition");
   const condition =

@@ -1,7 +1,5 @@
-import {
-  readCatalog,
-  referencePreviewEnabled,
-} from "../../features/catalog/queries.server";
+import { readCatalog } from "../../features/catalog/queries.server";
+import { readBuyerReferenceMode } from "../../features/catalog/buyer-data-mode.server";
 import { pageLocale } from "../../features/locale/page-locale.server";
 import { redirect } from "next/navigation";
 import { parseSellContinuation } from "../../features/sellers/sell-entry";
@@ -16,7 +14,7 @@ export default async function Page({
     returnTo?: string | string[];
   }>;
 }) {
-  if (!referencePreviewEnabled()) {
+  if (!(await readBuyerReferenceMode())) {
     const query = await searchParams;
     const target = new URLSearchParams({ lang: await pageLocale(query.lang) });
     const selling = parseSellContinuation(query.returnTo);

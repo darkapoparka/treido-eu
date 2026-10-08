@@ -1,0 +1,17 @@
+/* Public use of the approved Roboto 3.005 bytes. Source-only brand/GT faces
+   remain guarded; preserve the native owners' sizes, weights and spacing. */
+.shop-page.native-merchant[data-merchant-source="published"],
+.native-merchant[data-merchant-source="published"] h1,
+.native-merchant[data-merchant-source="published"] h2,
+.native-merchant[data-merchant-source="published"] .native-merchant-monogram,
+.native-merchant[data-merchant-source="published"] .native-merchant-follow,
+.native-merchant[data-merchant-source="published"]
+  .native-merchant-search-header
+  input,
+.native-merchant[data-merchant-source="published"] .store-grid-heading h2,
+.native-merchant[data-merchant-source="published"] .product-copy,
+.native-merchant[data-merchant-source="published"] .product-copy strong,
+.sheet.buyer-public-filter.filter-short,
+.sheet.buyer-public-filter.filter-tall {
+  font-family: TreidoBuyerRoboto, Roboto, Arial, sans-serif;
+}

@@ -14,6 +14,7 @@ import { libraryActorKey } from "../library/cursor.server";
 import { pageLocale } from "../locale/page-locale.server";
 import { ShopSurface } from "../discovery/hydration-boundary";
 import { FloatingNav } from "../discovery/components";
+import { BuyerOrders } from "../commerce/orders";
 import { variantCaption } from "../inventory/model";
 import {
   orderAftercareHref,
@@ -433,9 +434,9 @@ export async function PaidOrdersPage(props: PaymentPageProps) {
         <div className={a.pageBody}>{children}</div>
       </main>
     ) : (
-      <BuyerShell language={language} title={t.orders}>
+      <BuyerOrders language={language} back={!!id}>
         {children}
-      </BuyerShell>
+      </BuyerOrders>
     );
   }
   if (!backendConfigured()) return shell(<p>{t.unavailable}</p>);
@@ -451,6 +452,27 @@ export async function PaidOrdersPage(props: PaymentPageProps) {
         readSellerContext(getDatabase(), identity, sellerId),
       )
     : null;
+  if (!merchant && !id)
+    return (
+      <PaymentBoundary actorSubject={identity.subject} language={language}>
+        <BuyerOrders
+          orders={orders.map((order) => ({
+            id: order.id,
+            sellerName: order.sellerName,
+            totalMinor: order.totalMinor,
+            currency: order.currency,
+            payment: `${t.payment}: ${t.statuses[order.paymentState]}`,
+            fulfilment:
+              order.handover === "shipping"
+                ? `${shippingCopy[language].fulfilment}: ${order.shippingFulfilmentState ? shippingCopy[language].statuses[order.shippingFulfilmentState] : shippingCopy[language].stateUnavailable}`
+                : `${t.fulfilment}: ${t.statuses[order.fulfilmentState]}`,
+            settlement: `${t.settlement}: ${t.statuses[order.settlementState]}`,
+            titles: order.lines.map((line) => line.title),
+          }))}
+          language={language}
+        />
+      </PaymentBoundary>
+    );
   return shell(
     <PaymentBoundary actorSubject={identity.subject} language={language}>
       <div className={s.stack}>

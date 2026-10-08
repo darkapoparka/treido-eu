@@ -42,6 +42,32 @@ async function isQualifiedMerchantFont(file, output) {
   }
 }
 
+async function isQualifiedProductFont(file, output) {
+  if (
+    relative(output, file).split(sep).join("/") !==
+    "output/static/fonts/buyer/Roboto-Regular.ttf"
+  )
+    return false;
+  // Official AOSP Roboto 3.005, independently downloaded at pinned commit
+  // 5d982bb4526f3e8a438a776619c060e1daf2f18f. No captured-file exception.
+  try {
+    const [font, license] = await Promise.all([
+      readFile(file),
+      readFile(resolve(dirname(file), "NOTICE"), "utf8"),
+    ]);
+    return (
+      createHash("sha256").update(font).digest("hex") ===
+        "9ca9debb09459bf4e3e7f826f5cd0f35f253902b85684921fce2ba3f28dd0f50" &&
+      createHash("sha256")
+        .update(license.replace(/\r\n/g, "\n"))
+        .digest("hex") ===
+        "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function isPinnedPostgresLink(path, name, output, workspace) {
   if (
     dirname(path) !== resolve(output, "node_modules") ||
@@ -264,7 +290,8 @@ export async function auditProductionOutput(
   for (const file of files) {
     if (
       capturedMedia.test(file) &&
-      !(await isQualifiedMerchantFont(file, output))
+      !(await isQualifiedMerchantFont(file, output)) &&
+      !(await isQualifiedProductFont(file, output))
     )
       issues.push(`Unqualified font/video output: ${relative(output, file)}`);
   }

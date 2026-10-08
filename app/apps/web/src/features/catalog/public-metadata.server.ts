@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { readLocaleRequest } from "../locale/request.server";
 import { validateBackendBindings } from "../../server/config/backend-bindings";
 import { getDatabase } from "../../server/db/database";
-import { referencePreviewEnabled } from "./queries.server";
+import { readBuyerReferenceMode } from "./buyer-data-mode.server";
 import { readPublishedListing } from "./published.server";
 import { readPublicSeller } from "./public-discovery.server";
 import {
@@ -53,19 +53,19 @@ const referenceMetadata: Metadata = {
   icons: { icon: "data:," },
 };
 export async function readSiteMetadata(): Promise<Metadata> {
-  return referencePreviewEnabled()
+  return (await readBuyerReferenceMode())
     ? referenceMetadata
     : siteMetadata(await readPublicMetadataContext());
 }
 export async function readBuyerPageMetadata(
   kind: "home" | "search" | "saved" | "following",
 ): Promise<Metadata> {
-  return referencePreviewEnabled()
+  return (await readBuyerReferenceMode())
     ? { robots: { index: false, follow: false } }
     : buyerPageMetadata(await readPublicMetadataContext(), kind);
 }
 export async function readListingMetadata(id: string): Promise<Metadata> {
-  if (referencePreviewEnabled())
+  if (await readBuyerReferenceMode())
     return { robots: { index: false, follow: false } };
   const context = await readPublicMetadataContext();
   try {
@@ -81,7 +81,7 @@ export async function readSellerMetadata(
   id: string,
   section: "store" | "info" | "search" = "store",
 ): Promise<Metadata> {
-  if (referencePreviewEnabled())
+  if (await readBuyerReferenceMode())
     return { robots: { index: false, follow: false } };
   const context = await readPublicMetadataContext();
   try {

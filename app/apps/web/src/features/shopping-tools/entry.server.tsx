@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { getDatabase } from "../../server/db/database";
 import { backendConfigured } from "../sellers/backend-status.server";
-import { referencePreviewEnabled } from "../catalog/queries.server";
+import { readBuyerReferenceMode } from "../catalog/buyer-data-mode.server";
 import { pageLocale } from "../locale/page-locale.server";
 import { clerkLocalization } from "../locale/clerk-localization.server";
 import { SellerError } from "../sellers/errors";
@@ -17,7 +17,7 @@ import { searchToolCatalogue } from "./catalogue.server";
 import { parseToolIntent, type ToolMode, type ToolIntent } from "./intent";
 import { toolCopy } from "./copy";
 export async function ToolSessionLayout({ children }: { children: ReactNode }) {
-  if (referencePreviewEnabled() || !backendConfigured()) return children;
+  if ((await readBuyerReferenceMode()) || !backendConfigured()) return children;
   const locale = await pageLocale(undefined);
   return (
     <ClerkProvider
@@ -43,7 +43,7 @@ export async function FinderPage({
     locale = await pageLocale(source.lang),
     title =
       mode === "deal-finder" ? toolCopy[locale].deal : toolCopy[locale].find;
-  if (referencePreviewEnabled() || !backendConfigured())
+  if ((await readBuyerReferenceMode()) || !backendConfigured())
     return <ToolUnavailable title={title} />;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(source))
@@ -83,7 +83,7 @@ export async function FinderPage({
 export async function ComparisonPage() {
   await connection();
   const locale = await pageLocale(undefined);
-  if (referencePreviewEnabled() || !backendConfigured())
+  if ((await readBuyerReferenceMode()) || !backendConfigured())
     return <ToolUnavailable title={toolCopy[locale].compare} />;
   return <ComparisonScreen />;
 }

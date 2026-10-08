@@ -2,6 +2,7 @@
 import { displayRating, displayCount } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { getBrowseCategory } from "@treido/contracts/categories";
 import { ShopSurface } from "./hydration-boundary";
 import { SearchComposer, SearchFilterStrip } from "./buyer-chrome";
 /* eslint-disable @next/next/no-img-element */
@@ -12,6 +13,7 @@ import {
   rememberSourceReturn,
   SourceLink,
   ContextualCloseLink,
+  useContextualClose,
 } from "./return-navigation";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -55,9 +57,22 @@ import { JeansAnswer } from "./assistant";
 import { RecentSearchItems } from "./search-recent";
 import { CapturedJeansContinuation } from "./search-captured-continuation";
 import styles from "./search-entry.module.css";
+import type { BuyerPublicView } from "../catalog/buyer-entry-model";
+import { LibraryProvider } from "../library/provider";
+import {
+  publicSearchCatalog,
+  publicSearchQuery,
+  hasPublicSearchFilters,
+} from "./public-search-model";
+import { PublicSearchResults } from "./public-search-results";
+import { PublicSearchFilters } from "./public-search-filters";
+import { marketplaceResultsHref } from "./marketplace-navigation";
+import { publicExploreBackHref } from "./explore-model";
 import photoStyles from "./search-photo.module.css";
 import "./search-loading.css";
 import "./live-search.css";
+import "./buyer-surface.css";
+import "./public-search-store.css";
 import { readDiscoveryInput } from "../catalog/discovery-input";
 import { BrowseScopeControl, BrowseScopeUnavailable } from "./browse-scope";
 import { useLocale } from "../locale/provider";
@@ -74,27 +89,69 @@ const filteredStoreDeals: Record<string, string> = {
   "american-blues": "Save $15",
 };
 
-export function Search({
+export function Search(
+  props:
+    | {
+        catalog: SearchCatalog;
+        query?: string;
+        filters: SearchFilters;
+        publicView?: never;
+      }
+    | {
+        publicView: BuyerPublicView;
+        catalog?: never;
+        query?: never;
+        filters?: never;
+      },
+) {
+  if (props.publicView) {
+    const catalog = publicSearchCatalog(props.publicView);
+    return (
+      <LibraryProvider
+        query={{
+          listingIds: catalog.products.map((item) => item.id),
+          sellerIds: catalog.stores.map((seller) => seller.id),
+        }}
+      >
+        <SearchView
+          catalog={catalog}
+          filters={emptyFilters}
+          publicView={props.publicView}
+        />
+      </LibraryProvider>
+    );
+  }
+  return <SearchView {...props} />;
+}
+function SearchView({
   catalog,
   filters: initialFilters,
+  publicView,
 }: {
   catalog: SearchCatalog;
   query?: string;
   filters: SearchFilters;
+  publicView?: BuyerPublicView;
 }) {
   const intlLocale = useIntlLocale();
   const ui = useTranslations("discoveryUI");
+  const marketplaceText = useTranslations("marketplace");
   const router = useRouter();
-  const androidLive = Boolean(catalog.liveHomeStoreIds);
+  const androidLive = !!publicView || Boolean(catalog.liveHomeStoreIds);
   const params = useSearchParams();
+  const closeCategory = useContextualClose(
+    publicView ? params.toString() : undefined,
+  );
   const { messages } = useLocale();
   const text = messages.search;
   const scoped =
     readDiscoveryInput(new URLSearchParams(params)).input.seller !== "all";
   // An absent q after browser navigation means an empty query, not the stale
   // server prop from a previous result page.
-  const query = params.get("q") ?? "";
-  const editCapturedPhoto = params.get("edit") === "photo";
+  const query = publicView
+    ? readDiscoveryInput(new URLSearchParams(params)).input.q
+    : (params.get("q") ?? "");
+  const editCapturedPhoto = !publicView && params.get("edit") === "photo";
   const filters: SearchFilters = {
     ...initialFilters,
     ...readSearchFilters(params),
@@ -144,6 +201,8 @@ export function Search({
     } else save();
   }
   const [filter, setFilter] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState(false);
+  const [unsupported, setUnsupported] = useState(false);
   const [filterUnderlay, setFilterUnderlay] = useState<SearchFilters | null>(
     null,
   );
@@ -203,14 +262,23 @@ export function Search({
     };
   }, [focused]);
 
-  const suggestions = focused && !!draft.trim() && !photo;
+  const suggestions = focused && (!!publicView || !!draft.trim()) && !photo;
   const photoEditing = !!photo && focused;
   const history = params.get("view") === "recent";
   const visibleFilters = filter && filterUnderlay ? filterUnderlay : filters;
-  const filtered = hasSearchFilters(visibleFilters);
-  const jeansQuery = query.trim().toLowerCase() === "jeans";
-  const capturedFilteredJeans = isCapturedFilteredJeans(query, visibleFilters);
-  const answerOpen = params.get("answer") === "jeans";
+  const filtered = publicView
+    ? hasPublicSearchFilters(publicView.input)
+    : hasSearchFilters(visibleFilters);
+  const searchCategory = publicView?.input.category
+    ? getBrowseCategory(publicView.input.category)
+    : null;
+  const searchCategoryLabel =
+    searchCategory?.labels[publicView?.input.locale ?? "en"];
+  const canClearPublicQuery = !!publicView && !!query.trim();
+  const jeansQuery = !publicView && query.trim().toLowerCase() === "jeans";
+  const capturedFilteredJeans =
+    !publicView && isCapturedFilteredJeans(query, visibleFilters);
+  const answerOpen = !publicView && params.get("answer") === "jeans";
   useEffect(() => {
     if (!jeansQuery) {
       // A submit may still be moving from the composer to its result route.
@@ -286,12 +354,9 @@ export function Search({
   }, [answerOpen, viewAnswer]);
   const showResults = !!query.trim() || filtered;
   const resultsMode = (showResults || pending) && !suggestions && !photo;
-  const results = searchProducts(
-    catalog,
-    query,
-    visibleFilters,
-    state.followed,
-  );
+  const results = publicView
+    ? [...catalog.products]
+    : searchProducts(catalog, query, visibleFilters, state.followed);
   if (jeansQuery && visibleFilters.sort === "Relevance") {
     const rank = (id: string) =>
       id === "carpenter-jeans" ? 0 : id === "heritage-jeans" ? 1 : 2;
@@ -366,7 +431,7 @@ export function Search({
   }
   function submitQuery(value: string, now: number) {
     const next = value.trim();
-    const previewJeans = next.toLowerCase() === "jeans";
+    const previewJeans = !publicView && next.toLowerCase() === "jeans";
     const startedAt = previewJeans ? now : 0;
     jeansProgressQueued.current = previewJeans;
     jeansProgressStarted.current = startedAt;
@@ -384,11 +449,17 @@ export function Search({
     setPhoto("");
     closeSuggestions();
     startTransition(() => {
-      const destination = referenceSearchDestination(
-        new URLSearchParams(params),
-        searchParameters(next, filters),
+      const destination = publicView
+        ? publicSearchQuery(publicView.input, next)
+        : referenceSearchDestination(
+            new URLSearchParams(params),
+            searchParameters(next, filters),
+          );
+      router.push(
+        publicView
+          ? marketplaceResultsHref(readDiscoveryInput(destination).input)
+          : `/search${destination.size ? `?${destination}` : ""}`,
       );
-      router.push(`/search${destination.size ? `?${destination}` : ""}`);
     });
   }
   function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -420,7 +491,7 @@ export function Search({
       className={`search-form ${resultsMode ? "top-search" : "search-composer"} ${styles.composer} ${photo ? styles.photoComposer : ""} ${resultsMode ? styles.resultComposer : ""}`}
       onSubmit={(e) => {
         e.preventDefault();
-        if (!draft.trim() && !photo) return;
+        if (!draft.trim() && !photo && !canClearPublicQuery) return;
         closeSuggestions();
         if (
           photo &&
@@ -461,8 +532,22 @@ export function Search({
       <input
         key="query"
         ref={inputRef}
-        aria-label={text.products}
-        placeholder={answerOpen ? messages.navigation.search : text.placeholder}
+        aria-label={
+          searchCategoryLabel
+            ? marketplaceText("searchInCategory", {
+                category: searchCategoryLabel,
+              })
+            : text.products
+        }
+        placeholder={
+          searchCategoryLabel
+            ? marketplaceText("searchInCategory", {
+                category: searchCategoryLabel,
+              })
+            : answerOpen
+              ? messages.navigation.search
+              : text.placeholder
+        }
         autoComplete="off"
         enterKeyHint="search"
         value={answerOpen ? "" : draft}
@@ -501,7 +586,7 @@ export function Search({
         className="icon-button"
         aria-label={text.submit}
         type="submit"
-        disabled={!draft.trim() && !photo}
+        disabled={!draft.trim() && !photo && !canClearPublicQuery}
       >
         <Icon name="arrow" />
       </button>
@@ -509,7 +594,7 @@ export function Search({
   );
   return (
     <ShopSurface
-      className={`shop-page search-page ${androidLive ? "android-live android-search" : ""} ${styles.page} ${suggestions ? "search-has-suggestions" : ""} ${history ? "search-history" : ""} ${photoEditing ? styles.photoEditing : ""} ${focused ? styles.keyboard : ""} ${resultsMode ? styles.resultsPage : ""}`}
+      className={`shop-page search-page ${androidLive ? "android-live android-search" : ""} ${publicView ? "buyer-public" : ""} ${styles.page} ${suggestions ? "search-has-suggestions" : ""} ${history ? "search-history" : ""} ${photoEditing ? styles.photoEditing : ""} ${focused ? styles.keyboard : ""} ${resultsMode ? styles.resultsPage : ""}`}
       data-native-search-mode={
         androidLive
           ? history
@@ -547,8 +632,50 @@ export function Search({
               }}
             />
           )}
+          {!history && publicView && (
+            <button
+              type="button"
+              className="pill buyer-search-category"
+              aria-label={`${marketplaceText("category")}: ${searchCategoryLabel || marketplaceText("allCategories")}`}
+              aria-haspopup="dialog"
+              onClick={() => {
+                setCategoryFilter(true);
+              }}
+            >
+              <span>
+                {searchCategoryLabel || marketplaceText("allCategories")}
+              </span>
+              <Icon name="chevron" />
+            </button>
+          )}
           <BrowseScopeControl />
-          {showResults && !history && (
+          {showResults && !history && publicView && (
+            <>
+              <button
+                className="pill"
+                onClick={() => {
+                  setFilter(true);
+                }}
+              >
+                {publicView.input.location || marketplaceText("location")}
+              </button>
+              <button
+                className="pill"
+                aria-disabled="true"
+                onClick={() => setUnsupported(true)}
+              >
+                {text.deals}
+              </button>
+              <button
+                className="pill"
+                aria-disabled="true"
+                onClick={() => setUnsupported(true)}
+              >
+                {messages.navigation.following}
+              </button>
+            </>
+          )}
+          {showResults && !history && !publicView && (
             <>
               <button
                 className="pill"
@@ -619,7 +746,17 @@ export function Search({
       {photoEditing && draft.trim() ? null : suggestions ? (
         <section className="search-suggestions-surface">
           <header>
-            <h2>{ui("suggestions")}</h2>
+            <h2
+              className={
+                searchCategoryLabel ? "buyer-search-context" : undefined
+              }
+            >
+              {searchCategoryLabel
+                ? marketplaceText("searchInCategory", {
+                    category: searchCategoryLabel,
+                  })
+                : ui("suggestions")}
+            </h2>
             <IconButton
               icon="close"
               label={ui("closeSuggestions")}
@@ -629,8 +766,11 @@ export function Search({
           </header>
           {androidLive &&
             !scoped &&
+            (!publicView || !!draft.trim()) &&
             searchStores(catalog, draft, emptyFilters, [])
-              .filter((store) => store.referenceStyle === "android")
+              .filter(
+                (store) => publicView || store.referenceStyle === "android",
+              )
               .slice(0, 3)
               .map((store) => (
                 <SourceLink
@@ -680,7 +820,7 @@ export function Search({
               ))}
             </>
           )}
-          {(/jean/i.test(draft)
+          {(!publicView && /jean/i.test(draft)
             ? [
                 "jeans",
                 "jeans men",
@@ -689,30 +829,40 @@ export function Search({
                 "jeans women",
               ]
             : [draft.trim()]
-          ).map((q) => (
-            <Link
-              className="suggestion-query"
-              key={q}
-              href={`/search?${referenceSearchDestination(new URLSearchParams(params), searchParameters(q, filters))}`}
-              onClick={(event) => {
-                if (
-                  event.button === 0 &&
-                  !event.metaKey &&
-                  !event.ctrlKey &&
-                  !event.shiftKey &&
-                  !event.altKey
-                ) {
-                  event.preventDefault();
-                  submitQuery(q, performance.timeOrigin + event.timeStamp);
+          )
+            .filter(Boolean)
+            .map((q) => (
+              <Link
+                className="suggestion-query"
+                key={q}
+                href={
+                  publicView
+                    ? marketplaceResultsHref(
+                        readDiscoveryInput(
+                          publicSearchQuery(publicView.input, q),
+                        ).input,
+                      )
+                    : `/search?${referenceSearchDestination(new URLSearchParams(params), searchParameters(q, filters))}`
                 }
-              }}
-            >
-              <span>
-                <Icon name="search" />
-              </span>
-              {q}
-            </Link>
-          ))}
+                onClick={(event) => {
+                  if (
+                    event.button === 0 &&
+                    !event.metaKey &&
+                    !event.ctrlKey &&
+                    !event.shiftKey &&
+                    !event.altKey
+                  ) {
+                    event.preventDefault();
+                    submitQuery(q, performance.timeOrigin + event.timeStamp);
+                  }
+                }}
+              >
+                <span>
+                  <Icon name="search" />
+                </span>
+                {q}
+              </Link>
+            ))}
         </section>
       ) : pending ? (
         <SearchLoading />
@@ -721,12 +871,18 @@ export function Search({
           <h1>{ui("recentlyViewed")}</h1>
           <RecentSearchItems
             catalog={catalog}
+            publicData={!!publicView}
             expanded
             capturedContinuation={state.capturedSearchHistory}
           />
         </>
-      ) : scoped ? (
+      ) : scoped && !publicView ? (
         <BrowseScopeUnavailable />
+      ) : publicView && (showResults || publicView.unavailable) ? (
+        <PublicSearchResults
+          page={publicView.page}
+          unavailable={publicView.unavailable}
+        />
       ) : showResults ? (
         <>
           {stores.length > 0 && (
@@ -947,9 +1103,10 @@ export function Search({
           </SourceLink>
           <RecentSearchItems
             catalog={catalog}
+            publicData={!!publicView}
             capturedContinuation={state.capturedSearchHistory}
           />
-          {state.viewedAnswers.includes("jeans") && (
+          {!publicView && state.viewedAnswers.includes("jeans") && (
             <section className={`keep-shopping ${styles.conversations}`}>
               <SourceLink
                 startAtTop
@@ -1005,22 +1162,26 @@ export function Search({
             onChange={selectPhoto}
           />
         </label>
-        <button
-          className="account-row"
-          onClick={() => {
-            setPhotoError("");
-            setPhoto(capturedCapPhoto);
-            setDraft("");
-            rememberComposer("", capturedCapPhoto);
-            setPhotos(false);
-          }}
-        >
-          {ui("useCapturedCapExample")}
-        </button>
+        {!publicView && (
+          <button
+            className="account-row"
+            onClick={() => {
+              setPhotoError("");
+              setPhoto(capturedCapPhoto);
+              setDraft("");
+              rememberComposer("", capturedCapPhoto);
+              setPhotos(false);
+            }}
+          >
+            {ui("useCapturedCapExample")}
+          </button>
+        )}
         {photoError && <p role="alert">{photoError}</p>}
-        <p className="form-note">
-          {ui("photosStayOnThisDeviceTheCapturedAnswerCanBe")}
-        </p>
+        {!publicView && (
+          <p className="form-note">
+            {ui("photosStayOnThisDeviceTheCapturedAnswerCanBe")}
+          </p>
+        )}
       </Sheet>
       <Sheet
         open={photoUnavailable}
@@ -1034,53 +1195,115 @@ export function Search({
           <button className="pill" onClick={removePhoto}>
             {ui("removePhoto")}
           </button>
-          <Link
-            className="primary"
-            href="/assistant?example=photo"
-            onClick={(event) => {
-              if (event.defaultPrevented && photoOrigin.current)
-                bindSourceDestination(
-                  photoOrigin.current,
-                  "/assistant?example=photo",
-                );
-            }}
-          >
-            {ui("viewCapturedExample")}
-          </Link>
+          {!publicView && (
+            <Link
+              className="primary"
+              href="/assistant?example=photo"
+              onClick={(event) => {
+                if (event.defaultPrevented && photoOrigin.current)
+                  bindSourceDestination(
+                    photoOrigin.current,
+                    "/assistant?example=photo",
+                  );
+              }}
+            >
+              {ui("viewCapturedExample")}
+            </Link>
+          )}
         </div>
       </Sheet>
       {((androidLive && !photoEditing) ||
         (!suggestions && !photoEditing && !focused)) && (
-        <FloatingNav back={showResults || history || pending} />
+        <FloatingNav
+          back={showResults || history || pending}
+          onSearch={publicView ? () => inputRef.current?.focus() : undefined}
+          onBack={
+            publicView?.input.category
+              ? () => {
+                  if (!closeCategory())
+                    router.replace(publicExploreBackHref(publicView.input));
+                }
+              : undefined
+          }
+        />
+      )}
+      {!publicView && (
+        <Sheet
+          open={answerOpen}
+          title={ui("jeansAnswer")}
+          headerless
+          dragHandle
+          className={styles.answerSheet}
+          onClose={closeAnswer}
+          manageHistory={false}
+          initialFocus="[data-answer-heading]"
+        >
+          <JeansAnswer
+            catalog={catalog}
+            onClose={closeAnswer}
+            onConsumedNavigate={(href) => {
+              const token =
+                answerOrigin.current ??
+                window.history.state?.shopSourceReturnOrigin;
+              if (token) bindSourceDestination(token, href);
+            }}
+          />
+        </Sheet>
+      )}
+      {publicView ? (
+        <>
+          <PublicSearchFilters
+            open={filter}
+            onClose={() => setFilter(false)}
+            onReopen={() => setFilter(true)}
+            input={publicView.input}
+            page={publicView.page}
+            onApply={(next) =>
+              startTransition(() =>
+                router.push(
+                  marketplaceResultsHref(readDiscoveryInput(next).input),
+                ),
+              )
+            }
+          />
+          <PublicSearchFilters
+            open={categoryFilter}
+            initialSection="category"
+            onClose={() => setCategoryFilter(false)}
+            onReopen={() => setCategoryFilter(true)}
+            input={publicView.input}
+            page={publicView.page}
+            onApply={(next) =>
+              startTransition(() =>
+                router.push(
+                  marketplaceResultsHref(readDiscoveryInput(next).input),
+                ),
+              )
+            }
+          />
+        </>
+      ) : (
+        <Filters
+          open={filter}
+          onClose={() => setFilter(false)}
+          onReopen={() => setFilter(true)}
+          value={filters}
+          onChange={update}
+        />
       )}
       <Sheet
-        open={answerOpen}
-        title={ui("jeansAnswer")}
-        headerless
-        dragHandle
-        className={styles.answerSheet}
-        onClose={closeAnswer}
-        manageHistory={false}
-        initialFocus="[data-answer-heading]"
+        open={unsupported}
+        title={
+          intlLocale === "bg" ? "Филтърът не е свързан" : "Filter unavailable"
+        }
+        onClose={() => setUnsupported(false)}
       >
-        <JeansAnswer
-          catalog={catalog}
-          onClose={closeAnswer}
-          onConsumedNavigate={(href) => {
-            const token =
-              answerOrigin.current ??
-              window.history.state?.shopSourceReturnOrigin;
-            if (token) bindSourceDestination(token, href);
-          }}
-        />
+        <p className="sheet-copy">
+          {intlLocale === "bg"
+            ? "Търсенето по промоции и следвани продавачи още не е свързано. Останалите филтри остават активни."
+            : "Search by deals and followed sellers is not connected yet. Your other filters remain active."}
+        </p>
       </Sheet>
-      <Filters
-        open={filter}
-        onClose={() => setFilter(false)}
-        onReopen={() => setFilter(true)}
-        value={filters}
-        onChange={update}
-      />
     </ShopSurface>
   );
 }

@@ -40,6 +40,11 @@ export async function applyRuntimeGrants(client, role) {
   await client.query(
     `REVOKE INSERT,UPDATE,DELETE ON treido.category_registry_versions,treido.categories,treido.category_policies FROM ${name}`,
   );
+  await client.query(`DO $browse_grants$ BEGIN
+    IF to_regclass('treido.category_browse_nodes') IS NOT NULL THEN
+      REVOKE INSERT,UPDATE,DELETE ON treido.category_browse_versions,treido.category_browse_nodes FROM ${name};
+    END IF;
+  END $browse_grants$`);
   await client.query(`REVOKE INSERT,UPDATE,DELETE ON treido.operator_grants FROM ${name};
     GRANT EXECUTE ON FUNCTION treido.lock_operator_grant(uuid,text) TO ${name};
     REVOKE UPDATE ON treido.messages,treido.message_attachment_links FROM ${name}`);

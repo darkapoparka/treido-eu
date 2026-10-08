@@ -12,6 +12,40 @@ Draft writes require a persisted stable leaf but permit pending-policy drafts. R
 
 The default `validateListingCategory(input)` uses publication mode. Every current leaf has a pending policy and `enabledForPublish=false`; publication is denied until a reviewed policy and working selling path qualify it. Candidate handover/purchase modes in that pending policy do not claim an available carrier or checkout adapter. This module does not authenticate, create a seller, save a draft or seed a database. A server command derives seller kind from the currently authorized seller and separately enforces media, ownership, membership, moderation, quota and applicable expiry/refurbishment declarations. Those integrations remain with T04/T06/T23c; T23b consumes the field definitions in the category picker.
 
+## Browse hierarchy and mobile names — October 7, 2026
+
+The owner requests shorter consistent labels, Garden separate from Tools/DIY, and useful grouping for a broad marketplace. The single versioned [browse taxonomy](../app/packages/contracts/src/categories/navigation.ts) has **17 departments, 36 groups and the same 152 publication leaves**. Crowded departments use department → group → leaf; Garden and Gaming skip a redundant single group. Public category filters resolve a department or group to explicit descendant leaf IDs. Brand, condition and seller kind remain separate filters.
+
+Publication registry v1 and migration 0005 stay immutable. The additive [browse migration 0053](../app/apps/web/migrations/0053_category_navigation.sql) persists this tree with existing-leaf, parent-kind and depth foreign keys/checks. Runtime roles can read it and cannot change it. Navigation never grants publication approval. Existing listing/order snapshots retain their category IDs and policy versions. The compiled browse definition and its migration must match; application to an intended shared database requires its own integration evidence.
+
+Garden has the new browse ID cat:garden and the existing garden-tools, garden-furniture, barbecues-outdoor-living and pots-planters leaf IDs. The stable cat:garden-diy browse entry now contains the other seven leaves under Tools/DIY. Leaf IDs containing garden-diy remain valid; their strings do not determine their current browse parent. Use recorded ancestry, never split IDs. Intermediate groups use nav: IDs and cannot be publication categories.
+
+Owner-requested filter-testing supply belongs only to an explicitly qualified isolated Preview database. Synthetic category policy/declaration records are labelled TEST ONLY and grant no shared-development or production approval. Seeded accepted snapshots exercise real public eligibility, browse descendants, attribute/condition/price/location/seller filters, pagination and media reads; they do not establish actual seller identity, publication-command/quota/processing or provider-commerce acceptance. The owning task records the exact target, dataset, preservation digests and readback evidence. The application never imports the seed or falls back to these fixtures when a database read fails.
+
+| Department ID | BG display name | EN display name |
+|---|---|---|
+| cat:electronics | Електроника | Electronics |
+| cat:fashion | Мода | Fashion |
+| cat:home | Дом | Home |
+| cat:appliances | Уреди | Appliances |
+| cat:garden | Градина | Garden |
+| cat:garden-diy | Инструменти и ремонт | Tools and DIY |
+| cat:sports-outdoors | Спорт и туризъм | Sports and outdoors |
+| cat:baby-kids | Бебе и дете | Baby and kids |
+| cat:beauty-care | Красота | Beauty |
+| cat:books-media | Книги и медии | Books and media |
+| cat:hobbies-collectibles | Хоби и колекции | Hobbies and collectibles |
+| cat:music | Музика | Music |
+| cat:gaming | Гейминг | Gaming |
+| cat:motors-parts | Авточасти | Auto parts |
+| cat:pet-supplies | Домашни любимци | Pets |
+| cat:business-equipment | Бизнес оборудване | Business equipment |
+| cat:art-handmade | Изкуство и занаяти | Art and handmade |
+
+These shorter browse labels are separate from full publication labels below. Each UI role has one consistent font/size. Explore headings, tile titles, category pills and filter-sheet titles stay on one line with ellipsis; complete text remains accessible, and tile labels also appear on hover. Do not shrink individual labels. “Домашни любимци” names the department and keeps the prohibition on live animals.
+
+This organized v1 tree is **not an exhaustive eBay-scale taxonomy**. More precise leaves are still needed within clothing, computing accessories, furniture, collectibles and professional equipment. Add them through reviewed versioned catalogue/policy migrations with explicit old-ID compatibility and typed attributes. Do not invent an Other category or count empty navigation as available inventory. Retaining all 152 leaves is a measurable compatibility boundary, not a completeness claim.
+
 ## Seller category preparation
 
 The [selling form](../app/apps/web/src/features/selling/selling-form.tsx) at `/sell` uses this registry for bilingual root/leaf navigation and search, allowed conditions and all seven attribute control types. Roots open subcategories; only a leaf proceeds to details. Changing language or going Back preserves entered values, and category switching keeps each category's separate in-page preparation. Review validates complete attributes, including conditional carrier/fitment fields and affirmative sealed/unworn requirements. Unknown boolean answers remain distinct from an explicit no. Profile has a “Sell an item” entry.
@@ -24,11 +58,11 @@ The copied Shop reference's “Start selling for free” entry links to Shopify 
 
 ## Taxonomy contract
 
-Sixteen physical-goods roots below are the target catalogue. Each bullet is a sellable leaf with an English slug and Bulgarian/English labels. Its immutable seed ID is `cat:<root>/<leaf>`; the root ID is `cat:<root>`. Slugs are URL vocabulary, not translated IDs. A listing selects one leaf; ancestry supplies browse counts and breadcrumbs. Brand, audience, condition and seller type are attributes rather than duplicated category trees.
+The immutable publication registry v1 below contains sixteen physical-goods roots and 152 leaves. The browse hierarchy above supplies the current department/group parents and short labels. Each bullet is a publication leaf with an English slug and Bulgarian/English labels. Its immutable seed ID is `cat:<root>/<leaf>`; the publication root ID is `cat:<root>`. Slugs are URL vocabulary, not translated IDs. A listing selects one leaf; versioned browse ancestry supplies counts and navigation. Brand, audience, condition and seller type are attributes rather than duplicated category trees.
 
-These are planned categories, not permission to expose every kind of item in them. Every leaf has a versioned policy: allowed seller kinds, condition, fulfilment and purchase modes; prohibited-item rules; required attribute profile; country availability; and `enabled_for_publish`. A leaf stays disabled until its policy is reviewed and its sell/search/detail path works. A parent can appear in navigation without presenting unavailable children as usable options. Never classify an unsafe item under Miscellaneous to bypass policy.
+Seeded categories do not grant permission to expose every kind of item in them. Every leaf has a versioned policy: allowed seller kinds, condition, fulfilment and purchase modes; prohibited-item rules; required attribute profile; country availability; and `enabled_for_publish`. A leaf stays disabled until its policy is reviewed and its sell/search/detail path works. A parent can appear in navigation without presenting unavailable children as usable options. Never classify an unsafe item under Miscellaneous to bypass policy.
 
-Use up to three levels when a measured discovery need warrants a group; v1 uses root and leaf. Category IDs remain stable through a rename/reparent. Retired categories map to reviewed successors, preserve historical order snapshots and require revalidation before edited listings republish. One versioned migration seeds and validates the catalogue; no manual competing frontend arrays.
+The publication registry v1 records root and leaf; browse v1 adds the useful intermediate groups documented above. Category IDs remain stable through a rename/reparent. Retired categories map to reviewed successors, preserve historical order snapshots and require revalidation before edited listings republish. Versioned migrations seed and validate the shared catalogue and browse tree; no manual competing frontend arrays.
 
 ## Catalogue
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   browseScopeHref,
   discoveryDestination,
+  discoveryDockDestination,
   referenceSearchDestination,
 } from "./browse-scope-route";
 
@@ -9,10 +10,50 @@ const input = new URLSearchParams(
   "q=телефон&category=cat%3Aelectronics%2Fphones&seller=personal&condition=good&minPrice=12.34&maxPrice=90&location=София&lang=en&sort=price_asc&attr.brand=Samsung&sellerId=foreign&page=9",
 );
 describe("public browse routing", () => {
+  it.each(["/", "/explore"])(
+    "dock %s starts afresh while retaining seller scope and language",
+    (path) => {
+      const url = new URL(
+        discoveryDockDestination(path, input),
+        "https://treido.invalid",
+      );
+      expect(url.pathname).toBe(path);
+      expect(Object.fromEntries(url.searchParams)).toEqual({
+        seller: "personal",
+        lang: "en",
+      });
+    },
+  );
+  it("dock Search retains the current criteria and Home retains only an authored recent mode", () => {
+    const search = new URL(
+      discoveryDockDestination("/search", input),
+      "https://treido.invalid",
+    );
+    expect(search.searchParams.get("category")).toBe("cat:electronics/phones");
+    expect(search.searchParams.get("condition")).toBe("good");
+    expect(search.searchParams.get("minPrice")).toBe("12.34");
+    expect(discoveryDockDestination("/?home=recent", input)).toBe(
+      "/?home=recent&seller=personal&lang=en",
+    );
+    expect(
+      discoveryDockDestination(
+        "/explore",
+        new URLSearchParams(
+          "seller=invalid&lang=bad&category=cat%3Aelectronics",
+        ),
+      ),
+    ).toBe("/explore");
+    expect(discoveryDestination("/products/item", input)).toContain(
+      "category=cat%3Aelectronics%2Fphones",
+    );
+  });
   it("keeps explicit Bulgarian against a different saved/browser default", () => {
     const source = new URLSearchParams("lang=bg&location=София");
     expect(browseScopeHref("/search", source, "business")).toContain("lang=bg");
     expect(discoveryDestination("/products/item", source)).toContain("lang=bg");
+    expect(discoveryDockDestination("/explore", source)).toBe(
+      "/explore?lang=bg",
+    );
   });
   it("preserves canonical context and drops pagination and operating seller input", () => {
     const url = new URL(

@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { readCatalog } from "@/features/catalog/queries.server";
+import { readBuyerReferenceCatalog as readCatalog } from "@/features/catalog/buyer-data-mode.server";
 import { AccountPage } from "@/features/account/forms";
 
 export default async function Page() {

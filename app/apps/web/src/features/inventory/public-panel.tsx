@@ -17,10 +17,12 @@ export function PublicInventoryPanel({
   product,
   revision,
   initial,
+  allowCart = true,
 }: {
   product: ProductDetailProduct;
   revision: number;
   initial: PublicInventory | null;
+  allowCart?: boolean;
 }) {
   const t = useTranslations("inventory"),
     cart = useTranslations("buyerCart"),
@@ -88,6 +90,15 @@ export function PublicInventoryPanel({
   };
   return (
     <section className={s.root} data-public-inventory>
+      {failed && !allowCart && (
+        <ProductPriceSummary
+          product={product}
+          variant=""
+          price={product.price}
+          capturedSpendOffer=""
+          onDetails={() => {}}
+        />
+      )}
       {!failed && (
         <>
           {inventory?.skus.length &&
@@ -140,7 +151,7 @@ export function PublicInventoryPanel({
           {selected && (
             <p>{t("unitsAvailable", { count: selected.available })}</p>
           )}
-          {selected && inventory.mode === "stocked" && (
+          {allowCart && selected && inventory.mode === "stocked" && (
             <label className="form-field">
               {t("quantity")}
               <input
@@ -153,7 +164,7 @@ export function PublicInventoryPanel({
               />
             </label>
           )}
-          {selected && (
+          {allowCart && selected && (
             <CartMutationButton
               className="primary"
               operation={{
@@ -172,12 +183,14 @@ export function PublicInventoryPanel({
               }
             />
           )}
-          <p className={s.note}>{t("stockNote")}</p>
+          {allowCart && <p className={s.note}>{t("stockNote")}</p>}
         </>
       )}
-      <Link href={"/cart?lang=" + locale} className="pill">
-        {cart("open")}
-      </Link>
+      {allowCart && (
+        <Link href={"/cart?lang=" + locale} className="pill">
+          {cart("open")}
+        </Link>
+      )}
     </section>
   );
 }

@@ -238,10 +238,12 @@
 .android-merchant-card .hidden-shop {
   flex: 1;
 }
-.shop-page.android-live .floating-dock {
+.shop-page.android-live .floating-dock,
+.shop-page.shop-product .floating-dock {
   bottom: 8px;
 }
-.shop-page.android-live .floating-nav {
+.shop-page.android-live .floating-nav,
+.shop-page.shop-product .floating-nav {
   width: 212px;
   height: 56px;
   padding: 6px;
@@ -249,19 +251,23 @@
   border: 1px solid #f0f0f0;
   box-shadow: 0 2px 4px #0000000a;
 }
-.shop-page.android-live .floating-nav a {
+.shop-page.android-live .floating-nav a,
+.shop-page.shop-product .floating-nav a {
   width: 44px;
   height: 44px;
   flex: 0 0 44px;
 }
-.shop-page.android-live .floating-nav svg {
+.shop-page.android-live .floating-nav svg,
+.shop-page.shop-product .floating-nav svg {
   width: 24px;
   height: 24px;
 }
-.shop-page.android-live .floating-nav a[aria-current="page"] {
+.shop-page.android-live .floating-nav a[aria-current="page"],
+.shop-page.shop-product .floating-nav a[aria-current="page"] {
   background: #f1f2f3;
 }
-.shop-page.android-live .dock-back {
+.shop-page.android-live .dock-back,
+.shop-page.shop-product .dock-back {
   width: 56px;
   height: 56px;
 }
@@ -403,44 +409,44 @@
 .android-store .product-media img {
   object-fit: cover;
 }
-.shop-page.android-product {
+.shop-page.shop-product {
   background: #fcfcfc;
   padding: 8px 16px 100px;
 }
-.shop-page.android-live.android-product .product-underlay > .store-row {
+.shop-page.shop-product.product-page .product-underlay > .store-row {
   height: 40px;
   min-height: 40px;
   margin: 0 0 16px;
 }
-.shop-page.android-live.android-product .store-row-identity {
+.shop-page.shop-product.product-page .store-row-identity {
   gap: 12px;
   min-width: 0;
   padding: 4px;
 }
-.shop-page.android-live.android-product .store-row-identity > img,
-.shop-page.android-live.android-product .store-logo-fallback {
+.shop-page.shop-product.product-page .store-row-identity > img,
+.shop-page.shop-product.product-page .store-logo-fallback {
   width: 32px;
   height: 32px;
   flex: 0 0 32px;
   border-radius: 50%;
 }
-.shop-page.android-live.android-product .store-logo-fallback {
+.shop-page.shop-product.product-page .store-logo-fallback {
   display: grid;
   place-items: center;
   background: #cacdce;
   color: white;
   font-size: 12px;
 }
-.shop-page.android-live.android-product .store-row strong {
+.shop-page.shop-product.product-page .store-row strong {
   font-size: 14px;
   font-weight: 500;
   line-height: 18px;
 }
-.shop-page.android-live.android-product .store-row-identity > span > span {
+.shop-page.shop-product.product-page .store-row-identity > span > span {
   font-size: 12px;
   line-height: 16px;
 }
-.shop-page.android-live.android-product .product-gallery {
+.shop-page.shop-product.product-page .product-gallery {
   display: flex;
   align-items: flex-start;
   height: auto;
@@ -449,36 +455,36 @@
   gap: 8px;
   scroll-padding-inline: 16px;
 }
-.shop-page.android-live.android-product .product-gallery > button {
+.shop-page.shop-product.product-page .product-gallery > button {
   flex: 0 0 100%;
   width: 100%;
   height: auto;
   min-height: 0;
   border-radius: 12px;
 }
-.shop-page.android-live.android-product .product-gallery img {
+.shop-page.shop-product.product-page .product-gallery img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.shop-page.android-live.android-product .product-details {
+.shop-page.shop-product.product-page .product-details {
   padding: 28px 0 0;
   margin: 0;
 }
-.shop-page.android-live.android-product .product-heading {
+.shop-page.shop-product.product-page .product-heading {
   position: relative;
   display: block;
   min-height: 21px;
   padding-right: 100px;
 }
-.shop-page.android-live.android-product .product-heading h1 {
+.shop-page.shop-product.product-page .product-heading h1 {
   margin: 0;
   font-size: 16px;
   font-weight: 500;
   line-height: 21px;
   letter-spacing: -0.2px;
 }
-.shop-page.android-live.android-product .product-heading > button {
+.shop-page.shop-product.product-page .product-heading > button {
   position: absolute;
   top: -10px;
   width: 44px;
@@ -487,84 +493,80 @@
   border: 1px solid #e4e4e4;
   border-radius: 50%;
 }
-.shop-page.android-live.android-product
-  .product-heading
-  > button:nth-of-type(1) {
+.shop-page.shop-product.product-page .product-heading > button:nth-of-type(1) {
   right: 48px;
 }
-.shop-page.android-live.android-product
-  .product-heading
-  > button:nth-of-type(2) {
+.shop-page.shop-product.product-page .product-heading > button:nth-of-type(2) {
   right: 0;
 }
-.shop-page.android-live.android-product .review-link {
+.shop-page.shop-product.product-page .review-link {
   height: 18px;
   margin: 0;
   padding: 0;
   font-size: 14px;
   line-height: 18px;
 }
-.shop-page.android-live.android-product .product-price {
+.shop-page.shop-product.product-page .product-price {
   font-size: 18px;
   font-weight: 600;
   line-height: 22px;
   margin: 16px 0 0;
 }
-.shop-page.android-live.android-product .product-heading:has(+ .product-price) {
+.shop-page.shop-product.product-page .product-heading:has(+ .product-price) {
   min-height: 37px;
 }
-.shop-page.android-live.android-product .product-heading + .product-price {
+.shop-page.shop-product.product-page .product-heading + .product-price {
   margin-top: 16px;
 }
-.shop-page.android-live.android-product .product-price + p {
+.shop-page.shop-product.product-page .product-price + p {
   font-size: 12px;
   line-height: 16px;
   margin: 2px 0 0;
 }
-.shop-page.android-live.android-product .quantity {
+.shop-page.shop-product.product-page .quantity {
   margin: 18px 0 0;
   gap: 0;
 }
-.shop-page.android-live.android-product .quantity > label {
+.shop-page.shop-product.product-page .quantity > label {
   font-size: 12px;
   font-weight: 500;
   line-height: 16px;
   margin-bottom: 4px;
 }
-.shop-page.android-live.android-product .stepper {
+.shop-page.shop-product.product-page .stepper {
   width: 108px;
   height: 40px;
   border: 1px solid #e4e4e4;
   border-radius: 24px;
   background: #fff;
 }
-.shop-page.android-live.android-product .stepper button {
+.shop-page.shop-product.product-page .stepper button {
   width: 36px;
   height: 40px;
   background: transparent;
   border: 0;
 }
-.shop-page.android-live.android-product .stepper output {
+.shop-page.shop-product.product-page .stepper output {
   font-size: 14px;
   font-weight: 500;
 }
-.shop-page.android-live.android-product .pdp-purchase-buttons {
+.shop-page.shop-product.product-page .pdp-purchase-buttons {
   margin-top: 12px;
   gap: 8px;
 }
-.shop-page.android-live.android-product .pdp-purchase-buttons > button {
+.shop-page.shop-product.product-page .pdp-purchase-buttons > button {
   height: 52px;
   min-height: 52px;
   border-radius: 999px;
   font-size: 16px;
   font-weight: 500;
 }
-.shop-page.android-live.android-product .pdp-purchase-buttons > .primary {
+.shop-page.shop-product.product-page .pdp-purchase-buttons > .primary {
   height: 52px;
   min-height: 52px;
   background: #5433eb;
 }
-.shop-page.android-live.android-product:not(.cart-visible)::after {
+.shop-page.shop-product.product-page:not(.cart-visible)::after {
   height: calc(64px + env(safe-area-inset-bottom, 0px));
 }
 .sheet.android-shop-menu {
@@ -646,7 +648,7 @@
   background: #242424;
 }
 
-.shop-page.android-live.android-product .product-underlay > .store-row img {
+.shop-page.shop-product.product-page .product-underlay > .store-row img {
   outline: none;
   box-shadow: none;
   filter: brightness(0.91);
@@ -731,7 +733,9 @@
 }
 
 .shop-page.android-live .floating-dock::before,
-.shop-page.android-live .floating-dock::after {
+.shop-page.shop-product .floating-dock::before,
+.shop-page.android-live .floating-dock::after,
+.shop-page.shop-product .floating-dock::after {
   display: none;
 }
 
@@ -1267,7 +1271,8 @@
 .shop-page.android-following .following-empty {
   box-shadow: none;
 }
-.shop-page.android-live .dock-back {
+.shop-page.android-live .dock-back,
+.shop-page.shop-product .dock-back {
   position: fixed;
   left: auto;
   right: calc(50% + 116px);
@@ -1275,12 +1280,14 @@
   box-shadow: 0 2px 4px #00000008;
 }
 @media (max-width: 359px) {
-  .shop-page.android-live .floating-nav {
+  .shop-page.android-live .floating-nav,
+  .shop-page.shop-product .floating-nav {
     width: 188px;
     padding: 5px;
     gap: 0;
   }
-  .shop-page.android-live .dock-back {
+  .shop-page.android-live .dock-back,
+  .shop-page.shop-product .dock-back {
     width: 44px;
     height: 44px;
     right: calc(50% + 104px);
@@ -1369,7 +1376,7 @@
   color: white;
 }
 
-.shop-page.android-product
+.shop-page.shop-product
   .product-heading
   button[data-ui-label="saveProduct"][aria-pressed="true"] {
   background: #5433f6;
@@ -1384,10 +1391,10 @@
   img {
   filter: none;
 }
-.shop-page.android-live.android-product .product-gallery {
+.shop-page.shop-product.product-page .product-gallery {
   scroll-snap-type: none;
 }
-.shop-page.android-live.android-product .pdp-purchase-buttons > button {
+.shop-page.shop-product.product-page .pdp-purchase-buttons > button {
   box-shadow: none;
   border: 0;
   display: flex;
@@ -1432,7 +1439,7 @@
   border-radius: 50%;
   object-fit: cover;
 }
-.android-product .native-pdp-disclosure {
+.shop-product .native-pdp-disclosure {
   margin: 16px 0 0;
   padding: 16px 0 0;
   border: 0;
@@ -1441,10 +1448,10 @@
   background: transparent;
   box-shadow: none;
 }
-.android-product .pdp-description.native-pdp-disclosure {
+.shop-product .pdp-description.native-pdp-disclosure {
   margin-top: 24px;
 }
-.android-product .native-pdp-disclosure > summary {
+.shop-product .native-pdp-disclosure > summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1453,25 +1460,25 @@
   cursor: pointer;
   min-height: 24px;
 }
-.android-product .native-pdp-disclosure > summary::-webkit-details-marker {
+.shop-product .native-pdp-disclosure > summary::-webkit-details-marker {
   display: none;
 }
-.android-product .native-pdp-disclosure > summary h2 {
+.shop-product .native-pdp-disclosure > summary h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 500;
   line-height: 24px;
   letter-spacing: 0;
 }
-.android-product .native-pdp-disclosure > summary svg {
+.shop-product .native-pdp-disclosure > summary svg {
   width: 16px;
   height: 16px;
   transform: rotate(90deg);
 }
-.android-product .native-pdp-disclosure[open] > summary svg {
+.shop-product .native-pdp-disclosure[open] > summary svg {
   transform: rotate(-90deg);
 }
-.android-product .pdp-description > p {
+.shop-product .pdp-description > p {
   margin: 12px 0 0;
   font-size: 14px;
   line-height: 18px;
@@ -1931,7 +1938,7 @@
   font-size: 12px;
   line-height: 16px;
 }
-.shop-page.android-product[data-product-id^="live-staud-"] .product-details {
+.shop-page.shop-product[data-product-id^="live-staud-"] .product-details {
   padding-top: 32px;
 }
 .android-product[data-product-id^="live-staud-"] .pdp-color-choice + .variants {

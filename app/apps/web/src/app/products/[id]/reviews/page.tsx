@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { readCatalog } from "@/features/catalog/queries.server";
+import { readBuyerReferenceCatalog as readCatalog } from "@/features/catalog/buyer-data-mode.server";
 import { Reviews } from "@/features/discovery/reviews";
 import { ProductRatings } from "@/features/discovery/product-ratings";
 

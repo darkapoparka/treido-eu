@@ -1,7 +1,5 @@
-import {
-  readCatalog,
-  referencePreviewEnabled,
-} from "@/features/catalog/queries.server";
+import { readCatalog } from "@/features/catalog/queries.server";
+import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.server";
 import { Assistant } from "@/features/discovery/assistant";
 import { legacyAssistantDestination } from "@/features/assistant-runs/legacy-routes";
 import { pageLocale } from "@/features/locale/page-locale.server";
@@ -12,7 +10,7 @@ export default async function Page({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  if (!referencePreviewEnabled()) {
+  if (!(await readBuyerReferenceMode())) {
     await connection();
     const source = await searchParams;
     const destination = legacyAssistantDestination(

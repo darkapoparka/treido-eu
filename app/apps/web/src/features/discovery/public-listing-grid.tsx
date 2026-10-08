@@ -13,22 +13,85 @@ export function PublicListingGrid({
   items,
   placements,
   rail = false,
+  compact = false,
+  shelf = false,
 }: {
   items: PublicListingCard[];
   placements?: PromotionPlacement[];
   rail?: boolean;
+  compact?: boolean;
+  /** Existing Shop shelf cards, without the Marketplace grid/facts wrapper. */
+  shelf?: boolean;
 }) {
   const display =
     placements ?? items.map((listing) => ({ listing, sponsored: null }));
   return (
-    <div className={(rail ? "product-rail " : "product-grid ") + s.grid}>
-      {display.map((placement) => (
-        <PublicListing key={placement.listing.id} placement={placement} />
-      ))}
+    <div
+      className={
+        (rail ? "product-rail" : "product-grid") +
+        (shelf || (rail && compact) ? "" : " " + s.grid)
+      }
+    >
+      {display.map((placement) =>
+        shelf || (rail && compact) ? (
+          <PublicShelfListing
+            key={placement.listing.id}
+            placement={placement}
+            compact={compact}
+          />
+        ) : (
+          <PublicListing
+            key={placement.listing.id}
+            placement={placement}
+            compact={compact}
+          />
+        ),
+      )}
     </div>
   );
 }
-function PublicListing({ placement }: { placement: PromotionPlacement }) {
+function PublicShelfListing({
+  placement,
+  compact,
+}: {
+  placement: PromotionPlacement;
+  compact: boolean;
+}) {
+  const { listing, sponsored } = placement;
+  const locale = useLocale();
+  const observation = useSponsoredObservation<HTMLElement>(
+    sponsored?.token,
+    listing.id,
+  );
+  const label = sponsored
+    ? locale === "bg"
+      ? sponsored.labelBg
+      : sponsored.label
+    : undefined;
+  return (
+    <ProductCard
+      product={label && !compact ? { ...listing, promotion: label } : listing}
+      compact={compact}
+      showPromotion={!!label && !compact}
+      showRating={false}
+      storeName={compact ? undefined : listing.seller.name}
+      saveControl={<ListingSaveButton id={listing.id} title={listing.title} />}
+      observation={observation}
+      mediaLabel={
+        compact && label ? (
+          <span className="public-home-sponsored">{label}</span>
+        ) : undefined
+      }
+    />
+  );
+}
+function PublicListing({
+  placement,
+  compact,
+}: {
+  placement: PromotionPlacement;
+  compact: boolean;
+}) {
   const { listing: item, sponsored } = placement;
   const inventoryText = useTranslations("inventory");
   const t = useTranslations("marketplace"),
@@ -37,12 +100,13 @@ function PublicListing({ placement }: { placement: PromotionPlacement }) {
   return (
     <div
       className={s.listing}
+      data-compact-listing={compact || undefined}
       ref={ref}
       onClick={onClick}
     >
       <ProductCard
         product={
-          sponsored
+          sponsored && !compact
             ? {
                 ...item,
                 promotion:
@@ -50,25 +114,35 @@ function PublicListing({ placement }: { placement: PromotionPlacement }) {
               }
             : item
         }
-        showPromotion={!!sponsored}
+        compact={compact}
+        showPromotion={!!sponsored && !compact}
         showRating={false}
         saveControl={<ListingSaveButton id={item.id} title={item.title} />}
       />
-      <p className={s.facts}>
-        {optionLabel(item.condition, locale)}
-        {item.locality ? " · " + item.locality : ""}
-        {item.stockState && item.stockState !== "unknown"
-          ? " · " + inventoryText(item.stockState)
-          : ""}
-      </p>
-      <SourceLink
-        className={s.sellerLink}
-        preserveDiscoveryContext={false}
-        href={"/stores/" + item.seller.id + "?lang=" + locale}
-      >
-        {item.seller.name}
-        <span>{t(item.seller.kind)}</span>
-      </SourceLink>
+      {compact && sponsored && (
+        <span className="public-home-sponsored">
+          {locale === "bg" ? sponsored.labelBg : sponsored.label}
+        </span>
+      )}
+      {!compact && (
+        <>
+          <p className={s.facts}>
+            {optionLabel(item.condition, locale)}
+            {item.locality ? " · " + item.locality : ""}
+            {item.stockState && item.stockState !== "unknown"
+              ? " · " + inventoryText(item.stockState)
+              : ""}
+          </p>
+          <SourceLink
+            className={s.sellerLink}
+            preserveDiscoveryContext={false}
+            href={"/stores/" + item.seller.id + "?lang=" + locale}
+          >
+            {item.seller.name}
+            <span>{t(item.seller.kind)}</span>
+          </SourceLink>
+        </>
+      )}
     </div>
   );
 }

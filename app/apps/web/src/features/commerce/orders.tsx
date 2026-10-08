@@ -4,7 +4,15 @@ import { useLocale as useIntlLocale } from "next-intl";
 import { useCaption } from "../locale/use-caption";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type ComponentProps,
+} from "react";
+import { paymentText, type PaymentLanguage } from "../payments/messages";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TrackingDetail } from "./tracking";
 import { CartOverlay } from "./checkout";
@@ -42,6 +50,130 @@ import styles from "./orders-parity.module.css";
 import "./confirmation-parity.css";
 import { AccountPage, Boundary } from "../account/forms";
 import { useAccount, type ReferenceOrder } from "../account/state";
+import "../discovery/buyer-surface.css";
+
+function OrdersListPresentation(props: ComponentProps<typeof AccountPage>) {
+  return <AccountPage {...props} />;
+}
+function OrderListCard({
+  className = "account-panel tracking-card",
+  sourceKey,
+  status,
+  href,
+  seller,
+  title,
+  children,
+  image,
+  imageAlt = "",
+}: {
+  className?: string;
+  sourceKey: string;
+  status?: string;
+  href: string;
+  seller: ReactNode;
+  title: ReactNode;
+  children?: ReactNode;
+  image?: string;
+  imageAlt?: string;
+}) {
+  return (
+    <SourceLink
+      className={className}
+      sourceKey={sourceKey}
+      data-order-status={status}
+      href={href}
+    >
+      <div>
+        <strong className="order-seller-label">{seller}</strong>
+        <h2>{title}</h2>
+        {children}
+      </div>
+      {image && <img src={image} alt={imageAlt} />}
+    </SourceLink>
+  );
+}
+function OrdersEmpty({
+  className = "order-empty-source",
+  art,
+  title,
+  description,
+  actions,
+}: {
+  className?: string;
+  art?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className={className}>
+      {art}
+      <h2>{title}</h2>
+      {description !== undefined && <p>{description}</p>}
+      {actions}
+    </div>
+  );
+}
+
+/** The source order-list geometry accepts only current, authorized order facts. */
+export type BuyerOrderSummary = {
+  id: string;
+  sellerName: string;
+  totalMinor: number;
+  currency: "EUR";
+  payment: string;
+  fulfilment: string;
+  settlement: string;
+  titles: string[];
+};
+export function BuyerOrders({
+  orders,
+  language,
+  children,
+  back = false,
+}: {
+  orders?: BuyerOrderSummary[];
+  language: PaymentLanguage;
+  children?: ReactNode;
+  back?: boolean;
+}) {
+  const ui = useTranslations("commerceUI"),
+    t = paymentText(language);
+  return (
+    <OrdersListPresentation
+      title={ui("orders")}
+      android
+      publicData
+      back={back}
+      className={`source-orders-page android-orders ${styles.list}`}
+    >
+      {children ??
+        (!orders?.length ? (
+          <OrdersEmpty title={t.empty} />
+        ) : (
+          orders.map((order) => {
+            return (
+              <OrderListCard
+                sourceKey={"order-card:" + order.id}
+                href={"/orders/" + order.id + "?lang=" + language}
+                key={order.id}
+                seller={order.sellerName}
+                title={formatMoney(
+                  { amount: order.totalMinor, currency: order.currency },
+                  language,
+                )}
+              >
+                <p>{order.payment}</p>
+                <p>{order.fulfilment}</p>
+                <p>{order.settlement}</p>
+                <p>{order.titles.join(" · ")}</p>
+              </OrderListCard>
+            );
+          })
+        ))}
+    </OrdersListPresentation>
+  );
+}
 export function OrdersPage({
   catalog,
   archive = false,
@@ -89,7 +221,7 @@ export function OrdersPage({
     ? orderGridDeals.delivered
     : orderGridDeals.transit;
   return (
-    <AccountPage
+    <OrdersListPresentation
       android={native}
       back={archive || history || forcedView === "manual"}
       cart={!archive && !history ? () => setCartOpen(true) : undefined}
@@ -229,10 +361,10 @@ export function OrdersPage({
           );
         }
         return (
-          <SourceLink
+          <OrderListCard
             className={`account-panel tracking-card ${!p ? "manual-tracking-card" : ""}`}
             sourceKey={`order-card:${o.id}`}
-            data-order-status={o.status}
+            status={o.status}
             href={
               o.status === "Delivered" && p
                 ? `/orders/${o.id}/review`
@@ -241,97 +373,98 @@ export function OrdersPage({
                   : `/orders/${o.id}`
             }
             key={o.id}
-          >
-            <div>
-              <strong className="order-seller-label">
+            seller={
+              <>
                 {p && <img src="/api/reference-media/kitsch-logo" alt="" />}
                 {p ? "KITSCH" : o.name}
-              </strong>
-              <h2>
-                {o.status === "Delivered"
-                  ? p
-                    ? ui("reviewYourOrder")
-                    : ui("deliveredToday")
-                  : sourceWaiting
-                    ? ui("expectedByAug3")
-                    : o.status === "Ordered"
-                      ? p
-                        ? ui("orderPlaced")
-                        : ui("labelCreated")
-                      : ui("arrivesJul31Aug1")}
-              </h2>
-              {o.status === "Delivered" && p ? (
-                <span className="review-stars" aria-hidden="true">
-                  <ReviewStars rating={0} />
-                </span>
-              ) : (
-                <OrderProgress
-                  carrier={o.carrier}
-                  phase={
-                    o.status === "Delivered"
-                      ? "delivered"
-                      : sourceWaiting
-                        ? "waiting"
-                        : o.status === "Ordered" || labelCreated
-                          ? "label"
-                          : "transit"
-                  }
-                />
-              )}
-            </div>
-            <img
-              src={p ? p.images[0] : "/api/reference-media/order-manual-parcel"}
-              alt={p ? o.name : ui("trackedPackage")}
-            />
-          </SourceLink>
+              </>
+            }
+            title={
+              o.status === "Delivered"
+                ? p
+                  ? ui("reviewYourOrder")
+                  : ui("deliveredToday")
+                : sourceWaiting
+                  ? ui("expectedByAug3")
+                  : o.status === "Ordered"
+                    ? p
+                      ? ui("orderPlaced")
+                      : ui("labelCreated")
+                    : ui("arrivesJul31Aug1")
+            }
+            image={p ? p.images[0] : "/api/reference-media/order-manual-parcel"}
+            imageAlt={p ? o.name : ui("trackedPackage")}
+          >
+            {o.status === "Delivered" && p ? (
+              <span className="review-stars" aria-hidden="true">
+                <ReviewStars rating={0} />
+              </span>
+            ) : (
+              <OrderProgress
+                carrier={o.carrier}
+                phase={
+                  o.status === "Delivered"
+                    ? "delivered"
+                    : sourceWaiting
+                      ? "waiting"
+                      : o.status === "Ordered" || labelCreated
+                        ? "label"
+                        : "transit"
+                }
+              />
+            )}
+          </OrderListCard>
         );
       })}
       {!visible.length && (
-        <div
+        <OrdersEmpty
           className={
             archive || query ? "notification-empty" : "order-empty-source"
           }
-        >
-          {!archive && !query && (
-            <span
-              className={`${styles.emptyArt} ${native ? "android-order-art" : ""}`}
-            >
-              <img
-                src={
-                  native
-                    ? "/api/reference-media/live-empty-orders-art"
-                    : "/api/reference-media/order-empty-art"
-                }
-                alt=""
-              />
-              <DecorativeVideo
-                enabled={!native && params.get("reference") !== "captured"}
-                clips={[
-                  {
-                    key: "orders-empty-motion",
-                    className: styles.emptyArtVideo,
-                  },
-                ]}
-                loop
-              />
-            </span>
-          )}
-          {archive && !query && (
-            <img
-              className="archive-empty-package"
-              src="/api/reference-media/onboarding-package"
-              alt=""
-            />
-          )}
-          <h2>
-            {query
+          art={
+            <>
+              {!archive && !query && (
+                <span
+                  className={`${styles.emptyArt} ${native ? "android-order-art" : ""}`}
+                >
+                  <img
+                    src={
+                      native
+                        ? "/api/reference-media/live-empty-orders-art"
+                        : "/api/reference-media/order-empty-art"
+                    }
+                    alt=""
+                  />
+                  <DecorativeVideo
+                    enabled={!native && params.get("reference") !== "captured"}
+                    clips={[
+                      {
+                        key: "orders-empty-motion",
+                        className: styles.emptyArtVideo,
+                      },
+                    ]}
+                    loop
+                  />
+                </span>
+              )}
+              {archive && !query && (
+                <img
+                  className="archive-empty-package"
+                  src="/api/reference-media/onboarding-package"
+                  alt=""
+                />
+              )}
+            </>
+          }
+          title={
+            query
               ? ui("noOrdersFound")
               : archive
                 ? ui("noArchivedOrdersYet")
-                : ui("trackAllYourOrdersHere")}
-          </h2>
-          <p>
-            {query
+                : ui("trackAllYourOrdersHere")
+          }
+          description={
+            query
               ? ui("tryAnotherNameOrOrderNumber")
               : archive
                 ? ui("cleanUpYourOrdersTabByMovingYourPastOrders")
@@ -339,28 +472,31 @@ export function OrdersPage({
                   ? ui("signInToConnectYourAccountAndShopWillAutomatically")
                   : ui(
                       "connectYourAccountAndShopWillAutomaticallyTrackYourOrders",
-                    )}
-          </p>
-          {!archive && !query && (
-            <>
-              <SourceLink
-                className="primary form-submit"
-                href={
-                  guest
-                    ? "/login?journey=new&returnTo=/orders"
-                    : "/account/connections"
-                }
-              >
-                {guest ? ui("signIn") : ui("connectAccount")}
-              </SourceLink>
-              {!guest && (
-                <SourceLink className="form-cancel" href="/orders/new">
-                  {ui("addAPackageManually")}
+                    )
+          }
+          actions={
+            !archive &&
+            !query && (
+              <>
+                <SourceLink
+                  className="primary form-submit"
+                  href={
+                    guest
+                      ? "/login?journey=new&returnTo=/orders"
+                      : "/account/connections"
+                  }
+                >
+                  {guest ? ui("signIn") : ui("connectAccount")}
                 </SourceLink>
-              )}
-            </>
-          )}
-        </div>
+                {!guest && (
+                  <SourceLink className="form-cancel" href="/orders/new">
+                    {ui("addAPackageManually")}
+                  </SourceLink>
+                )}
+              </>
+            )
+          }
+        />
       )}
       {!history &&
         !archive &&
@@ -482,7 +618,7 @@ export function OrdersPage({
         />
         <OrderAction label={ui("addOrderManually")} href="/orders/new" />
       </Sheet>
-    </AccountPage>
+    </OrdersListPresentation>
   );
 }
 export function OrderDetail({ catalog, id }: { catalog: Catalog; id: string }) {

@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const catalogRead = vi.hoisted(() => vi.fn());
-vi.mock("./queries.server", () => ({ readCatalog: catalogRead }));
+vi.mock("./buyer-data-mode.server", () => ({
+  readBuyerReferenceCatalog: catalogRead,
+}));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NOT_FOUND");

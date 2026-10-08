@@ -6,11 +6,8 @@ export async function generateMetadata({
 }) {
   return readSellerMetadata((await params).id, "info");
 }
-import {
-  MarketplacePage,
-  type MarketplaceSearchParams,
-} from "@/features/discovery/marketplace-page.server";
-import { referencePreviewEnabled } from "@/features/catalog/queries.server";
+import { readPublicStoreView } from "@/features/discovery/public-store.server";
+import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.server";
 import { readSellerPage } from "@/features/catalog/seller-page.server";
 import { StoreInfo } from "@/features/discovery/store";
 export default async function Page({
@@ -18,11 +15,15 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<MarketplaceSearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  if (!referencePreviewEnabled())
-    return <MarketplacePage raw={await searchParams} sellerId={id} info />;
+  if (!(await readBuyerReferenceMode()))
+    return (
+      <StoreInfo
+        publicView={await readPublicStoreView(id, await searchParams, true)}
+      />
+    );
   const { store, catalog } = await readSellerPage(id);
   return <StoreInfo store={store} catalog={catalog} />;
 }

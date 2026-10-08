@@ -15,6 +15,128 @@ import {
 } from "../catalog/types";
 import { capturedLineAmount } from "./pricing";
 import type { CartCatalog } from "./cart-catalog";
+
+export function CartLinePresentation({
+  image,
+  title,
+  href,
+  price,
+  variant,
+  children,
+  lineKey,
+  skuId,
+  onNavigate,
+}: {
+  image?: string;
+  title: string;
+  href?: string;
+  price?: ReactNode;
+  variant?: ReactNode;
+  children: ReactNode;
+  lineKey?: string;
+  skuId?: string;
+  onNavigate?: (href: string) => void;
+}) {
+  return (
+    <article
+      className="commerce-line"
+      data-cart-line={lineKey}
+      data-cart-sku={skuId}
+    >
+      {image && <img src={image} alt="" />}
+      <div>
+        <div className="cart-line-title">
+          {href ? (
+            <CartNavigationLink href={href} onNavigate={onNavigate}>
+              <strong>{title}</strong>
+            </CartNavigationLink>
+          ) : (
+            <strong>{title}</strong>
+          )}
+          {price !== undefined && <span>{price}</span>}
+        </div>
+        {variant && <p className="cart-variant">{variant}</p>}
+        {children}
+      </div>
+    </article>
+  );
+}
+export function CartStepper({
+  decrease,
+  quantity,
+  increase,
+  label,
+}: {
+  decrease: ReactNode;
+  quantity: number;
+  increase: ReactNode;
+  label?: string;
+}) {
+  return (
+    <div className="cart-stepper">
+      {decrease}
+      <output aria-label={label}>{quantity}</output>
+      {increase}
+    </div>
+  );
+}
+export function CartSubtotal({
+  label,
+  total,
+}: {
+  label: ReactNode;
+  total: ReactNode;
+}) {
+  return (
+    <div className="cart-subtotal">
+      <span>{label}</span>
+      <strong>{total}</strong>
+    </div>
+  );
+}
+export function CartSellerGroup({
+  seller,
+  logo,
+  note,
+  className = "",
+  children,
+}: {
+  seller: ReactNode;
+  logo?: string;
+  note?: ReactNode;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className={"seller-cart" + (className ? " " + className : "")}>
+      <header>
+        {logo && <img src={logo} alt="" />}
+        <div>
+          <strong>{seller}</strong>
+          {note}
+        </div>
+      </header>
+      {children}
+    </section>
+  );
+}
+export function CartEmpty({
+  title,
+  note,
+  actions,
+}: {
+  title: ReactNode;
+  note?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="notification-empty">
+      <h2 tabIndex={-1}>{title}</h2>
+      {note !== undefined && <p>{note}</p>}
+      {actions}
+    </div>
+  );
+}
 function cartMutationFocus(control: HTMLElement, ...selectors: string[]) {
   const owner = control.closest<HTMLElement>("dialog, main");
   return owner ? { owner, selectors } : null;
@@ -86,19 +208,23 @@ export function CartContents({
   return (
     <>
       {!resolved.length ? (
-        <div className="notification-empty">
-          <h2 tabIndex={-1}>{ui("yourCartIsEmpty")}</h2>
-          <p>
-            {ui("addProductsWhileYouShopSo")}
-            <br />
-            {ui("theyLlBeReadyForCheckoutLater")}
-          </p>
-          {!onNavigate && (
-            <Link className="primary form-submit" href="/search">
-              {ui("goShopping")}
-            </Link>
-          )}
-        </div>
+        <CartEmpty
+          title={ui("yourCartIsEmpty")}
+          note={
+            <>
+              {ui("addProductsWhileYouShopSo")}
+              <br />
+              {ui("theyLlBeReadyForCheckoutLater")}
+            </>
+          }
+          actions={
+            !onNavigate && (
+              <Link className="primary form-submit" href="/search">
+                {ui("goShopping")}
+              </Link>
+            )
+          }
+        />
       ) : (
         stores.map((storeId) => {
           const lines = resolved.filter((l) => groupKey(l.product) === storeId),
@@ -109,25 +235,23 @@ export function CartContents({
               0,
             );
           return (
-            <section className="seller-cart" key={storeId}>
-              <header>
-                {store?.logo && <img src={store.logo} alt="" />}
-                <div>
-                  <strong>
-                    {store?.name ?? ui("shopInformationNotCaptured")}
-                  </strong>
-                  {store?.rating !== undefined && (
-                    <p>
-                      {store.rating} ★ (
-                      {storeId === "kitsch" &&
-                      lines.some((line) => line.productId === "shampoo-bag")
-                        ? "195.2K"
-                        : store.ratingCount}
-                      )
-                    </p>
-                  )}
-                </div>
-              </header>
+            <CartSellerGroup
+              key={storeId}
+              logo={store?.logo}
+              seller={store?.name ?? ui("shopInformationNotCaptured")}
+              note={
+                store?.rating !== undefined && (
+                  <p>
+                    {store.rating} ★ (
+                    {storeId === "kitsch" &&
+                    lines.some((line) => line.productId === "shampoo-bag")
+                      ? "195.2K"
+                      : store.ratingCount}
+                    )
+                  </p>
+                )
+              }
+            >
               {storeId === "kitsch" &&
                 lines.some((l) => l.productId === "shampoo-bag") && (
                   <p className="cart-captured-error" role="status">
@@ -140,52 +264,43 @@ export function CartContents({
                   </p>
                 )}
               {lines.map((l) => (
-                <article
-                  className="commerce-line"
+                <CartLinePresentation
                   key={`${l.productId}-${l.variantId}`}
-                  data-cart-line={`${l.productId}|${l.variantId}`}
-                >
-                  {l.product.images[0] && (
-                    <img src={l.product.images[0]} alt="" />
+                  lineKey={`${l.productId}|${l.variantId}`}
+                  image={l.product.images[0]}
+                  title={l.product.title}
+                  href={`/products/${l.productId}`}
+                  onNavigate={onNavigate}
+                  price={formatMoney(
+                    {
+                      ...l.product.price,
+                      amount: l.product.price.amount * l.quantity,
+                    },
+                    intlLocale,
                   )}
-                  <div>
-                    <div className="cart-line-title">
-                      <CartNavigationLink
-                        href={`/products/${l.productId}`}
-                        onNavigate={onNavigate}
-                      >
-                        <strong>{l.product.title}</strong>
-                      </CartNavigationLink>
+                  variant={
+                    l.product.variants.length > 1 ? l.variant.label : undefined
+                  }
+                >
+                  {capturedLineAmount(l, l.product.price.amount) !==
+                    l.product.price.amount && (
+                    <p className="cart-discount">
+                      {ui("discountApplied")}{" "}
                       <span>
                         {formatMoney(
                           {
-                            ...l.product.price,
-                            amount: l.product.price.amount * l.quantity,
+                            amount: -135 * l.quantity,
+                            currency: "USD",
                           },
                           intlLocale,
                         )}
                       </span>
-                    </div>
-                    {l.product.variants.length > 1 && (
-                      <p className="cart-variant">{l.variant.label}</p>
-                    )}
-                    {capturedLineAmount(l, l.product.price.amount) !==
-                      l.product.price.amount && (
-                      <p className="cart-discount">
-                        {ui("discountApplied")}{" "}
-                        <span>
-                          {formatMoney(
-                            {
-                              amount: -135 * l.quantity,
-                              currency: "USD",
-                            },
-                            intlLocale,
-                          )}
-                        </span>
-                      </p>
-                    )}
-                    <div className="cart-controls">
-                      <div className="cart-stepper">
+                    </p>
+                  )}
+                  <div className="cart-controls">
+                    <CartStepper
+                      quantity={l.quantity}
+                      decrease={
                         <button
                           aria-label={
                             l.quantity === 1
@@ -206,7 +321,8 @@ export function CartContents({
                         >
                           <Icon name={l.quantity === 1 ? "trash" : "minus"} />
                         </button>
-                        <output>{l.quantity}</output>
+                      }
+                      increase={
                         <button
                           aria-label={ui("increaseValue1", {
                             value1: l.product.title ?? "",
@@ -224,22 +340,22 @@ export function CartContents({
                         >
                           <Icon name="plus" />
                         </button>
-                      </div>
-                      <button
-                        onClick={(event) => {
-                          prepareMutationFocus(
-                            event.currentTarget,
-                            `.cart-later [data-cart-line="${CSS.escape(`${l.productId}|${l.variantId}`)}"] .move-to-cart:not(:disabled)`,
-                            `.cart-later [data-cart-line="${CSS.escape(`${l.productId}|${l.variantId}`)}"] .cart-controls button:not(:disabled)`,
-                          );
-                          state.saveForLater(l.productId, l.variantId);
-                        }}
-                      >
-                        {ui("saveForLater")}
-                      </button>
-                    </div>
+                      }
+                    />
+                    <button
+                      onClick={(event) => {
+                        prepareMutationFocus(
+                          event.currentTarget,
+                          `.cart-later [data-cart-line="${CSS.escape(`${l.productId}|${l.variantId}`)}"] .move-to-cart:not(:disabled)`,
+                          `.cart-later [data-cart-line="${CSS.escape(`${l.productId}|${l.variantId}`)}"] .cart-controls button:not(:disabled)`,
+                        );
+                        state.saveForLater(l.productId, l.variantId);
+                      }}
+                    >
+                      {ui("saveForLater")}
+                    </button>
                   </div>
-                </article>
+                </CartLinePresentation>
               ))}
               {onOffer && storeId === "kitsch" && (
                 <button
@@ -261,18 +377,16 @@ export function CartContents({
                   <progress value={total} max={5000} aria-hidden="true" />
                 </button>
               )}
-              <div className="cart-subtotal">
-                <span>{ui("subtotal")}</span>
-                <strong>
-                  {formatMoney(
-                    {
-                      amount: total,
-                      currency: lines[0].product.price.currency,
-                    },
-                    intlLocale,
-                  )}
-                </strong>
-              </div>
+              <CartSubtotal
+                label={ui("subtotal")}
+                total={formatMoney(
+                  {
+                    amount: total,
+                    currency: lines[0].product.price.currency,
+                  },
+                  intlLocale,
+                )}
+              />
               {store ? (
                 <CartNavigationLink
                   onNavigate={onNavigate}
@@ -286,7 +400,7 @@ export function CartContents({
                   {ui("checkoutDetailsWereNotCapturedForThisItemNothingWill")}
                 </p>
               )}
-            </section>
+            </CartSellerGroup>
           );
         })
       )}

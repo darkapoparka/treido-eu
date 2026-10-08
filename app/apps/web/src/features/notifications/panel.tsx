@@ -16,12 +16,18 @@ import { useReadSelection } from "./use-read-selection";
 import s from "../purchase-reviews/reviews.module.css";
 import n from "./notifications.module.css";
 import { SearchMatchFeedPanel } from "../saved-searches/updates";
+import { NotificationsEmpty } from "../discovery/notifications";
+import { buyerNotificationsEmpty } from "./buyer-empty";
 export function NotificationPanel({
   initial,
   actorSubject,
+  shop = false,
+  shopEmpty = true,
 }: {
   initial: NotificationFeed;
   actorSubject: string;
+  shop?: boolean;
+  shopEmpty?: boolean;
 }) {
   const t = useTranslations("notifications"),
     format = useFormatter(),
@@ -58,6 +64,17 @@ export function NotificationPanel({
     selection.draft.entries.map((entry) => entry.row.messageId),
   );
   const outstanding = selection.draft.entries.filter(retryableRead).length;
+  if (
+    shop &&
+    shopEmpty &&
+    status === "ready" &&
+    buyerNotificationsEmpty(data, {
+      entries: selection.draft.entries.length,
+      invalid: selection.invalid,
+      storageFailed: selection.storageFailed,
+    })
+  )
+    return <NotificationsEmpty />;
   if (status !== "ready")
     return (
       <section className={s.card}>
@@ -87,7 +104,10 @@ export function NotificationPanel({
       </section>
     );
   return (
-    <div className={s.stack} data-notification-feed>
+    <div
+      className={shop ? "buyer-notification-feed" : s.stack}
+      data-notification-feed
+    >
       <p className={s.muted}>{t("inAppOnly")}</p>
       <nav className={s.actions} aria-label={t("filter")}>
         <Link
@@ -225,9 +245,13 @@ export function NotificationPanel({
           </Link>
         </section>
       )}
-      <ol className={s.list}>
+      <ol className={shop ? "account-panel buyer-notification-list" : s.list}>
         {data.items.map((item) => (
-          <li key={item.id} className={s.card} data-notification-id={item.id}>
+          <li
+            key={item.id}
+            className={shop ? "buyer-notification-row" : s.card}
+            data-notification-id={item.id}
+          >
             <div className={s.row}>
               <div>
                 <h2>

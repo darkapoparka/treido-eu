@@ -35,6 +35,24 @@ export function discoveryDestination(href: string, source: URLSearchParams) {
   return `${destination.pathname}${query ? `?${query}` : ""}${destination.hash}`;
 }
 
+/** Dock destinations start Home/Explore afresh. Result/detail links retain
+ * their complete browse context through discoveryDestination. */
+export function discoveryDockDestination(
+  href: string,
+  source: URLSearchParams,
+) {
+  if (!href.startsWith("/") || href.startsWith("//")) return href;
+  const destination = new URL(href, "https://treido.invalid");
+  if (!["/", "/explore"].includes(destination.pathname))
+    return discoveryDestination(href, source);
+  const { input } = readDiscoveryInput(source);
+  const params = new URLSearchParams(destination.search);
+  if (input.seller !== "all") params.set("seller", input.seller);
+  const locale = parseLocale(source.get("lang"));
+  if (locale) params.set("lang", locale);
+  return `${destination.pathname}${params.size ? `?${params}` : ""}${destination.hash}`;
+}
+
 export function browseScopeHref(
   pathname: string,
   source: URLSearchParams,
@@ -72,7 +90,8 @@ export function referenceSearchDestination(
   ])
     params.delete(key);
   const category = params.get("category");
-  if (category && !category.startsWith("cat:")) params.delete("category");
+  if (category && !category.startsWith("cat:") && !category.startsWith("nav:"))
+    params.delete("category");
   if (
     params.has("sort") &&
     !["relevance", "newest", "price_asc", "price_desc"].includes(

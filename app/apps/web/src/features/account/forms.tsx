@@ -10,6 +10,8 @@ import { Icon } from "../discovery/icons";
 import { useEffect, useState, type ReactNode } from "react";
 import { FloatingNav, Sheet } from "../discovery/components";
 import { SourceLink } from "../discovery/return-navigation";
+import "../discovery/buyer-surface.css";
+import "./public-profile.css";
 import {
   useAccount,
   blankAddress,
@@ -28,6 +30,7 @@ export function AccountPage({
   back = true,
   className = "",
   onBack,
+  publicData = false,
 }: {
   title?: string;
   children: ReactNode;
@@ -40,10 +43,11 @@ export function AccountPage({
   back?: boolean;
   className?: string;
   onBack?: () => void;
+  publicData?: boolean;
 }) {
   return (
     <ShopSurface
-      className={`shop-page account-page ${className} ${android ? "android-live" : ""}`}
+      className={`shop-page account-page ${className} ${android ? "android-live" : ""}${publicData ? " buyer-public" : ""}`}
     >
       <header className="account-heading">
         {title && <h1>{title}</h1>}

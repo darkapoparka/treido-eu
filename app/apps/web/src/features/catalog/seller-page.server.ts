@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import { readCatalog } from "./queries.server";
+import { readBuyerReferenceCatalog as readCatalog } from "./buyer-data-mode.server";
 
 /** Seller presentation stays out of shared product/search catalog records. */
 export async function readSellerPage(id: string) {

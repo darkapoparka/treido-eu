@@ -7,11 +7,13 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["inngest"],
   devIndicators: false,
   // Clerk resumes requests through a same-origin rewrite. Keep the literal
-  // loopback origin so development does not proxy 127.0.0.1 back to localhost.
-  ...(process.env.TREIDO_ENV === "development" &&
-  process.env.NODE_ENV !== "production" &&
+  // loopback origin in local dev, including a qualified Preview backend, so
+  // Next does not externally proxy Clerk's resume back to this same server.
+  ...(process.env.NODE_ENV !== "production" &&
   !process.env.VERCEL &&
-  !process.env.VERCEL_ENV
+  ((process.env.TREIDO_ENV === "development" && !process.env.VERCEL_ENV) ||
+    (process.env.TREIDO_ENV === "preview" &&
+      process.env.VERCEL_ENV === "preview"))
     ? { skipProxyUrlNormalize: true }
     : {}),
   // Keep audit type generation away from the running preview's protected config.

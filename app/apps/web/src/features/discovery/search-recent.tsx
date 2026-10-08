@@ -11,6 +11,7 @@ import { useDiscovery } from "./state";
 import { recentStoreCover } from "./recent-store-media";
 import styles from "./search-entry.module.css";
 import photoStyles from "./search-photo.module.css";
+import { ListingSaveButton } from "../library/controls";
 
 export function RecentSearchItems({
   catalog,
@@ -18,12 +19,14 @@ export function RecentSearchItems({
   limit,
   capturedContinuation,
   surface = "search",
+  publicData = false,
 }: {
   catalog: SearchCatalog;
   expanded?: boolean;
   limit?: number;
   capturedContinuation?: "photo" | null;
   surface?: "search" | "home";
+  publicData?: boolean;
 }) {
   const ui = useTranslations("discoveryUI");
   const state = useDiscovery();
@@ -67,40 +70,50 @@ export function RecentSearchItems({
             <ProductCard
               product={{
                 ...product,
-                promotion: item.promotion,
+                promotion: publicData ? undefined : item.promotion,
                 images:
-                  product.id === "terracotta"
+                  !publicData && product.id === "terracotta"
                     ? ["/api/reference-media/recent-terracotta-photo"]
                     : product.images,
               }}
               compact
+              saveControl={
+                publicData ? (
+                  <ListingSaveButton id={product.id} title={product.title} />
+                ) : undefined
+              }
             />
           ) : store ? (
             <SourceLink
-              className={`${styles.store} ${recentStoreCover(store.id, surface) ? styles.capturedStore : ""} ${store.id === "loaded-tea" ? styles.logoStore : ""} ${store.id === "drmtlgy" && surface !== "home" ? styles.partialStore : ""}`}
+              className={`${styles.store} ${!publicData && recentStoreCover(store.id, surface) ? styles.capturedStore : ""} ${!publicData && store.id === "loaded-tea" ? styles.logoStore : ""} ${!publicData && store.id === "drmtlgy" && surface !== "home" ? styles.partialStore : ""}`}
               data-recent-store={store.id}
               href={`/stores/${store.id}`}
               aria-label={ui("visitValue1", { value1: store.name ?? "" })}
             >
-              {(recentStoreCover(store.id, surface) ||
+              {((!publicData && recentStoreCover(store.id, surface)) ||
                 store.coverImage ||
                 store.logo) && (
                 <img
                   src={
-                    recentStoreCover(store.id, surface)
+                    !publicData && recentStoreCover(store.id, surface)
                       ? `/api/reference-media/${recentStoreCover(store.id, surface)}`
                       : store.coverImage || store.logo
                   }
                   alt=""
                 />
               )}
-              {(!recentStoreCover(store.id, surface) ||
+              {(publicData ||
+                !recentStoreCover(store.id, surface) ||
                 (store.id === "drmtlgy" && surface !== "home")) && (
                 <span className={styles.wordmark} aria-hidden="true">
-                  {store.id === "kitsch" ? <KitschWordmark /> : store.name}
+                  {!publicData && store.id === "kitsch" ? (
+                    <KitschWordmark />
+                  ) : (
+                    store.name
+                  )}
                 </span>
               )}
-              {!expanded && item.promotion && (
+              {!publicData && !expanded && item.promotion && (
                 <span className="price-badge deal">{item.promotion}</span>
               )}
             </SourceLink>
@@ -135,7 +148,7 @@ export function RecentSearchItems({
           )}
         </div>
       ))}
-      {!expanded && capturedContinuation === "photo" && (
+      {!publicData && !expanded && capturedContinuation === "photo" && (
         <div
           className={`${styles.item} ${photoStyles.recentFragment}`}
           data-captured-search-continuation="photo"

@@ -1,6 +1,12 @@
 "use client";
 import Link from "next/link";
-import { useLayoutEffect, useRef, useState, useTransition } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { readBuyerCartAction, changeBuyerCartAction } from "./actions";
@@ -18,6 +24,8 @@ type Props = {
   disabled?: boolean;
   refreshPage?: boolean;
   className?: string;
+  children?: ReactNode;
+  wrapperClassName?: string;
 };
 /** Each click is an explicit authenticated command. No cart data is stored locally. */
 export function CartMutationButton(props: Props) {
@@ -34,6 +42,8 @@ function ScopedCartMutationButton({
   refreshPage = false,
   className = "pill",
   base,
+  children,
+  wrapperClassName,
 }: Props) {
   const t = useTranslations("buyerCart"),
     locale = useLocale(),
@@ -168,14 +178,15 @@ function ScopedCartMutationButton({
     saved = visible?.saved;
   const saving = pending && workingKey === scope.key;
   return (
-    <div>
+    <div className={wrapperClassName}>
       <button
         type="button"
         className={className}
+        aria-label={children ? label : undefined}
         disabled={saving || disabled || !scope.isCurrent()}
         onClick={submit}
       >
-        {saving ? t("saving") : label}
+        {saving ? t("saving") : (children ?? label)}
       </button>
       {saved && (
         <p className="form-note" role="status">

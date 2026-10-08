@@ -23,21 +23,6 @@ export function PublicHome({
     <div className="home-merchant-shelves public-home">
       {publicHomeSections(page).map((section) => {
         const items = section.placements.map((placement) => placement.listing);
-        if (section.kind === "personal") {
-          return (
-            <section
-              className="public-home-personal"
-              key={items[0].id}
-              aria-label={t("personal")}
-            >
-              <h3>{t("personal")}</h3>
-              <PublicListingGrid
-                items={items}
-                placements={section.placements}
-              />
-            </section>
-          );
-        }
         const seller = section.seller;
         return (
           <HomeMerchantCard
@@ -72,6 +57,7 @@ export function PublicHome({
               items={items}
               placements={section.placements}
               rail
+              compact
             />
           </HomeMerchantCard>
         );

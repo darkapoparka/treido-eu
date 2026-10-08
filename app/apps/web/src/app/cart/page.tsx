@@ -1,8 +1,6 @@
 import { connection } from "next/server";
-import {
-  readCatalog,
-  referencePreviewEnabled,
-} from "@/features/catalog/queries.server";
+import { readCatalog } from "@/features/catalog/queries.server";
+import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.server";
 import { CartPage } from "@/features/commerce/checkout";
 import { BuyerCartPage } from "@/features/buyer-cart/page";
 import { readBuyerCart } from "@/features/buyer-cart/cart.server";
@@ -11,7 +9,7 @@ import { readVerifiedIdentity } from "@/server/identity/clerk.server";
 import { getDatabase } from "@/server/db/database";
 export default async function Page() {
   await connection();
-  if (referencePreviewEnabled())
+  if (await readBuyerReferenceMode())
     return <CartPage catalog={await readCatalog()} />;
   let initial: BuyerCart | null = null;
   let status: "ready" | "guest" | "error" = "guest";

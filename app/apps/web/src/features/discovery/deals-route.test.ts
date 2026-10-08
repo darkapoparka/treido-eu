@@ -1,8 +1,8 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 const boundary = vi.hoisted(() => ({ reference: vi.fn() }));
-vi.mock("../catalog/queries.server", () => ({
-  referencePreviewEnabled: boundary.reference,
+vi.mock("../catalog/buyer-data-mode.server", () => ({
+  readBuyerReferenceMode: boundary.reference,
 }));
 vi.mock("./marketplace-deals", () => ({
   MarketplaceDeals: "marketplace-deals",

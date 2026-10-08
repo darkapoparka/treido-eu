@@ -9,7 +9,11 @@ import {
 import { browseScopeHref } from "./browse-scope-route";
 import { consumeSheetHistory, Sheet } from "./components";
 import { Icon } from "./icons";
-import { rememberSourcePosition, SourceLink } from "./return-navigation";
+import {
+  bindSourceDestination,
+  rememberSourcePosition,
+  SourceLink,
+} from "./return-navigation";
 import styles from "./browse-scope.module.css";
 import { useLocale } from "../locale/provider";
 
@@ -24,6 +28,7 @@ export function BrowseScopeControl() {
   const [pending, startTransition] = useTransition();
   const requested = useRef<{ href: string; scope: BrowseScope } | null>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const sourceReturn = useRef<string | null>(null);
   const current = `${pathname}${params.size ? `?${params}` : ""}`;
   useEffect(() => {
     const request = requested.current;
@@ -45,6 +50,7 @@ export function BrowseScopeControl() {
     // Replace the chooser's temporary entry with the selection. Back then
     // restores the previous scope, without racing Sheet's deferred dismissal.
     const replace = consumeSheetHistory();
+    if (sourceReturn.current) bindSourceDestination(sourceReturn.current, href);
     setOpen(false);
     startTransition(() =>
       replace
@@ -66,7 +72,9 @@ export function BrowseScopeControl() {
         aria-expanded={open}
         aria-busy={pending}
         onClick={() => {
-          rememberSourcePosition("[data-browse-scope-trigger]");
+          sourceReturn.current = rememberSourcePosition(
+            "[data-browse-scope-trigger]",
+          );
           setOpen(true);
         }}
       >

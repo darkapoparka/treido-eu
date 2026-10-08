@@ -39,7 +39,13 @@ const skinTypes = [
   "Wet",
   "With redness",
 ];
-export function Preferences({ personId }: { personId?: string }) {
+export function Preferences({
+  personId,
+  onUnavailable,
+}: {
+  personId?: string;
+  onUnavailable?: () => void;
+}) {
   const caption = useCaption();
   const ui = useTranslations("accountUI");
   const {
@@ -176,6 +182,42 @@ export function Preferences({ personId }: { personId?: string }) {
       </div>
     );
   }
+  if (onUnavailable)
+    return (
+      <>
+        <div className="account-panel field-panel">
+          {Object.keys(sizes).map((key) => {
+            const label =
+              key === "shoeSize"
+                ? "Shoe size"
+                : key === "shirtSize"
+                  ? "Shirt size"
+                  : "Pants size";
+            return (
+              <div className="preference-size" key={key}>
+                <button
+                  className="profile-field"
+                  aria-expanded={false}
+                  onClick={onUnavailable}
+                >
+                  <span>{caption(label)}</span>
+                  <span className="selected-preferences">
+                    {ui("addLabel", { label: caption(label).toLowerCase() })}
+                  </span>
+                  <Icon name="chevron" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <button className="preference-add" onClick={onUnavailable}>
+          {ui("skinCare")}
+        </button>
+        <button className="preference-add" onClick={onUnavailable}>
+          {ui("hairCare")}
+        </button>
+      </>
+    );
   return (
     <>
       <div ref={sizePanel} className="account-panel field-panel">

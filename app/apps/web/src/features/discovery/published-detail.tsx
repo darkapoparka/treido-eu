@@ -12,14 +12,15 @@ import Link from "next/link";
 import { SourceLink } from "./return-navigation";
 import { PublicListingGrid } from "./public-listing-grid";
 import type { PublicListingCard } from "../catalog/public-discovery-model";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDiscovery } from "./state";
 import { useLocale, useTranslations } from "next-intl";
 import { getCategory } from "@treido/contracts/categories";
 import type { PublishedListing } from "../catalog/published-model";
 import type { ProductDetailProduct } from "../catalog/product-detail-model";
 import { optionLabel } from "../selling/copy";
-import { ShopSurface } from "./hydration-boundary";
-import { FloatingNav, IconButton } from "./components";
+import { IconButton, StoreRow } from "./components";
+import { ProductSurface, PublicProductDock } from "./product-shell";
 import { ProductGalleryRail, ProductLightbox } from "./product-gallery-view";
 import { useProductGallery } from "./use-product-gallery";
 import { ProductPriceSummary } from "./product-price-summary";
@@ -56,6 +57,10 @@ function PublishedProductContent({
   const locale = useLocale(),
     t = useTranslations("publication");
   const market = useTranslations("marketplace");
+  const { viewProduct } = useDiscovery();
+  useEffect(() => {
+    viewProduct(listing.id);
+  }, [listing.id, viewProduct]);
   const [shareStatus, setShareStatus] = useState("");
   const photos = listing.photos.map((photo) => photo.url);
   const gallery = useProductGallery(photos, false);
@@ -71,28 +76,20 @@ function PublishedProductContent({
   };
   const category = getCategory(listing.categoryId);
   return (
-    <ShopSurface
+    <ProductSurface
+      published
       className={"shop-page product-page " + s.page}
       data-product-id={listing.id}
       data-publication-revision={listing.revision}
     >
       <div className="product-underlay">
-        <div className="store-row">
-          <SourceLink
-            className="store-row-identity"
-            preserveDiscoveryContext={false}
-            href={"/stores/" + listing.seller.id + "?lang=" + locale}
-          >
-            <span className="store-logo-fallback" aria-hidden="true">
-              {listing.seller.name.slice(0, 1)}
-            </span>
-            <span>
-              <strong>{listing.seller.name}</strong>
-              <small className={s.muted}>{t(listing.seller.kind)}</small>
-            </span>
-          </SourceLink>
-          <SellerFollowButton id={listing.seller.id} />
-        </div>
+        <StoreRow
+          store={{ id: listing.seller.id, name: listing.seller.name }}
+          href={"/stores/" + listing.seller.id + "?lang=" + locale}
+          preserveDiscoveryContext={false}
+          subtitle={<small className={s.muted}>{t(listing.seller.kind)}</small>}
+          actions={<SellerFollowButton id={listing.seller.id} />}
+        />
         <ProductGalleryRail
           product={product}
           photos={photos}
@@ -101,6 +98,11 @@ function PublishedProductContent({
         <section className="product-details">
           <div className={"product-heading " + s.heading}>
             <h1>{listing.title}</h1>
+            <ListingSaveButton
+              id={listing.id}
+              title={listing.title}
+              overlay={false}
+            />
             <IconButton
               icon="share"
               label={t("share")}
@@ -137,6 +139,7 @@ function PublishedProductContent({
               product={product}
               revision={listing.revision}
               initial={inventory}
+              allowCart={false}
             />
           ) : (
             <ProductPriceSummary
@@ -168,11 +171,6 @@ function PublishedProductContent({
           </dl>
           <div className={s.contact}>
             <div className={libraryStyles.actions}>
-              <ListingSaveButton
-                id={listing.id}
-                title={listing.title}
-                overlay={false}
-              />
               <ListingCollectionButton id={listing.id} />
             </div>
             <Link
@@ -187,22 +185,35 @@ function PublishedProductContent({
           <ProductDisclosure
             title={t("description")}
             className="pdp-description"
+            collapsible
           >
             <p className={s.preserve}>{listing.description}</p>
           </ProductDisclosure>
           {listing.defects && (
-            <ProductDisclosure title={t("defects")} className="pdp-description">
+            <ProductDisclosure
+              title={t("defects")}
+              className="pdp-description"
+              collapsible
+            >
               <p className={s.preserve}>{listing.defects}</p>
             </ProductDisclosure>
           )}
-          <ProductDisclosure title={t("handover")} className="pdp-description">
+          <ProductDisclosure
+            title={t("handover")}
+            className="pdp-description"
+            collapsible
+          >
             <p>{listing.handover.map((mode) => t(mode)).join(" · ")}</p>
             {listing.deliveryDetails && (
               <p className={s.preserve}>{listing.deliveryDetails}</p>
             )}
           </ProductDisclosure>
           {category?.kind === "leaf" && (
-            <ProductDisclosure title={t("details")} className="pdp-description">
+            <ProductDisclosure
+              title={t("details")}
+              className="pdp-description"
+              collapsible
+            >
               <dl className={s.facts}>
                 {category.profile.fields.flatMap((field) => {
                   const value = listing.fields[field.id];
@@ -242,8 +253,8 @@ function PublishedProductContent({
           <PublicListingGrid items={moreFromSeller} rail />
         </section>
       )}
-      <FloatingNav back marketplace />
+      <PublicProductDock />
       <ProductLightbox product={product} photos={photos} controller={gallery} />
-    </ShopSurface>
+    </ProductSurface>
   );
 }

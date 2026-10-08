@@ -1,0 +1,24 @@
+/* Public data keeps source geometry. Private captured faces remain guarded. */
+.account-page.buyer-public.profile-editor,
+.account-page.buyer-public.profile-overview,
+.sheet.buyer-public-account {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+}
+.account-page.buyer-public .guest-sign-in > .profile-avatar {
+  display: block;
+  width: 28px;
+  height: 30px;
+  margin: 0 auto;
+}
+.account-page.buyer-public .profile-empty-package > svg {
+  width: 100%;
+  height: 100%;
+}
+.account-page.buyer-public .profile-empty-package::after {
+  display: none;
+}
+.account-page.buyer-public .guest-no-orders > svg {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+}

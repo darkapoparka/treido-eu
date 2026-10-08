@@ -1,14 +1,12 @@
 "use client";
-/* eslint-disable @next/next/no-img-element -- Eligibility-checked, owned listing derivatives. */
 import Link from "next/link";
 import {
   CreateReviewButton,
   BuyerReviewLinks,
 } from "../purchase-reviews/controls";
-import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ShopSurface } from "../discovery/hydration-boundary";
-import { FloatingNav } from "../discovery/components";
+import { AccountPage } from "../account/forms";
+import { Icon } from "../discovery/icons";
 import { SourceLink } from "../discovery/return-navigation";
 import { formatMoney } from "../catalog/types";
 import { variantCaption } from "../inventory/model";
@@ -18,7 +16,15 @@ import { paymentText } from "../payments/messages";
 import { BuyerSessionBoundary } from "../library/session-boundary";
 import { useBuyerCartController } from "./use-cart";
 import s from "./cart.module.css";
-function CartRow({
+import "../discovery/buyer-surface.css";
+import {
+  CartLinePresentation,
+  CartStepper,
+  CartSubtotal,
+  CartSellerGroup,
+  CartEmpty,
+} from "../commerce/cart";
+export function BuyerCartLine({
   line,
   base,
 }: {
@@ -27,56 +33,88 @@ function CartRow({
 }) {
   const t = useTranslations("buyerCart"),
     locale = useLocale(),
-    [quantity, setQuantity] = useState(String(line.quantity)),
+    ui = useTranslations("commerceUI"),
+    discovery = useTranslations("discoveryUI"),
     item = line.item;
-  const count = /^\d+$/.test(quantity) ? Number(quantity) : 0;
   return (
-    <article className="commerce-line" data-cart-sku={line.skuId}>
-      {item?.photo && <img src={item.photo} alt="" />}
-      <div>
-        {item ? (
+    <CartLinePresentation
+      skuId={line.skuId}
+      image={item?.photo}
+      title={item?.title ?? t("unavailableItem")}
+      href={
+        item ? "/products/" + item.listingId + "?lang=" + locale : undefined
+      }
+      variant={item ? variantCaption(item.options) : undefined}
+      price={
+        item
+          ? formatMoney(
+              { amount: item.priceMinor * line.quantity, currency: "EUR" },
+              locale,
+            )
+          : undefined
+      }
+    >
+      {line.state !== "ready" && (
+        <p className={s.notice} role="status">
+          {t(line.state === "unavailable" ? "unavailableItem" : line.state)}
+        </p>
+      )}
+      <div className={"cart-controls " + s.controls}>
+        {item && (
           <>
-            <div className="cart-line-title">
-              <SourceLink
-                href={"/products/" + item.listingId + "?lang=" + locale}
-              >
-                <strong>{item.title}</strong>
-              </SourceLink>
-              <span>
-                {formatMoney(
-                  { amount: item.priceMinor * line.quantity, currency: "EUR" },
-                  locale,
-                )}
-              </span>
-            </div>
-            <p className="cart-variant">{variantCaption(item.options)}</p>
-          </>
-        ) : (
-          <strong>{t("unavailableItem")}</strong>
-        )}
-        {line.state !== "ready" && (
-          <p className={s.notice} role="status">
-            {t(line.state === "unavailable" ? "unavailableItem" : line.state)}
-          </p>
-        )}
-        <div className={"cart-controls " + s.controls}>
-          {item && (
-            <>
-              <label className={s.quantity}>
-                {t("quantity")}
-                <input
-                  type="number"
-                  min={1}
-                  max={
-                    item.mode === "unique"
-                      ? 1
-                      : Math.min(99, Math.max(1, item.available))
+            <CartStepper
+              quantity={line.quantity}
+              label={t("quantity")}
+              decrease={
+                <CartMutationButton
+                  base={base}
+                  refreshPage
+                  wrapperClassName={s.stepperControl}
+                  className=""
+                  operation={
+                    line.quantity === 1
+                      ? { kind: "remove", skuId: line.skuId }
+                      : {
+                          kind: "set",
+                          listingId: item.listingId,
+                          skuId: item.skuId,
+                          publicationRevision: item.publicationRevision,
+                          quantity: line.quantity - 1,
+                        }
                   }
-                  step={1}
-                  value={quantity}
-                  onChange={(event) => setQuantity(event.target.value)}
-                />
-              </label>
+                  label={
+                    line.quantity === 1
+                      ? t("remove")
+                      : discovery("decreaseQuantity") + " " + item.title
+                  }
+                >
+                  <Icon name={line.quantity === 1 ? "trash" : "minus"} />
+                </CartMutationButton>
+              }
+              increase={
+                <CartMutationButton
+                  base={base}
+                  refreshPage
+                  wrapperClassName={s.stepperControl}
+                  className=""
+                  operation={{
+                    kind: "set",
+                    listingId: item.listingId,
+                    skuId: item.skuId,
+                    publicationRevision: item.publicationRevision,
+                    quantity: line.quantity + 1,
+                  }}
+                  label={ui("increaseValue1", { value1: item.title })}
+                  disabled={
+                    line.quantity >=
+                    Math.min(item.available, item.mode === "unique" ? 1 : 99)
+                  }
+                >
+                  <Icon name="plus" />
+                </CartMutationButton>
+              }
+            />
+            {line.state === "changed" && (
               <CartMutationButton
                 base={base}
                 refreshPage
@@ -85,35 +123,33 @@ function CartRow({
                   listingId: item.listingId,
                   skuId: item.skuId,
                   publicationRevision: item.publicationRevision,
-                  quantity: count,
+                  quantity: line.quantity,
                 }}
                 label={t(line.state === "changed" ? "confirmPrice" : "update")}
                 disabled={
-                  !Number.isSafeInteger(count) ||
-                  count < 1 ||
-                  count >
-                    Math.min(item.available, item.mode === "unique" ? 1 : 99)
+                  line.quantity >
+                  Math.min(item.available, item.mode === "unique" ? 1 : 99)
                 }
               />
-            </>
-          )}
-          <CartMutationButton
-            base={base}
-            refreshPage
-            operation={{ kind: "remove", skuId: line.skuId }}
-            label={t("remove")}
-          />
-        </div>
-        {item && (
-          <Link
-            className="pill"
-            href={"/messages/new?listing=" + item.listingId + "&lang=" + locale}
-          >
-            {t("contact")}
-          </Link>
+            )}
+          </>
         )}
+        <CartMutationButton
+          base={base}
+          refreshPage
+          operation={{ kind: "remove", skuId: line.skuId }}
+          label={t("remove")}
+        />
       </div>
-    </article>
+      {item && (
+        <Link
+          className="pill"
+          href={"/messages/new?listing=" + item.listingId + "&lang=" + locale}
+        >
+          {t("contact")}
+        </Link>
+      )}
+    </CartLinePresentation>
   );
 }
 export function BuyerCartPage({
@@ -158,20 +194,17 @@ function ScopedBuyerCartPage({
       ]
     : [];
   return (
-    <ShopSurface className={"shop-page cart-page " + s.page} data-account-cart>
-      <header className={s.header}>
-        <h1>{t("title")}</h1>
-        <Link href={"/search?lang=" + locale} className="pill">
-          {t("browse")}
-        </Link>
-        <BuyerReviewLinks />
-      </header>
+    <AccountPage
+      title={t("title")}
+      publicData
+      className={"cart-page " + s.page}
+    >
       {status !== "ready" ? (
-        <section className="empty-state">
-          <h2>{t(status === "guest" ? "guest" : "unavailable")}</h2>
-          {status === "guest" ? (
-            <>
-              <p>{t("guestNote")}</p>
+        <CartEmpty
+          title={t(status === "guest" ? "guest" : "unavailable")}
+          note={status === "guest" ? t("guestNote") : undefined}
+          actions={
+            status === "guest" ? (
               <Link
                 className="primary"
                 href={
@@ -183,24 +216,26 @@ function ScopedBuyerCartPage({
               >
                 {t("signIn")}
               </Link>
-            </>
-          ) : (
-            <button
-              className="primary"
-              onClick={() => void controller.refresh()}
-            >
-              {t("retry")}
-            </button>
-          )}
-        </section>
+            ) : (
+              <button
+                className="primary"
+                onClick={() => void controller.refresh()}
+              >
+                {t("retry")}
+              </button>
+            )
+          }
+        />
       ) : !initial?.lines.length ? (
-        <section className="notification-empty">
-          <h2>{t("empty")}</h2>
-          <p>{t("emptyNote")}</p>
-          <Link className="primary" href={"/search?lang=" + locale}>
-            {t("browse")}
-          </Link>
-        </section>
+        <CartEmpty
+          title={t("empty")}
+          note={t("emptyNote")}
+          actions={
+            <Link className="primary" href={"/search?lang=" + locale}>
+              {t("browse")}
+            </Link>
+          }
+        />
       ) : (
         <>
           <p className={s.note}>{t("noReservation")}</p>
@@ -216,20 +251,23 @@ function ScopedBuyerCartPage({
               0,
             );
             return (
-              <section className={"seller-cart " + s.group} key={group}>
-                <header>
-                  {first ? (
+              <CartSellerGroup
+                className={s.group}
+                key={group}
+                seller={
+                  first ? (
                     <SourceLink
                       href={"/stores/" + first.sellerId + "?lang=" + locale}
                     >
-                      <strong>{first.sellerName}</strong>
+                      {first.sellerName}
                     </SourceLink>
                   ) : (
-                    <strong>{t("unavailableGroup")}</strong>
-                  )}
-                </header>
+                    t("unavailableGroup")
+                  )
+                }
+              >
                 {lines.map((line) => (
-                  <CartRow
+                  <BuyerCartLine
                     key={line.skuId + ":" + initial.revision}
                     line={line}
                     base={{
@@ -241,15 +279,13 @@ function ScopedBuyerCartPage({
                 ))}
                 {first && (
                   <>
-                    <div className="cart-subtotal">
-                      <span>{t("subtotal")}</span>
-                      <strong>
-                        {formatMoney(
-                          { amount: total, currency: "EUR" },
-                          locale,
-                        )}
-                      </strong>
-                    </div>
+                    <CartSubtotal
+                      label={t("subtotal")}
+                      total={formatMoney(
+                        { amount: total, currency: "EUR" },
+                        locale,
+                      )}
+                    />
                     <p className={s.note}>
                       {t("currentPrice")} · {t("contactOnly")}
                     </p>
@@ -270,12 +306,12 @@ function ScopedBuyerCartPage({
                     </Link>
                   </>
                 )}
-              </section>
+              </CartSellerGroup>
             );
           })}
         </>
       )}
-      <FloatingNav back marketplace />
-    </ShopSurface>
+      <BuyerReviewLinks />
+    </AccountPage>
   );
 }

@@ -12,6 +12,16 @@ export {
 } from "./registry";
 export { attributeProfiles } from "./profiles";
 export {
+  BROWSE_TAXONOMY_VERSION,
+  browseCategories,
+  browseCategoryRoots,
+  getBrowseCategory,
+  getBrowseChildren,
+  getBrowseAncestry,
+  getBrowseLeafIds,
+} from "./navigation";
+export type { BrowseCategory, BrowseCategoryId } from "./navigation";
+export {
   validateCategoryAttributes,
   validateCategoryAttributeValue,
   validateListingCategory,

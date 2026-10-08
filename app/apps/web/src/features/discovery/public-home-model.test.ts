@@ -73,7 +73,7 @@ describe("public Home presentation ordering", () => {
     });
   });
 
-  it("does not turn personal sellers into branded shops or infer seller kind from condition", () => {
+  it("keeps separate real seller containers for personal supply without inventing branding or inferring kind", () => {
     const items = [
       listing("1", "person-a", "personal"),
       listing("2", "person-b", "personal"),
@@ -81,11 +81,17 @@ describe("public Home presentation ordering", () => {
     ];
     const sections = publicHomeSections({ items });
     expect(sections[0].kind).toBe("personal");
-    expect(sections[0]).not.toHaveProperty("seller");
-    expect(sections[0].placements).toHaveLength(2);
+    expect(sections.map((section) => section.seller.id)).toEqual([
+      "person-a",
+      "person-b",
+      "shop-a",
+    ]);
+    expect(sections[0].seller).toBe(items[0].seller);
+    expect(sections[0].seller).not.toHaveProperty("logo");
+    expect(sections[0].placements).toHaveLength(1);
     expect(sections[0].placements[0].listing.condition).toBe("new");
-    expect(sections[1].kind).toBe("business");
-    expect(sections[1].placements[0].listing.condition).toBe("good");
+    expect(sections[2].kind).toBe("business");
+    expect(sections[2].placements[0].listing.condition).toBe("good");
   });
 
   it("does not mutate the authoritative page or invent seller/listing facts", () => {

@@ -1,14 +1,21 @@
 "use client";
 
 import { useCaption } from "../locale/use-caption";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { navigateAccountStage } from "./stage-history";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ProfileFooter } from "./profile-footer";
 import { LanguagePickerButton } from "../locale/language-picker";
 import { SourceLink } from "../discovery/return-navigation";
-import { useEffect, useLayoutEffect, useState, useRef } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useRef,
+  type ReactNode,
+} from "react";
+import type { SearchCatalog } from "../catalog/search-catalog";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useDiscovery } from "../discovery/state";
 import { Icon } from "../discovery/icons";
@@ -49,31 +56,60 @@ import {
   type Profile,
   type Person,
 } from "./state";
-export function ProfilePage({ catalog }: { catalog: Catalog }) {
+export type PublicProfilePresentation = {
+  contact: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  savedMedia: ReactNode;
+  followingMedia: ReactNode;
+  orderContent: ReactNode;
+  settings: ReactNode;
+  recent: ReactNode;
+  onUnavailable: () => void;
+  signOut: () => Promise<void>;
+};
+export function ProfilePage({
+  catalog,
+  publicProfile,
+}: {
+  catalog: Catalog | SearchCatalog;
+  publicProfile?: PublicProfilePresentation;
+}) {
   const ui = useTranslations("accountUI");
   const t = useTranslations("account");
+  const bg = useLocale() === "bg";
   const {
-    profile,
+    profile: referenceProfile,
     paymentAvailable,
     paymentCards,
-    hasPaymentProfile,
-    orders,
+    hasPaymentProfile: referenceHasPaymentProfile,
+    orders: referenceOrders,
     reset,
   } = useAccount();
+  const profile = publicProfile
+    ? { ...publicProfile.contact, avatar: undefined }
+    : referenceProfile;
+  const hasPaymentProfile = !publicProfile && referenceHasPaymentProfile;
+  const orders = publicProfile ? [] : referenceOrders;
   const discovery = useDiscovery();
   const [logout, setLogout] = useState(false);
   const activeOrders = orders.filter((order) => !order.archived);
   const hasOrders = orders.length > 0;
   const starterProfile =
+    !publicProfile &&
     !profile.firstName &&
     !profile.lastName &&
     !profile.avatar &&
     !profile.phone;
-  if (catalog.liveHomeStoreIds && !profile.email)
+  if (!publicProfile && catalog.liveHomeStoreIds && !profile.email)
     return <GuestProfile catalog={catalog} />;
   return (
     <AccountPage
       dockFade
+      publicData={!!publicProfile}
       className={`profile-overview ${starterProfile ? "starter-profile" : "active-profile"}`}
     >
       <SourceLink
@@ -87,7 +123,13 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
             <strong>{profile.email}</strong>
           ) : (
             <>
-              <strong>{profile.firstName}</strong>
+              <strong>
+                {publicProfile
+                  ? profile.firstName ||
+                    profile.email ||
+                    (bg ? "Профил" : "Profile")
+                  : profile.firstName}
+              </strong>
               <small>{profile.email}</small>
             </>
           )}
@@ -114,6 +156,17 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
             {ui("addPhone")}
           </Link>
         </div>
+      ) : publicProfile ? (
+        <button
+          className="account-panel passkey-row"
+          onClick={publicProfile.onUnavailable}
+        >
+          <span className="profile-passkey-mark" aria-hidden="true">
+            <AccountIcon name="passkey" />
+          </span>
+          <strong>{ui("addAPasskeyForFastAndSecureSignInOn")}</strong>
+          <b>›</b>
+        </button>
       ) : (
         <SourceLink
           className="account-panel passkey-row"
@@ -133,7 +186,9 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
           sourceKey="profile-saved"
         >
           <div className="tile-images">
-            {starterProfile ? (
+            {publicProfile ? (
+              publicProfile.savedMedia
+            ) : starterProfile ? (
               <span className="starter-saved-icon" aria-hidden="true">
                 <Icon name="heart" />
               </span>
@@ -152,7 +207,9 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
           sourceKey="profile-following"
         >
           <div className="tile-images">
-            {starterProfile ? (
+            {publicProfile ? (
+              publicProfile.followingMedia
+            ) : starterProfile ? (
               <span className="starter-following-logos" aria-hidden="true">
                 <img src="/api/reference-media/kitsch-logo" alt="" />
                 <img src="/api/reference-media/pura-logo" alt="" />
@@ -176,7 +233,14 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
         </SourceLink>
       </div>
       <h2 className="profile-order-heading">
-        {!hasOrders ? (
+        {publicProfile ? (
+          <SourceLink href="/orders" aria-label={ui("orderHistory")}>
+            {t("orderHistory")}
+            <span aria-hidden="true">
+              <Icon name="back" />
+            </span>
+          </SourceLink>
+        ) : !hasOrders ? (
           ui("orderHistory_928f4f")
         ) : (
           <SourceLink
@@ -192,7 +256,9 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
         )}
       </h2>
       <div className="account-panel profile-order-panel">
-        {!hasOrders ? (
+        {publicProfile ? (
+          publicProfile.orderContent
+        ) : !hasOrders ? (
           <div className="profile-empty-orders">
             <img
               className="profile-empty-package"
@@ -270,7 +336,11 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
         </>
       ) : (
         <>
-          <ProfileRecent catalog={catalog} />
+          {publicProfile ? (
+            publicProfile.recent
+          ) : (
+            <ProfileRecent catalog={catalog} />
+          )}
           {hasPaymentProfile && (
             <>
               <div className="profile-payment-heading">
@@ -304,32 +374,36 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
               )}
             </>
           )}
-          <div className="account-panel profile-settings-panel">
-            <LanguagePreferenceRow />
-            <MessagesEntry />
-            <Row label="Sell an item" href="/sell" />
-            {hasPaymentProfile && (
-              <Row label="Addresses" href="/account/addresses" />
-            )}
-            <Row label="Sign in & security" href="/account/security" />
-            <Row label="Notifications" href="/account/notifications" />
-            <Row label="Connections" href="/account/connections" />
-            <Row label="Data & privacy" href="/account/privacy" />
-            <Row label="Support" href="/support" />
-          </div>
+          {publicProfile ? (
+            publicProfile.settings
+          ) : (
+            <div className="account-panel profile-settings-panel">
+              <LanguagePreferenceRow />
+              <MessagesEntry />
+              <Row label="Sell an item" href="/sell" />
+              {hasPaymentProfile && (
+                <Row label="Addresses" href="/account/addresses" />
+              )}
+              <Row label="Sign in & security" href="/account/security" />
+              <Row label="Notifications" href="/account/notifications" />
+              <Row label="Connections" href="/account/connections" />
+              <Row label="Data & privacy" href="/account/privacy" />
+              <Row label="Support" href="/support" />
+            </div>
+          )}
           <button
             className="form-cancel profile-signout"
             onClick={() => setLogout(true)}
           >
             <AccountIcon name="logout" /> {ui("signOut")}
           </button>
-          <ProfileFooter />
+          <ProfileFooter publicData={!!publicProfile} />
         </>
       )}
       <Sheet
         open={logout}
         title={ui("signOut_c1c084")}
-        className="signout-confirm"
+        className={`signout-confirm${publicProfile ? " buyer-public-account" : ""}`}
         onClose={() => setLogout(false)}
       >
         <p className="form-note">
@@ -339,13 +413,22 @@ export function ProfilePage({ catalog }: { catalog: Catalog }) {
           <button className="form-cancel" onClick={() => setLogout(false)}>
             {t("cancel")}
           </button>
-          <Link
-            href="/onboarding?step=signout"
-            onClick={reset}
-            className="danger-button form-submit"
-          >
-            {ui("signOut")}
-          </Link>
+          {publicProfile ? (
+            <button
+              className="danger-button form-submit"
+              onClick={() => void publicProfile.signOut()}
+            >
+              {ui("signOut")}
+            </button>
+          ) : (
+            <Link
+              href="/onboarding?step=signout"
+              onClick={reset}
+              className="danger-button form-submit"
+            >
+              {ui("signOut")}
+            </Link>
+          )}
         </div>
       </Sheet>
     </AccountPage>
@@ -371,16 +454,47 @@ export function EmailConnection() {
     )
   );
 }
-export function AccountDetails() {
+export function AccountDetails({
+  publicProfile,
+}: {
+  publicProfile?: {
+    contact?: PublicProfilePresentation["contact"];
+    onUnavailable: () => void;
+    identity?: ReactNode;
+    settings: ReactNode;
+  };
+} = {}) {
   const caption = useCaption();
   const ui = useTranslations("accountUI");
   const t = useTranslations("account");
-  const { profile, updateProfile, people } = useAccount();
+  const {
+    profile: referenceProfile,
+    updateProfile,
+    people: referencePeople,
+  } = useAccount();
+  const profile: Profile = publicProfile
+    ? {
+        firstName: publicProfile.contact?.firstName ?? "",
+        lastName: publicProfile.contact?.lastName ?? "",
+        email: publicProfile.contact?.email ?? "",
+        phone: publicProfile.contact?.phone ?? "",
+        gender: "",
+        birthday: "",
+        shoeSize: "",
+        shirtSize: "",
+        pantsSize: "",
+        skin: "",
+        avatar: "",
+      }
+    : referenceProfile;
+  const people = publicProfile ? [] : referencePeople;
+  const bg = useLocale() === "bg";
   const requestedEdit = useSearchParams().get("edit");
   const [field, setField] = useState<keyof Profile | null>(() =>
-    requestedEdit === "phone" ? "phone" : null,
+    !publicProfile && requestedEdit === "phone" ? "phone" : null,
   );
-  const [draft, setDraft] = useState(profile);
+  const [referenceDraft, setDraft] = useState(profile);
+  const draft = publicProfile ? profile : referenceDraft;
   const editingName = field === "firstName" || field === "lastName";
   const [draftError, setDraftError] = useState("");
   const [photo, setPhoto] = useState(false);
@@ -413,6 +527,10 @@ export function AccountDetails() {
     ["birthday", "Birthday"],
   ] as const;
   const edit = (key: keyof Profile) => {
+    if (publicProfile) {
+      publicProfile.onUnavailable();
+      return;
+    }
     if (key === "phone") {
       setPhoneStage("phone");
       setPhoneSession((session) => session + 1);
@@ -423,8 +541,9 @@ export function AccountDetails() {
     <AccountPage
       className="profile-editor"
       dockFade
+      publicData={!!publicProfile}
       action={
-        field && field !== "phone" && field !== "gender" ? (
+        !publicProfile && field && field !== "phone" && field !== "gender" ? (
           <button
             className="profile-save"
             onClick={() => {
@@ -456,15 +575,24 @@ export function AccountDetails() {
         <button
           className="avatar-edit"
           aria-label={ui("editProfilePicture")}
-          onClick={() => setPhoto(true)}
+          onClick={() =>
+            publicProfile ? publicProfile.onUnavailable() : setPhoto(true)
+          }
           data-ui-label="editProfilePicture"
         >
           <Icon name="edit" />
         </button>
-        <SourceLink className="pill" href="/account/public">
-          {ui("viewPublicProfile")}
-        </SourceLink>
+        {publicProfile ? (
+          <button className="pill" onClick={publicProfile.onUnavailable}>
+            {ui("viewPublicProfile")}
+          </button>
+        ) : (
+          <SourceLink className="pill" href="/account/public">
+            {ui("viewPublicProfile")}
+          </SourceLink>
+        )}
       </div>
+      {publicProfile?.identity}
       <div
         ref={contactFields}
         className="account-panel field-panel profile-contact-fields"
@@ -508,15 +636,19 @@ export function AccountDetails() {
                       draft.birthday
                     ? displayBirthday(draft.birthday)
                     : draft[key]) ||
-                  (key === "gender"
-                    ? ui("selectGender")
-                    : key === "birthday"
-                      ? ui("mMDDYYYY")
-                      : key === "firstName" || key === "lastName"
-                        ? caption(label)
-                        : ui("addLabel", {
-                            label: caption(label).toLowerCase(),
-                          }))}
+                  (publicProfile
+                    ? bg
+                      ? "Не е достъпно"
+                      : "Unavailable"
+                    : key === "gender"
+                      ? ui("selectGender")
+                      : key === "birthday"
+                        ? ui("mMDDYYYY")
+                        : key === "firstName" || key === "lastName"
+                          ? caption(label)
+                          : ui("addLabel", {
+                              label: caption(label).toLowerCase(),
+                            }))}
               </button>
             )}
             {key === "email" ? (
@@ -544,7 +676,7 @@ export function AccountDetails() {
           {draftError}
         </p>
       )}
-      <Preferences />
+      <Preferences onUnavailable={publicProfile?.onUnavailable} />
       <div className="account-panel people-preview">
         <h2>{ui("othersYouShopFor")}</h2>
         {people.map((p) => (
@@ -558,16 +690,29 @@ export function AccountDetails() {
             {p.name}
           </SourceLink>
         ))}
-        <SourceLink
-          className="add-person-tile"
-          href="/account/people?view=nickname&new=1&return=account"
-          scroll={false}
-          sourceKey="account-add-person"
-        >
-          <span>+</span>
-          {people.length ? ui("addSomeoneNew_474327") : ui("addSomeone_d3d464")}
-        </SourceLink>
+        {publicProfile ? (
+          <button
+            className="add-person-tile"
+            onClick={publicProfile.onUnavailable}
+          >
+            <span>+</span>
+            {ui("addSomeone_d3d464")}
+          </button>
+        ) : (
+          <SourceLink
+            className="add-person-tile"
+            href="/account/people?view=nickname&new=1&return=account"
+            scroll={false}
+            sourceKey="account-add-person"
+          >
+            <span>+</span>
+            {people.length
+              ? ui("addSomeoneNew_474327")
+              : ui("addSomeone_d3d464")}
+          </SourceLink>
+        )}
       </div>
+      {publicProfile?.settings}
       <Sheet
         open={field === "phone"}
         title={
@@ -1479,16 +1624,27 @@ const notificationOptions = [
     "Get notified when updates are made to a collection you own or collaborate on",
   ],
 ];
-export function NotificationSettings() {
+export function NotificationSettings({
+  publicData = false,
+}: { publicData?: boolean } = {}) {
   const caption = useCaption();
   const ui = useTranslations("accountUI");
   const { notifications, toggleNotification } = useAccount();
+  const bg = useLocale() === "bg";
   return (
     <AccountPage
       title={ui("notifications")}
       dockFade
       className="account-settings-page notification-settings-page"
+      publicData={publicData}
     >
+      {publicData && (
+        <p className="form-note" role="status">
+          {bg
+            ? "Настройките за имейл и push известия още не са свързани. Тези контроли не показват запазени предпочитания и не изпращат известия."
+            : "Email and push notification settings are not connected yet. These controls do not show saved preferences or send notifications."}
+        </p>
+      )}
       {notificationOptions.map(([title, copy]) => (
         <label className="notification-setting" key={caption(title)}>
           <span>
@@ -1498,11 +1654,17 @@ export function NotificationSettings() {
           <input
             role="switch"
             type="checkbox"
-            checked={notifications[title] ?? true}
-            onChange={() => toggleNotification(title)}
+            checked={publicData ? false : (notifications[title] ?? true)}
+            disabled={publicData || undefined}
+            onChange={publicData ? undefined : () => toggleNotification(title)}
           />
         </label>
       ))}
+      {publicData && (
+        <SourceLink className="primary form-submit" href="/notifications">
+          {ui("notifications")}
+        </SourceLink>
+      )}
     </AccountPage>
   );
 }

@@ -1,4 +1,4 @@
-import { readCatalog } from "@/features/catalog/queries.server";
+import { readBuyerReferenceCatalog as readCatalog } from "@/features/catalog/buyer-data-mode.server";
 import { Receipt } from "@/features/commerce/orders";
 export default async function Page({
   params,

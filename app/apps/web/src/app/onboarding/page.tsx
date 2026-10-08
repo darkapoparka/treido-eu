@@ -1,7 +1,5 @@
-import {
-  readCatalog,
-  referencePreviewEnabled,
-} from "../../features/catalog/queries.server";
+import { readCatalog } from "../../features/catalog/queries.server";
+import { readBuyerReferenceMode } from "../../features/catalog/buyer-data-mode.server";
 import { pageLocale } from "../../features/locale/page-locale.server";
 import { redirect } from "next/navigation";
 import { OnboardingPage } from "../../features/account/support";
@@ -10,7 +8,7 @@ export default async function Page({
 }: {
   searchParams: Promise<{ step?: string; lang?: string | string[] }>;
 }) {
-  if (!referencePreviewEnabled())
+  if (!(await readBuyerReferenceMode()))
     redirect(
       "/app/intent?lang=" + (await pageLocale((await searchParams).lang)),
     );

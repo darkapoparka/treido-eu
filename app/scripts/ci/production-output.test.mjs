@@ -143,6 +143,52 @@ for (const mode of [
   });
 }
 
+async function productFont(t, mode = "valid") {
+  const { workspace, output } = await fixture(t);
+  const directory = join(
+    output,
+    mode === "wrong-location"
+      ? "output/static/fonts/unreviewed"
+      : "output/static/fonts/buyer",
+  );
+  await mkdir(directory, { recursive: true });
+  const source = new URL("../../apps/web/public/fonts/buyer/", import.meta.url);
+  const font = await readFile(new URL("Roboto-Regular.ttf", source));
+  if (mode === "changed-font") font[0] ^= 1;
+  await writeFile(join(directory, "Roboto-Regular.ttf"), font);
+  if (mode !== "missing-license")
+    await writeFile(
+      join(directory, "NOTICE"),
+      mode === "changed-license"
+        ? "unapproved license"
+        : await readFile(new URL("NOTICE", source)),
+    );
+  return { workspace, output };
+}
+
+test("accepts only official product Roboto bytes accompanied by upstream NOTICE", async (t) => {
+  const { workspace, output } = await productFont(t);
+  assert.deepEqual(await auditProductionOutput(output, workspace), {
+    tracesChecked: 1,
+    issues: [],
+  });
+});
+
+for (const mode of [
+  "changed-font",
+  "missing-license",
+  "changed-license",
+  "wrong-location",
+]) {
+  test(`rejects product font publication with ${mode}`, async (t) => {
+    const { workspace, output } = await productFont(t, mode);
+    assert.match(
+      (await auditProductionOutput(output, workspace)).issues.join("\n"),
+      /Unqualified font/,
+    );
+  });
+}
+
 test("malformed dependency traces fail rather than reporting success", async (t) => {
   const { workspace, output } = await fixture(t);
   await writeFile(

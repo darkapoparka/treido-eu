@@ -12,6 +12,7 @@ import {
 import { SourceLink } from "../discovery/return-navigation";
 import { Icon } from "../discovery/icons";
 import { SavedCard } from "../discovery/saved-card";
+import { BuyerFollowing } from "../discovery/following";
 import { LibraryProvider, useBuyerLibrary } from "./provider";
 import { LibraryLoadState } from "./feedback";
 import {
@@ -24,6 +25,8 @@ import {
   type CollectionPanel,
 } from "./collection-dialog";
 import s from "./library.module.css";
+import "../discovery/saved.css";
+import "../discovery/buyer-surface.css";
 
 export function BuyerSavedPage({ following = false }: { following?: boolean }) {
   const params = useSearchParams();
@@ -42,7 +45,6 @@ export function BuyerSavedPage({ following = false }: { following?: boolean }) {
 function BuyerLibraryContent({ following }: { following: boolean }) {
   const library = useBuyerLibrary(),
     t = useTranslations("library"),
-    market = useTranslations("marketplace"),
     locale = useLocale();
   const router = useRouter(),
     params = useSearchParams();
@@ -69,10 +71,39 @@ function BuyerLibraryContent({ following }: { following: boolean }) {
     (replace ? router.replace : router.push)(href(options));
   }
   const ready = library.status === "ready" && library.view;
+  if (following)
+    return (
+      <BuyerFollowing
+        follows={ready ? library.view!.follows : []}
+        ready={!!ready}
+        state={<LibraryLoadState controller={library} />}
+        control={(id) => <SellerFollowButton id={id} />}
+        pagination={
+          ready && (library.view!.nextCursor || params.has("cursor")) ? (
+            <nav className={s.pagination} aria-label={t("pagination")}>
+              {params.has("cursor") && (
+                <SourceLink className="pill" href={href()}>
+                  {t("first")}
+                </SourceLink>
+              )}
+              {library.view!.nextCursor && (
+                <SourceLink
+                  className="primary"
+                  href={href({ cursor: library.view!.nextCursor })}
+                  startAtTop
+                >
+                  {t("next")}
+                </SourceLink>
+              )}
+            </nav>
+          ) : undefined
+        }
+      />
+    );
   return (
     <ShopSurface
       className={
-        "shop-page saved-page saved-library " +
+        "shop-page saved-page saved-library android-live android-saved buyer-public " +
         (collection ? "saved-collection " : "") +
         (adding ? "saved-selection " : "") +
         s.page
@@ -107,26 +138,6 @@ function BuyerLibraryContent({ following }: { following: boolean }) {
             />
           ))}
       </header>
-      <nav className={s.tabs} aria-label={t("saved")}>
-        <SourceLink
-          className="pill"
-          href={"/saved?lang=" + locale}
-          preserveDiscoveryContext={false}
-          aria-current={
-            !following && !collection && !adding ? "page" : undefined
-          }
-        >
-          {t("allSaved")}
-        </SourceLink>
-        <SourceLink
-          className="pill"
-          href={"/following?lang=" + locale}
-          preserveDiscoveryContext={false}
-          aria-current={following ? "page" : undefined}
-        >
-          {t("following")}
-        </SourceLink>
-      </nav>
       {!ready ? (
         <>
           <LibraryLoadState controller={library} />
@@ -211,32 +222,7 @@ function BuyerLibraryContent({ following }: { following: boolean }) {
               </span>
             </div>
           )}
-          {following ? (
-            <div className={s.sellers}>
-              {library.view!.follows.map((row) => (
-                <article className={s.seller} key={row.id}>
-                  {row.seller ? (
-                    <SourceLink
-                      href={"/stores/" + row.id + "?lang=" + locale}
-                      preserveDiscoveryContext={false}
-                    >
-                      <strong>{row.seller.name}</strong>
-                      <small>
-                        {market(row.seller.kind)}
-                        {row.seller.locality ? " · " + row.seller.locality : ""}
-                      </small>
-                    </SourceLink>
-                  ) : (
-                    <div>
-                      <strong>{t("unavailableSeller")}</strong>
-                      <p className={s.muted}>{t("unavailableSellerNote")}</p>
-                    </div>
-                  )}
-                  <SellerFollowButton id={row.id} />
-                </article>
-              ))}
-            </div>
-          ) : (
+          {
             <div className="product-grid saved-grid">
               {library.view!.items.map((item) => {
                 const included =
@@ -337,7 +323,7 @@ function BuyerLibraryContent({ following }: { following: boolean }) {
                 );
               })}
             </div>
-          )}
+          }
           {(following
             ? !library.view!.follows.length
             : !library.view!.items.length) && (

@@ -1,6 +1,9 @@
 import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { CATEGORY_REGISTRY_VERSION } from "@treido/contracts/categories";
+import {
+  CATEGORY_REGISTRY_VERSION,
+  BROWSE_TAXONOMY_VERSION,
+} from "@treido/contracts/categories";
 import {
   discoverySearchParams,
   DISCOVERY_LIMITS,
@@ -17,7 +20,7 @@ export type DiscoveryPosition = Readonly<{
 const fingerprint = (input: DiscoveryInput) =>
   createHash("sha256")
     .update(
-      `discovery-v1:${CATEGORY_REGISTRY_VERSION}:${discoverySearchParams(input).toString()}`,
+      `discovery-v1:${CATEGORY_REGISTRY_VERSION}:browse-${BROWSE_TAXONOMY_VERSION}:${discoverySearchParams(input).toString()}`,
     )
     .digest("hex");
 function signingKey(secret: Uint8Array) {

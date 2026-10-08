@@ -2,13 +2,20 @@
 import { displayCount, displayRating } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { ShopSurface } from "./hydration-boundary";
+import { BuyerSurface } from "./buyer-surface";
+import type { BuyerEntryData } from "../catalog/buyer-entry-model";
+import { LibraryProvider } from "../library/provider";
+import { PublicHome } from "./public-home";
+import { PublicHomeContext } from "./public-home-context";
+import { getBrowseCategory } from "@treido/contracts/categories";
+import { BuyerAvailability } from "./buyer-availability";
+import { marketplaceHref } from "./marketplace-navigation";
 import { HomeShortcuts } from "./buyer-chrome";
 /* eslint-disable @next/next/no-img-element */
 import { rememberSourceReturn, SourceLink } from "./return-navigation";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { formatMoney, type Catalog } from "../catalog/types";
+import { formatMoney } from "../catalog/types";
 import { FloatingNav, IconButton, ProductCard, StoreRow } from "./components";
 import { HomeCampaigns } from "./home-campaigns";
 import { HomeMerchantShelves } from "./home-merchant-shelves";
@@ -22,9 +29,26 @@ import { readDiscoveryInput } from "../catalog/discovery-input";
 import { BrowseScopeControl, BrowseScopeUnavailable } from "./browse-scope";
 import { useLocale } from "../locale/provider";
 import { localeDestination, parseLocale } from "../locale/locale";
-export function Home({ catalog }: { catalog: Catalog }) {
+export function Home(props: BuyerEntryData) {
+  const items = props.publicView?.page?.items ?? [];
+  return props.publicView ? (
+    <LibraryProvider
+      query={{
+        view: "state",
+        listingIds: items.map((item) => item.id),
+        sellerIds: [...new Set(items.map((item) => item.seller.id))],
+      }}
+    >
+      <HomeContent {...props} />
+    </LibraryProvider>
+  ) : (
+    <HomeContent {...props} />
+  );
+}
+function HomeContent({ catalog, publicView }: BuyerEntryData) {
   const intlLocale = useIntlLocale();
   const ui = useTranslations("discoveryUI");
+  const market = useTranslations("marketplace");
   const router = useRouter();
   const params = useSearchParams();
   const { messages } = useLocale();
@@ -34,13 +58,14 @@ export function Home({ catalog }: { catalog: Catalog }) {
   const state = useDiscovery(),
     { profile } = useAccount();
   // Different recorded journeys share these same feed components; only their data/order changes.
-  const returning = params.get("journey") === "returning";
-  const requestedFeed = params.get("feed");
+  const returning = !publicView && params.get("journey") === "returning";
+  const requestedFeed = publicView ? null : params.get("feed");
   const nativeHome =
-    !!catalog.liveHomeStoreIds?.length &&
-    !returning &&
-    !requestedFeed &&
-    params.get("reference") !== "captured";
+    !!publicView ||
+    (!!catalog?.liveHomeStoreIds?.length &&
+      !returning &&
+      !requestedFeed &&
+      params.get("reference") !== "captured");
   const puraOptionsHistory = requestedFeed === "pura-options";
   const [cartOpen, setCartOpen] = useState(false);
   const recentProducts =
@@ -72,21 +97,24 @@ export function Home({ catalog }: { catalog: Catalog }) {
   const lastShopMenu = useRef("");
   const [shopStage, setShopStage] = useState<ShopMenuStage>("menu");
   const [hidden, setHidden] = useState<string[]>([]);
-  const menuStore = catalog.stores.find((store) => store.id === shopMenu);
+  const menuStore = (catalog?.stores ?? []).find(
+    (store) => store.id === shopMenu,
+  );
   function closeShopMenu() {
     setShopMenu("");
     setShopStage("menu");
   }
   const recent = state.viewedProducts
     .flatMap((id) => {
-      const p = catalog.products.find((p) => p.id === id);
+      const p = (catalog?.products ?? []).find((p) => p.id === id);
       return p ? [p] : [];
     })
     .slice(0, 3);
   const nativeRecentProducts =
     nativeHome && params.get("home") === "recent" && recent.length > 0;
   return (
-    <ShopSurface
+    <BuyerSurface
+      publicData={!!publicView}
       className={`shop-page home-page ${returning ? "home-returning" : ""} ${nativeHome ? "android-live android-home" : ""}`}
       data-feed={
         returning
@@ -106,7 +134,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
           aria-label={text.profile}
           className="avatar"
         >
-          {nativeHome && !profile.avatar ? (
+          {nativeHome && (!profile.avatar || !!publicView) ? (
             <svg
               className="android-guest-avatar"
               viewBox="0 0 40 40"
@@ -157,10 +185,10 @@ export function Home({ catalog }: { catalog: Catalog }) {
           {text.minis}
         </SourceLink>
       </HomeShortcuts>
-      {tracking && (
+      {tracking && catalog && (
         <SourceLink href="/orders" className="delivery-card">
           <img
-            src={catalog.stores.find((s) => s.id === "kitsch")!.logo}
+            src={(catalog?.stores ?? []).find((s) => s.id === "kitsch")!.logo}
             alt=""
           />
           <span>
@@ -192,7 +220,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
           <Icon name="back" />
         </button>
       )}
-      {recentStores && (
+      {recentStores && catalog && (
         <section
           className="recent-panel recent-stores-panel"
           aria-label={ui("recentlyViewedShops")}
@@ -235,7 +263,8 @@ export function Home({ catalog }: { catalog: Catalog }) {
         </section>
       )}
       {recentProducts &&
-        catalog.stores
+        catalog &&
+        (catalog?.stores ?? [])
           .filter((s) => s.id === "vehla")
           .map((store) => (
             <section className="store-feed" key={store.id}>
@@ -261,7 +290,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
                 </div>
               ) : (
                 <div>
-                  {catalog.products
+                  {(catalog?.products ?? [])
                     .filter((p) => p.storeId === store.id)
                     .slice(0, 1)
                     .map((p) => (
@@ -326,9 +355,41 @@ export function Home({ catalog }: { catalog: Catalog }) {
           </SourceLink>
         </section>
       )}
-      {scoped ? (
+      {publicView && <PublicHomeContext input={publicView.input} />}
+      {publicView ? (
+        publicView.unavailable || !publicView.page?.items.length ? (
+          <BuyerAvailability
+            unavailable={publicView.unavailable}
+            home
+            categoryLabel={
+              publicView.input.category
+                ? getBrowseCategory(publicView.input.category)?.labels[
+                    publicView.input.locale
+                  ]
+                : undefined
+            }
+          />
+        ) : (
+          <>
+            <PublicHome page={publicView.page} />
+            {publicView.page.nextCursor && (
+              <SourceLink
+                className="pill"
+                preserveDiscoveryContext={false}
+                href={marketplaceHref(
+                  "/",
+                  publicView.input,
+                  publicView.page.nextCursor,
+                )}
+              >
+                {market("next")}
+              </SourceLink>
+            )}
+          </>
+        )
+      ) : scoped ? (
         <BrowseScopeUnavailable />
-      ) : nativeHome ? (
+      ) : nativeHome && catalog ? (
         <HomeMerchantShelves
           catalog={catalog}
           hidden={hidden}
@@ -342,7 +403,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
             setHidden((values) => values.filter((value) => value !== id))
           }
         />
-      ) : (
+      ) : catalog ? (
         <HomeCampaigns
           catalog={catalog}
           productLayout={returning ? "grid" : "rail"}
@@ -355,7 +416,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
                 : "welcome"
           }
         />
-      )}
+      ) : null}
       {!nativeHome &&
         !scoped &&
         !tracking &&
@@ -387,7 +448,7 @@ export function Home({ catalog }: { catalog: Catalog }) {
             {ui("keepGoing")} <Icon name="arrow" />
           </button>
         )}
-      {showCart && (
+      {showCart && catalog && (
         <CartOverlay
           catalog={catalog}
           open={cartOpen}
@@ -395,12 +456,13 @@ export function Home({ catalog }: { catalog: Catalog }) {
         />
       )}
       <FloatingNav
-        android={nativeHome}
+        android={nativeHome && !publicView}
+        sourceNavigation={!!publicView}
         fade
         showExplore={!returning}
         showCartWhenEmpty={showCart}
         cart={showCart ? () => setCartOpen(true) : undefined}
       />
-    </ShopSurface>
+    </BuyerSurface>
   );
 }

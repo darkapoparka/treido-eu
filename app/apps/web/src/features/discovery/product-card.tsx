@@ -3,7 +3,7 @@
 import { displayRating, displayCount } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, MouseEventHandler, ReactNode, Ref } from "react";
 import type { ProductCardData } from "../catalog/card-model";
 import { formatMoney } from "../catalog/types";
 import { SourceLink } from "./return-navigation";
@@ -45,6 +45,8 @@ export function ProductCard({
   ratingStars,
   partialRatingStars,
   nativeIcons = false,
+  observation,
+  mediaLabel,
 }: {
   product: ProductCardData;
   compact?: boolean;
@@ -60,6 +62,12 @@ export function ProductCard({
   /** Only these filled stars were visible; the full rating and count are unknown. */
   partialRatingStars?: number;
   nativeIcons?: boolean;
+  /** Real placement observation uses the existing article, not a layout wrapper. */
+  observation?: {
+    ref: Ref<HTMLElement>;
+    onClick?: MouseEventHandler<HTMLElement>;
+  };
+  mediaLabel?: ReactNode;
 }) {
   const intlLocale = useIntlLocale();
   const inventoryText = useTranslations("inventory");
@@ -83,6 +91,8 @@ export function ProductCard({
     product.images[0];
   return (
     <article
+      ref={observation?.ref}
+      onClick={observation?.onClick}
       className={`product-card ${compact ? "compact" : ""}`}
       data-product-id={product.id}
       data-native-photo={
@@ -142,6 +152,7 @@ export function ProductCard({
           (saveControl ?? (
             <SaveButton product={product} native={nativeIcons} />
           ))}
+        {mediaLabel}
       </div>
       {!compact && !mediaOnly && (
         <SourceLink

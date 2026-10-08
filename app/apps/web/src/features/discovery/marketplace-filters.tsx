@@ -2,9 +2,9 @@
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  categoryRoots,
-  getCategory,
-  getChildren,
+  browseCategoryRoots,
+  getBrowseCategory,
+  getBrowseChildren,
   itemConditions,
   type AttributeDefinition,
 } from "@treido/contracts/categories";
@@ -139,7 +139,7 @@ export function MarketplaceFilters({
   const locale = useLocale(),
     t = useTranslations("marketplace");
   const [categoryId, setCategoryId] = useState<string>(input.category ?? "");
-  const category = getCategory(categoryId);
+  const category = getBrowseCategory(categoryId);
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -185,16 +185,22 @@ export function MarketplaceFilters({
             onChange={(event) => setCategoryId(event.target.value)}
           >
             <option value="">{t("allCategories")}</option>
-            {categoryRoots.map((root) => (
+            {browseCategoryRoots.map((root) => (
               <optgroup key={root.id} label={root.labels[locale]}>
                 <option value={root.id}>
                   {root.labels[locale]} · {t("any")}
                 </option>
-                {getChildren(root.id).map((leaf) => (
-                  <option key={leaf.id} value={leaf.id}>
-                    {leaf.labels[locale]}
-                  </option>
-                ))}
+                {getBrowseChildren(root.id)
+                  .flatMap((node) =>
+                    node.kind === "group"
+                      ? [node, ...getBrowseChildren(node.id)]
+                      : [node],
+                  )
+                  .map((leaf) => (
+                    <option key={leaf.id} value={leaf.id}>
+                      {leaf.labels[locale]}
+                    </option>
+                  ))}
               </optgroup>
             ))}
           </select>

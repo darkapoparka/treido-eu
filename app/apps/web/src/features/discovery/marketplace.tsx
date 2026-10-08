@@ -13,10 +13,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useLocale as useNavigationLocale } from "../locale/provider";
 import {
-  categoryRoots,
-  getCategory,
-  getCategoryAncestry,
-  getChildren,
+  browseCategoryRoots,
+  getBrowseCategory,
+  getBrowseAncestry,
+  getBrowseChildren,
+  getBrowseLeafIds,
 } from "@treido/contracts/categories";
 import {
   discoverySearchParams,
@@ -163,18 +164,18 @@ function MarketplaceContent({
     next.set("q", String(new FormData(event.currentTarget).get("q") ?? ""));
     navigate(next);
   }
-  const category = input.category ? getCategory(input.category) : null;
+  const category = input.category ? getBrowseCategory(input.category) : null;
   const categories =
-    category?.kind === "root"
-      ? getChildren(category.id)
+    category && category.kind !== "leaf"
+      ? getBrowseChildren(category.id)
       : category?.kind === "leaf"
         ? []
-        : categoryRoots;
+        : browseCategoryRoots;
   const countFor = (id: string) =>
     (page?.facets.categories ?? []).reduce(
       (sum, facet) =>
         sum +
-        (facet.value === id || getCategory(facet.value)?.parentId === id
+        (getBrowseLeafIds(id).some((leafId) => leafId === facet.value)
           ? facet.count
           : 0),
       0,
@@ -569,7 +570,7 @@ function MarketplaceContent({
               >
                 {t("allCategories")}
               </SourceLink>
-              {getCategoryAncestry(category.id).map((item) => (
+              {getBrowseAncestry(category.id).map((item) => (
                 <SourceLink
                   key={item.id}
                   href={marketplaceHref(destination, {

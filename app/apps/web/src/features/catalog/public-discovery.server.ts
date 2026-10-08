@@ -1,7 +1,13 @@
 import "server-only";
 import { publicServiceSettings } from "../seller-settings/model";
 import { createHmac } from "node:crypto";
-import { getCategory, itemConditions } from "@treido/contracts/categories";
+import {
+  browseCategoryRoots,
+  getBrowseCategory,
+  getBrowseChildren,
+  getCategory,
+  itemConditions,
+} from "@treido/contracts/categories";
 import type { SellerDatabase } from "../../server/db/database";
 import {
   decodeDiscoveryCursor,
@@ -96,6 +102,7 @@ export async function readPublicDiscovery(
     sellerId?: string;
     excludeId?: string;
     limit?: number;
+    previewCategories?: readonly string[];
   },
 ): Promise<PublicDiscoveryPage> {
   const { input, cursor } = readDiscoveryInput(source);
@@ -114,7 +121,10 @@ export async function readPublicDiscovery(
         (options.excludeId ?? "none"),
     )
     .digest();
-  const position = cursor ? decodeDiscoveryCursor(cursor, input, key) : null;
+  const position =
+    cursor && !options.previewCategories
+      ? decodeDiscoveryCursor(cursor, input, key)
+      : null;
   const query = buildPublicDiscoveryQuery(input, { ...options, position });
   const row = (
     await database.pool.query<{
@@ -131,7 +141,7 @@ export async function readPublicDiscovery(
   const items = selected.map(publicListingCard);
   const last = selected.at(-1);
   let nextCursor: string | null = null;
-  if (row.items.length > query.limit && last) {
+  if (!options.previewCategories && row.items.length > query.limit && last) {
     const anchor: DiscoveryPosition = {
       id: last.id,
       createdAt: new Date(last.createdAt).toISOString(),
@@ -153,8 +163,28 @@ export async function readPublicDiscovery(
       sellers: row.sellers,
     },
     nextCursor,
-    cursorReset: !!cursor && !position,
+    cursorReset: !options.previewCategories && !!cursor && !position,
   };
+}
+
+/** One eligible SQL snapshot samples each immediate browse branch, so the
+ * newest department cannot crowd all other departments out of Explore. */
+export function readPublicExplore(
+  database: SellerDatabase,
+  source: DiscoveryParams,
+  options: { key: Uint8Array },
+) {
+  const { input } = readDiscoveryInput(source);
+  const selected = input.category ? getBrowseCategory(input.category) : null;
+  const branches = selected
+    ? selected.kind === "leaf"
+      ? [selected]
+      : getBrowseChildren(selected.id)
+    : browseCategoryRoots;
+  return readPublicDiscovery(database, source, {
+    ...options,
+    previewCategories: branches.map((branch) => branch.id),
+  });
 }
 
 /** A store becomes public only while it has currently eligible supply. */

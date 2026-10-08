@@ -4,9 +4,14 @@ import { displayRating, displayCount } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { SourceLink, useSourceNavigationTab } from "./return-navigation";
+import {
+  SourceLink,
+  useSourceNavigationTab,
+  rememberSourceReturn,
+} from "./return-navigation";
+import { canonicalResultsDestination } from "./marketplace-navigation";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { discoveryDestination } from "./browse-scope-route";
+import { discoveryDockDestination } from "./browse-scope-route";
 import {
   Suspense,
   useEffect,
@@ -16,7 +21,6 @@ import {
   type PointerEvent,
 } from "react";
 import { Icon } from "./icons";
-import { NativeIcon } from "./native-icons";
 import { IconButton } from "./icon-button";
 export { IconButton } from "./icon-button";
 export { ProductCard, SaveButton } from "./product-card";
@@ -29,12 +33,14 @@ type FloatingNavProps = {
   back?: boolean;
   cart?: () => void;
   onBack?: () => void;
+  onSearch?: () => void;
   showCartWhenEmpty?: boolean;
   showExplore?: boolean;
   fade?: boolean;
   android?: boolean;
   nativeIcons?: boolean;
   marketplace?: boolean;
+  sourceNavigation?: boolean;
 };
 export function FloatingNav(props: FloatingNavProps) {
   return (
@@ -51,12 +57,11 @@ function FloatingNavContent({
   back = false,
   cart,
   onBack,
+  onSearch,
   showCartWhenEmpty = false,
-  showExplore = true,
   fade = false,
   android = false,
-  nativeIcons = false,
-  marketplace = false,
+  sourceNavigation = false,
   params,
 }: FloatingNavProps & { params: URLSearchParams | null }) {
   const pathname = usePathname();
@@ -66,17 +71,11 @@ function FloatingNavContent({
     (quantity, line) => quantity + line.quantity,
     0,
   );
-  const sourceActive = useSourceNavigationTab(pathname, android);
-  const active = marketplace
-    ? pathname.startsWith("/messages")
-      ? "/messages"
-      : pathname.startsWith("/app")
-        ? "/app"
-        : pathname === "/"
-          ? "/"
-          : "/search"
-    : sourceActive;
-  const marketText = useTranslations("marketplace");
+  const sourceActive = useSourceNavigationTab(
+    pathname,
+    android || sourceNavigation,
+  );
+  const active = sourceActive;
   const { messages } = useLocale();
   const text = messages.navigation;
   return (
@@ -89,7 +88,6 @@ function FloatingNavContent({
           icon="back"
           label={text.back}
           className="dock-back"
-          native={nativeIcons}
           onClick={() => {
             if (onBack) onBack();
             else if (window.history.length > 1) router.back();
@@ -98,47 +96,56 @@ function FloatingNavContent({
         />
       )}
       <nav aria-label={text.main} className="floating-nav">
-        {(marketplace
-          ? ([
-              ["/", "home", text.home],
-              ["/search", "search", text.search],
-              ["/messages", "chat-round", marketText("messages")],
-              ["/app", "storefront", marketText("sell")],
-            ] as const)
-          : ([
-              ["/", "home", text.home],
-              ["/search", "search", text.search],
-              ["/explore", "explore", text.explore],
-              ["/orders", "orders", text.orders],
-            ] as const)
-        )
-          .filter(([href]) => showExplore || href !== "/explore")
-          .map(([href, icon, label]) => (
+        {(
+          [
+            ["/", "home", text.home],
+            ["/search", "search", text.search],
+            ["/explore", "explore", text.explore],
+            ["/orders", "orders", text.orders],
+          ] as const
+        ).map(([href, icon, label]) => {
+          const destination = canonicalResultsDestination(
+            localeDestination(
+              discoveryDockDestination(
+                android && href === "/" && viewedProducts.length > 0
+                  ? "/?home=recent"
+                  : href,
+                new URLSearchParams(params ?? undefined),
+              ),
+              parseLocale(params?.get("lang")),
+            ),
+          );
+          const categorySearch =
+            href === "/search" && destination.startsWith("/explore/");
+          return (
             <Link
-              href={localeDestination(
-                discoveryDestination(
-                  android && href === "/" && viewedProducts.length > 0
-                    ? "/?home=recent"
-                    : href,
-                  new URLSearchParams(params ?? undefined),
-                ),
-                parseLocale(params?.get("lang")),
-              )}
-              aria-label={android && href === "/search" ? text.chat : label}
-              data-nav-kind={android && icon === "search" ? "chat" : icon}
+              href={destination}
+              aria-label={label}
+              onNavigate={
+                href === "/search" && (onSearch || categorySearch)
+                  ? (event) => {
+                      if (onSearch) {
+                        event.preventDefault();
+                        onSearch();
+                      } else {
+                        rememberSourceReturn(
+                          destination,
+                          '[data-nav-kind="chat"]',
+                        );
+                      }
+                    }
+                  : undefined
+              }
+              // Keep the original Home glyph's measured optical fit. This
+              // styling token does not change Search's destination or label.
+              data-nav-kind={icon === "search" ? "chat" : icon}
               aria-current={active === href ? "page" : undefined}
               key={href}
             >
-              {nativeIcons ? (
-                <NativeIcon
-                  name={icon === "search" ? "search-nav" : icon}
-                  filled={icon !== "search"}
-                />
-              ) : (
-                <Icon name={icon} filled={icon !== "search"} />
-              )}
+              <Icon name={icon} filled={icon !== "search"} />
             </Link>
-          ))}
+          );
+        })}
       </nav>
       {cart && (showCartWhenEmpty || cartQuantity > 0) && (
         <button
@@ -148,11 +155,7 @@ function FloatingNavContent({
           data-focus-return="cart"
           onClick={cart}
         >
-          {nativeIcons ? (
-            <NativeIcon name="cart" filled />
-          ) : (
-            <Icon name="cart" filled />
-          )}
+          <Icon name="cart" filled />
           {cartQuantity > 0 && (
             <span
               className="dock-cart-count"
@@ -170,15 +173,28 @@ function FloatingNavContent({
 export function StoreRow({
   store,
   onMore,
+  subtitle,
+  actions,
+  href,
+  preserveDiscoveryContext,
 }: {
-  store: Pick<Store, "id" | "name" | "logo" | "rating" | "ratingCount">;
+  store: Pick<Store, "id" | "name"> &
+    Partial<Pick<Store, "logo" | "rating" | "ratingCount">>;
   onMore?: () => void;
+  subtitle?: ReactNode;
+  actions?: ReactNode;
+  href?: string;
+  preserveDiscoveryContext?: boolean;
 }) {
   const intlLocale = useIntlLocale();
   const ui = useTranslations("discoveryUI");
   return (
     <div className="store-row">
-      <SourceLink className="store-row-identity" href={`/stores/${store.id}`}>
+      <SourceLink
+        className="store-row-identity"
+        href={href ?? `/stores/${store.id}`}
+        preserveDiscoveryContext={preserveDiscoveryContext}
+      >
         {store.logo ? (
           <img src={store.logo} alt="" />
         ) : (
@@ -188,6 +204,7 @@ export function StoreRow({
         )}
         <span>
           <strong>{store.name}</strong>
+          {subtitle}
           {store.rating !== undefined && (
             <span>
               {displayRating(store.rating, intlLocale)} ★{" "}
@@ -197,22 +214,23 @@ export function StoreRow({
           )}
         </span>
       </SourceLink>
-      {onMore ? (
-        <IconButton
-          icon="more"
-          label={ui("moreOptions")}
-          onClick={onMore}
-          data-ui-label="moreOptions"
-        />
-      ) : (
-        <SourceLink
-          href={`/stores/${store.id}/info`}
-          aria-label={ui("storeInformation")}
-          data-ui-label="storeInformation"
-        >
-          <Icon name="more" />
-        </SourceLink>
-      )}
+      {actions ??
+        (onMore ? (
+          <IconButton
+            icon="more"
+            label={ui("moreOptions")}
+            onClick={onMore}
+            data-ui-label="moreOptions"
+          />
+        ) : (
+          <SourceLink
+            href={`/stores/${store.id}/info`}
+            aria-label={ui("storeInformation")}
+            data-ui-label="storeInformation"
+          >
+            <Icon name="more" />
+          </SourceLink>
+        ))}
     </div>
   );
 }
@@ -253,6 +271,8 @@ export function Sheet({
   open,
   title,
   onClose,
+  onBack,
+  backLabel,
   children,
   className = "",
   headerless = false,
@@ -263,6 +283,8 @@ export function Sheet({
   open: boolean;
   title: string;
   onClose: () => void;
+  onBack?: () => void;
+  backLabel?: string;
   children: ReactNode;
   className?: string;
   headerless?: boolean;
@@ -530,6 +552,14 @@ export function Sheet({
         </>
       ) : (
         <div className="sheet-header" {...dragHandlers}>
+          {onBack && (
+            <IconButton
+              icon="back"
+              className="sheet-back"
+              label={backLabel ?? ui("back")}
+              onClick={onBack}
+            />
+          )}
           <h2 id={titleId}>{title}</h2>
           <IconButton
             icon="close"

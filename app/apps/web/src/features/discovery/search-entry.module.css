@@ -292,7 +292,7 @@
   width: 40px;
   padding: 10px;
 }
-.resultsPage :global(.filter-chips) [aria-pressed="true"] {
+.resultsPage :global(.filter-chips) > [aria-pressed="true"] {
   background: #111;
   border-color: #111;
   color: #fff;
@@ -1293,6 +1293,12 @@
   font-size: 18px;
   line-height: 24px;
 }
+.filterSheet:global(.buyer-public-filter) :global(.sheet-header) h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .filterSheet :global(.sheet-header) :global(.icon-button) {
   width: 24px;
   height: 24px;
@@ -1300,6 +1306,63 @@
 .filterSheet :global(.sheet-header) :global(.icon-button) svg {
   width: 16px;
   height: 16px;
+}
+.filterSheet.categorySheet {
+  height: auto;
+  max-height: min(597px, calc(100dvh - 64px));
+  overflow: hidden;
+}
+.filterSheet.categorySheet :global(.sheet-header) {
+  flex: none;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.filterSheet.categorySheet :global(.sheet-header) h2 {
+  flex: 1;
+}
+.filterSheet.categorySheet :global(.sheet-header) :global(.icon-button) {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  position: relative;
+  background: transparent;
+}
+.filterSheet.categorySheet
+  :global(.sheet-header)
+  :global(.icon-button[data-ui-label="closeValue1"])::before {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f4f4f4;
+  pointer-events: none;
+}
+.filterSheet.categorySheet :global(.sheet-header) :global(.icon-button) svg {
+  position: relative;
+}
+.filterSheet.categorySheet :global(.filter-options) {
+  min-height: 0;
+  flex: 0 1 auto;
+  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: minmax(56px, max-content);
+}
+.filterSheet.categorySheet :global(.filter-options > button) {
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+.categoryLabel {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.filterSheet.categorySheet :global(.radio-outline),
+.filterSheet.categorySheet :global(.filter-options > button > svg),
+.filterSheet.categorySheet :global(.sheet-actions) {
+  flex: none;
 }
 .answerBody :global(.assistant-answer-card) .answerCardPhoto {
   position: relative;

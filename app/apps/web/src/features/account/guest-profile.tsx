@@ -2,6 +2,7 @@
 import { useTranslations } from "next-intl";
 /* eslint-disable @next/next/no-img-element -- Bounded reference brand artwork. */
 import type { Catalog } from "../catalog/types";
+import type { SearchCatalog } from "../catalog/search-catalog";
 import { AccountPage, Row } from "./forms";
 import { ProfileRecent } from "./profile-recent";
 import { ProfileFooter } from "./profile-footer";
@@ -10,23 +11,43 @@ import { Icon } from "../discovery/icons";
 import { SourceLink } from "../discovery/return-navigation";
 import { LanguagePreferenceRow } from "../locale/preference-row";
 import { MessagesEntry } from "../messaging/entry";
+import type { ReactNode } from "react";
 
-export function GuestProfile({ catalog }: { catalog: Catalog }) {
+export function GuestProfile({
+  catalog,
+  publicBody,
+}: {
+  catalog?: Catalog | SearchCatalog;
+  publicBody?: {
+    identity: ReactNode;
+    recent?: ReactNode;
+    orders: ReactNode;
+    settings: ReactNode;
+  };
+}) {
   const t = useTranslations("account");
   const { orders } = useAccount();
   return (
-    <AccountPage android className="android-guest-profile">
-      <section className="guest-sign-in">
-        <img src="/api/reference-media/live-guest-signin-mark" alt="" />
-        <h1>{t("signInOrCreateAnAccount")}</h1>
-        <p>{t("profileIntro")}</p>
-        <SourceLink
-          className="primary"
-          href="/login?journey=new&returnTo=/profile"
-        >
-          {t("signIn")}
-        </SourceLink>
-      </section>
+    <AccountPage
+      android
+      publicData={!!publicBody}
+      className="android-guest-profile"
+    >
+      {publicBody ? (
+        publicBody.identity
+      ) : (
+        <section className="guest-sign-in">
+          <img src="/api/reference-media/live-guest-signin-mark" alt="" />
+          <h1>{t("signInOrCreateAnAccount")}</h1>
+          <p>{t("profileIntro")}</p>
+          <SourceLink
+            className="primary"
+            href="/login?journey=new&returnTo=/profile"
+          >
+            {t("signIn")}
+          </SourceLink>
+        </section>
+      )}
       <div className="guest-profile-panels">
         <SourceLink href="/saved">
           <span>
@@ -41,10 +62,14 @@ export function GuestProfile({ catalog }: { catalog: Catalog }) {
           <strong>{t("following")}</strong>
         </SourceLink>
       </div>
-      <ProfileRecent catalog={catalog} />
+      {publicBody
+        ? publicBody.recent
+        : catalog && <ProfileRecent catalog={catalog} />}
       <section className="guest-profile-orders">
         <h2>{t("orderHistory")}</h2>
-        {orders.length === 0 ? (
+        {publicBody ? (
+          publicBody.orders
+        ) : orders.length === 0 ? (
           <div className="guest-no-orders">
             <img src="/api/reference-media/live-guest-order-package" alt="" />
             <span>
@@ -65,16 +90,20 @@ export function GuestProfile({ catalog }: { catalog: Catalog }) {
           ))
         )}
       </section>
-      <div className="account-panel guest-profile-settings">
-        <LanguagePreferenceRow native />
-        <MessagesEntry native />
-        <Row native label="Sell an item" href="/sell" />
-        <Row native label="Notifications" href="/account/notifications" />
-        <Row native label="Data & privacy" href="/account/privacy" />
-        <Row native label="Development mode" href="/account/development" />
-        <Row native label="Support" href="/support" />
-      </div>
-      <ProfileFooter native />
+      {publicBody ? (
+        publicBody.settings
+      ) : (
+        <div className="account-panel guest-profile-settings">
+          <LanguagePreferenceRow native />
+          <MessagesEntry native />
+          <Row native label="Sell an item" href="/sell" />
+          <Row native label="Notifications" href="/account/notifications" />
+          <Row native label="Data & privacy" href="/account/privacy" />
+          <Row native label="Development mode" href="/account/development" />
+          <Row native label="Support" href="/support" />
+        </div>
+      )}
+      <ProfileFooter native publicData={!!publicBody} />
     </AccountPage>
   );
 }

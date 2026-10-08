@@ -39,6 +39,8 @@ import { useSearchDraft } from "./search-draft";
 import { Cart } from "./product";
 import { useDiscovery } from "./state";
 import styles from "./store.module.css";
+import { PublicStore } from "./public-store";
+import type { PublicStoreView } from "./public-store-model";
 import { BrowseScopeUnavailable } from "./browse-scope";
 import {
   readStoreFilters,
@@ -553,7 +555,12 @@ function ChemicalMediaShelves() {
   );
 }
 
-export function Storefront(props: { store: Store; catalog: Catalog }) {
+type StoreViewProps =
+  | { store: Store; catalog: Catalog; publicView?: never }
+  | { publicView: PublicStoreView; store?: never; catalog?: never };
+export function Storefront(props: StoreViewProps) {
+  if (props.publicView)
+    return <PublicStore view={props.publicView} kind="store" />;
   return hasMerchantPresentation(props.store) ? (
     <NativeStorefront {...props} />
   ) : (
@@ -1026,7 +1033,9 @@ const storeCategories = [
     slug: "shower-caps",
   },
 ];
-export function StoreInfo(props: { store: Store; catalog: Catalog }) {
+export function StoreInfo(props: StoreViewProps) {
+  if (props.publicView)
+    return <PublicStore view={props.publicView} kind="info" />;
   return hasMerchantPresentation(props.store) ? (
     <NativeStoreInfo {...props} />
   ) : (
@@ -1239,7 +1248,9 @@ function ReferenceStoreInfo({ store }: { store: Store; catalog: Catalog }) {
     </ShopSurface>
   );
 }
-export function StoreSearch(props: { store: Store; catalog: Catalog }) {
+export function StoreSearch(props: StoreViewProps) {
+  if (props.publicView)
+    return <PublicStore view={props.publicView} kind="search" />;
   return hasMerchantPresentation(props.store) ? (
     <NativeMerchantSearch {...props} />
   ) : (
