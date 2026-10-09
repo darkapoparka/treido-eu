@@ -1,32 +1,37 @@
-import type { ReactNode } from "react";
+import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import type { PublicListingCard } from "../catalog/public-discovery-model";
 import { PublicListingGrid } from "./public-listing-grid";
 import { PublicHome } from "./public-home";
 
+const navigation = vi.hoisted(() => ({
+  locale: "bg" as "bg" | "en",
+  params: new URLSearchParams(),
+}));
 vi.mock("next-intl", () => ({
-  useLocale: () => "bg",
+  useLocale: () => navigation.locale,
   useTranslations: () => (key: string) => key,
 }));
 vi.mock("./state", () => ({ useDiscovery: () => ({ reportedProducts: [] }) }));
 vi.mock("./use-sponsored-observation", () => ({
   useSponsoredObservation: () => ({ ref: undefined, onClick: undefined }),
 }));
-vi.mock("./return-navigation", () => ({
-  SourceLink: ({
-    href,
-    children,
-    className,
-  }: {
-    href: string;
-    children?: ReactNode;
-    className?: string;
-  }) => (
-    <a href={href} className={className}>
-      {children}
-    </a>
-  ),
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/products/current-item",
+  useSearchParams: () => navigation.params,
+  useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
+}));
+vi.mock("next/link", () => ({
+  default: ({
+    prefetch,
+    onNavigate,
+    ...props
+  }: ComponentProps<"a"> & { prefetch?: boolean; onNavigate?: unknown }) => {
+    void prefetch;
+    void onNavigate;
+    return <a {...props} />;
+  },
 }));
 vi.mock("../library/provider", () => ({
   useBuyerLibrary: () => ({ status: "guest", busy: false, execute: vi.fn() }),
@@ -44,6 +49,69 @@ const listing: PublicListingCard = {
   locality: "София",
   publishedAt: "2026-10-06T00:00:00.000Z",
 };
+
+beforeEach(() => {
+  navigation.locale = "bg";
+  navigation.params = new URLSearchParams("lang=bg");
+});
+
+it.each([
+  ["bg", "all"],
+  ["bg", "personal"],
+  ["bg", "business"],
+  ["en", "all"],
+  ["en", "personal"],
+  ["en", "business"],
+] as const)(
+  "%s / %s lower related-item rail seller link keeps public criteria and its contextual return target",
+  (locale, seller) => {
+    navigation.locale = locale;
+    navigation.params = new URLSearchParams({
+      lang: locale,
+      q: "phone",
+      category: listing.categoryId,
+      seller,
+      condition: "good",
+      minPrice: "12.50",
+      maxPrice: "300",
+      location: "София",
+      sort: "price_desc",
+      "attr.brand": "Apple",
+      cursor: `payload.${"a".repeat(43)}`,
+      sellerId: "private-operating-seller",
+      role: "owner",
+    });
+    const html = renderToStaticMarkup(
+      <PublicListingGrid items={[listing]} rail />,
+    );
+    expect(html).toContain('class="product-rail');
+    const anchor = [...html.matchAll(/<a\b[^>]*>/g)]
+      .map(([tag]) => tag)
+      .find((tag) => tag.includes(`href="/stores/${listing.seller.id}?`));
+    expect(anchor).toBeDefined();
+    const href = anchor!.match(/\bhref="([^"]+)"/)![1].replaceAll("&amp;", "&");
+    const destination = new URL(href, "https://treido.invalid");
+    expect(destination.pathname).toBe(`/stores/${listing.seller.id}`);
+    expect(Object.fromEntries(destination.searchParams)).toEqual({
+      q: "phone",
+      category: listing.categoryId,
+      ...(seller === "all" ? {} : { seller }),
+      condition: "good",
+      location: "София",
+      minPrice: "12.50",
+      maxPrice: "300.00",
+      currency: "EUR",
+      sort: "price_desc",
+      "attr.brand": "Apple",
+      lang: locale,
+    });
+    const returnTarget = anchor!
+      .match(/\bdata-source-return="([^"]+)"/)![1]
+      .replaceAll("&amp;", "&");
+    expect(returnTarget.startsWith(`${href}|`)).toBe(true);
+    expect(returnTarget).not.toContain("private-operating-seller");
+  },
+);
 
 it("compact sponsored shelves retain the actual price, sponsorship label and real save control", () => {
   const html = renderToStaticMarkup(

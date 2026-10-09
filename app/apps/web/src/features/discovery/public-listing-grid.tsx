@@ -135,7 +135,6 @@ function PublicListing({
           </p>
           <SourceLink
             className={s.sellerLink}
-            preserveDiscoveryContext={false}
             href={"/stores/" + item.seller.id + "?lang=" + locale}
           >
             {item.seller.name}
