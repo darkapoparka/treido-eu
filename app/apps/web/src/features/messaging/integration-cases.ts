@@ -1,6 +1,7 @@
 import { seedPublishedSnapshot } from "../../../tests/fixtures/published-listing";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
+import sharp from "sharp";
 import type { Client } from "pg";
 import type { SellerDatabase } from "../../server/db/database";
 import {
@@ -9,6 +10,18 @@ import {
 } from "../sellers/persistence.server";
 import { createListingDraft } from "../selling/drafts.server";
 import { emptyDraft } from "../selling/draft-model";
+import { executeJob } from "../../server/jobs/execution.server";
+import {
+  stageAttachment,
+  uploadAttachment,
+  attachmentStatus,
+} from "../message-attachments/commands.server";
+import { createAttachmentStorage } from "../message-attachments/storage.server";
+import { checksumOf } from "../message-attachments/raster.server";
+import {
+  processAttachmentJob,
+  type AttachmentJob,
+} from "../message-attachments/jobs.server";
 import {
   openListingConversation,
   sendConversationMessage,
@@ -169,11 +182,105 @@ export function defineParticipantIntegrationCases(
           [other.subject],
         )
       ).rows[0].id;
-      const attachmentId = randomUUID();
-      await admin.query(
-        "INSERT INTO treido.message_attachments(id,thread_id,created_by,state,content_type,bytes,object_key) VALUES($1,$2,$3,'ready','image/jpeg',100,$4)",
-        [attachmentId, threadId, buyerId, `private/test/${attachmentId}`],
+      await expect(
+        admin.query(
+          "INSERT INTO treido.message_attachments(id,thread_id,created_by,state,content_type,bytes,object_key) VALUES($1,$2,$3,'ready','image/jpeg',100,$4)",
+          [randomUUID(), threadId, buyerId, "private/test/unreviewed"],
+        ),
+      ).rejects.toMatchObject({ code: "23514" });
+      // Same actual intake/processing path as the canonical T72 fixture.
+      // Private byte storage and verified identity are isolated test adapters.
+      const objects = new Map<string, Buffer>();
+      const storage = createAttachmentStorage({
+        scope: "a".repeat(64),
+        prefix: "private/test/",
+        async read(key, maximum) {
+          const bytes = objects.get(key);
+          if (!bytes || bytes.length > maximum)
+            throw Error("Unavailable fixture object");
+          return Buffer.from(bytes);
+        },
+        async put(key, bytes) {
+          objects.set(key, Buffer.from(bytes));
+        },
+        async remove(key) {
+          objects.delete(key);
+        },
+        async head() {
+          throw Error("Unused fixture operation");
+        },
+        async freeze() {
+          throw Error("Unused fixture operation");
+        },
+        async upload() {
+          throw Error("Unused fixture operation");
+        },
+      });
+      const png = await sharp({
+        create: { width: 12, height: 8, channels: 3, background: "blue" },
+      })
+        .png()
+        .toBuffer();
+      const scope = { sellerId: null, threadId };
+      const staged = await stageAttachment(
+        database,
+        other,
+        {
+          ...scope,
+          requestId: randomUUID(),
+          bytes: png.length,
+          contentType: "image/png",
+          checksum: checksumOf(png),
+        },
+        storage,
       );
+      const attachmentId = staged.id;
+      await uploadAttachment(
+        database,
+        other,
+        { ...scope, id: attachmentId, revision: staged.revision },
+        png,
+        storage,
+      );
+      const job = (
+        await admin.query<AttachmentJob>(
+          'SELECT id,kind,seller_id AS "sellerId",buyer_id AS "buyerId",resource_id AS "resourceId",operation_key AS "operationKey",actor_id AS "actorId",authority,generation FROM treido.outbox_jobs WHERE kind=\'message-attachment.process\' AND resource_id=$1',
+          [attachmentId],
+        )
+      ).rows[0];
+      const binding = {
+        environment: "test",
+        applicationId: "treido-participant-test",
+      };
+      expect(
+        await executeJob(
+          database,
+          {
+            schemaVersion: 1,
+            jobId: job.id,
+            sellerId: job.sellerId,
+            generation: job.generation,
+            ...binding,
+          },
+          binding,
+          "participant-attachment:" + randomUUID(),
+          {
+            "message-attachment.process": (job) => {
+              expect(job.executionToken).toEqual(expect.any(String));
+              return processAttachmentJob(database, job, storage);
+            },
+          },
+        ),
+      ).toEqual({ jobId: job.id, status: "completed" });
+      expect(
+        (
+          await attachmentStatus(database, other, {
+            ...scope,
+            id: attachmentId,
+            revision: 1,
+          })
+        ).state,
+      ).toBe("ready");
       await sendConversationMessage(database, other, {
         threadId,
         requestId: randomUUID(),

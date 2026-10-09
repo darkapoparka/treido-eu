@@ -81,6 +81,8 @@ export function createJobExecutor(
           );
           recorded = true;
           console.error("Treido durable job exhausted its executor retries.");
+        } catch {
+          throw new Error("Treido executor failure recording is unavailable.");
         } finally {
           observeJob(() => ({
             phase: "exhaustion",
@@ -94,25 +96,35 @@ export function createJobExecutor(
     },
     async ({ event, step, runId }) => {
       const started = jobObservationTime();
-      try {
-        // Only IDs and status are retained in executor step history.
-        const result = await step.run("execute-owned-effect-v1", () =>
-          executeJob(database(), event.data, bindings, runId, handlers),
-        );
-        observeJob(() => ({
-          phase: "executor",
-          outcome: result?.status,
-          correlation: event.data,
-          runId,
-          eventId: event.id,
-          durationMs: jobObservationDuration(started),
-        }));
-        return result;
-      } catch (error) {
-        if (
-          (error instanceof JobError || error instanceof SellerError) &&
-          ["INVALID_INPUT", "NOT_FOUND", "FORBIDDEN"].includes(error.code)
-        ) {
+      // Classify and sanitize inside the step: the SDK records step errors
+      // before an outer catch runs, and replayed errors lose custom prototypes.
+      const result = await step.run("execute-owned-effect-v1", async () => {
+        try {
+          return await executeJob(
+            database(),
+            event.data,
+            bindings,
+            runId,
+            handlers,
+          );
+        } catch (error) {
+          if (
+            (error instanceof JobError || error instanceof SellerError) &&
+            ["INVALID_INPUT", "NOT_FOUND", "FORBIDDEN"].includes(error.code)
+          ) {
+            observeJob(() => ({
+              phase: "executor",
+              outcome: "failed",
+              correlation: event.data,
+              runId,
+              eventId: event.id,
+              durationMs: jobObservationDuration(started),
+              errorClass: "authority_rejected",
+            }));
+            throw new NonRetriableError(
+              "Treido job input or authority was rejected.",
+            );
+          }
           observeJob(() => ({
             phase: "executor",
             outcome: "failed",
@@ -120,25 +132,22 @@ export function createJobExecutor(
             runId,
             eventId: event.id,
             durationMs: jobObservationDuration(started),
-            errorClass: "authority_rejected",
+            errorClass: "effect_unavailable",
           }));
-          throw new NonRetriableError(
-            "Treido job input or authority was rejected.",
+          throw new Error(
+            "Treido durable effect is unavailable; retry with the same identity.",
           );
         }
-        observeJob(() => ({
-          phase: "executor",
-          outcome: "failed",
-          correlation: event.data,
-          runId,
-          eventId: event.id,
-          durationMs: jobObservationDuration(started),
-          errorClass: "effect_unavailable",
-        }));
-        throw new Error(
-          "Treido durable effect is unavailable; retry with the same identity.",
-        );
-      }
+      });
+      observeJob(() => ({
+        phase: "executor",
+        outcome: result?.status,
+        correlation: event.data,
+        runId,
+        eventId: event.id,
+        durationMs: jobObservationDuration(started),
+      }));
+      return result;
     },
   );
   const repair = client.createFunction(
@@ -160,53 +169,63 @@ export function createJobExecutor(
         throw new NonRetriableError(
           "Treido repair wake-up authority was rejected.",
         );
+      const repairStep = <T>(id: string, operation: () => Promise<T>) =>
+        step.run(id, async () => {
+          try {
+            return await operation();
+          } catch {
+            throw new Error(
+              "Treido repair effect is unavailable; retry with the same identity.",
+            );
+          }
+        });
       await observeJobHealth(database);
       return withRepairDueCheckpoint(
-        (read) => step.run("repair-due-work-v1", read),
+        (read) => repairStep("repair-due-work-v1", read),
         database,
         async () => {
-          await step.run("schedule-seller-billing-observation-v1", () =>
+          await repairStep("schedule-seller-billing-observation-v1", () =>
             scheduleBillingRepair(database()),
           );
-          await step.run("schedule-promotion-observation-v1", async () => {
+          await repairStep("schedule-promotion-observation-v1", async () => {
             const db = database();
             if (!(await inTransaction(db, promotionStorageReady))) return 0;
             return schedulePromotionRepair(db);
           });
-          await step.run("schedule-order-refund-observation-v2", () =>
+          await repairStep("schedule-order-refund-observation-v2", () =>
             scheduleOrderRefundRepair(database()),
           );
-          await step.run("schedule-payment-observation-v1", () =>
+          await repairStep("schedule-payment-observation-v1", () =>
             schedulePaymentRepair(database()),
           );
-          await step.run("schedule-buyer-search-matches-v1", () =>
+          await repairStep("schedule-buyer-search-matches-v1", () =>
             scheduleSavedSearches(database()),
           );
-          await step.run("schedule-current-notification-mail-v1", () =>
+          await repairStep("schedule-current-notification-mail-v1", () =>
             scheduleNotificationEmails(database()),
           );
-          await step.run("schedule-owned-assistant-maintenance-v1", () =>
+          await repairStep("schedule-owned-assistant-maintenance-v1", () =>
             scheduleLifecycleMaintenance(database(), "assistant"),
           );
-          await step.run("schedule-accepted-account-closure-v1", () =>
+          await repairStep("schedule-accepted-account-closure-v1", () =>
             scheduleLifecycleMaintenance(database(), "closure"),
           );
-          await step.run("schedule-original-shipping-retention-v1", () =>
+          await repairStep("schedule-original-shipping-retention-v1", () =>
             scheduleLifecycleMaintenance(database(), "shipping"),
           );
-          const dispatched = await step.run("lease-and-handoff-v1", () =>
+          const dispatched = await repairStep("lease-and-handoff-v1", () =>
             dispatchOutbox(database(), bindings, (event) => client.send(event)),
           );
-          await step.run("expire-inventory-reservations-v1", () =>
+          await repairStep("expire-inventory-reservations-v1", () =>
             expireInventoryAllocations(database()),
           );
-          await step.run("expire-negotiated-offers-v1", () =>
+          await repairStep("expire-negotiated-offers-v1", () =>
             expireOffers(database()),
           );
-          await step.run("expire-private-csv-uploads-v1", () =>
+          await repairStep("expire-private-csv-uploads-v1", () =>
             expireImportUploads(database()),
           );
-          await step.run("reconcile-invitation-mail-v1", async () => {
+          await repairStep("reconcile-invitation-mail-v1", async () => {
             const db = database();
             const ready = await db.pool.query(
               "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='treido' AND table_name='invitation_deliveries' AND column_name='mail_binding') AS ready",
@@ -217,16 +236,16 @@ export function createJobExecutor(
               invitationMailConfig(process.env, bindings),
             );
           });
-          await step.run("cleanup-private-message-images-v1", () =>
+          await repairStep("cleanup-private-message-images-v1", () =>
             maintainMessageAttachments(database()),
           );
-          await step.run("reconcile-known-notification-mail-v1", () =>
+          await repairStep("reconcile-known-notification-mail-v1", () =>
             maintainNotificationEmails(database()),
           );
-          await step.run("expire-business-invitations-v1", () =>
+          await repairStep("expire-business-invitations-v1", () =>
             expireTeamInvitations(database()),
           );
-          await step.run("cleanup-registered-photo-objects-v1", async () => {
+          await repairStep("cleanup-registered-photo-objects-v1", async () => {
             let storage;
             try {
               storage = requireMediaStorage();

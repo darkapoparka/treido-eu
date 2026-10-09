@@ -9,7 +9,8 @@ import { createJobExecutor } from "./inngest.server";
 import { leaseJobs, recordHandoff, releaseDispatch } from "./outbox.server";
 import { executeJob, markExecutorFailure } from "./execution.server";
 import { JobError } from "./model";
-import { NonRetriableError } from "inngest";
+import { NonRetriableError, serializeError } from "inngest";
+import { SellerError } from "../../features/sellers/errors";
 import type { SellerDatabase } from "../db/database";
 import type { JobBindings } from "./bindings";
 
@@ -327,6 +328,45 @@ describe("unchanged dispatch results and release behavior", () => {
 });
 
 describe("unchanged executor outcome, sanitation and retry policy", () => {
+  it.each([
+    new JobError("INVALID_INPUT"),
+    new JobError("NOT_FOUND"),
+    new SellerError("FORBIDDEN"),
+    new JobError("BUSY"),
+    Object.assign(new Error("private-sentinel"), {
+      code: "private-sentinel",
+      cause: new Error("private-sentinel"),
+    }),
+  ])(
+    "sanitizes and classifies %s before the actual SDK serializes the step error",
+    async (failure) => {
+      vi.mocked(executeJob).mockRejectedValue(failure);
+      const fn = executor();
+      const input = executorInput();
+      let recorded: unknown;
+      input.step.run = async (_name, operation) => {
+        try {
+          return await operation();
+        } catch (error) {
+          recorded = serializeError(error);
+          throw error;
+        }
+      };
+      await expect(fn.run(input)).rejects.toThrow();
+      const permanent =
+        failure instanceof SellerError ||
+        (failure instanceof JobError && failure.code !== "BUSY");
+      expect(recorded).toMatchObject({
+        name: permanent ? "NonRetriableError" : "Error",
+        message: permanent
+          ? "Treido job input or authority was rejected."
+          : "Treido durable effect is unavailable; retry with the same identity.",
+      });
+      expect(JSON.stringify(recorded)).not.toContain("private-sentinel");
+      expect(recorded).not.toHaveProperty("code");
+      expect((recorded as { cause?: unknown }).cause).toBeUndefined();
+    },
+  );
   it.each(["completed", "cancelled", "stale"] as const)(
     "returns the original %s outcome without logging private event fields",
     async (status) => {
@@ -408,7 +448,7 @@ describe("unchanged executor outcome, sanitation and retry policy", () => {
       onFailure({
         event: { data: { event: { data: executorInput().event.data } } },
       }),
-    ).rejects.toBe(failure);
+    ).rejects.toThrow("Treido executor failure recording is unavailable.");
     expect(observed()[0]).toMatchObject({
       phase: "exhaustion",
       outcome: "failed",

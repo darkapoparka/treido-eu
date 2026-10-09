@@ -11,8 +11,10 @@ import {
   mkdtemp,
   appendFile,
   writeFile,
+  readdir,
+  realpath,
 } from "node:fs/promises";
-import { resolve, join, basename } from "node:path";
+import { resolve, join, basename, relative, parse } from "node:path";
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
@@ -58,6 +60,12 @@ import {
 import { defineJobIntegrationCases } from "../../server/jobs/integration-cases";
 import { defineMediaIntegrationCases } from "./media-integration-cases";
 import { applyRuntimeGrants } from "../../../scripts/runtime-grants.mjs";
+import {
+  assertFixtureHeadroom,
+  selectFixtureEvidenceDirectory,
+  cleanupLaunchCluster,
+} from "../../../../../tests/t72/native-fixture-support.mjs";
+import { trackPoolDisconnects } from "../../../../../tests/t72/pool-disconnects.mjs";
 import { defineCategoryIntegrationCases } from "../../server/categories/integration-cases";
 import { defineParticipantIntegrationCases } from "../messaging/integration-cases";
 import { defineInboxIntegrationCases } from "../messaging/inbox-integration-cases";
@@ -80,9 +88,12 @@ import {
   withdrawSellerProducts,
 } from "../sellers/admin-product-management.server";
 
-const evidence = process.env.TREIDO_DATABASE_EVIDENCE_ROOT
-  ? resolve(process.env.TREIDO_DATABASE_EVIDENCE_ROOT)
-  : resolve(process.cwd(), "../.qa/t04b-drafts-20261001");
+const evidence = selectFixtureEvidenceDirectory(
+  undefined,
+  process.env.TREIDO_DATABASE_EVIDENCE_ROOT,
+  resolve(process.cwd(), "../.qa/t04b-drafts-20261001"),
+);
+const priorDiscoveryKey = process.env.TREIDO_DISCOVERY_CURSOR_KEY;
 let cluster: EmbeddedPostgres;
 let directory: string;
 let pgCtl: string;
@@ -105,6 +116,8 @@ const execute = (file: string, args: string[]) =>
   });
 let admin: Client;
 let database: SellerDatabase;
+let drainRuntime: (() => Promise<void>) | undefined;
+const migrationEvidence: Array<{ version: string; checksum: string }> = [];
 let runtimeConfig: {
   host: string;
   port: number;
@@ -124,8 +137,21 @@ let businessB: string;
 let otherUserId: string;
 
 beforeAll(async () => {
+  if (process.version !== "v24.20.0") throw Error("Pinned Node required");
+  assertFixtureHeadroom(evidence);
+  process.env.TREIDO_DISCOVERY_CURSOR_KEY = randomBytes(32).toString("hex");
   await mkdir(evidence, { recursive: true });
   directory = await mkdtemp(join(evidence, "postgres-"));
+  const exact = await realpath(directory);
+  if (
+    relative(await realpath(evidence), exact).startsWith("..") ||
+    exact === parse(exact).root
+  )
+    throw Error("Unsafe isolated cluster path");
+  const temp = join(evidence, "temp");
+  await mkdir(temp, { recursive: true });
+  process.env.TEMP = temp;
+  process.env.TMP = temp;
   const logPath = join(evidence, `${basename(directory)}.log`);
   const port = await new Promise<number>((done, fail) => {
     const server = createServer();
@@ -137,6 +163,8 @@ beforeAll(async () => {
       server.close(() => done(address.port));
     });
   });
+  if ([6412, 6413, 6418, 6419].includes(port))
+    throw Error("Protected preview port selected");
   cluster = new EmbeddedPostgres({
     databaseDir: directory,
     port,
@@ -658,6 +686,56 @@ beforeAll(async () => {
       "already-applied",
     );
   }
+  // Retain the original rollback/replay assertions above, then exercise the
+  // current canonical schema and grants on this fresh owned loopback target.
+  const runner = await readFile(
+    resolve(process.cwd(), "apps/web/scripts/migrate.mjs"),
+    "utf8",
+  );
+  const literal = runner.match(
+    /for\s*\(const version of\s*(\[[\s\S]*?\])\s*\)/,
+  )?.[1];
+  if (
+    !literal ||
+    literal
+      .slice(1, -1)
+      .replace(/"\d{4}_[a-z_]+"/g, "")
+      .replace(/[\s,]/g, "") !== ""
+  )
+    throw Error("Canonical migration sequence is not literal");
+  const canonical = [...literal.matchAll(/"(\d{4}_[a-z_]+)"/g)].map(
+    (match) => match[1],
+  );
+  const files = (await readdir(resolve(process.cwd(), "apps/web/migrations")))
+    .filter((file) => /^\d{4}_[a-z_]+\.sql$/.test(file))
+    .sort();
+  expect(canonical.map((version) => version + ".sql")).toEqual(files);
+  expect(
+    canonical.every(
+      (version, index) => Number(version.slice(0, 4)) === index + 1,
+    ),
+  ).toBe(true);
+  for (const version of canonical) {
+    const source = await readFile(
+      resolve(process.cwd(), `apps/web/migrations/${version}.sql`),
+      "utf8",
+    );
+    const checksum = createHash("sha256").update(source).digest("hex");
+    expect(await applyReviewedMigration(admin, version, source)).toBe(
+      Number(version.slice(0, 4)) <= 22 ? "already-applied" : "applied",
+    );
+    expect(await applyReviewedMigration(admin, version, source)).toBe(
+      "already-applied",
+    );
+    migrationEvidence.push({ version, checksum });
+  }
+  expect(
+    (
+      await admin.query(
+        "SELECT version,checksum FROM public.treido_schema_migrations ORDER BY version",
+      )
+    ).rows,
+  ).toEqual(migrationEvidence);
   await applyRuntimeGrants(admin, "treido_runtime");
   runtimeConfig = {
     host: "127.0.0.1",
@@ -667,14 +745,14 @@ beforeAll(async () => {
     password,
     max: 5,
   };
-  database = createDatabase(
-    new Pool({
-      ...runtimeConfig,
-      connectionTimeoutMillis: 3000,
-      statement_timeout: 12000,
-      idle_in_transaction_session_timeout: 12000,
-    }),
-  );
+  const runtimePool = new Pool({
+    ...runtimeConfig,
+    connectionTimeoutMillis: 3000,
+    statement_timeout: 12000,
+    idle_in_transaction_session_timeout: 12000,
+  });
+  drainRuntime = trackPoolDisconnects(runtimePool);
+  database = createDatabase(runtimePool);
   personal = await ensurePersonalSeller(database, owner);
   businessA = await createBusinessSeller(database, owner, {
     name: "Business A",
@@ -704,6 +782,7 @@ beforeAll(async () => {
         port,
         database: "treido_integration",
         runtimeRole: "treido_runtime",
+        migrations: migrationEvidence,
         migrationRollback: "PASS on empty owned schema",
         setupMigration:
           "Transactional failed migration rollback, apply, checksum replay and mismatch denial PASS",
@@ -1166,19 +1245,37 @@ describe("real PostgreSQL resumable business setup and human intent", () => {
   });
 });
 afterAll(async () => {
-  await database?.pool.end();
-  await admin?.end();
-  if (started)
-    await execute(pgCtl, [
-      "stop",
-      "-D",
-      directory,
-      "-m",
-      "fast",
-      "-w",
-      "-t",
-      "30",
-    ]);
+  try {
+    await cleanupLaunchCluster({
+      drains: [drainRuntime, admin ? () => admin.end() : undefined].filter(
+        (drain): drain is () => Promise<void> => Boolean(drain),
+      ),
+      stop: started
+        ? () =>
+            execute(pgCtl, [
+              "stop",
+              "-D",
+              directory,
+              "-m",
+              "fast",
+              "-w",
+              "-t",
+              "60",
+            ])
+        : undefined,
+      recordStopped: async () => {
+        started = false;
+        await writeFile(
+          join(directory, "fixture-stopped.json"),
+          JSON.stringify({ stopped: true }),
+        );
+      },
+    });
+  } finally {
+    if (priorDiscoveryKey === undefined)
+      delete process.env.TREIDO_DISCOVERY_CURSOR_KEY;
+    else process.env.TREIDO_DISCOVERY_CURSOR_KEY = priorDiscoveryKey;
+  }
 });
 
 async function waitForBlockedAuthority(table: string, minimum: number) {
