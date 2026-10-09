@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback } from "react";
 import { useTranslations } from "next-intl";
 import type { Locale } from "../locale/locale";
@@ -23,6 +24,16 @@ export function InboxWorkspace({
   actorSubject: string;
   language: Locale;
 }) {
+  const auth = useAuth(),
+    clerk = useClerk();
+  const sameActor =
+    clerk.user?.id === actorSubject &&
+    !!clerk.session?.id &&
+    clerk.session.status === "active" &&
+    (!auth.isLoaded ||
+      (auth.isSignedIn &&
+        auth.userId === actorSubject &&
+        auth.sessionId === clerk.session.id));
   const offers = useTranslations("offers");
   const t = useTranslations("messaging"),
     query = initialInbox.query;
@@ -61,28 +72,30 @@ export function InboxWorkspace({
       </header>
       <div className={s.frame} data-selected={!!initialConversation}>
         <aside className={s.threads} aria-label={t("title")}>
-          <form className={s.filters} action={base}>
-            <input type="hidden" name="lang" value={language} />
-            <input
-              type="search"
-              aria-label={t("search")}
-              placeholder={t("search")}
-              name="q"
-              maxLength={120}
-              defaultValue={query.q}
-            />
-            <div className={s.actions}>
-              <select
-                aria-label={t("all")}
-                name="filter"
-                defaultValue={query.filter}
-              >
-                <option value="all">{t("all")}</option>
-                <option value="unread">{t("unread")}</option>
-              </select>
-              <button className={s.button}>{t("apply")}</button>
-            </div>
-          </form>
+          {sameActor && status !== "denied" && (
+            <form className={s.filters} action={base}>
+              <input type="hidden" name="lang" value={language} />
+              <input
+                type="search"
+                aria-label={t("search")}
+                placeholder={t("search")}
+                name="q"
+                maxLength={120}
+                defaultValue={query.q}
+              />
+              <div className={s.actions}>
+                <select
+                  aria-label={t("all")}
+                  name="filter"
+                  defaultValue={query.filter}
+                >
+                  <option value="all">{t("all")}</option>
+                  <option value="unread">{t("unread")}</option>
+                </select>
+                <button className={s.button}>{t("apply")}</button>
+              </div>
+            </form>
+          )}
           {status !== "ready" ? (
             <div className={s.notice} role="status">
               <p>

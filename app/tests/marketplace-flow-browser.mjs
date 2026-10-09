@@ -4,7 +4,7 @@ import { createLibraryBrowserTransport } from "./library-browser-transport.mjs";
 import { createRequire } from "node:module";
 import { createServer } from "node:http";
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL, URL } from "node:url";
 import process from "node:process";
 import console from "node:console";
@@ -31,6 +31,27 @@ export async function runMarketplaceBrowser({
     web = createRequire(join(app, "apps/web/package.json"));
   const vite = createRequire(req.resolve("vitest/config"));
   const { build } = await import(pathToFileURL(vite.resolve("vite")).href);
+  const clerk = `
+import {useSyncExternalStore} from 'react';
+const resources=new Set(),observers=new Set(),observed=new WeakSet();
+const subject=()=>current.actorSubject??null;
+const sessionId=()=>subject()?'synthetic-marketplace-session:'+subject():null;
+let resourceActor,user=null,session=null;
+function currentResources(){const actor=subject();if(actor!==resourceActor){resourceActor=actor;user=actor?{id:actor}:null;session=actor?{id:sessionId(),status:'active'}:null}}
+const clerk={get user(){currentResources();return user},get session(){currentResources();return session},addListener(listener){resources.add(listener);listener({user:clerk.user,session:clerk.session});return()=>resources.delete(listener)}};
+function notify(){[...resources].forEach(listener=>listener({user:clerk.user,session:clerk.session}));[...observers].forEach(listener=>listener())}
+function observe(value){if(observed.has(value))return value;const proxy=new Proxy(value,{set(target,key,value){const before=subject();Reflect.set(target,key,value);if(key==='actorSubject'&&before!==subject())notify();return true}});observed.add(proxy);return proxy}
+let current=observe(window.__marketplace);
+Object.defineProperty(window,'__marketplace',{configurable:true,get:()=>current,set(value){const before=subject();current=observe(value);if(before!==subject())notify()}});
+export const useClerk=()=>clerk;
+export function useAuth(){const actor=useSyncExternalStore(listener=>{observers.add(listener);return()=>observers.delete(listener)},subject);return {isLoaded:true,isSignedIn:!!actor,userId:actor,sessionId:actor?'synthetic-marketplace-session:'+actor:null}}
+export function useUser(){const auth=useAuth();return {isLoaded:auth.isLoaded,isSignedIn:auth.isSignedIn,user:clerk.user}}
+export const ClerkProvider=({children})=>children;
+`;
+  const unusedActions = {
+    "purchase-reviews/actions": ["createPurchaseReviewAction"],
+    "promotions/metric-actions": ["recordPromotionMetricAction"],
+  };
   await build({
     configFile: false,
     root: app,
@@ -60,7 +81,7 @@ export async function runMarketplaceBrowser({
       {
         name: "isolated-marketplace-navigation",
         enforce: "pre",
-        resolveId(id) {
+        resolveId(id, importer) {
           if (
             [
               "next/link",
@@ -70,16 +91,33 @@ export async function runMarketplaceBrowser({
             ].includes(id)
           )
             return "\0market:" + id;
+          const path = (
+            id.startsWith(".") && importer ? resolve(dirname(importer), id) : id
+          ).replaceAll("\\", "/");
+          const actionModule = Object.keys(unusedActions).find(
+            (name) =>
+              path.endsWith("/features/" + name) ||
+              path.endsWith("/features/" + name + ".ts"),
+          );
+          if (actionModule) return "\0market:unused-actions:" + actionModule;
         },
         load(id) {
+          if (id.startsWith("\0market:unused-actions:"))
+            return unusedActions[id.slice("\0market:unused-actions:".length)]
+              .map(
+                (name) =>
+                  "export const " +
+                  name +
+                  "=async()=>({ok:false,code:'NOT_AVAILABLE'});",
+              )
+              .join("\n");
           if (id === "\0market:next/navigation")
             return "const router={push:p=>location.assign(p),replace:p=>location.replace(p),back:()=>history.back(),refresh:()=>location.reload()};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const useParams=()=>({sellerId:(window.__marketplace.inventoryEditor?.sellerId??window.__marketplace.adminSeller?.sellerId)});";
           if (id === "\0market:next/link")
             return "import React from 'react';export default function Link({prefetch,onNavigate,onClick,href,...props}){return React.createElement('a',{...props,href,onClick:event=>{onClick?.(event);if(!event.defaultPrevented)onNavigate?.({preventDefault:()=>event.preventDefault()});}});}";
           if (id === "\0market:next/image")
             return "import React from 'react';export default function Image({priority,fill,...props}){return React.createElement('img',props);}";
-          if (id === "\0market:@clerk/nextjs")
-            return "const subject=()=>window.__marketplace.actorSubject??null;export const useAuth=()=>({isLoaded:true,isSignedIn:!!subject(),userId:subject()});export const useClerk=()=>({get user(){return subject()?{id:subject()}:null}});";
+          if (id === "\0market:@clerk/nextjs") return clerk;
         },
       },
     ],

@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { createServer } from "node:http";
 import { readFile, mkdir, readdir } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL, URL } from "node:url";
 import { randomUUID } from "node:crypto";
 import process from "node:process";
@@ -30,6 +30,10 @@ export async function runInboxBrowserChecks({
     "startConversationAction",
     "reportResourceAction",
     "appealModerationAction",
+    // Current command envelopes reach the real transport; its legacy SQL
+    // handler does not qualify recoverable reply/appeal acknowledgement yet.
+    "sendRecoverableReplyAction",
+    "submitRecoverableAppealAction",
   ];
   const actions = actionNames
     .map(
@@ -43,6 +47,43 @@ export async function runInboxBrowserChecks({
     .join("\n");
   const navigation =
     'export const useParams=()=>({sellerId:window.__inbox.sellerId});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);const dest=path=>{const u=new URL(path,location.origin);u.searchParams.set("role",window.__inbox.role);return u.href;};const router={push:path=>location.assign(dest(path)),replace:path=>location.replace(dest(path)),refresh:()=>fetch(location.href+"&data=1").then(r=>r.json()).then(window.__renderInbox)};export const useRouter=()=>router;';
+  const clerk = `
+import {useSyncExternalStore} from 'react';
+const resources=new Set(),observers=new Set(),observed=new WeakSet();
+const subject=()=>current.actor??null;
+const sessionId=()=>subject()?'synthetic-inbox-session:'+subject():null;
+let resourceActor,user=null,session=null;
+function currentResources(){const actor=subject();if(actor!==resourceActor){resourceActor=actor;user=actor?{id:actor}:null;session=actor?{id:sessionId(),status:'active'}:null}}
+const clerk={get user(){currentResources();return user},get session(){currentResources();return session},addListener(listener){resources.add(listener);listener({user:clerk.user,session:clerk.session});return()=>resources.delete(listener)}};
+function notify(){[...resources].forEach(listener=>listener({user:clerk.user,session:clerk.session}));[...observers].forEach(listener=>listener())}
+function observe(value){if(observed.has(value))return value;const proxy=new Proxy(value,{set(target,key,value){const before=subject();Reflect.set(target,key,value);if(key==='actor'&&before!==subject())notify();return true}});observed.add(proxy);return proxy}
+let current=observe(window.__inbox);
+Object.defineProperty(window,'__inbox',{configurable:true,get:()=>current,set(value){const before=subject();current=observe(value);if(before!==subject())notify()}});
+export const useClerk=()=>clerk;
+export function useAuth(){const actor=useSyncExternalStore(listener=>{observers.add(listener);return()=>observers.delete(listener)},subject);return {isLoaded:true,isSignedIn:!!actor,userId:actor,sessionId:actor?'synthetic-inbox-session:'+actor:null}}
+export function useUser(){const auth=useAuth();return {isLoaded:auth.isLoaded,isSignedIn:auth.isSignedIn,user:clerk.user}}
+export const ClerkProvider=({children})=>children;
+`;
+  const unusedActions = {
+    "trust/case-actions": [
+      "readTrustCaseContextAction",
+      "decideTrustCaseAction",
+    ],
+    "message-attachments/actions": [
+      "stageAttachmentAction",
+      "attachmentStatusAction",
+      "removeAttachmentAction",
+    ],
+    "offers/actions": ["readOffersAction", "changeOfferAction"],
+    "purchase-reviews/actions": ["createPurchaseReviewAction"],
+  };
+  const actionModules = [
+    "messaging/actions",
+    "messaging/reply-actions",
+    "trust/actions",
+    "trust/appeal-submission-actions",
+    ...Object.keys(unusedActions),
+  ];
   await build({
     configFile: false,
     root: app,
@@ -75,19 +116,34 @@ export async function runInboxBrowserChecks({
         resolveId(id, importer) {
           if (["next/link", "next/navigation", "@clerk/nextjs"].includes(id))
             return "\0inbox:" + id;
-          if (
-            id === "./actions" &&
-            /[/](messaging|trust)[/]/.test(
-              (importer ?? "").replaceAll("\\", "/"),
-            )
-          )
-            return "\0inbox:actions";
+          const path = (
+            id.startsWith(".") && importer ? resolve(dirname(importer), id) : id
+          ).replaceAll("\\", "/");
+          const actionModule = actionModules.find(
+            (name) =>
+              path.endsWith("/features/" + name) ||
+              path.endsWith("/features/" + name + ".ts"),
+          );
+          if (actionModule) return "\0inbox:actions:" + actionModule;
         },
         load(id) {
-          if (id === "\0inbox:actions") return actions;
+          if (id.startsWith("\0inbox:actions:")) {
+            const module = id.slice("\0inbox:actions:".length),
+              names = unusedActions[module];
+            // These boundaries are outside this packet's original assertions.
+            return names
+              ? names
+                  .map(
+                    (name) =>
+                      "export const " +
+                      name +
+                      "=async()=>({ok:false,code:'NOT_AVAILABLE'});",
+                  )
+                  .join("\n")
+              : actions;
+          }
           if (id === "\0inbox:next/navigation") return navigation;
-          if (id === "\0inbox:@clerk/nextjs")
-            return "export const useAuth=()=>({isLoaded:true,isSignedIn:true,userId:window.__inbox.actor});";
+          if (id === "\0inbox:@clerk/nextjs") return clerk;
           if (id === "\0inbox:next/link")
             return 'import React from "react";export default function Link({href,prefetch,...props}){const u=new URL(href,location.origin);u.searchParams.set("role",window.__inbox.role);return React.createElement("a",{...props,href:u.href});}';
         },

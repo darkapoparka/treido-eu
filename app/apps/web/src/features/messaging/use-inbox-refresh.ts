@@ -1,100 +1,255 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import type { SellerResult } from "../sellers/errors";
 import { inboxLimits } from "./inbox-model";
-/** Poll only the visible workspace; late replies cannot repopulate a departed scope. */
+type Status = "ready" | "checking" | "unavailable" | "denied";
+
+/** Qualify the current session before exposing accepted private projections. */
 export function useInboxRefresh<T>(
   initial: T,
   actorSubject: string,
   load: () => Promise<SellerResult<T>>,
 ) {
-  const auth = useAuth();
+  const auth = useAuth(),
+    clerk = useClerk();
+  const sessionId = auth.isLoaded ? auth.sessionId : null;
   const sameActor =
-    auth.isLoaded && auth.isSignedIn && auth.userId === actorSubject;
-  const [data, setData] = useState(initial);
-  const [status, setStatus] = useState<
-    "ready" | "checking" | "unavailable" | "denied"
-  >("ready");
-  const epoch = useRef({ value: 0 }),
-    live = useRef(false),
-    busy = useRef(false);
+    auth.isLoaded &&
+    auth.isSignedIn &&
+    auth.userId === actorSubject &&
+    clerk.user?.id === actorSubject;
+  const entry =
+    typeof location === "undefined" ? "" : location.pathname + location.search;
+  const context = [actorSubject, sessionId ?? "", entry].join("\0");
+  const [snapshot, setSnapshot] = useState({
+    data: initial,
+    source: initial,
+    loader: load,
+    user: clerk.user,
+    session: clerk.session,
+    context: null as string | null,
+    status: "checking" as Status,
+  });
+  const life = useRef({
+    mounted: false,
+    visible: false,
+    generation: 0,
+    read: 0,
+    busy: false,
+    source: initial,
+    loader: load,
+    context,
+  });
+  const active = useCallback(
+    () =>
+      life.current.mounted &&
+      life.current.visible &&
+      sameActor &&
+      !!sessionId &&
+      document.visibilityState === "visible" &&
+      clerk.user?.id === actorSubject &&
+      clerk.session?.id === sessionId &&
+      clerk.session.status === "active" &&
+      location.pathname + location.search === entry,
+    [sameActor, sessionId, clerk, actorSubject, entry],
+  );
   const refresh = useCallback(
     async (foreground = false) => {
-      if (!live.current || !sameActor || document.visibilityState !== "visible")
+      const current = life.current;
+      if (!current.mounted || document.visibilityState !== "visible") return;
+      if (
+        current.source !== initial ||
+        current.loader !== load ||
+        current.context !== context
+      )
         return;
-      if (busy.current && !foreground) return;
-      const version = ++epoch.current.value;
-      busy.current = true;
-      if (foreground) setStatus("checking");
+      // Explicit visible Retry recovers after blur even without a focus event.
+      if (foreground) current.visible = true;
+      if (!active() || (current.busy && !foreground)) return;
+      const generation = current.generation,
+        sequence = ++current.read,
+        user = clerk.user,
+        session = clerk.session;
+      current.busy = true;
+      const requestCurrent = () =>
+        active() &&
+        clerk.user === user &&
+        clerk.session === session &&
+        current.source === initial &&
+        current.loader === load &&
+        current.context === context &&
+        generation === current.generation &&
+        sequence === current.read;
+      setSnapshot((previous) => ({
+        data:
+          previous.source === initial && previous.loader === load
+            ? previous.data
+            : initial,
+        source: initial,
+        loader: load,
+        user,
+        session,
+        context,
+        status:
+          !foreground &&
+          previous.context === context &&
+          previous.source === initial &&
+          previous.loader === load &&
+          previous.status === "ready"
+            ? "ready"
+            : "checking",
+      }));
       try {
         const result = await load();
-        if (!live.current || version !== epoch.current.value) return;
-        if (result.ok) {
-          setData(result.data);
-          setStatus("ready");
-        } else
-          setStatus(
-            [
-              "FORBIDDEN",
-              "NOT_FOUND",
-              "UNAUTHENTICATED",
-              "INVALID_INPUT",
-            ].includes(result.code)
+        if (!requestCurrent()) return;
+        setSnapshot((previous) => ({
+          ...previous,
+          data: result.ok ? result.data : previous.data,
+          context,
+          source: initial,
+          loader: load,
+          user,
+          session,
+          status: result.ok
+            ? "ready"
+            : [
+                  "FORBIDDEN",
+                  "NOT_FOUND",
+                  "UNAUTHENTICATED",
+                  "INVALID_INPUT",
+                ].includes(result.code)
               ? "denied"
               : "unavailable",
-          );
+        }));
       } catch {
-        if (live.current && version === epoch.current.value)
-          setStatus("unavailable");
+        if (requestCurrent())
+          setSnapshot((previous) => ({ ...previous, status: "unavailable" }));
       } finally {
-        if (version === epoch.current.value) busy.current = false;
+        if (generation === current.generation && sequence === current.read)
+          current.busy = false;
       }
     },
-    [load, sameActor],
+    [active, context, initial, load, clerk.user, clerk.session],
   );
+  // A retained child callback can run during a new frame's layout commit,
+  // before passive subscriptions restart. Only the committed frame may read.
+  useLayoutEffect(() => {
+    const current = life.current;
+    current.source = initial;
+    current.loader = load;
+    current.context = context;
+  }, [initial, load, context]);
   useEffect(() => {
-    const generation = epoch.current;
-    live.current = true;
-    const visible = () => {
-      if (document.visibilityState === "visible") void refresh(true);
-      else {
-        ++epoch.current.value;
-        busy.current = false;
-        setStatus("checking");
-      }
+    const current = life.current;
+    let mounted = true;
+    current.mounted = true;
+    current.visible = false;
+    ++current.generation;
+    ++current.read;
+    current.busy = false;
+    const conceal = () => {
+      if (!mounted) return;
+      ++current.generation;
+      ++current.read;
+      current.visible = false;
+      current.busy = false;
+      setSnapshot((previous) => ({
+        ...previous,
+        context: null,
+        status: "checking",
+      }));
     };
-    const blur = () => {
-      ++epoch.current.value;
-      busy.current = false;
-      setStatus("checking");
+    const restore = () => {
+      if (!mounted || document.visibilityState !== "visible") return;
+      current.visible = true;
+      void refresh(true);
+    };
+    const signature = () =>
+      [
+        clerk.user?.id ?? "",
+        clerk.session?.id ?? "",
+        clerk.session?.status ?? "",
+      ].join("\0");
+    let previous = signature(),
+      previousUser = clerk.user,
+      previousSession = clerk.session;
+    const unsubscribe = clerk.addListener(() => {
+      if (!mounted) return;
+      const next = signature();
+      if (
+        next !== previous ||
+        clerk.user !== previousUser ||
+        clerk.session !== previousSession
+      ) {
+        previous = next;
+        previousUser = clerk.user;
+        previousSession = clerk.session;
+        conceal();
+        restore();
+      }
+    });
+    void Promise.resolve().then(() => {
+      if (mounted) {
+        conceal();
+        restore();
+      }
+    });
+    const visible = () =>
+      document.visibilityState === "visible" ? restore() : conceal();
+    const restored = () => {
+      conceal();
+      restore();
     };
     const timer = setInterval(() => {
-      if (document.hasFocus()) void refresh();
+      if (mounted && current.visible && document.hasFocus()) void refresh();
     }, inboxLimits.pollMs);
+    window.addEventListener("focus", restore);
+    window.addEventListener("blur", conceal);
+    window.addEventListener("pageshow", restored);
     document.addEventListener("visibilitychange", visible);
-    window.addEventListener("focus", visible);
-    window.addEventListener("blur", blur);
-    const initialRequest = setTimeout(() => void refresh(), 0);
     return () => {
-      clearTimeout(initialRequest);
-      live.current = false;
-      ++generation.value;
-      busy.current = false;
+      mounted = false;
+      current.mounted = false;
+      current.visible = false;
+      ++current.generation;
+      ++current.read;
+      current.busy = false;
+      unsubscribe();
       clearInterval(timer);
+      window.removeEventListener("focus", restore);
+      window.removeEventListener("blur", conceal);
+      window.removeEventListener("pageshow", restored);
       document.removeEventListener("visibilitychange", visible);
-      window.removeEventListener("focus", visible);
-      window.removeEventListener("blur", blur);
     };
-  }, [refresh]);
+  }, [clerk, refresh, initial, load, context]);
+  const qualified =
+    sameActor &&
+    !!sessionId &&
+    clerk.session?.id === sessionId &&
+    clerk.session.status === "active" &&
+    typeof document !== "undefined" &&
+    document.visibilityState === "visible" &&
+    snapshot.context === context &&
+    snapshot.user === clerk.user &&
+    snapshot.session === clerk.session &&
+    snapshot.source === initial &&
+    snapshot.loader === load;
   return {
-    data,
-    status:
-      auth.isLoaded && !sameActor
+    data: snapshot.source === initial ? snapshot.data : initial,
+    status: !auth.isLoaded
+      ? ("checking" as const)
+      : !sameActor || !sessionId || clerk.session?.status !== "active"
         ? ("denied" as const)
-        : !auth.isLoaded
-          ? ("checking" as const)
-          : status,
+        : qualified
+          ? snapshot.status
+          : ("checking" as const),
     refresh,
   };
 }

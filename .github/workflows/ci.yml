@@ -130,6 +130,14 @@ jobs:
       - name: Private attachment browser regressions
         run: node tests/t72/attachment-browser.mjs
 
+      - name: Inbox, notification, team and seller settings session races
+        run: |
+          pnpm exec prettier --check tests/t56/inbox-session-entry.tsx tests/t56/inbox-session-browser.mjs tests/t56/team-session-entry.tsx tests/t56/team-session-browser.mjs tests/t56/seller-settings-session-entry.tsx tests/t56/seller-settings-session-browser.mjs
+          pnpm exec eslint tests/t56/inbox-session-entry.tsx tests/t56/inbox-session-browser.mjs tests/t56/team-session-entry.tsx tests/t56/team-session-browser.mjs tests/t56/seller-settings-session-entry.tsx tests/t56/seller-settings-session-browser.mjs --max-warnings=0
+          node tests/t56/inbox-session-browser.mjs
+          node tests/t56/team-session-browser.mjs
+          node tests/t56/seller-settings-session-browser.mjs
+
       - name: Seller photo hydration browser regressions
         run: node tests/media-picker-browser.mjs
 

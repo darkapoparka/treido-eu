@@ -2,16 +2,9 @@
 import type messages from "./messages.json";
 type SettingsMessageKey = keyof typeof messages.en;
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
-import { useClerk } from "@clerk/nextjs";
+import { useCallback, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useInboxRefresh } from "../messaging/use-inbox-refresh";
+import { useSettingsSession } from "./use-settings-session";
 import { useUnsavedChanges } from "../sellers/use-unsaved-changes";
 import {
   readServiceSettingsAction,
@@ -31,107 +24,64 @@ export function ServiceSettingsForm({
   language: "bg" | "en";
 }) {
   const t = useTranslations("sellerSettings"),
-    clerk = useClerk(),
     sellerId = initial.sellerId,
     section = initial.section;
   const load = useCallback(
     () => readServiceSettingsAction(sellerId, section),
     [sellerId, section],
   );
-  const { data, status, refresh } = useInboxRefresh(
+  const session = useSettingsSession<ServiceView, ServiceCommand>(
     initial,
     actorSubject,
     load,
+    saveServiceSettingsAction,
   );
-  const [payload, setPayload] = useState<ServicePayload>(initial.payload),
-    [saved, setSaved] = useState(JSON.stringify(initial.payload)),
-    [revision, setRevision] = useState(initial.revision),
-    [latest, setLatest] = useState<ServiceView | null>(null),
-    [pending, setPending] = useState(false),
-    [notice, setNotice] = useState<string | null>(null),
-    [blocked, setBlocked] = useState(false);
-  const live = useRef(true),
-    busy = useRef(false),
-    attempt = useRef<{ hash: string; command: ServiceCommand } | null>(null);
-  const hidden = blocked || status !== "ready",
+  const { data, status, pending, notice, latest, editKey } = session;
+  const [editor, setEditor] = useState({
+    key: null as string | null,
+    payload: initial.payload,
+    saved: JSON.stringify(initial.payload),
+    revision: initial.revision,
+  });
+  const { payload, saved, revision } = editor;
+  const hidden = session.hidden || editor.key !== editKey,
     dirty = JSON.stringify(payload) !== saved;
-  useUnsavedChanges(dirty && !blocked && status !== "denied", language);
-  useEffect(() => {
-    live.current = true;
-    return () => {
-      live.current = false;
-    };
-  }, []);
-  const here = (path: string) =>
-    live.current &&
-    clerk.user?.id === actorSubject &&
-    location.pathname === path;
-  function failure(code: string) {
-    setNotice(code);
-    if (["FORBIDDEN", "UNAUTHENTICATED", "NOT_FOUND"].includes(code))
-      setBlocked(true);
+  useUnsavedChanges(dirty && !hidden, language);
+  // A new editor owner receives only an accepted read (or its exact journal).
+  // React restarts this render before committing any former private children.
+  if (!session.hidden && editor.key !== editKey) {
+    setEditor({
+      key: editKey,
+      payload: (session.retained?.payload as ServicePayload) ?? data.payload,
+      saved: JSON.stringify(data.payload),
+      revision: session.retained?.expectedRevision ?? data.revision,
+    });
   }
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (hidden || busy.current || clerk.user?.id !== actorSubject) return;
-    const hash = JSON.stringify({ payload, revision });
-    if (attempt.current?.hash !== hash)
-      attempt.current = {
-        hash,
-        command: {
-          sellerId,
-          section,
-          expectedRevision: revision,
-          payload,
-          requestId: crypto.randomUUID(),
-        },
-      };
-    busy.current = true;
-    setPending(true);
-    setNotice(null);
-    const path = location.pathname;
-    try {
-      const result = await saveServiceSettingsAction(attempt.current.command);
-      if (!here(path)) return;
-      if (!result.ok) {
-        failure(result.code);
-        return;
-      }
-      setPayload(result.data.payload);
-      setSaved(JSON.stringify(result.data.payload));
-      setRevision(result.data.revision);
-      setLatest(null);
-      attempt.current = null;
-      setNotice("SAVED");
-      await refresh();
-    } catch {
-      if (here(path)) setNotice("NOT_AVAILABLE");
-    } finally {
-      busy.current = false;
-      if (live.current) setPending(false);
-    }
-  }
-  async function compare() {
-    if (busy.current || hidden) return;
-    busy.current = true;
-    setPending(true);
-    const path = location.pathname;
-    try {
-      const result = await load();
-      if (!here(path)) return;
-      if (result.ok) setLatest(result.data);
-      else failure(result.code);
-    } catch {
-      if (here(path)) setNotice("NOT_AVAILABLE");
-    } finally {
-      busy.current = false;
-      if (live.current) setPending(false);
-    }
+    if (hidden) return;
+    await session.submit(
+      {
+        sellerId,
+        section,
+        expectedRevision: revision,
+        payload,
+        requestId: crypto.randomUUID(),
+      },
+      (value) => {
+        setEditor({
+          key: editKey,
+          payload: value.payload,
+          saved: JSON.stringify(value.payload),
+          revision: value.revision,
+        });
+      },
+    );
   }
   const values = payload as unknown as Record<string, string | boolean>;
   function change(field: string, value: string | boolean) {
-    setPayload({ ...payload, [field]: value });
-    setNotice(null);
+    if (!session.edit()) return;
+    setEditor({ ...editor, payload: { ...payload, [field]: value } });
   }
   function text(
     field: string,
@@ -149,6 +99,7 @@ export function ServiceSettingsForm({
             rows={4}
             maxLength={max}
             value={String(values[field] ?? "")}
+            readOnly={session.uncertain}
             onChange={(e) => change(field, e.target.value)}
           />
         ) : (
@@ -157,6 +108,7 @@ export function ServiceSettingsForm({
             type={type}
             maxLength={max}
             value={String(values[field] ?? "")}
+            readOnly={session.uncertain}
             onChange={(e) => change(field, e.target.value)}
           />
         )}
@@ -170,6 +122,7 @@ export function ServiceSettingsForm({
           name={field}
           type="checkbox"
           checked={values[field] === true}
+          disabled={session.uncertain}
           onChange={(e) => change(field, e.target.checked)}
         />
         <span>{t(label)}</span>
@@ -204,123 +157,124 @@ export function ServiceSettingsForm({
           <section className={s.card} role="status">
             <p>
               {t(
-                blocked || status === "denied"
+                session.denied
                   ? "denied"
                   : status === "checking"
                     ? "checking"
                     : "unavailable",
               )}
             </p>
-            <button className={a.secondary} onClick={() => void refresh(true)}>
+            <button className={a.secondary} onClick={session.refresh}>
               {t("retry")}
             </button>
           </section>
         )}
-        <div
-          className={s.stack}
-          hidden={hidden}
-          data-service-settings={section}
-        >
-          <section className={s.card}>
-            <h2>{initial.name}</h2>
-            <p>
-              {t(section === "contact" ? "contactNote" : "deliveryDescription")}
-            </p>
-            <p className={s.muted}>{t("privateNote")}</p>
-          </section>
-          <form className={s.card} onSubmit={submit}>
-            <fieldset disabled={pending || hidden} className={s.form}>
-              {checkbox(
-                "published",
-                section === "contact"
-                  ? "publishedContact"
-                  : "publishedDelivery",
-              )}
-              {section === "contact" ? (
-                <>
-                  {text("publicEmail", "publicEmail", 254, false, "email")}
-                  {text("publicPhone", "publicPhone", 40, false, "tel")}
-                  {text("contactNote", "contactMessage", 1200, true)}
-                </>
-              ) : (
-                <>
-                  {checkbox("pickup", "pickup")}
-                  {text("pickupArea", "pickupArea", 100)}
-                  {text("pickupNote", "pickupNote", 1200, true)}
-                  {checkbox("deliveryByArrangement", "deliveryByArrangement")}
-                  {text("deliveryNote", "deliveryNote", 1200, true)}
-                  {text("returnsNote", "returnsNote", 2000, true)}
-                </>
-              )}
-              <p className={s.muted}>{t("publicNote")}</p>
-              <div className={s.actions}>
-                <button className={a.primary}>
-                  {t(pending ? "saving" : "save")}
-                </button>
-                <span className={s.muted}>{t("revision", { revision })}</span>
-              </div>
-            </fieldset>
-          </form>
-          {notice && (
-            <p
-              className={s.notice}
-              role={notice === "SAVED" ? "status" : "alert"}
-            >
-              {t(
-                notice === "SAVED"
-                  ? "saved"
-                  : notice === "CONFLICT"
-                    ? "conflict"
-                    : notice === "INVALID_INPUT"
-                      ? "invalid"
-                      : "unavailable",
-              )}
-            </p>
-          )}
-          {(notice === "CONFLICT" || data.revision > revision) && (
-            <button
-              className={a.secondary}
-              disabled={pending}
-              onClick={() => void compare()}
-            >
-              {t("compare")}
-            </button>
-          )}
-          {latest && (
+        {!hidden && (
+          <div className={s.stack} data-service-settings={section}>
             <section className={s.card}>
-              <h2>{t("latest")}</h2>
-              <p>{t("revision", { revision: latest.revision })}</p>
-              <dl>
-                {Object.entries(latest.payload).map(([key, value]) => (
-                  <div key={key}>
-                    <dt>
-                      <strong>{t(labels[key])}</strong>
-                    </dt>
-                    <dd className={s.compare}>
-                      {typeof value === "boolean"
-                        ? t(value ? "yes" : "no")
-                        : value || "—"}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <p>{t("replaceNote")}</p>
+              <h2>{data.name}</h2>
+              <p>
+                {t(
+                  section === "contact" ? "contactNote" : "deliveryDescription",
+                )}
+              </p>
+              <p className={s.muted}>{t("privateNote")}</p>
+            </section>
+            <form className={s.card} onSubmit={submit}>
+              <fieldset disabled={pending || hidden} className={s.form}>
+                {checkbox(
+                  "published",
+                  section === "contact"
+                    ? "publishedContact"
+                    : "publishedDelivery",
+                )}
+                {section === "contact" ? (
+                  <>
+                    {text("publicEmail", "publicEmail", 254, false, "email")}
+                    {text("publicPhone", "publicPhone", 40, false, "tel")}
+                    {text("contactNote", "contactMessage", 1200, true)}
+                  </>
+                ) : (
+                  <>
+                    {checkbox("pickup", "pickup")}
+                    {text("pickupArea", "pickupArea", 100)}
+                    {text("pickupNote", "pickupNote", 1200, true)}
+                    {checkbox("deliveryByArrangement", "deliveryByArrangement")}
+                    {text("deliveryNote", "deliveryNote", 1200, true)}
+                    {text("returnsNote", "returnsNote", 2000, true)}
+                  </>
+                )}
+                <p className={s.muted}>{t("publicNote")}</p>
+                <div className={s.actions}>
+                  <button className={a.primary}>
+                    {t(pending ? "saving" : "save")}
+                  </button>
+                  <span className={s.muted}>{t("revision", { revision })}</span>
+                </div>
+              </fieldset>
+            </form>
+            {notice && (
+              <p
+                className={s.notice}
+                role={notice === "SAVED" ? "status" : "alert"}
+              >
+                {t(
+                  notice === "SAVED"
+                    ? "saved"
+                    : notice === "CONFLICT"
+                      ? "conflict"
+                      : notice === "INVALID_INPUT"
+                        ? "invalid"
+                        : "unavailable",
+                )}
+              </p>
+            )}
+            {(notice === "CONFLICT" || data.revision > revision) && (
               <button
                 className={a.secondary}
-                onClick={() => {
-                  setPayload(latest.payload);
-                  setRevision(latest.revision);
-                  setSaved(JSON.stringify(latest.payload));
-                  attempt.current = null;
-                  setLatest(null);
-                  setNotice(null);
-                }}
+                disabled={pending}
+                onClick={() => void session.compare()}
               >
-                {t("load")}
+                {t("compare")}
               </button>
-            </section>
-          )}
-        </div>
+            )}
+            {latest && (
+              <section className={s.card}>
+                <h2>{t("latest")}</h2>
+                <p>{t("revision", { revision: latest.revision })}</p>
+                <dl>
+                  {Object.entries(latest.payload).map(([key, value]) => (
+                    <div key={key}>
+                      <dt>
+                        <strong>{t(labels[key])}</strong>
+                      </dt>
+                      <dd className={s.compare}>
+                        {typeof value === "boolean"
+                          ? t(value ? "yes" : "no")
+                          : value || "—"}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <p>{t("replaceNote")}</p>
+                <button
+                  className={a.secondary}
+                  onClick={() => {
+                    if (!session.clearAttempt()) return;
+                    setEditor({
+                      key: editKey,
+                      payload: latest.payload,
+                      saved: JSON.stringify(latest.payload),
+                      revision: latest.revision,
+                    });
+                  }}
+                >
+                  {t("load")}
+                </button>
+              </section>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );

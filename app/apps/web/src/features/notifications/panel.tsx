@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback } from "react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useInboxRefresh } from "../messaging/use-inbox-refresh";
@@ -29,6 +30,16 @@ export function NotificationPanel({
   shop?: boolean;
   shopEmpty?: boolean;
 }) {
+  const auth = useAuth(),
+    clerk = useClerk();
+  const sameActor =
+    clerk.user?.id === actorSubject &&
+    !!clerk.session?.id &&
+    clerk.session.status === "active" &&
+    (!auth.isLoaded ||
+      (auth.isSignedIn &&
+        auth.userId === actorSubject &&
+        auth.sessionId === clerk.session.id));
   const t = useTranslations("notifications"),
     format = useFormatter(),
     locale = useLocale(),
@@ -48,7 +59,7 @@ export function NotificationPanel({
     actorSubject,
     status === "ready",
     () => {
-      void refresh();
+      void refresh(true);
     },
   );
   const base = sellerId
@@ -75,8 +86,8 @@ export function NotificationPanel({
     })
   )
     return <NotificationsEmpty />;
-  if (status !== "ready")
-    return (
+  const accessStatus =
+    status !== "ready" ? (
       <section className={s.card}>
         <p role="status">
           {t(
@@ -102,235 +113,265 @@ export function NotificationPanel({
           </Link>
         )}
       </section>
-    );
+    ) : null;
   return (
     <div
       className={shop ? "buyer-notification-feed" : s.stack}
-      data-notification-feed
+      data-notification-feed={status === "ready" ? true : undefined}
     >
+      {accessStatus}
       <p className={s.muted}>{t("inAppOnly")}</p>
-      <nav className={s.actions} aria-label={t("filter")}>
-        <Link
-          className={s.secondary}
-          href={href({ filter: "all" })}
-          aria-current={query.filter === "all" ? "page" : undefined}
-        >
-          {t("all")}
-        </Link>
-        <Link
-          className={s.secondary}
-          href={href({ filter: "unread" })}
-          aria-current={query.filter === "unread" ? "page" : undefined}
-        >
-          {t("unread")}
-        </Link>
-        <span className={s.badge}>
-          {t("unreadCount", { count: data.unreadCount })}
-        </span>
-        <button
-          className={s.secondary}
-          disabled={selection.busy}
-          onClick={() => void refresh(true)}
-        >
-          {t("reload")}
-        </button>
-        <Link className={s.secondary} href={inboxHref({ sellerId }, language)}>
-          {t("inbox")}
-        </Link>
-      </nav>
-      <form action={base} className={s.actions}>
-        <input
-          type="search"
-          name="q"
-          maxLength={80}
-          defaultValue={query.q}
-          aria-label={t("search")}
-          placeholder={t("search")}
-        />
-        <label className={s.field}>
-          {t("kind")}
-          <select name="kind" defaultValue={query.kind}>
-            <option value="all">{t("allKinds")}</option>
-            <option value="message">{t("message")}</option>
-            <option value="offer">{t("offer")}</option>
-            {!sellerId && <option value="search">{t("savedSearch")}</option>}
-          </select>
-        </label>
-        <input type="hidden" name="lang" value={language} />
-        <input type="hidden" name="filter" value={query.filter} />
-        <button className={s.secondary}>{t("searchSubmit")}</button>
-      </form>
-      {!sellerId && data.matches && (
-        <SearchMatchFeedPanel
-          initial={data.matches}
-          actorSubject={actorSubject}
-          onRead={() => void refresh(true)}
-        />
-      )}
-      {selection.invalid && (
-        <p className={s.notice} role="alert">
-          {t("invalidRecovery")}
-        </p>
-      )}
-      {selection.storageFailed && (
-        <p className={s.notice} role="alert">
-          {t("storageFailed")}
-        </p>
-      )}
-      {!!selection.draft.entries.length && (
-        <section className={s.card}>
-          <h2>{t("selection", { count: selection.draft.entries.length })}</h2>
-          <p>{t("readNote")}</p>
-          <ol className={s.lines}>
-            {selection.draft.entries.map((entry) => (
-              <li key={entry.row.requestId}>
-                <strong>{entry.label || t("conversation")}</strong>
-                <p className={s.muted}>
-                  {t("through", { sequence: entry.row.sequence })}
-                </p>
-                {entry.result && (
-                  <p role="status">
-                    {t(
-                      entry.result.state === "read"
-                        ? "acknowledged"
-                        : entry.result.state,
-                    )}
-                  </p>
-                )}
-                {entry.result?.state === "read" && (
-                  <small>
-                    {t("through", {
-                      sequence: entry.result.acknowledgedThrough,
-                    })}
-                  </small>
-                )}
-              </li>
-            ))}
-          </ol>
-          <div className={s.actions}>
-            <button
+      {sameActor && status !== "denied" && (
+        <>
+          <nav className={s.actions} aria-label={t("filter")}>
+            <Link
               className={s.secondary}
-              disabled={!selection.enabled}
-              onClick={selection.acknowledge}
+              href={href({ filter: "all" })}
+              aria-current={query.filter === "all" ? "page" : undefined}
             >
-              {t(selection.draft.submitted ? "acknowledge" : "clearSelection")}
-            </button>
-            {outstanding > 0 && (
-              <button
-                className={s.primary}
-                disabled={!selection.enabled}
-                onClick={selection.confirm}
-              >
-                {t(
-                  selection.busy
-                    ? "saving"
-                    : selection.draft.submitted
-                      ? "retry"
-                      : "markSelected",
-                )}
-              </button>
-            )}
-          </div>
-        </section>
-      )}
-      {!data.items.length && query.kind !== "search" && (
-        <section className={n.empty}>
-          <h2>{t("empty")}</h2>
-          <p>{t("emptyNote")}</p>
-          <Link
-            className={s.secondary}
-            href={href({ filter: "all", kind: "all", q: "" })}
-          >
-            {t("reset")}
-          </Link>
-        </section>
-      )}
-      <ol className={shop ? "account-panel buyer-notification-list" : s.list}>
-        {data.items.map((item) => (
-          <li
-            key={item.id}
-            className={shop ? "buyer-notification-row" : s.card}
-            data-notification-id={item.id}
-          >
-            <div className={s.row}>
-              <div>
-                <h2>
-                  {item.title === null
-                    ? t("restrictedItem")
-                    : item.title || t("untitled")}
-                </h2>
-                <p className={s.muted}>{item.sellerName}</p>
-              </div>
+              {t("all")}
+            </Link>
+            <Link
+              className={s.secondary}
+              href={href({ filter: "unread" })}
+              aria-current={query.filter === "unread" ? "page" : undefined}
+            >
+              {t("unread")}
+            </Link>
+            {status === "ready" && (
               <span className={s.badge}>
-                {t(item.unread ? "unread" : "read")}
+                {t("unreadCount", { count: data.unreadCount })}
               </span>
-            </div>
-            <p>
-              <strong>{t(item.offerKind ? "offer" : "message")}</strong> ·{" "}
-              <time dateTime={item.at}>
-                {format.dateTime(new Date(item.at), {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              </time>
-            </p>
-            {!!item.body && <p className={n.excerpt}>{item.body}</p>}
-            <div className={s.actions}>
-              <Link
-                className={s.secondary}
-                href={inboxHref({ sellerId }, language, item.threadId)}
-              >
-                {t("openConversation")}
-              </Link>
-              <label className={n.select}>
-                <input
-                  type="checkbox"
-                  checked={selected.has(item.id)}
-                  disabled={
-                    !selection.enabled ||
-                    selection.draft.submitted ||
-                    (!selected.has(item.id) &&
-                      (!item.unread || selected.size >= NOTIFICATION_LIMIT))
-                  }
-                  onChange={() => selection.toggle(item)}
-                />
-                <span>{t("selectRead")}</span>
-              </label>
-            </div>
-          </li>
-        ))}
-      </ol>
-      {data.nextBefore && (
-        <Link className={s.secondary} href={href({ before: data.nextBefore })}>
-          {t("older")}
-        </Link>
-      )}
-      {query.before && (
-        <Link className={s.secondary} href={href({})}>
-          {t("latest")}
-        </Link>
-      )}
-      {selection.confirming && (
-        <ConversationDialog title={t("markSelected")} onClose={selection.close}>
-          <p>{t("confirmRead", { count: outstanding })}</p>
-          <p>{t("readNote")}</p>
-          <div className={s.actions}>
+            )}
             <button
               className={s.secondary}
               disabled={selection.busy}
-              onClick={selection.close}
+              onClick={() => void refresh(true)}
             >
-              {t("cancel")}
+              {t("reload")}
             </button>
-            <button
-              className={s.primary}
-              disabled={!selection.enabled}
-              onClick={() => void selection.submit()}
+            <Link
+              className={s.secondary}
+              href={inboxHref({ sellerId }, language)}
             >
-              {t("confirm")}
-            </button>
-          </div>
-        </ConversationDialog>
+              {t("inbox")}
+            </Link>
+          </nav>
+          <form action={base} className={s.actions}>
+            <input
+              type="search"
+              name="q"
+              maxLength={80}
+              defaultValue={query.q}
+              aria-label={t("search")}
+              placeholder={t("search")}
+            />
+            <label className={s.field}>
+              {t("kind")}
+              <select name="kind" defaultValue={query.kind}>
+                <option value="all">{t("allKinds")}</option>
+                <option value="message">{t("message")}</option>
+                <option value="offer">{t("offer")}</option>
+                {!sellerId && (
+                  <option value="search">{t("savedSearch")}</option>
+                )}
+              </select>
+            </label>
+            <input type="hidden" name="lang" value={language} />
+            <input type="hidden" name="filter" value={query.filter} />
+            <button className={s.secondary}>{t("searchSubmit")}</button>
+          </form>
+        </>
+      )}
+      {status === "ready" && (
+        <>
+          {!sellerId && data.matches && (
+            <SearchMatchFeedPanel
+              initial={data.matches}
+              actorSubject={actorSubject}
+              onRead={() => void refresh(true)}
+            />
+          )}
+          {selection.invalid && (
+            <p className={s.notice} role="alert">
+              {t("invalidRecovery")}
+            </p>
+          )}
+          {selection.storageFailed && (
+            <p className={s.notice} role="alert">
+              {t("storageFailed")}
+            </p>
+          )}
+          {!!selection.draft.entries.length && (
+            <section className={s.card}>
+              <h2>
+                {t("selection", { count: selection.draft.entries.length })}
+              </h2>
+              <p>{t("readNote")}</p>
+              <ol className={s.lines}>
+                {selection.draft.entries.map((entry) => (
+                  <li key={entry.row.requestId}>
+                    <strong>{entry.label || t("conversation")}</strong>
+                    <p className={s.muted}>
+                      {t("through", { sequence: entry.row.sequence })}
+                    </p>
+                    {entry.result && (
+                      <p role="status">
+                        {t(
+                          entry.result.state === "read"
+                            ? "acknowledged"
+                            : entry.result.state,
+                        )}
+                      </p>
+                    )}
+                    {entry.result?.state === "read" && (
+                      <small>
+                        {t("through", {
+                          sequence: entry.result.acknowledgedThrough,
+                        })}
+                      </small>
+                    )}
+                  </li>
+                ))}
+              </ol>
+              <div className={s.actions}>
+                <button
+                  className={s.secondary}
+                  disabled={!selection.enabled}
+                  onClick={selection.acknowledge}
+                >
+                  {t(
+                    selection.draft.submitted
+                      ? "acknowledge"
+                      : "clearSelection",
+                  )}
+                </button>
+                {outstanding > 0 && (
+                  <button
+                    className={s.primary}
+                    disabled={!selection.enabled}
+                    onClick={selection.confirm}
+                  >
+                    {t(
+                      selection.busy
+                        ? "saving"
+                        : selection.draft.submitted
+                          ? "retry"
+                          : "markSelected",
+                    )}
+                  </button>
+                )}
+              </div>
+            </section>
+          )}
+          {!data.items.length && query.kind !== "search" && (
+            <section className={n.empty}>
+              <h2>{t("empty")}</h2>
+              <p>{t("emptyNote")}</p>
+              <Link
+                className={s.secondary}
+                href={href({ filter: "all", kind: "all", q: "" })}
+              >
+                {t("reset")}
+              </Link>
+            </section>
+          )}
+          <ol
+            className={shop ? "account-panel buyer-notification-list" : s.list}
+          >
+            {data.items.map((item) => (
+              <li
+                key={item.id}
+                className={shop ? "buyer-notification-row" : s.card}
+                data-notification-id={item.id}
+              >
+                <div className={s.row}>
+                  <div>
+                    <h2>
+                      {item.title === null
+                        ? t("restrictedItem")
+                        : item.title || t("untitled")}
+                    </h2>
+                    <p className={s.muted}>{item.sellerName}</p>
+                  </div>
+                  <span className={s.badge}>
+                    {t(item.unread ? "unread" : "read")}
+                  </span>
+                </div>
+                <p>
+                  <strong>{t(item.offerKind ? "offer" : "message")}</strong> ·{" "}
+                  <time dateTime={item.at}>
+                    {format.dateTime(new Date(item.at), {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </time>
+                </p>
+                {!!item.body && <p className={n.excerpt}>{item.body}</p>}
+                <div className={s.actions}>
+                  <Link
+                    className={s.secondary}
+                    href={inboxHref({ sellerId }, language, item.threadId)}
+                  >
+                    {t("openConversation")}
+                  </Link>
+                  <label className={n.select}>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(item.id)}
+                      disabled={
+                        !selection.enabled ||
+                        selection.draft.submitted ||
+                        (!selected.has(item.id) &&
+                          (!item.unread || selected.size >= NOTIFICATION_LIMIT))
+                      }
+                      onChange={() => selection.toggle(item)}
+                    />
+                    <span>{t("selectRead")}</span>
+                  </label>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {data.nextBefore && (
+            <Link
+              className={s.secondary}
+              href={href({ before: data.nextBefore })}
+            >
+              {t("older")}
+            </Link>
+          )}
+          {query.before && (
+            <Link className={s.secondary} href={href({})}>
+              {t("latest")}
+            </Link>
+          )}
+          {selection.confirming && (
+            <ConversationDialog
+              title={t("markSelected")}
+              onClose={selection.close}
+            >
+              <p>{t("confirmRead", { count: outstanding })}</p>
+              <p>{t("readNote")}</p>
+              <div className={s.actions}>
+                <button
+                  className={s.secondary}
+                  disabled={selection.busy}
+                  onClick={selection.close}
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  className={s.primary}
+                  disabled={!selection.enabled}
+                  onClick={() => void selection.submit()}
+                >
+                  {t("confirm")}
+                </button>
+              </div>
+            </ConversationDialog>
+          )}
+        </>
       )}
     </div>
   );

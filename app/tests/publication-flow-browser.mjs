@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import console from "node:console";
 import { createServer } from "node:http";
 import { readFile, mkdir, readdir } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL, URL } from "node:url";
 import { randomUUID } from "node:crypto";
 import process from "node:process";
@@ -31,8 +31,48 @@ export async function runPublishFlowBrowserChecks({
  export const markReadAction=input=>call('read',input);
  export const blockContactAction=input=>call('block',input);
  export const reportResourceAction=input=>call('report',input);
- export const appealModerationAction=input=>call('appeal',input);`;
+ export const appealModerationAction=input=>call('appeal',input);
+ // The original SQL transport has no current recoverable reply handler.
+ export const sendRecoverableReplyAction=input=>call('sendRecoverableReplyAction',input);`;
   const navigation = `const dest=p=>{const u=new URL(p,location.origin);u.searchParams.set('role',window.__publication.role);return u.href;};const router={push:p=>location.assign(dest(p)),replace:p=>location.replace(dest(p)),back:()=>history.back(),refresh:()=>fetch(location.href+'&data=1').then(r=>r.json()).then(window.__renderPublication)};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const useParams=()=>({});`;
+  const clerk = `
+import {useSyncExternalStore} from 'react';
+const resources=new Set(),observers=new Set(),observed=new WeakSet();
+const subject=()=>current.actor??null;
+const sessionId=()=>subject()?'synthetic-publication-session:'+subject():null;
+let resourceActor,user=null,session=null;
+function currentResources(){const actor=subject();if(actor!==resourceActor){resourceActor=actor;user=actor?{id:actor}:null;session=actor?{id:sessionId(),status:'active'}:null}}
+const clerk={get user(){currentResources();return user},get session(){currentResources();return session},addListener(listener){resources.add(listener);listener({user:clerk.user,session:clerk.session});return()=>resources.delete(listener)}};
+function notify(){[...resources].forEach(listener=>listener({user:clerk.user,session:clerk.session}));[...observers].forEach(listener=>listener())}
+function observe(value){if(observed.has(value))return value;const proxy=new Proxy(value,{set(target,key,value){const before=subject();Reflect.set(target,key,value);if(key==='actor'&&before!==subject())notify();return true}});observed.add(proxy);return proxy}
+let current=observe(window.__publication);
+Object.defineProperty(window,'__publication',{configurable:true,get:()=>current,set(value){const before=subject();current=observe(value);if(before!==subject())notify()}});
+export const useClerk=()=>clerk;
+export function useAuth(){const actor=useSyncExternalStore(listener=>{observers.add(listener);return()=>observers.delete(listener)},subject);return {isLoaded:true,isSignedIn:!!actor,userId:actor,sessionId:actor?'synthetic-publication-session:'+actor:null}}
+export function useUser(){const auth=useAuth();return {isLoaded:auth.isLoaded,isSignedIn:auth.isSignedIn,user:clerk.user}}
+export const ClerkProvider=({children})=>children;
+`;
+  const unusedActions = {
+    "message-attachments/actions": [
+      "stageAttachmentAction",
+      "attachmentStatusAction",
+      "removeAttachmentAction",
+    ],
+    "offers/actions": ["readOffersAction", "changeOfferAction"],
+    "purchase-reviews/actions": ["createPurchaseReviewAction"],
+    "library/actions": ["readLibraryAction", "changeLibraryAction"],
+    "promotions/metric-actions": ["recordPromotionMetricAction"],
+    "inventory/actions": ["readPublicInventoryAction"],
+    "buyer-cart/actions": ["readBuyerCartAction", "changeBuyerCartAction"],
+  };
+  const actionModules = [
+    "selling/publish-actions",
+    "selling/publication-actions",
+    "messaging/actions",
+    "messaging/reply-actions",
+    "trust/actions",
+    ...Object.keys(unusedActions),
+  ];
   await build({
     configFile: false,
     root: app,
@@ -59,7 +99,7 @@ export async function runPublishFlowBrowserChecks({
       {
         name: "publication-test-transport",
         enforce: "pre",
-        resolveId(id) {
+        resolveId(id, importer) {
           if (
             [
               "next/link",
@@ -69,16 +109,34 @@ export async function runPublishFlowBrowserChecks({
             ].includes(id)
           )
             return "\0publish:" + id;
-          if (
-            /(?:^|\/)(?:publish-actions|publication-actions|actions)$/.test(id)
-          )
-            return "\0publish:actions";
+          const path = (
+            id.startsWith(".") && importer ? resolve(dirname(importer), id) : id
+          ).replaceAll("\\", "/");
+          const actionModule = actionModules.find(
+            (name) =>
+              path.endsWith("/features/" + name) ||
+              path.endsWith("/features/" + name + ".ts"),
+          );
+          if (actionModule) return "\0publish:actions:" + actionModule;
         },
         load(id) {
-          if (id === "\0publish:actions") return actions;
+          if (id.startsWith("\0publish:actions:")) {
+            const module = id.slice("\0publish:actions:".length),
+              names = unusedActions[module];
+            // No sample success for imported capabilities outside this journey.
+            return names
+              ? names
+                  .map(
+                    (name) =>
+                      "export const " +
+                      name +
+                      "=async()=>({ok:false,code:'NOT_AVAILABLE'});",
+                  )
+                  .join("\n")
+              : actions;
+          }
           if (id === "\0publish:next/navigation") return navigation;
-          if (id === "\0publish:@clerk/nextjs")
-            return `export const useAuth=()=>({isLoaded:true,isSignedIn:true,userId:window.__publication.actor});`;
+          if (id === "\0publish:@clerk/nextjs") return clerk;
           if (id === "\0publish:next/link")
             return `import React from 'react';export default function Link({href,prefetch,...props}){const u=new URL(href,location.origin);u.searchParams.set('role',window.__publication.role);return React.createElement('a',{...props,href:u.href});}`;
           if (id === "\0publish:next/image")
@@ -311,7 +369,9 @@ export async function runPublishFlowBrowserChecks({
       await expect
         .poll(() =>
           page.evaluate(
-            () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+            () =>
+              globalThis.document.documentElement.scrollWidth <=
+              globalThis.innerWidth,
           ),
         )
         .toBe(true);
