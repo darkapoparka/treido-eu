@@ -81,6 +81,8 @@ Cached/indexed records are derived. A stale search result cannot grant purchase 
 
 Conversation identity binds buyer, seller and listing; prevent self-contact where appropriate. Messages persist before delivery signals. Use server sequence/cursor ordering, participant authorization, a sender-scoped retry key, bounded attachments and monotonic read progress. Membership revocation applies to business inbox reads, not just writes. Prefer simple bounded polling first unless actual realtime needs justify a provider.
 
+Reply recovery retains the same human's text, image IDs and original request ID for deliberate exact retry. Authentication finishes before opening the database. A reply response can acknowledge that attempt only while its original active session and conversation generation remain current; a session or conversation round trip does not revive an obsolete response. Late success, failure and cleanup cannot clear another draft or unlock a newer send. An uncertain attempt remains retryable when ordinary new contact is unavailable; the server still verifies current authority before replaying a receipt.
+
 Offers: `pending → accepted | rejected | withdrawn | expired | superseded`. Countering creates a new immutable offer and supersedes the previous pending one atomically. Validate current participant, listing revision, currency, amount and expiry. Acceptance records agreed terms and obtains the same allocation used by checkout; it does not mark paid. An accepted offer remains historical even if its allocation later expires.
 
 ## Unique-item allocation
@@ -96,6 +98,8 @@ Business listings can use `stocked` inventory with validated SKU option combinat
 Allocation lines bind listing/SKU, quantity and quote/offer. Lock all affected inventory in stable ID order, verify current availability, and reserve every line atomically or none. No offer path, import or checkout has its own weaker stock counter. Reconcile expiry and uncertain provider outcomes before allowing a conflicting claim. [Data model](data-model.md) specifies constraints and race cases.
 
 The cart groups seller/currency obligations; each checkout produces one seller/currency order with one or more immutable line snapshots. Show all known item/delivery/fee/tax amounts before payment, or explicitly require missing delivery information. Pickup/contact-only arrangements state that payment is outside Treido and never produce platform-paid reviews or GMV. Fulfilment, return/case, payment and settlement are independent lifecycles from [billing](../billing.md) and [journeys](journeys.md).
+
+Order controls isolate private input and pending acknowledgements by human, actor key, operating seller and order. An uncertain command retains its exact request ID and terms for deliberate retry. The server checks current authority and an existing exact receipt before rejecting an outdated revision. A definitive revision conflict requests a new read; correction stays locked until a distinct current-authority order view supplies a different revision. A view that arrived before the rejection is insufficient. Session/resource changes and obsolete completion or cleanup cannot acknowledge another operation.
 
 ## Honest insight
 

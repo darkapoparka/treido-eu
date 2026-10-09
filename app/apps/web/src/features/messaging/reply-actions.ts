@@ -5,13 +5,10 @@ import { SellerError } from "../sellers/errors";
 import { sendRecoverableReply } from "./reply.server";
 export async function sendRecoverableReplyAction(raw: unknown) {
   try {
+    const identity = await requireVerifiedIdentity();
     return {
       ok: true as const,
-      data: await sendRecoverableReply(
-        getDatabase(),
-        await requireVerifiedIdentity(),
-        raw,
-      ),
+      data: await sendRecoverableReply(getDatabase(), identity, raw),
     };
   } catch (error) {
     if (!(error instanceof SellerError))

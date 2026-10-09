@@ -144,6 +144,13 @@ jobs:
           pnpm exec eslint tests/t56/catalogue-import-session-entry.tsx tests/t56/catalogue-import-session-browser.mjs --max-warnings=0
           node tests/t56/catalogue-import-session-browser.mjs
 
+      - name: Reply and order command recovery
+        run: |
+          pnpm exec prettier --check tests/messaging/reply-session-entry.tsx tests/messaging/reply-session-browser.mjs tests/t56/payment-order-session-browser.mjs
+          pnpm exec eslint tests/messaging/reply-session-entry.tsx tests/messaging/reply-session-browser.mjs tests/t56/payment-order-session-browser.mjs --max-warnings=0
+          node tests/messaging/reply-session-browser.mjs
+          node tests/t56/payment-order-session-browser.mjs
+
       - name: Seller photo hydration browser regressions
         run: node tests/media-picker-browser.mjs
 

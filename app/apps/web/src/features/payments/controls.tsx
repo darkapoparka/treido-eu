@@ -1,6 +1,7 @@
 "use client";
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useTransition,
@@ -206,15 +207,7 @@ export function OnboardingButton({
     </>
   );
 }
-export function OrderControls({
-  order,
-  actorKey,
-  actorSubject,
-  sellerId,
-  canFulfil,
-  canRefund,
-  language,
-}: {
+type OrderControlsProps = {
   order: OrderView;
   actorKey: string;
   actorSubject: string;
@@ -222,7 +215,29 @@ export function OrderControls({
   canFulfil: boolean;
   canRefund: boolean;
   language: PaymentLanguage;
-}) {
+};
+export function OrderControls(props: OrderControlsProps) {
+  return (
+    <PrivateOrderControls
+      key={JSON.stringify([
+        props.actorSubject,
+        props.actorKey,
+        props.sellerId,
+        props.order.id,
+      ])}
+      {...props}
+    />
+  );
+}
+function PrivateOrderControls({
+  order,
+  actorKey,
+  actorSubject,
+  sellerId,
+  canFulfil,
+  canRefund,
+  language,
+}: OrderControlsProps) {
   const clerk = useClerk(),
     router = useRouter(),
     [pending, start] = useTransition(),
@@ -233,8 +248,74 @@ export function OrderControls({
   const action = useReverification(changeOrderAction),
     t = paymentText(language),
     scope = `treido-order-command:${actorKey}:${order.id}`;
-  const mounted = usePaymentLifetime();
+  const mounted = useRef(false);
+  useLayoutEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const [recovery, setRecovery] = useState<OrderCommand | null>(null);
+  const [rejectedView, setRejectedView] = useState<OrderView | null>(null);
+  const latestView = useRef(order);
+  useLayoutEffect(() => {
+    latestView.current = order;
+  }, [order]);
+  const sessionFence = useRef({ generation: 0, signature: "" });
+  useEffect(() => {
+    const signature = () =>
+      `${clerk.user?.id}:${clerk.session?.id}:${clerk.session?.status}`;
+    sessionFence.current.signature = signature();
+    return clerk.addListener(() => {
+      const next = signature();
+      if (sessionFence.current.signature !== next) {
+        sessionFence.current.signature = next;
+        sessionFence.current.generation++;
+        busy.current = false;
+      }
+    });
+  }, [clerk]);
+  useEffect(() => {
+    if (
+      mounted.current &&
+      clerk.user?.id === actorSubject &&
+      rejectedView &&
+      order !== rejectedView &&
+      recovery &&
+      recovery.id === order.id &&
+      recovery.actorKey === actorKey &&
+      order.revision !== recovery.expectedRevision
+    ) {
+      const generation = sessionFence.current.generation;
+      const timer = window.setTimeout(() => {
+        if (
+          !mounted.current ||
+          clerk.user?.id !== actorSubject ||
+          clerk.session?.status !== "active" ||
+          sessionFence.current.generation !== generation
+        )
+          return;
+        // Only refreshed, currently authorized server data unlocks a correction.
+        // An uncertain request keeps its exact ID and terms for receipt replay.
+        try {
+          sessionStorage.removeItem(scope);
+        } catch {}
+        if (recovery.action === "refund") setReason(recovery.reason);
+        setRecovery(null);
+        setRejectedView(null);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [
+    order,
+    rejectedView,
+    recovery,
+    scope,
+    clerk,
+    actorSubject,
+    actorKey,
+    mounted,
+  ]);
   useEffect(() => {
     function restore() {
       try {
@@ -244,6 +325,7 @@ export function OrderControls({
           if (
             value.id === order.id &&
             value.actorKey === actorKey &&
+            value.sellerId === sellerId &&
             validId(value.requestId)
           )
             setRecovery(value);
@@ -256,11 +338,14 @@ export function OrderControls({
       window.clearTimeout(timer);
       window.removeEventListener("pageshow", restore);
     };
-  }, [scope, order.id, actorKey]);
+  }, [scope, order.id, actorKey, sellerId]);
   function submit(kind: OrderCommand["action"]) {
     if (
       busy.current ||
+      rejectedView !== null ||
       clerk.user?.id !== actorSubject ||
+      !clerk.session?.id ||
+      clerk.session?.status !== "active" ||
       (kind === "refund" && !confirmed)
     )
       return;
@@ -280,11 +365,18 @@ export function OrderControls({
     } catch {}
     busy.current = true;
     setError(null);
+    const generation = sessionFence.current.generation,
+      sessionId = clerk.session.id;
+    const current = () =>
+      mounted.current &&
+      clerk.user?.id === actorSubject &&
+      clerk.session?.id === sessionId &&
+      clerk.session?.status === "active" &&
+      sessionFence.current.generation === generation;
     start(async () => {
       try {
         const result = await action(command);
-        if (!result || !mounted.current || clerk.user?.id !== actorSubject)
-          return;
+        if (!result || !current()) return;
         if (result.ok) {
           try {
             sessionStorage.removeItem(scope);
@@ -293,12 +385,19 @@ export function OrderControls({
           setReason("");
           setConfirmed(false);
           router.refresh();
-        } else setError(paymentError(result.code, language));
+        } else {
+          setError(paymentError(result.code, language));
+          // Committed exact-ID commands replay successfully before the server
+          // checks revisions. Keep a rejected request locked until a fresh view.
+          if (result.code === "CONFLICT") {
+            setRejectedView(latestView.current);
+            router.refresh();
+          }
+        }
       } catch {
-        if (mounted.current && clerk.user?.id === actorSubject)
-          setError(t.failed);
+        if (current()) setError(t.failed);
       } finally {
-        busy.current = false;
+        if (current()) busy.current = false;
       }
     });
   }
@@ -309,7 +408,11 @@ export function OrderControls({
       {sellerId && canFulfil && paid && order.fulfilmentState === "pending" && (
         <button
           className={s.primary}
-          disabled={pending || (!!recovery && recovery.action !== "ready")}
+          disabled={
+            pending ||
+            !!rejectedView ||
+            (!!recovery && recovery.action !== "ready")
+          }
           onClick={() => submit("ready")}
         >
           {t.readyAction}
@@ -318,7 +421,7 @@ export function OrderControls({
       {!sellerId && paid && order.fulfilmentState === "ready" && (
         <button
           className={s.primary}
-          disabled={pending}
+          disabled={pending || !!rejectedView}
           onClick={() => submit("collected")}
         >
           {t.collectedAction}
@@ -328,7 +431,7 @@ export function OrderControls({
         canRefund &&
         !order.refundState &&
         ["paid", "reconciliation", "disputed"].includes(order.paymentState) && (
-          <fieldset disabled={pending} className={s.field}>
+          <fieldset disabled={pending || !!rejectedView} className={s.field}>
             <label>
               {t.reason}
               <textarea
@@ -380,7 +483,11 @@ export function OrderControls({
           )}
           <button
             className={s.secondary}
-            disabled={pending || (recovery.action === "refund" && !confirmed)}
+            disabled={
+              pending ||
+              !!rejectedView ||
+              (recovery.action === "refund" && !confirmed)
+            }
             onClick={() => submit(recovery.action)}
           >
             {t.retryOriginal}

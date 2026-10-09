@@ -9,6 +9,7 @@ import { backendConfigured } from "@/features/sellers/backend-status.server";
 import {
   requirePageIdentity,
   recoveryKey,
+  readPrivatePage,
 } from "@/features/sellers/page-context.server";
 import { Workspace } from "@/features/sellers/workspace";
 import { listOwnedSellers } from "@/features/sellers/persistence.server";
@@ -37,7 +38,9 @@ export default async function SellPage({
       `/sell?${intent === "business" ? "intent=business&" : ""}lang=${language}`,
     );
     if (intent === "business") redirect(`/app/onboarding?lang=${language}`);
-    const sellers = await listOwnedSellers(getDatabase(), identity);
+    const sellers = await readPrivatePage(() =>
+      listOwnedSellers(getDatabase(), identity),
+    );
     const personal = sellers.find((seller) => seller.kind === "personal");
     if (personal)
       redirect(

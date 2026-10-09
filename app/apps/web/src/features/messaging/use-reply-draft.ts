@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { useContactRecovery } from "../purchase-reviews/contact-recovery";
 import { sendRecoverableReplyAction } from "./reply-actions";
 import {
@@ -17,7 +17,14 @@ export function useReplyDraft(
   attachments: { ids: string[]; ready: boolean } = { ids: [], ready: true },
 ) {
   const clerk = useClerk(),
-    { isLoaded, user } = useUser();
+    auth = useAuth({ treatPendingAsSignedOut: true });
+  const sessionId = auth.isLoaded && auth.isSignedIn ? auth.sessionId : null;
+  const context = JSON.stringify([
+    scope.actorSubject,
+    scope.sellerId,
+    scope.threadId,
+    sessionId,
+  ]);
   const recovery = useContactRecovery(
     "reply:" +
       scope.actorSubject +
@@ -30,29 +37,74 @@ export function useReplyDraft(
   const [busy, setBusy] = useState(false),
     [storageFailed, setStorageFailed] = useState(false);
   const [acknowledgment, setAcknowledgment] = useState(0);
-  const life = useRef({ mounted: true, busy: false });
-  const sameActor = isLoaded && user?.id === scope.actorSubject;
+  const life = useRef({ mounted: true, busy: false, generation: 0, context });
+  const sameActor =
+    auth.isLoaded &&
+    auth.isSignedIn &&
+    auth.userId === scope.actorSubject &&
+    !!sessionId &&
+    clerk.user?.id === scope.actorSubject &&
+    clerk.session?.id === sessionId &&
+    clerk.session?.status === "active";
+  useLayoutEffect(() => {
+    const current = life.current;
+    if (current.context !== context) {
+      current.context = context;
+      ++current.generation;
+      current.busy = false;
+      setBusy(false);
+    }
+  }, [context]);
   useEffect(() => {
     const current = life.current;
     current.mounted = true;
+    const signature = () =>
+      JSON.stringify([
+        clerk.user?.id ?? null,
+        clerk.session?.id ?? null,
+        clerk.session?.status ?? null,
+      ]);
+    let previous = signature();
+    // Observe every transition, including a session round trip batched into
+    // one React render. Same-human draft storage keeps its original command.
+    const unsubscribe = clerk.addListener(() => {
+      const next = signature();
+      if (current.mounted && next !== previous) {
+        previous = next;
+        ++current.generation;
+        current.busy = false;
+        setBusy(false);
+      }
+    });
     return () => {
       current.mounted = false;
+      ++current.generation;
+      unsubscribe();
     };
-  }, []);
+  }, [clerk]);
+  function current() {
+    return (
+      life.current.mounted &&
+      life.current.context === context &&
+      sameActor &&
+      clerk.user?.id === scope.actorSubject &&
+      clerk.session?.id === sessionId &&
+      clerk.session?.status === "active"
+    );
+  }
   function store(next: ReplyDraft) {
     const saved = recovery.write(next);
     setStorageFailed(!saved);
     return saved;
   }
   function edit(body: string) {
-    if (!sameActor || busy || invalid || draft.attempt || body.length > 4000)
+    if (!current() || busy || invalid || draft.attempt || body.length > 4000)
       return;
     store({ ...draft, body, code: null, receipt: null });
   }
   async function send() {
     if (
-      !sameActor ||
-      clerk.user?.id !== scope.actorSubject ||
+      !current() ||
       life.current.busy ||
       invalid ||
       draft.rejected ||
@@ -88,10 +140,12 @@ export function useReplyDraft(
     }
     life.current.busy = true;
     setBusy(true);
+    const generation = life.current.generation;
+    const operationCurrent = () =>
+      current() && generation === life.current.generation;
     try {
       const result = await sendRecoverableReplyAction(command);
-      if (!life.current.mounted || clerk.user?.id !== scope.actorSubject)
-        return;
+      if (!operationCurrent()) return;
       if (result.ok) {
         store({ ...emptyReplyDraft(), receipt: result.data });
         setAcknowledgment((value) => value + 1);
@@ -103,15 +157,20 @@ export function useReplyDraft(
           code: result.code,
         });
     } catch {
-      if (life.current.mounted && clerk.user?.id === scope.actorSubject)
-        store({ ...next, code: "NOT_AVAILABLE" });
+      if (operationCurrent()) store({ ...next, code: "NOT_AVAILABLE" });
     } finally {
-      life.current.busy = false;
-      if (life.current.mounted) setBusy(false);
+      if (
+        life.current.mounted &&
+        life.current.context === context &&
+        generation === life.current.generation
+      ) {
+        life.current.busy = false;
+        setBusy(false);
+      }
     }
   }
   function editRejected() {
-    if (!sameActor || busy || invalid || !draft.rejected) return;
+    if (!current() || busy || invalid || !draft.rejected) return;
     store({ ...emptyReplyDraft(), body: draft.body });
   }
   return {

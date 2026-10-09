@@ -7,7 +7,7 @@ import type { VerifiedIdentity } from "../../server/identity/clerk.server";
 import { libraryActorKey } from "../library/cursor.server";
 import { executeOrderCase, recoverOrderAftercare } from "./cases.server";
 import { executeOrderRefund } from "./refund-commands.server";
-import { changePaidOrder } from "../payments/orders.server";
+import { changePaidOrder, readPaidOrders } from "../payments/orders.server";
 import { prepareOrderRefund } from "./refund-commands.server";
 import { readOrderAftercare } from "./queries.server";
 import { submitOrderFeedback } from "../order-feedback/commands.server";
@@ -194,6 +194,88 @@ export function defineAftercareBoundaryCases(
     },
   });
   describe("T64 original aftercare authority on disposable native PostgreSQL", () => {
+    it("paid order exact receipt replays after later revisions while stale unaccepted commands require fresh authority", async () => {
+      const f = await get("case-replay");
+      // The declared paid fixture starts collected. Prepare only this isolated
+      // order's pickup state; quote, accepted terms, stock and grants stay intact.
+      await f.admin.query(
+        "UPDATE treido.paid_orders SET fulfilment_state='pending' WHERE id=$1",
+        [f.orderId],
+      );
+      const before = await snapshot(f),
+        providers = f.providerCounts();
+      const ready = {
+        actorKey: libraryActorKey(f.merchant),
+        id: f.orderId,
+        sellerId: f.sellerId,
+        requestId: randomUUID(),
+        action: "ready",
+        expectedRevision: f.orderRevision,
+        reason: "",
+      };
+      const accepted = await changePaidOrder(f.database, f.merchant, ready);
+      expect(accepted.revision).toBe(f.orderRevision + 1);
+      const stale = {
+        ...ready,
+        actorKey: libraryActorKey(f.buyer),
+        sellerId: null,
+        requestId: randomUUID(),
+        action: "collected",
+      };
+      await expect(
+        changePaidOrder(f.database, f.buyer, stale),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(
+        (
+          await f.admin.query(
+            "SELECT count(*)::int AS count FROM treido.paid_order_receipts WHERE order_id=$1 AND request_id=$2",
+            [f.orderId, stale.requestId],
+          )
+        ).rows[0].count,
+      ).toBe(0);
+      const [fresh] = await readPaidOrders(
+        f.database,
+        f.buyer,
+        null,
+        f.orderId,
+      );
+      expect(fresh.revision).toBe(accepted.revision);
+      const corrected = {
+        ...stale,
+        requestId: randomUUID(),
+        expectedRevision: fresh.revision,
+      };
+      expect(await changePaidOrder(f.database, f.buyer, corrected)).toEqual({
+        id: f.orderId,
+        revision: accepted.revision + 1,
+      });
+      expect(await changePaidOrder(f.database, f.merchant, ready)).toEqual(
+        accepted,
+      );
+      await expect(
+        changePaidOrder(f.database, f.merchant, {
+          ...ready,
+          expectedRevision: fresh.revision,
+        }),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(
+        (
+          await f.admin.query(
+            "SELECT count(*)::int AS count FROM treido.paid_order_receipts WHERE order_id=$1",
+            [f.orderId],
+          )
+        ).rows[0].count,
+      ).toBe(2);
+      expect(
+        (await readPaidOrders(f.database, f.buyer, null, f.orderId))[0],
+      ).toMatchObject({
+        revision: accepted.revision + 1,
+        fulfilmentState: "collected",
+      });
+      expect(await snapshot(f)).toEqual(before);
+      expect(f.providerCounts()).toEqual(providers);
+    });
+
     it("one original execute race emits one POST and unknown outcomes keep the original budget/expiry while jobs only read", async () => {
       const f = await get("one-post-unknown"),
         before = await snapshot(f);
