@@ -1,6 +1,6 @@
 # Treido UI pattern library
 
-Owner: this file specifies reusable presentation and interaction patterns; [styling](../styling.md) owns change policy, [verification](ui-verification.md) owns acceptance, and [tasks](../tasks.md) alone owns progress. Read the relevant pattern and its implementation owners, not the whole reference archive. Measurements below were inspected on October 2, 2026; they are calibration references, not a new universal token package.
+Owner: this file specifies reusable presentation and interaction patterns; [styling](../styling.md) owns change policy, [verification](ui-verification.md) owns acceptance, and [tasks](../tasks.md) alone owns progress. Read the relevant pattern and its implementation owners, not the whole reference archive. Measurements identify recorded source states; consult their cited audit dates. They are calibration references, not a new universal token package.
 
 ## Two visual systems, one marketplace
 
@@ -10,9 +10,11 @@ Owner: this file specifies reusable presentation and interaction patterns; [styl
 | Direct Sell and authentication | Existing selling/account forms and their own typography | Verified continuation and owned draft commands; no mandatory business dashboard |
 | Seller Studio: private `/app` and isolated `/admin-preview` | Existing Shopify-measured merchant shell, Inter typography and feature modules | Private: current human/seller/resource authority. Preview: explicitly fictional device state only |
 | Platform operations: `/ops` | Existing restricted operator form language; no unrequested restyling | Operation-specific operator grants, never business-owner status |
-| Retained native app | Expo implementation and assigned native reference | Separate native acceptance; responsive web is not a native build |
+| Retained native app | Shop composition implemented per platform, with the assigned native reference | Separate native acceptance; responsive web is not a native build |
 
 Shop buyer UI and Shopify admin share design ideas, but they are not the same component library or identical UX. Do not apply Studio's dense table typography to buying, or buyer-sized pills to every admin control. Shopify is a design reference, not Treido's commerce backend. No Shopify account or store is required for a personal seller.
+
+Shopify's current [App Design Guidelines](https://shopify.dev/docs/apps/design) call for merchant workflows that match the host admin and remain adaptable and accessible. Its [App Home reference](https://shopify.dev/docs/api/app-home/latest/web-components) supplies Polaris web components; [Polaris React is archived and deprecated](https://github.com/Shopify/polaris-react-archive). The [migration guide](https://shopify.dev/docs/apps/build/app-home/migrate-from-polaris-react) applies to iframe-based Shopify apps and their App Bridge integration. Treido Studio implements the selected admin patterns through its existing scoped components/CSS; this guidance does not change the buyer system or install an embedded-app runtime. Public documentation establishes guidance, while actual signed-in admin comparison establishes visual evidence.
 
 ## Source and cascade ownership
 
@@ -23,6 +25,19 @@ Studio owns [admin.module.css](../app/apps/web/src/features/sellers/admin.module
 Current Studio shell declarations: ink `#101010`, muted `#707070`, line `#ebebeb`, dark surround `#0a0a0a`; base type 13px/20px, -0.13px tracking, contextual alternates disabled. White canvas radius 16px; desktop inset 4px and sidebar 220px. Home card radius 24px; editor main-panel radius 20px and field radius 12px. These are distinct roles, not inconsistent values to normalize.
 
 Keep Tailwind 4 + CSS + CSS Modules. Preserve source order, selector specificity, inheritance, media queries, scrollbars and DOM wrappers when extracting. Fix an owning selector rather than stacking global overrides or broad substring matches. A numerical match before the cascade resolves is not visual proof.
+
+### Route-to-presenter starting points
+
+| Route family | Reuse these current owners |
+|---|---|
+| Buyer Home and root Explore | [home.tsx](../app/apps/web/src/features/discovery/home.tsx), [public-home.tsx](../app/apps/web/src/features/discovery/public-home.tsx), [public-explore.tsx](../app/apps/web/src/features/discovery/public-explore.tsx); existing seller containers, rails and dock |
+| Search and category results | [search.tsx](../app/apps/web/src/features/discovery/search.tsx), [public-search-results.tsx](../app/apps/web/src/features/discovery/public-search-results.tsx), existing query/filter sheets and return navigation |
+| Item and related supply | [published-detail.tsx](../app/apps/web/src/features/discovery/published-detail.tsx), [product-shell.tsx](../app/apps/web/src/features/discovery/product-shell.tsx), [public-listing-grid.tsx](../app/apps/web/src/features/discovery/public-listing-grid.tsx); shared gallery/card owners |
+| Public seller | [public-store.tsx](../app/apps/web/src/features/discovery/public-store.tsx), native merchant chrome/CSS from BUY-03 |
+| Buyer Minis | [minis-catalog.tsx](../app/apps/web/src/features/discovery/minis-catalog.tsx), [tool-catalogue.tsx](../app/apps/web/src/features/shopping-tools/tool-catalogue.tsx), [mini-frame.tsx](../app/apps/web/src/features/discovery/mini-frame.tsx); BUY-04 below |
+| Private seller Studio | [admin-shell.tsx](../app/apps/web/src/features/sellers/admin-shell.tsx), feature modules and scoped admin CSS from STU-01–04 |
+
+Read-only Shop comparison owners are under `L:/inspiration/shop-app/apps/web/src/features/discovery/`: `home.tsx`, `search.tsx`, `product.tsx`, `native-merchant.tsx`, `minis.tsx` and `mini-frame.tsx`, with `src/app/globals.css` and their feature styles. Read the matching branch and imported styles before extracting a presenter. The source Home seller containers, Search composer/results and Minis carousel/inline search identify composition and interaction owners; their reference inventory and assets do not establish Treido eligibility or publication rights.
 
 ## BUY-01 — Discovery chrome and public seller scope
 
@@ -79,6 +94,16 @@ Owners: existing discovery components, [product-information-sheet.tsx](../app/ap
 Reuse sheet anchoring, backdrop, dismissal, safe areas and return semantics; do not create a new modal system per feature. Preserve applied versus draft filter state: cancel cannot commit. Errors remain in the current flow with retained input and explicit retry. Screenshots are evidence, never interactive component backgrounds.
 
 The current reference cart/checkout is not stock, quote or payment authority. Real checkout retains its visual family while binding seller/currency orders, authoritative amounts and allocation. Payment redirects, optimistic UI and browser storage never establish a paid order. Preserve buyer account and guest-language flows when adding seller entry links.
+
+### Buyer Minis: catalogue and readable tool canvas
+
+The catalogue reuses `MiniCatalogSurface`, the existing featured carousel and row presentation, original Treido artwork and four-destination dock. Keep 72px recent thumbnails and 44px row icons. Inline `native-mini-searchbar` / `native-mini-search-results` preserves the catalogue query through a tool excursion; Cancel/Escape returns focus to Search. Mini-only `miniSearch` / `miniQuery` presentation state stays separate from public `q` and filters. Show actual visits and the seven real tools; Voice is an input mode within Find.
+
+`MiniShell` already supplies the main landmark and black 44px host header. Its direct screen child is a `<section className={s.content}>`, activating the existing `.mini-shell > section` rule: 28px top corners and `min-height: calc(100dvh - 44px)`. Genuine tool modules explicitly give `.content` the existing white `var(--surface, #fff)` background and `var(--text-primary, #171717)` text. Reuse [tool-ui.tsx](../app/apps/web/src/features/shopping-tools/tool-ui.tsx) and the owning shopping-tools, gift-finder, photo-match or assistant-tools CSS module. Keep native reference skins in their own owners.
+
+Loading, guest, denied, empty and unavailable tools use this same readable canvas and reachable actions. Inspect computed colors, one main landmark, keyboard focus, long translated copy and mobile overflow in those states as well as results. Keep the accepted header, font, form spacing and artwork frame while repairing a surface defect.
+
+For task screens, read the Shop comparison's `discovery/sol.tsx` and `sol.module.css` for the conversation/composer hierarchy. Place the actual task input before optional advanced criteria. Reuse [IntentControls](../app/apps/web/src/features/shopping-tools/intent-controls.tsx) and its existing details/form for those criteria, and [AssistantInterpretInput](../app/apps/web/src/features/assistant-runs/interpreted-intent.tsx) for genuine text, voice or photo actions with consent and canonical review. Preserve input, criteria and return state. Feedback cards need an actual status, pending operation or message; keep idle Reload in a compact action row. Source fixture responses and staged microphone behavior do not establish a connected assistant.
 
 ## STU-01 — Shell, page hierarchy and exits
 

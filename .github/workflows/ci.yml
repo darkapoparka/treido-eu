@@ -120,6 +120,13 @@ jobs:
           node tests/t56/workspace-session-browser.mjs
           node tests/t56/account-settings-session-browser.mjs
 
+      - name: Shopping session recovery and assistant input states
+        run: |
+          pnpm exec prettier --check tests/t56/shopping-session-entry.tsx tests/t56/shopping-session-browser.mjs tests/t56/assistant-input-display-entry.tsx tests/t56/assistant-input-display-browser.mjs
+          pnpm exec eslint tests/t56/shopping-session-entry.tsx tests/t56/shopping-session-browser.mjs tests/t56/assistant-input-display-entry.tsx tests/t56/assistant-input-display-browser.mjs --max-warnings=0
+          node tests/t56/shopping-session-browser.mjs
+          node tests/t56/assistant-input-display-browser.mjs
+
       - name: Private attachment browser regressions
         run: node tests/t72/attachment-browser.mjs
 

@@ -91,6 +91,19 @@
   cursor: pointer;
   min-height: 28px;
 }
+.advanced {
+  margin-top: 12px;
+}
+.advanced > summary {
+  min-height: 44px;
+  padding-block: 12px;
+}
+.advanced[open] > summary {
+  margin-bottom: 12px;
+}
+.filter .nav :is(button, a) {
+  min-height: 44px;
+}
 .fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

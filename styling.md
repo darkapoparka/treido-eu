@@ -30,6 +30,16 @@ The copied application at `app/apps/web` is the current visual baseline. The nat
 
 T01 records a baseline commit/file state, browser, operating system, viewport, device pixel ratio, font availability, fixture, route, scroll position and overlay state. A screenshot without those conditions is not a reproducible baseline. Once accepted, do not regenerate it simply to make a diff pass.
 
+## Implement the next screen through its owner
+
+New buyer screens, including phone layouts and shopping tools, follow Shop composition and controls. Seller Studio follows the Shopify admin system inside its scoped shell. Choose the route's existing presenter and CSS owners from [UI patterns](docs/ui-patterns.md) before adding markup; a successful backend read does not make an unstyled page complete.
+
+1. Read the corresponding source component, its styles and the accepted Treido caller. Trace the shell, font, image frame, content hierarchy, scroll container and navigation through the actual DOM. `L:/inspiration/shop-app` is a read-only comparison source; reuse Treido's current owners for implementation.
+2. Bind a bounded genuine view model to that presenter. Local and hosted data modes use the same visual owner. Put new marketplace facts and actions in the existing content slots, preserving accepted geometry, artwork and typography.
+3. Render loading, true empty, unavailable, denied and pending states within the same styled surface. Keep input and a useful retry when a read fails. Check foreground/background and disabled-control contrast after the cascade resolves; inherited text on a dark host is not a content surface.
+4. Check BG/EN, long names, 320/393px phones and affected desktop/breakpoint states with fonts and artwork loaded. Confine horizontal scrolling to the existing rails/tables; keep the page, dock and actions reachable with a keyboard or mobile keyboard open.
+5. Follow the real action and return: filters/language, Back/Forward, query, scroll, gallery selection, Cancel/Escape and opener focus. Inspect the rendered changed route and its failure state before accepting it. Use the existing task for evidence; this workflow creates no additional queue or approval ceremony.
+
 ## Actual styling system
 
 The web uses Tailwind CSS 4, ordinary CSS and CSS Modules. The audit found **no StyleX dependency/import**. Keep this system. Do not introduce StyleX, a component-library theme, a new utility framework or a default font as a refactoring step.

@@ -36,8 +36,7 @@ export const toolCopy = {
       "Find real published items, inspect the facts, and make your own shortlist.",
     deterministic:
       "Catalogue results use published facts and your selected filters.",
-    findNote:
-      "Set your own criteria. Results must match every supported filter; no hidden relaxation or invented recommendations.",
+    findNote: "Search by keyword, then narrow the results with filters.",
     dealNote:
       "Ordered by current item price within your filters, not by an invented discount. Delivery costs and complete totals are unknown.",
     compareNote:
@@ -47,6 +46,7 @@ export const toolCopy = {
     sellHelperNote:
       "Review proposed changes to a draft you can edit. Apply them explicitly; no automatic publication.",
     criteria: "Search criteria",
+    appliedFilters: "Applied filters",
     query: "Keywords or model",
     category: "Category",
     allCategories: "All categories",
@@ -248,8 +248,7 @@ export const toolCopy = {
       "Намерете реални публикувани артикули, прегледайте фактите и направете свой списък.",
     deterministic:
       "Резултатите в каталога използват публикуваните факти и избраните филтри.",
-    findNote:
-      "Задайте собствени критерии. Резултатите трябва да отговарят на всеки поддържан филтър, без скрито разширяване или измислени препоръки.",
+    findNote: "Търси по ключови думи и уточни резултатите с филтри.",
     dealNote:
       "Подредба по текуща цена на артикула в избраните филтри, не по измислена отстъпка. Доставката и крайната обща сума са неизвестни.",
     compareNote:
@@ -259,6 +258,7 @@ export const toolCopy = {
     sellHelperNote:
       "Прегледайте предложените промени по чернова, която можете да редактирате. Приложете ги изрично; няма автоматично публикуване.",
     criteria: "Критерии за търсене",
+    appliedFilters: "Приложени филтри",
     query: "Ключови думи или модел",
     category: "Категория",
     allCategories: "Всички категории",

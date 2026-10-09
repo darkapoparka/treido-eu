@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition, type FormEvent } from "react";
+import { useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   categoryRoots,
@@ -161,6 +161,19 @@ export function IntentControls({
     [error, setError] = useState(false),
     [navigating, startNavigation] = useTransition();
   const category = getCategory(categoryId);
+  const advanced = useRef<HTMLDetailsElement>(null);
+  const appliedFilters =
+    [
+      input.category,
+      input.seller !== "all",
+      input.condition,
+      input.location,
+      input.minPriceMinor !== null,
+      input.maxPriceMinor !== null,
+      initial.handover !== "any",
+      initial.availability !== "any",
+      mode === "find-for-me" && input.sort !== "relevance",
+    ].filter(Boolean).length + Object.keys(input.attributes).length;
   function apply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(false);
@@ -224,17 +237,26 @@ export function IntentControls({
       startNavigation(() => router.push(toolHref(mode, parsed)));
     } catch {
       setError(true);
+      if (advanced.current) advanced.current.open = true;
     }
   }
   return (
-    <details className={s.filter} open>
-      <summary>{t.criteria}</summary>
-      <form onSubmit={apply}>
+    <form className={s.filter} onSubmit={apply}>
+      <label className={s.field}>
+        {t.query}
+        <input name="q" maxLength={120} defaultValue={input.q} />
+      </label>
+      <details className={s.advanced} ref={advanced}>
+        <summary>
+          {t.criteria}
+          {appliedFilters > 0 && (
+            <span aria-label={t.appliedFilters + ": " + appliedFilters}>
+              {" "}
+              ({appliedFilters})
+            </span>
+          )}
+        </summary>
         <div className={s.fields}>
-          <label className={s.field}>
-            {t.query}
-            <input name="q" maxLength={120} defaultValue={input.q} />
-          </label>
           <label className={s.field}>
             {t.category}
             <select
@@ -355,14 +377,14 @@ export function IntentControls({
             </details>
           </div>
         </div>
-        {error && <p role="alert">{t.invalid}</p>}
-        <div className={s.nav}>
-          <button className={s.button + " " + s.primary} disabled={navigating}>
-            {navigating ? t.loading : t.apply}
-          </button>
-          <a href={"/minis/" + mode + "?lang=" + locale}>{t.reset}</a>
-        </div>
-      </form>
-    </details>
+      </details>
+      {error && <p role="alert">{t.invalid}</p>}
+      <div className={s.nav}>
+        <button className={s.button + " " + s.primary} disabled={navigating}>
+          {navigating ? t.loading : t.apply}
+        </button>
+        <a href={"/minis/" + mode + "?lang=" + locale}>{t.reset}</a>
+      </div>
+    </form>
   );
 }

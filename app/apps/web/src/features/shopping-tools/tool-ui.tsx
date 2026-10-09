@@ -17,7 +17,7 @@ import { variantCaption } from "../inventory/model";
 import { optionLabel } from "../selling/copy";
 import { IntentControls } from "./intent-controls";
 import { toolCopy, money, type ToolLocale } from "./copy";
-import { toolHref, type ToolIntent, type ToolMode } from "./intent";
+import { toolHref, toolParams, type ToolIntent, type ToolMode } from "./intent";
 import { AssistantInterpretInput } from "../assistant-runs/interpreted-intent";
 import {
   beginFindNavigation,
@@ -78,7 +78,7 @@ export function ToolNavigation({
       {voice && (
         <SourceLink
           preserveDiscoveryContext={false}
-          href={"/minis/find-for-me/voice?lang=" + intent.discovery.locale}
+          href={"/minis/find-for-me/voice?" + toolParams(intent).toString()}
         >
           {t.voice}
         </SourceLink>
@@ -547,7 +547,6 @@ export function Finder({ data, mode }: { data: ToolResults; mode: ToolMode }) {
                   <p>{variantCaption(item.variant.options) || t.variant}</p>
                 )}
                 <SourceLink
-                  preserveDiscoveryContext={false}
                   href={"/stores/" + item.card.seller.id + "?lang=" + locale}
                 >
                   {item.card.seller.name}

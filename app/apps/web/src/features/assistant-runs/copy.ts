@@ -10,6 +10,9 @@ const en = {
   signIn: "Sign in",
   unavailable:
     "This input is unavailable until processing and privacy settings are approved.",
+  checkAgain: "Check again",
+  compactUnavailable:
+    "Suggestions are unavailable right now. You can still search by keyword or use filters.",
   consent: "Allow processing for this input",
   withdraw: "Withdraw processing consent",
   privacy: "Processing notice",
@@ -93,6 +96,9 @@ const bg: typeof en = {
   signIn: "Вход",
   unavailable:
     "Този вход не е достъпен, докато настройките за обработка и поверителност не бъдат одобрени.",
+  checkAgain: "Провери отново",
+  compactUnavailable:
+    "Предложенията не са достъпни в момента. Можеш да търсиш по ключови думи или да използваш филтрите.",
   consent: "Разрешавам обработката на този вход",
   withdraw: "Оттегляне на съгласието",
   privacy: "Информация за обработката",

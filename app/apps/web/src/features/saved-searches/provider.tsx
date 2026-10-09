@@ -1,5 +1,5 @@
 "use client";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import {
   createContext,
   useCallback,
@@ -12,13 +12,13 @@ import {
 import { readSavedSearchesAction, changeSavedSearchAction } from "./actions";
 import {
   parseSearchCommand,
+  type SearchChange,
   type SearchCommand,
   type SearchOperation,
   type SearchView,
-  type SearchChange,
 } from "./model";
 import type { SearchCopyKey } from "./copy";
-type Controller = {
+type SavedSearchController = {
   subject: string | null;
   status: "checking" | "guest" | "ready" | "unavailable" | "denied";
   view: SearchView | null;
@@ -26,17 +26,21 @@ type Controller = {
   pending: boolean;
   feedback: SearchCopyKey | null;
   ack: SearchChange | null;
-  execute: (op: SearchOperation, expected?: number) => Promise<void>;
+  execute: (
+    operation: SearchOperation,
+    expectedRevision?: number,
+  ) => Promise<void>;
   retry: () => Promise<void>;
   reload: () => Promise<void>;
 };
-const Context = createContext<Controller | null>(null);
+const Context = createContext<SavedSearchController | null>(null);
+/** Keep public Finder children mounted while qualifying private account state. */
 export function SavedSearchProvider({ children }: { children: ReactNode }) {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, userId, sessionId } = useAuth();
   return (
     <SearchController
-      key={isLoaded ? (userId ?? "guest") : "checking"}
       subject={isLoaded ? (userId ?? null) : null}
+      sessionId={isLoaded ? (sessionId ?? null) : null}
       loaded={!!isLoaded}
     >
       {children}
@@ -44,147 +48,316 @@ export function SavedSearchProvider({ children }: { children: ReactNode }) {
   );
 }
 function SearchController({
-  children,
   subject,
+  sessionId,
   loaded,
+  children,
 }: {
-  children: ReactNode;
   subject: string | null;
+  sessionId: string | null;
   loaded: boolean;
+  children: ReactNode;
 }) {
-  const [status, setStatus] = useState<Controller["status"]>(
-      loaded && !subject ? "guest" : "checking",
-    ),
-    [view, setView] = useState<SearchView | null>(null),
-    [busy, setBusy] = useState(false),
-    [pending, setPending] = useState(false),
-    [feedback, setFeedback] = useState<SearchCopyKey | null>(null),
-    [ack, setAck] = useState<SearchChange | null>(null);
+  const clerk = useClerk();
+  const [state, setState] = useState({
+    owner: "",
+    status: "checking" as SavedSearchController["status"],
+    view: null as SearchView | null,
+    busy: false,
+    pending: false,
+    feedback: null as SearchCopyKey | null,
+    ack: null as SearchChange | null,
+  });
   const life = useRef({
       alive: false,
-      busy: false,
+      visible: false,
+      generation: 0,
+      operation: null as number | null,
+      nextOperation: 0,
       read: 0,
       storageReady: false,
-      hasView: false,
+      subject: null as string | null,
     }),
-    attempt = useRef<SearchCommand | null>(null);
+    attempt = useRef<SearchCommand | null>(null),
+    attemptBytes = useRef<string | null>(null);
   const key = "treido-saved-search-recovery-v1:" + (subject ?? "guest");
+  const owner = useCallback(
+    () => [subject ?? "", sessionId ?? "", life.current.generation].join("\0"),
+    [subject, sessionId],
+  );
+  const active = useCallback(
+    () =>
+      !!subject &&
+      !!sessionId &&
+      loaded &&
+      life.current.alive &&
+      life.current.visible &&
+      document.visibilityState === "visible" &&
+      clerk.user?.id === subject &&
+      clerk.session?.id === sessionId &&
+      clerk.session.status === "active",
+    [clerk, subject, sessionId, loaded],
+  );
   const reload = useCallback(async () => {
-    if (
-      !subject ||
-      !life.current.alive ||
-      document.visibilityState !== "visible"
-    )
-      return;
-    const ticket = ++life.current.read;
-    if (!life.current.hasView) setStatus("checking");
+    const current = life.current;
+    if (!current.alive || document.visibilityState !== "visible") return;
+    // A visible explicit refresh also restores after blur without a focus event.
+    current.visible = true;
+    if (!active()) return;
+    const ticket = ++current.read,
+      generation = current.generation,
+      requestOwner = owner();
+    const requestCurrent = () =>
+      active() && generation === current.generation && ticket === current.read;
+    let recoveryError: SearchCopyKey | null = null;
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (attempt.current) {
+        if (raw !== attemptBytes.current) throw Error("Recovery changed");
+      } else if (raw) {
+        if (raw.length > 12000) throw Error("Recovery size");
+        attempt.current = parseSearchCommand(JSON.parse(raw), true);
+        attemptBytes.current = raw;
+      }
+      current.storageReady = true;
+    } catch {
+      current.storageReady = false;
+      recoveryError = "recoveryInvalid";
+    }
+    setState((previous) => {
+      const retain =
+        previous.owner === requestOwner && previous.status === "ready";
+      return {
+        ...previous,
+        owner: requestOwner,
+        status: retain ? "ready" : "checking",
+        view: retain ? previous.view : null,
+        pending: !!attempt.current,
+        feedback: recoveryError ?? previous.feedback,
+      };
+    });
+    const unavailable = (status: "denied" | "unavailable") => {
+      ++current.generation;
+      current.operation = null;
+      setState((previous) => ({
+        ...previous,
+        owner: owner(),
+        status,
+        view: null,
+        busy: false,
+        ack: null,
+      }));
+    };
     try {
       const result = await readSavedSearchesAction();
-      if (!life.current.alive || ticket !== life.current.read) return;
+      if (!requestCurrent()) return;
       if (result.ok && result.data.subject === subject) {
-        life.current.hasView = true;
-        setView(result.data.view);
-        setStatus("ready");
+        const mismatched =
+          attempt.current &&
+          attempt.current.actorKey !== result.data.view.actorKey;
+        setState((previous) => ({
+          ...previous,
+          owner: requestOwner,
+          status: "ready",
+          view: result.data.view,
+          pending: !!attempt.current,
+          feedback: mismatched ? "recoveryInvalid" : previous.feedback,
+        }));
       } else {
-        life.current.hasView = false;
-        setView(null);
-        setStatus(
-          !result.ok &&
-            (result.code === "FORBIDDEN" || result.code === "UNAUTHENTICATED")
+        unavailable(
+          result.ok ||
+            result.code === "UNAUTHENTICATED" ||
+            result.code === "FORBIDDEN"
             ? "denied"
             : "unavailable",
         );
       }
     } catch {
-      if (life.current.alive && ticket === life.current.read) {
-        life.current.hasView = false;
-        setView(null);
-        setStatus("unavailable");
-      }
+      if (requestCurrent()) unavailable("unavailable");
     }
-  }, [subject]);
+  }, [active, key, owner, subject]);
   useEffect(() => {
     const current = life.current;
+    let mounted = true;
     current.alive = true;
-    const initialize = async () => {
-      await Promise.resolve();
-      if (!current.alive || !subject) return;
-      try {
-        const raw = sessionStorage.getItem(key);
-        if (raw) {
-          if (raw.length > 12000) throw Error();
-          attempt.current = parseSearchCommand(JSON.parse(raw), true);
-          setPending(true);
-        }
-        current.storageReady = true;
-      } catch {
-        current.storageReady = false;
-        setFeedback("recoveryInvalid");
-      }
-      await reload();
+    current.visible = document.visibilityState === "visible";
+    ++current.generation;
+    ++current.read;
+    current.operation = null;
+    current.storageReady = false;
+    if (current.subject !== subject) {
+      // Retain the former human's durable journal without exposing their buffer.
+      attempt.current = null;
+      attemptBytes.current = null;
+      current.subject = subject;
+    }
+    const conceal = () => {
+      ++current.generation;
+      ++current.read;
+      current.operation = null;
+      current.visible = false;
+      setState({
+        owner: owner(),
+        status: "checking",
+        view: null,
+        busy: false,
+        pending: false,
+        feedback: null,
+        ack: null,
+      });
     };
-    void initialize();
+    const restore = () => {
+      if (!mounted || document.visibilityState !== "visible") return;
+      current.visible = true;
+      if (active() && current.operation === null) void reload();
+    };
+    const signature = () =>
+      [
+        clerk.user?.id ?? "",
+        clerk.session?.id ?? "",
+        clerk.session?.status ?? "",
+      ].join("\0");
+    let previous = signature();
+    const unsubscribe = clerk.addListener(() => {
+      if (!mounted) return;
+      const next = signature();
+      if (next !== previous) {
+        previous = next;
+        conceal();
+        restore();
+      }
+    });
+    void Promise.resolve().then(() => {
+      if (mounted) {
+        conceal();
+        restore();
+      }
+    });
     const refresh = () => {
-      if (!current.busy && document.visibilityState === "visible")
+      if (mounted && current.visible && active() && current.operation === null)
         void reload();
     };
     const visibility = () => {
-      if (document.visibilityState !== "visible") {
-        ++current.read;
-        current.hasView = false;
-        setView(null);
-        setStatus("checking");
-      } else refresh();
+      if (document.visibilityState !== "visible") conceal();
+      else restore();
     };
-    window.addEventListener("focus", refresh);
+    const pageshow = (event: PageTransitionEvent) => {
+      if (event.persisted) conceal();
+      restore();
+    };
+    window.addEventListener("blur", conceal);
+    window.addEventListener("focus", restore);
+    window.addEventListener("pageshow", pageshow);
     window.addEventListener("online", refresh);
     document.addEventListener("visibilitychange", visibility);
     const timer = setInterval(refresh, 30000);
     return () => {
+      mounted = false;
       current.alive = false;
+      current.visible = false;
+      ++current.generation;
       ++current.read;
+      current.operation = null;
+      unsubscribe();
       clearInterval(timer);
-      window.removeEventListener("focus", refresh);
+      window.removeEventListener("blur", conceal);
+      window.removeEventListener("focus", restore);
+      window.removeEventListener("pageshow", pageshow);
       window.removeEventListener("online", refresh);
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, [subject, key, reload]);
+  }, [active, clerk, owner, reload, subject]);
   const submit = async (command: SearchCommand) => {
-    if (!subject || !life.current.alive || life.current.busy) return;
-    life.current.busy = true;
-    setBusy(true);
-    setFeedback(null);
+    const current = life.current;
+    if (
+      !active() ||
+      state.owner !== owner() ||
+      state.status !== "ready" ||
+      !state.view ||
+      state.view.actorKey !== command.actorKey ||
+      current.operation !== null ||
+      !current.storageReady
+    )
+      return;
+    try {
+      if (attempt.current) {
+        if (
+          attempt.current !== command ||
+          sessionStorage.getItem(key) !== attemptBytes.current
+        )
+          throw Error("Recovery changed");
+      } else {
+        const raw = JSON.stringify(command);
+        if (raw.length > 12000 || sessionStorage.getItem(key) !== null)
+          throw Error("Recovery occupied");
+        sessionStorage.setItem(key, raw);
+        if (sessionStorage.getItem(key) !== raw)
+          throw Error("Recovery unavailable");
+        attempt.current = command;
+        attemptBytes.current = raw;
+      }
+    } catch {
+      current.storageReady = false;
+      setState((previous) => ({ ...previous, feedback: "recoveryStorage" }));
+      return;
+    }
+    const operation = ++current.nextOperation,
+      generation = current.generation;
+    current.operation = operation;
+    ++current.read;
+    const requestCurrent = () =>
+      active() &&
+      generation === current.generation &&
+      current.operation === operation &&
+      attempt.current === command;
+    setState((previous) => ({
+      ...previous,
+      busy: true,
+      pending: true,
+      feedback: null,
+    }));
     try {
       const result = await changeSavedSearchAction(command);
-      if (!life.current.alive) return;
-      if (result.ok && result.data.subject !== subject) {
-        life.current.hasView = false;
-        setView(null);
-        setStatus("denied");
-        setFeedback("pending");
-        return;
-      }
+      if (!requestCurrent()) return;
       if (
-        !result.ok &&
-        ["NOT_AVAILABLE", "UNAUTHENTICATED", "FORBIDDEN"].includes(result.code)
+        (result.ok && result.data.subject !== subject) ||
+        (!result.ok &&
+          (result.code === "NOT_AVAILABLE" ||
+            result.code === "UNAUTHENTICATED" ||
+            result.code === "FORBIDDEN"))
       ) {
-        setFeedback("pending");
-        life.current.hasView = false;
-        setView(null);
-        setStatus(result.code === "NOT_AVAILABLE" ? "unavailable" : "denied");
+        ++current.generation;
+        current.operation = null;
+        setState((previous) => ({
+          ...previous,
+          owner: owner(),
+          feedback: "pending",
+          view: null,
+          status:
+            !result.ok && result.code === "NOT_AVAILABLE"
+              ? "unavailable"
+              : "denied",
+          busy: false,
+          ack: null,
+        }));
         return;
       }
-      if (result.ok) setAck(result.data.change);
       try {
+        if (sessionStorage.getItem(key) !== attemptBytes.current)
+          throw Error("Recovery changed");
         sessionStorage.removeItem(key);
       } catch {
-        setFeedback("recoveryStorage");
+        current.storageReady = false;
+        setState((previous) => ({ ...previous, feedback: "recoveryStorage" }));
         return;
       }
       attempt.current = null;
-      setPending(false);
-      setFeedback(
-        result.ok
+      attemptBytes.current = null;
+      setState((previous) => ({
+        ...previous,
+        pending: false,
+        ack: result.ok ? result.data.change : null,
+        feedback: result.ok
           ? "saved"
           : result.code === "CONFLICT"
             ? "conflict"
@@ -193,67 +366,87 @@ function SearchController({
               : result.code === "NOT_FOUND"
                 ? "notFound"
                 : "invalid",
-      );
+      }));
       await reload();
     } catch {
-      if (life.current.alive) setFeedback("pending");
+      if (requestCurrent())
+        setState((previous) => ({ ...previous, feedback: "pending" }));
     } finally {
-      life.current.busy = false;
-      if (life.current.alive) setBusy(false);
+      if (
+        active() &&
+        generation === current.generation &&
+        current.operation === operation
+      ) {
+        current.operation = null;
+        setState((previous) => ({ ...previous, busy: false }));
+      }
     }
   };
-  const execute = async (operation: SearchOperation, expected?: number) => {
+  const execute = async (
+    operation: SearchOperation,
+    expectedRevision?: number,
+  ) => {
     if (
-      !subject ||
-      status !== "ready" ||
-      !view ||
-      life.current.busy ||
+      !active() ||
+      state.owner !== owner() ||
+      state.status !== "ready" ||
+      !state.view ||
+      life.current.operation !== null ||
       attempt.current
     )
       return;
     if (!life.current.storageReady) {
-      setFeedback("recoveryStorage");
+      setState((previous) => ({ ...previous, feedback: "recoveryStorage" }));
       return;
     }
     let command: SearchCommand;
     try {
       command = parseSearchCommand({
-        actorKey: view.actorKey,
-        expectedRevision: expected ?? view.revision,
+        actorKey: state.view.actorKey,
+        expectedRevision: expectedRevision ?? state.view.revision,
         requestId: crypto.randomUUID(),
         operation,
       });
     } catch {
-      setFeedback("invalid");
+      setState((previous) => ({ ...previous, feedback: "invalid" }));
       return;
     }
-    try {
-      const raw = JSON.stringify(command);
-      if (raw.length > 12000) throw Error();
-      sessionStorage.setItem(key, raw);
-    } catch {
-      life.current.storageReady = false;
-      setFeedback("recoveryStorage");
-      return;
-    }
-    attempt.current = command;
-    setPending(true);
     await submit(command);
   };
   const retry = async () => {
     if (attempt.current) await submit(attempt.current);
     else await reload();
   };
+  const qualified =
+      loaded &&
+      !!subject &&
+      !!sessionId &&
+      clerk.user?.id === subject &&
+      clerk.session?.id === sessionId &&
+      clerk.session.status === "active" &&
+      typeof document !== "undefined" &&
+      document.visibilityState === "visible" &&
+      state.owner.startsWith([subject, sessionId, ""].join("\0")),
+    ready = qualified && state.status === "ready";
   return (
     <Context.Provider
       value={{
         subject,
-        status,
-        view,
-        busy,
-        pending,
-        feedback,
-        ack,
+        status:
+          loaded && !subject
+            ? "guest"
+            : loaded &&
+                subject &&
+                (!sessionId || clerk.session?.status !== "active")
+              ? "denied"
+              : qualified
+                ? state.status
+                : "checking",
+        view: ready ? state.view : null,
+        busy: ready && state.busy,
+        pending: ready && state.pending,
+        feedback: qualified ? state.feedback : null,
+        ack: ready ? state.ack : null,
         execute,
         retry,
         reload,

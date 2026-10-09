@@ -236,6 +236,33 @@ function InputWorkspace({
     }
   }
   const run = view?.run;
+  if (
+    controller.status === "ready" &&
+    view &&
+    !available &&
+    !view.consent &&
+    !view.consentChoice?.granted &&
+    !view.asset &&
+    !run &&
+    !controller.pending &&
+    !controller.feedback
+  )
+    return (
+      <section aria-label={t.titles[mode]} className={s.panel}>
+        <h2>{t.titles[mode]}</h2>
+        <p role="status">{t.compactUnavailable}</p>
+        <div className={s.actions}>
+          <button
+            type="button"
+            className={s.button}
+            onClick={controller.reload}
+            disabled={controller.busy}
+          >
+            {t.checkAgain}
+          </button>
+        </div>
+      </section>
+    );
   return (
     <section aria-label={t.titles[mode]} className={s.editor}>
       <h2>{t.titles[mode]}</h2>

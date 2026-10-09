@@ -37,6 +37,7 @@ import { observeJob } from "./observations.server";
 import { jobObservationTime, jobObservationDuration } from "./observations";
 import { withRepairDueCheckpoint } from "./repair-due.server";
 import { REPAIR_EVENT, validRepairWakeup } from "./repair-wakeup.server";
+import { observeJobHealth } from "./health.server";
 
 const quietLogger = { info() {}, warn() {}, error() {}, debug() {} };
 export function createJobExecutor(
@@ -159,6 +160,7 @@ export function createJobExecutor(
         throw new NonRetriableError(
           "Treido repair wake-up authority was rejected.",
         );
+      await observeJobHealth(database);
       return withRepairDueCheckpoint(
         (read) => step.run("repair-due-work-v1", read),
         database,

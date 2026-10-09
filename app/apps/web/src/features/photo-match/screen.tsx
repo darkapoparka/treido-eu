@@ -3,7 +3,8 @@ import { useAuth } from "@clerk/nextjs";
 import { MiniShell } from "../discovery/mini-frame";
 import { SourceLink } from "../discovery/return-navigation";
 import { AssistantNavigation } from "../assistant-tools/common-ui";
-import { parseToolIntent } from "../shopping-tools/intent";
+import { parseToolIntent, toolHref } from "../shopping-tools/intent";
+import { toolCopy } from "../shopping-tools/copy";
 import { ComparisonProvider } from "../shopping-tools/comparison-provider";
 import { AssistantInterpretInput } from "../assistant-runs/interpreted-intent";
 import { inputCopy } from "../assistant-runs/copy";
@@ -20,8 +21,16 @@ export function InputScreen({
 }) {
   const { isLoaded, userId } = useAuth(),
     t = inputCopy[locale],
+    path =
+      inputMode === "photo" ? "/minis/photo-match" : "/minis/find-for-me/voice",
+    validated = parseAssistantInputContinuation(continuation),
+    destination = validated?.startsWith(path + "?")
+      ? validated
+      : path + "?lang=" + locale,
     initial = parseToolIntent(
-      "lang=" + locale + "&availability=known",
+      inputMode === "voice"
+        ? destination.slice(destination.indexOf("?") + 1)
+        : "lang=" + locale + "&availability=known",
       "find-for-me",
     );
   return (
@@ -30,6 +39,17 @@ export function InputScreen({
         <section className={s.content}>
           <h1>{t.titles[inputMode]}</h1>
           <AssistantNavigation />
+          {inputMode === "voice" && (
+            <div className={s.actions}>
+              <SourceLink
+                className={s.button}
+                preserveDiscoveryContext={false}
+                href={toolHref("find-for-me", initial)}
+              >
+                {toolCopy[locale].find}
+              </SourceLink>
+            </div>
+          )}
           {!isLoaded || !userId ? (
             <>
               <p role="status">{isLoaded ? t.guest : "…"}</p>
@@ -40,10 +60,7 @@ export function InputScreen({
                     "/sign-in?lang=" +
                     locale +
                     "&next=" +
-                    encodeURIComponent(
-                      parseAssistantInputContinuation(continuation) ??
-                        "/minis/photo-match?lang=" + locale,
-                    )
+                    encodeURIComponent(destination)
                   }
                 >
                   {t.signIn}

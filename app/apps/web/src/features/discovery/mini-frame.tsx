@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { useCaption } from "../locale/use-caption";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   useState,
   useEffect,
@@ -20,6 +20,8 @@ import { Sheet } from "./components";
 import { ShopSurface } from "./hydration-boundary";
 import { Icon } from "./icons";
 import { ContextualCloseLink } from "./return-navigation";
+import { discoveryDestination } from "./browse-scope-route";
+import { localeDestination } from "../locale/locale";
 
 export function MiniShell({
   name,
@@ -41,8 +43,13 @@ export function MiniShell({
   nativeInfo?: NativeMiniInformation;
 }) {
   const ui = useTranslations("discoveryUI");
+  const locale = useLocale();
   const router = useRouter();
   const { params, change } = useMiniRoute(usePathname());
+  const catalogueHref = localeDestination(
+    discoveryDestination("/minis", params),
+    locale === "en" ? "en" : "bg",
+  );
   const menuOpen = Boolean(nativeInfo && params.get("miniMenu") === "1");
   const requestedDocument = params.get("miniDocument");
   const documentType =
@@ -124,7 +131,7 @@ export function MiniShell({
             </button>
           ) : (
             <ContextualCloseLink
-              href="/minis"
+              href={catalogueHref}
               aria-label={ui("backToMinis")}
               data-ui-label="backToMinis"
             >
@@ -163,7 +170,7 @@ export function MiniShell({
           </span>
         )}
         <ContextualCloseLink
-          href="/minis"
+          href={catalogueHref}
           aria-label={ui("closeValue1", { value1: name ?? "" })}
         >
           <Icon name="close" />
