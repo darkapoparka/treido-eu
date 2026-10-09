@@ -36,9 +36,7 @@ export default async function Page({
   );
   return (
     <CatalogueImportDetail
-      key={
-        sellerId + "/" + importId + "/" + actor.subject + "/" + initial.after
-      }
+      key={sellerId + "/" + importId + "/" + actor.subject}
       initial={initial}
       actorSubject={actor.subject}
     />

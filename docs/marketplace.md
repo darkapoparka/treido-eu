@@ -54,6 +54,8 @@ Category definitions own typed attributes, required fields and allowed values. A
 
 The category registry has 16 roots, BG/EN leaf labels, immutable IDs and explicit publication-policy versions. Roots are browse containers; listings publish to reviewed leaves. CSV import uses these same definitions and normal draft/publish rules. An import is never authority to publish unreviewed rows, exceed quotas, copy external photos or convert disabled goods into an Other leaf.
 
+An interrupted import command keeps its original request ID, revision and row terms in memory for that human, seller and import. Later permission denial or revision conflict does not prove the earlier command failed. A fresh authorized read enables deliberate retry of the original change, including after ordinary new changes become unavailable; explicit Use current import adopts the current revision without claiming the earlier change was acknowledged. Same-import pagination retains this recovery and the local row draft, while session, resource, page and visibility changes require fresh qualification. Unqualified rows and dialogs are absent, and obsolete responses, report downloads and cleanup cannot affect a newer operation. Nothing automatically resends a write.
+
 ## Listing lifecycle
 
 | Dimension | States | Invariant |

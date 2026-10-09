@@ -1,19 +1,41 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { existsSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { parseCsv, csvCell, csvDocument, CSV_COLUMNS } from "./csv";
 import { validateImportRow, importCommand, type ImportView } from "./model";
 import { parseWorkspaceContinuation } from "../sellers/workspace-continuation";
-const navigation = vi.hoisted(() => ({ locale: "bg" }));
+const navigation = vi.hoisted(() => ({ locale: "bg", actor: "test-seller" }));
 vi.mock("next-intl", () => ({
   useLocale: () => navigation.locale,
   useTranslations: () => (key: string) => key,
 }));
-vi.mock("@clerk/nextjs", () => ({ useClerk: () => ({ user: null }) }));
+vi.mock("@clerk/nextjs", () => {
+  const clerk = {
+    user: { id: "test-seller" },
+    session: { id: "navigation-session", status: "active" },
+    addListener: () => () => {},
+  };
+  return {
+    useClerk: () => clerk,
+    useAuth: () => ({
+      isLoaded: true,
+      isSignedIn: true,
+      userId: clerk.user.id,
+      sessionId: clerk.session.id,
+    }),
+  };
+});
+vi.mock("next/navigation", () => ({
+  usePathname: () =>
+    "/app/sellers/10000000-0000-4000-8000-000000000001/imports/10000000-0000-4000-8000-000000000003",
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock("../messaging/use-inbox-refresh", () => ({
   useInboxRefresh: (initial: ImportView) => ({
-    data: initial,
+    // This presentation-only unit receives an explicit accepted read. Actual
+    // session/read qualification is exercised by the deferred browser packet.
+    data: { ...initial },
     status: "ready",
     refresh: vi.fn(),
   }),
@@ -23,7 +45,32 @@ vi.mock("./actions", () => ({
   changeCatalogueImportAction: vi.fn(),
   exportImportReportAction: vi.fn(),
 }));
+// The unit configuration deliberately has no Next @ alias. These exact page
+// seams resolve its existing imports without changing application resolution.
+vi.mock("@/features/locale/page-locale.server", () => ({
+  pageLocale: async () => "en",
+}));
+vi.mock("@/features/sellers/backend-status.server", () => ({
+  backendConfigured: () => true,
+}));
+vi.mock("@/features/sellers/workspace", () => ({
+  BackendUnavailable: () => null,
+}));
+vi.mock("@/features/sellers/page-context.server", () => ({
+  requirePageIdentity: async () => ({ subject: navigation.actor }),
+  readPrivatePage: async (work: () => Promise<unknown>) => work(),
+}));
+vi.mock("@/server/db/database", () => ({ getDatabase: () => ({}) }));
+vi.mock("@/features/catalogue-import/queries.server", () => ({
+  readCatalogueImport: async (
+    _database: unknown,
+    _actor: unknown,
+    input: { sellerId: string; importId: string; after: number },
+  ) => ({ sellerId: input.sellerId, id: input.importId, after: input.after }),
+}));
+vi.mock("@/features/catalogue-import/detail", async () => import("./detail"));
 import { CatalogueImportDetail } from "./detail";
+import ImportPage from "../../app/app/sellers/[sellerId]/imports/[importId]/page";
 const row = {
   external_id: "phone-1",
   title: "Телефон",
@@ -44,6 +91,54 @@ const row = {
   sku: "PHONE-1",
   options_json: '{"Color":"Blue"}',
 };
+beforeEach(() => {
+  vi.stubGlobal("document", { visibilityState: "visible" });
+  vi.stubGlobal("location", {
+    pathname:
+      "/app/sellers/10000000-0000-4000-8000-000000000001/imports/10000000-0000-4000-8000-000000000003",
+    search: "",
+  });
+});
+afterEach(() => vi.unstubAllGlobals());
+describe("private import page editor ownership", () => {
+  const sellerId = "10000000-0000-4000-8000-000000000001",
+    importId = "10000000-0000-4000-8000-000000000003";
+  const renderPage = async (
+    after: string,
+    seller = sellerId,
+    id = importId,
+    actor = "route-human",
+  ) => {
+    navigation.actor = actor;
+    return ImportPage({
+      params: Promise.resolve({ sellerId: seller, importId: id }),
+      searchParams: Promise.resolve({ lang: "en", after }),
+    });
+  };
+  it("keeps the same actual editor instance across same-import pagination", async () => {
+    const first = await renderPage("0"),
+      next = await renderPage("1"),
+      back = await renderPage("0");
+    expect(next.type).toBe(first.type);
+    expect(next.key).toBe(first.key);
+    expect(back.key).toBe(first.key);
+    expect(first.props.initial.after).toBe(0);
+    expect(next.props.initial.after).toBe(1);
+  });
+  it.each(["seller", "import", "human"])(
+    "remounts the actual editor for a changed %s owner",
+    async (owner) => {
+      const first = await renderPage("0");
+      const next = await renderPage(
+        "0",
+        owner === "seller" ? "20000000-0000-4000-8000-000000000001" : sellerId,
+        owner === "import" ? "20000000-0000-4000-8000-000000000003" : importId,
+        owner === "human" ? "another-human" : "route-human",
+      );
+      expect(next.key).not.toBe(first.key);
+    },
+  );
+});
 describe("imported draft navigation", () => {
   it.each(["bg", "en"])(
     "opens the created draft at the existing editor route in %s",

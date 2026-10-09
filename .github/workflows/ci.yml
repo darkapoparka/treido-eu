@@ -138,6 +138,12 @@ jobs:
           node tests/t56/team-session-browser.mjs
           node tests/t56/seller-settings-session-browser.mjs
 
+      - name: Import session and pagination recovery
+        run: |
+          pnpm exec prettier --check tests/t56/catalogue-import-session-entry.tsx tests/t56/catalogue-import-session-browser.mjs
+          pnpm exec eslint tests/t56/catalogue-import-session-entry.tsx tests/t56/catalogue-import-session-browser.mjs --max-warnings=0
+          node tests/t56/catalogue-import-session-browser.mjs
+
       - name: Seller photo hydration browser regressions
         run: node tests/media-picker-browser.mjs
 

@@ -4,6 +4,7 @@ import type { SellerContext } from "./persistence.server";
 import { AdminArt } from "./admin-art";
 import { AdminHomeSearch } from "./admin-search-context";
 import styles from "./admin.module.css";
+import home from "./admin-home.module.css";
 
 export function AdminHome({
   seller,
@@ -27,15 +28,34 @@ export function AdminHome({
   return (
     <main className={styles.home}>
       <h1 className={styles.welcome}>
-        {bg ? "Добре дошъл в Treido" : "Welcome to Treido"}
-        <br />
-        {seller
-          ? bg
-            ? `Да подготвим ${seller.name}`
-            : `Let's set up ${seller.name}`
-          : bg
-            ? "Твоето място за продажби"
-            : "Your selling workspace"}
+        <span className={home.desktopWelcome}>
+          {bg ? "Добре дошъл в Treido" : "Welcome to Treido"}
+          <br />
+          {seller
+            ? bg
+              ? `Да подготвим ${seller.name}`
+              : `Let's set up ${seller.name}`
+            : bg
+              ? "Твоето място за продажби"
+              : "Your selling workspace"}
+        </span>
+        <span className={home.phoneWelcome}>
+          <span className={home.welcomeRow}>
+            {bg ? "Добре дошъл!" : "Welcome!"}
+          </span>
+          {seller ? (
+            <span className={home.setupRow}>
+              <span>{bg ? "Настрой" : "Set up"}</span>
+              <span className={home.sellerName} title={seller.name}>
+                {seller.name}
+              </span>
+            </span>
+          ) : (
+            <span className={home.welcomeRow}>
+              {bg ? "Твоите продажби" : "Your workspace"}
+            </span>
+          )}
+        </span>
       </h1>
       <AdminHomeSearch language={language} />
       <div className={styles.cards}>

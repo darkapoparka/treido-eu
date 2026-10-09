@@ -1,0 +1,31 @@
+.phoneWelcome {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .desktopWelcome {
+    display: none;
+  }
+
+  .phoneWelcome,
+  .welcomeRow {
+    display: block;
+  }
+
+  .setupRow {
+    display: flex;
+    align-items: baseline;
+    column-gap: 0.25em;
+  }
+
+  .setupRow > span:first-child {
+    flex: none;
+  }
+
+  .sellerName {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

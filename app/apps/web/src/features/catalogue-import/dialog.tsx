@@ -1,6 +1,6 @@
 "use client";
 import { importMessageKey } from "./copy";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { ImportRowView } from "./model";
 import { CSV_COLUMNS, type CsvRow } from "./csv";
@@ -27,6 +27,7 @@ export function ImportDialog({
   active,
   pending,
   error,
+  onChange,
   onSave,
   onCancel,
   onClose,
@@ -35,6 +36,7 @@ export function ImportDialog({
   active: boolean;
   pending: boolean;
   error: string | null;
+  onChange: (raw: CsvRow) => void;
   onSave: (raw: CsvRow) => Promise<boolean>;
   onCancel: () => Promise<boolean>;
   onClose: () => void;
@@ -42,7 +44,7 @@ export function ImportDialog({
   const t = useTranslations("catalogueImport"),
     ref = useRef<HTMLDialogElement>(null),
     titleId = useId();
-  const [raw, setRaw] = useState<CsvRow>(row?.raw ?? {});
+  const raw = row?.raw ?? {};
   useEffect(() => {
     const element = ref.current,
       opener =
@@ -106,7 +108,7 @@ export function ImportDialog({
                     value={raw[key] ?? ""}
                     maxLength={key === "description" ? 6000 : 24000}
                     onChange={(event) =>
-                      setRaw({ ...raw, [key]: event.target.value })
+                      onChange({ ...raw, [key]: event.target.value })
                     }
                   />
                 ) : (
@@ -117,7 +119,7 @@ export function ImportDialog({
                       key === "title" ? 160 : key === "external_id" ? 128 : 200
                     }
                     onChange={(event) =>
-                      setRaw({ ...raw, [key]: event.target.value })
+                      onChange({ ...raw, [key]: event.target.value })
                     }
                   />
                 )}

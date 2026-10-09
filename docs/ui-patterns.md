@@ -117,13 +117,15 @@ Go to Treido returns to buyer Home in the current language. View store currently
 
 ## STU-02 — Home, plan pill and setup cards
 
-Owners: [admin-home.tsx](../app/apps/web/src/features/sellers/admin-home.tsx), preview Home composition, [admin-art.tsx](../app/apps/web/src/features/sellers/admin-art.tsx) and scoped styles.
+Owners: [admin-home.tsx](../app/apps/web/src/features/sellers/admin-home.tsx), [admin-home.module.css](../app/apps/web/src/features/sellers/admin-home.module.css), preview Home composition and [admin-art.tsx](../app/apps/web/src/features/sellers/admin-art.tsx).
 
 Desktop Home has a bounded central region: declared maximum 936px, three cards with 16px gaps, two at the existing 1000px boundary and one on phones. Do not widen its content indiscriminately with the outer canvas. At the recorded 1440×900 state, cards measured 300×344px at x357/673/989 and y407.1875; at 393×793, 350×304px with the first at x16/y324. These identify a source state, not absolute-positioning instructions for every viewport.
 
 Card titles use 15px/18.75px, medium weight; body uses 13px/20px. Keep artwork placement, padding and bottom-aligned actions. Use original Treido illustrations, not Shopify promotional imagery. Load visible art before comparison. The preview Home composer measured 622×106px on desktop and 350×106px at 393px. It opens Sell Helper, not global search. The black plan pill has a green indicator and local Plan destination, but no invented live promotion.
 
 T30f deliberately adapts phone copy: Welcome! / Добре дошъл! and Set up / Настрой plus the linked store name. Preserve two 32px rows at normal phone text, the 26px heading and normal single-line 36px plan pill at 320px. Truncate only an overlong store-name link, retaining its full accessible name/title. Doubled text can reflow; never scale the interface. Desktop retains longer copy. Dismissed setup cards can be restored; real readiness derives from authoritative facts, not dismissed cards or a percentage.
+
+The real Home presenter uses the same compact phone copy and a bounded seller-name span with full text/title; it retains its existing server-derived name presentation and authorized destinations. Its own module hides the phone composition on desktop and leaves shared shell, font, search, artwork and card styles intact. A missing selected seller uses Your workspace / Твоите продажби. Use the actual presenter for comparisons; the device-local preview context is not an adapter for private Home.
 
 ## STU-03 — Global search and seller Mini are different tools
 
