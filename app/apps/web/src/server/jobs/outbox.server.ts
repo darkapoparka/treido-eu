@@ -59,6 +59,10 @@ export type ClosureJobRow = Omit<AssistantJobRow, "kind" | "authority"> & {
   kind: "account.closure";
   authority: "closure";
 };
+export type NotificationJobRow = Omit<AssistantJobRow, "kind" | "authority"> & {
+  kind: "buyer.notification-email";
+  authority: "notification";
+};
 export type ShippingJobRow = {
   [K in ShippingJobKind]: Omit<AssistantJobRow, "kind" | "authority"> & {
     kind: K;
@@ -86,7 +90,8 @@ export type JobRow =
   | AssistantJobRow
   | ClosureJobRow
   | ShippingJobRow
-  | AttachmentJobRow;
+  | AttachmentJobRow
+  | NotificationJobRow;
 export function isAssistantJob(job: JobRow): job is AssistantJobRow {
   return isAssistantJobKind(job.kind);
 }

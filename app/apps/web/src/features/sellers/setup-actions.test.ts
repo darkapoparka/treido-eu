@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   read: vi.fn(),
   intent: vi.fn(),
-  readIntent: vi.fn(),
   access: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
@@ -18,9 +17,10 @@ vi.mock("./setup.server", () => ({
   saveSellerSetup: mocks.save,
   readSellerSetup: mocks.read,
   completeSignupIntent: mocks.intent,
-  readSignupIntent: mocks.readIntent,
 }));
-vi.mock("./persistence.server", () => ({ readSellerContext: mocks.access }));
+vi.mock("./workspace-access.server", () => ({
+  readWorkspaceAccess: mocks.access,
+}));
 import {
   completeSignupIntentAction,
   readSellerSetupAction,
@@ -47,8 +47,8 @@ describe("setup action authentication boundary (PostgreSQL tested separately)", 
     for (const operation of [
       () => saveSellerSetupAction(input()),
       () => readSellerSetupAction(randomUUID()),
-      () => refreshSellerAccessAction(randomUUID()),
-      () => refreshSellerAccessAction(null),
+      () => refreshSellerAccessAction("/app/sellers/" + randomUUID() + "/team"),
+      () => refreshSellerAccessAction("/app"),
       () => completeSignupIntentAction(null, new FormData()),
     ])
       expect(await operation()).toEqual({ ok: false, code: "UNAUTHENTICATED" });
@@ -67,9 +67,26 @@ describe("setup action authentication boundary (PostgreSQL tested separately)", 
       command,
     );
   });
+  it("passes the full current workspace route and server-verified human to the authority reader", async () => {
+    const route =
+      "/app/sellers/" + randomUUID() + "/insights?lang=en&dataset=imports";
+    const snapshot = { actorSubject: "user_verified", route, sellers: [] };
+    mocks.access.mockResolvedValue(snapshot);
+    expect(await refreshSellerAccessAction(route)).toEqual({
+      ok: true,
+      data: snapshot,
+    });
+    expect(mocks.access).toHaveBeenCalledWith(
+      { adapter: "database" },
+      { subject: "user_verified" },
+      route,
+    );
+  });
   it("returns current revoked-access and revision-conflict denials", async () => {
     mocks.access.mockRejectedValue(new SellerError("FORBIDDEN"));
-    expect(await refreshSellerAccessAction(randomUUID())).toEqual({
+    expect(
+      await refreshSellerAccessAction("/app/sellers/" + randomUUID() + "/team"),
+    ).toEqual({
       ok: false,
       code: "FORBIDDEN",
     });
@@ -80,16 +97,16 @@ describe("setup action authentication boundary (PostgreSQL tested separately)", 
     });
   });
   it("rechecks the human's current status when restoring a view without a selected seller", async () => {
-    mocks.readIntent.mockRejectedValue(new SellerError("FORBIDDEN"));
-    expect(await refreshSellerAccessAction(null)).toEqual({
+    mocks.access.mockRejectedValue(new SellerError("FORBIDDEN"));
+    expect(await refreshSellerAccessAction("/app")).toEqual({
       ok: false,
       code: "FORBIDDEN",
     });
-    expect(mocks.readIntent).toHaveBeenCalledWith(
+    expect(mocks.access).toHaveBeenCalledWith(
       { adapter: "database" },
       { subject: "user_verified" },
+      "/app",
     );
-    expect(mocks.access).not.toHaveBeenCalled();
     expect(mocks.intent).not.toHaveBeenCalled();
   });
   it("skip wins over a previously selected radio without creating a seller", async () => {

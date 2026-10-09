@@ -86,7 +86,6 @@ function PublishedProductContent({
         <StoreRow
           store={{ id: listing.seller.id, name: listing.seller.name }}
           href={"/stores/" + listing.seller.id + "?lang=" + locale}
-          preserveDiscoveryContext={false}
           subtitle={<small className={s.muted}>{t(listing.seller.kind)}</small>}
           actions={<SellerFollowButton id={listing.seller.id} />}
         />
@@ -153,7 +152,6 @@ function PublishedProductContent({
           {category && (
             <SourceLink
               className={s.category}
-              preserveDiscoveryContext={false}
               href={"/search?category=" + category.id + "&lang=" + locale}
             >
               {category.labels[locale]}

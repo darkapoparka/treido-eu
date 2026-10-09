@@ -1,7 +1,5 @@
 import process from "node:process";
 import fs from "node:fs/promises";
-import { statfsSync } from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -9,6 +7,12 @@ import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
 import { trackPoolDisconnects } from "./pool-disconnects.mjs";
+import {
+  assertFixtureHeadroom,
+  cleanupLaunchCluster,
+  rethrowLaunchFailure,
+  selectFixtureEvidenceDirectory,
+} from "./native-fixture-support.mjs";
 import { applyReviewedMigration } from "../../apps/web/scripts/identity-draft-migration.mjs";
 import { applyRuntimeGrants } from "../../apps/web/scripts/runtime-grants.mjs";
 const root = path.resolve(import.meta.dirname, "../../..");
@@ -43,20 +47,23 @@ export async function startLaunchCluster({
   messageLifecycle = false,
   messageImageDispatch = false,
   privacyEvidence = false,
+  notificationDelivery = false,
   evidenceDirectory,
 } = {}) {
-  const evidence = evidenceDirectory
-    ? path.resolve(evidenceDirectory)
-    : path.join(
-        root,
-        messageImageDispatch || privacyEvidence
+  const evidence = selectFixtureEvidenceDirectory(
+    evidenceDirectory,
+    process.env.TREIDO_NATIVE_EVIDENCE_DIRECTORY,
+    path.join(
+      root,
+      notificationDelivery
+        ? ".qa/notification-delivery/native"
+        : messageImageDispatch || privacyEvidence
           ? ".qa/launch-privacy-20261005/native"
           : ".qa/t72/native",
-      );
+    ),
+  );
   if (process.version !== "v24.20.0") throw Error("Pinned Node required");
-  const stat = statfsSync(root);
-  if (stat.bavail * stat.bsize < 1073741824 || os.freemem() < 1610612736)
-    throw Error("Insufficient headroom");
+  assertFixtureHeadroom(evidence);
   await fs.mkdir(evidence, { recursive: true });
   const directory = await fs.mkdtemp(path.join(evidence, "postgres-"));
   const exact = await fs.realpath(directory);
@@ -108,19 +115,23 @@ export async function startLaunchCluster({
       path.join(directory, "state.json"),
       JSON.stringify(state, null, 2),
     );
-  const stop = async () => {
-    for (const pool of [runtime, admin, bootstrap]) {
-      if (pool) await disconnects.get(pool)();
-    }
-    if (state.started && !state.stopped) {
-      // The measured Windows shutdown checkpoint can exceed30s on this
-      // shared disk. Keep a finite cleanup wait without changing test or
-      // startup deadlines, assertions, persistence or shutdown mode.
-      await pgctl(["stop", "-D", directory, "-m", "fast", "-w", "-t", "60"]);
-      state.stopped = true;
-      await persist();
-    }
-  };
+  const stop = () =>
+    cleanupLaunchCluster({
+      drains: [runtime, admin, bootstrap]
+        .filter(Boolean)
+        .map((pool) => disconnects.get(pool)),
+      // The measured Windows shutdown checkpoint can exceed 30s on this
+      // shared disk. Keep the existing finite cleanup wait and fast shutdown.
+      stop:
+        state.started && !state.stopped
+          ? () =>
+              pgctl(["stop", "-D", directory, "-m", "fast", "-w", "-t", "60"])
+          : undefined,
+      recordStopped: async () => {
+        state.stopped = true;
+        await persist();
+      },
+    });
   try {
     await cluster.initialise();
     await pgctl([
@@ -156,25 +167,55 @@ export async function startLaunchCluster({
       database: "t72_isolated",
       max: 3,
     });
+    const migrationLimit = notificationDelivery
+      ? 55
+      : messageImageDispatch
+        ? 50
+        : messageLifecycle
+          ? 49
+          : 47;
+    const finalMigration = notificationDelivery
+      ? "0055_notification_delivery.sql"
+      : messageImageDispatch
+        ? "0050_message_image_dispatch_barrier.sql"
+        : messageLifecycle
+          ? "0049_message_image_executor_fence.sql"
+          : "0047_billing_change_recovery.sql";
     const files = (await fs.readdir(path.join(root, "app/apps/web/migrations")))
       .filter(
         (f) =>
           /^\d{4}_[a-z_]+\.sql$/.test(f) &&
-          Number(f.slice(0, 4)) <=
-            (messageImageDispatch ? 50 : messageLifecycle ? 49 : 47),
+          Number(f.slice(0, 4)) <= migrationLimit,
       )
       .sort();
-    if (
-      files.length !==
-        (messageImageDispatch ? 50 : messageLifecycle ? 49 : 47) ||
-      files.at(-1) !==
-        (messageImageDispatch
-          ? "0050_message_image_dispatch_barrier.sql"
-          : messageLifecycle
-            ? "0049_message_image_executor_fence.sql"
-            : "0047_billing_change_recovery.sql")
-    )
+    if (files.length !== migrationLimit || files.at(-1) !== finalMigration)
       throw Error("Unexpected migration inventory");
+    if (notificationDelivery) {
+      if (files.some((file, index) => Number(file.slice(0, 4)) !== index + 1))
+        throw Error("Notification canonical schema is not contiguous");
+      const runner = await fs.readFile(
+        path.join(root, "app/apps/web/scripts/migrate.mjs"),
+        "utf8",
+      );
+      const literal = runner.match(
+        /for\s*\(const version of\s*(\[[\s\S]*?\])\s*\)/,
+      )?.[1];
+      if (
+        !literal ||
+        literal
+          .slice(1, -1)
+          .replace(/"\d{4}_[a-z_]+"/g, "")
+          .replace(/[\s,]/g, "") !== ""
+      )
+        throw Error("Canonical migration runner sequence is not literal");
+      const canonical = [...literal.matchAll(/"(\d{4}_[a-z_]+)"/g)].map(
+        (match) => match[1] + ".sql",
+      );
+      if (JSON.stringify(canonical) !== JSON.stringify(files))
+        throw Error(
+          "Notification schema differs from canonical migration runner",
+        );
+    }
     const client = await admin.connect();
     try {
       for (const file of files) {
@@ -209,7 +250,6 @@ export async function startLaunchCluster({
     await persist();
     return { admin, runtime, stop, state };
   } catch (error) {
-    await stop();
-    throw error;
+    return rethrowLaunchFailure(error, stop);
   }
 }

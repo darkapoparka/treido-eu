@@ -345,7 +345,7 @@ export function ComparisonScreen() {
       }}
     >
       <MiniShell name={t.compare}>
-        <main className={s.content}>
+        <section className={s.content}>
           <h1>{t.compare}</h1>
           <p className={s.note}>{t.compareNote}</p>
           <nav className={s.nav}>
@@ -514,7 +514,7 @@ export function ComparisonScreen() {
               <p className={s.note}>{t.totalNote}</p>
             </>
           )}
-        </main>
+        </section>
         <Sheet
           open={clearing !== null}
           title={t.clear}

@@ -118,6 +118,7 @@ export async function processOrderRefund(
       if (
         !row ||
         row.generation !== source.row.generation ||
+        row.state === "succeeded" ||
         row.state === "expired" ||
         row.state === "remedy_required"
       )
@@ -129,6 +130,17 @@ export async function processOrderRefund(
         row.providerId !== observation.providerId
       )
         throw new SellerError("CONFLICT");
+      // Creation acknowledgements can arrive while this same generation is
+      // observing outside the lock. Keep their known identity/terminal status;
+      // a succeeded refund still reconciles until reversal and fee are verified.
+      if (
+        (row.providerId && !observation.providerId) ||
+        (["succeeded", "failed", "canceled"].includes(
+          row.providerStatus ?? "",
+        ) &&
+          row.providerStatus !== observation.providerStatus)
+      )
+        return;
       await tx.client.query(
         "INSERT INTO treido.order_refund_observations(id,intent_id,generation,provider_id,provider_status,amount_minor,settlement_state,refund_fact) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
         [
@@ -190,7 +202,7 @@ export async function scheduleOrderRefundRepair(database: SellerDatabase) {
     if (!(await aftercareStorageAvailable(tx))) return 0;
     const candidates = (
       await tx.client.query<{ id: string; allocationId: string }>(
-        "SELECT r.id,q.allocation_id AS \"allocationId\" FROM treido.order_refund_intents r JOIN treido.payable_quotes q ON q.id=r.quote_id WHERE r.reconcile_at<=clock_timestamp() AND r.state IN ('prepared','creating','pending','reconciling') ORDER BY r.reconcile_at,r.id LIMIT 20",
+        "SELECT r.id,q.allocation_id AS \"allocationId\" FROM treido.order_refund_intents r JOIN treido.payable_quotes q ON q.id=r.quote_id WHERE r.reconcile_at<=clock_timestamp() AND ((r.state='prepared' AND r.expires_at<=clock_timestamp()) OR (r.state IN ('creating','pending','reconciling') AND NOT EXISTS (SELECT 1 FROM treido.outbox_jobs j WHERE j.kind='payment.aftercare' AND j.resource_id=r.id AND j.state IN ('pending','accepted')))) ORDER BY r.reconcile_at,r.id LIMIT 20",
       )
     ).rows;
     let queued = 0;
@@ -198,6 +210,11 @@ export async function scheduleOrderRefundRepair(database: SellerDatabase) {
       await lockAllocation(tx, item.allocationId);
       const row = await readRefundIntent(tx, item.id, true);
       if (!row) continue;
+      const due = await tx.client.query(
+        "SELECT id FROM treido.order_refund_intents WHERE id=$1 AND reconcile_at<=clock_timestamp() AND ((state='prepared' AND expires_at<=clock_timestamp()) OR state IN ('creating','pending','reconciling'))",
+        [row.id],
+      );
+      if (due.rowCount !== 1) continue;
       if (row.state === "prepared") {
         await tx.client.query(
           "UPDATE treido.order_refund_intents SET state='expired',revision=revision+1,updated_at=clock_timestamp() WHERE id=$1 AND first_attempt_at IS NULL AND provider_id IS NULL AND expires_at<=clock_timestamp()",

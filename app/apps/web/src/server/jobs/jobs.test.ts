@@ -39,6 +39,32 @@ const configuration = {
 };
 afterEach(() => vi.unstubAllEnvs());
 describe("job authority and provider boundary", () => {
+  it("keeps notification delivery authority tied to the original buyer and delivery", () => {
+    const resourceId = randomUUID();
+    const intent = {
+      kind: "buyer.notification-email" as const,
+      sellerId: null,
+      buyerId: randomUUID(),
+      actorId: null,
+      resourceId,
+      operationKey: resourceId,
+      authority: "notification" as const,
+    };
+    expect(() => validateJobIntent(intent)).not.toThrow();
+    for (const override of [
+      { sellerId: randomUUID() },
+      { buyerId: null },
+      { actorId: intent.buyerId },
+      { authority: "buyer" },
+      { authority: "service" },
+      { resourceId: "private-payload" },
+      { operationKey: randomUUID() },
+    ]) {
+      expect(() =>
+        validateJobIntent({ ...intent, ...override } as never),
+      ).toThrow("INVALID_INPUT");
+    }
+  });
   it("rejects media service authority and unbounded/private event additions", () => {
     const intent = {
       kind: "media.process" as const,

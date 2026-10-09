@@ -2,11 +2,11 @@
 
 import { getDatabase } from "../../server/db/database";
 import { requireVerifiedIdentity } from "../../server/identity/clerk.server";
-import { readSellerContext } from "./persistence.server";
+import { readWorkspaceAccess } from "./workspace-access.server";
+import type { WorkspaceAccessView } from "./workspace-access";
 import { SellerError, type SellerResult } from "./errors";
 import {
   completeSignupIntent,
-  readSignupIntent,
   readSellerSetup,
   saveSellerSetup,
   type SaveSellerSetupInput,
@@ -52,14 +52,14 @@ export async function readSellerSetupAction(
   }
 }
 export async function refreshSellerAccessAction(
-  sellerId: string | null,
-): Promise<SellerResult<null>> {
+  route: unknown,
+): Promise<SellerResult<WorkspaceAccessView>> {
   try {
     const identity = await requireVerifiedIdentity();
-    if (sellerId !== null)
-      await readSellerContext(getDatabase(), identity, sellerId);
-    else await readSignupIntent(getDatabase(), identity);
-    return { ok: true, data: null };
+    return {
+      ok: true,
+      data: await readWorkspaceAccess(getDatabase(), identity, route),
+    };
   } catch (error) {
     return failure(error);
   }

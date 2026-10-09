@@ -16,6 +16,17 @@ function fixture(...values: unknown[]) {
   return { query, database: { pool: { query } } as unknown as SellerDatabase };
 }
 describe("durable maintenance due checkpoint", () => {
+  it("uses notification-aware due coverage when the additive migration exists", async () => {
+    const input = fixture();
+    input.query
+      .mockReset()
+      .mockResolvedValueOnce({ rows: [{ ready: true, notifications: true }] })
+      .mockResolvedValueOnce({ rows: [{ due: true }] });
+    expect((await readRepairDue(input.database)).due).toBe(true);
+    expect(input.query).toHaveBeenLastCalledWith(
+      "SELECT treido.repair_any_due_v2() AS due",
+    );
+  });
   it("only an explicit false boolean permits the empty return", async () => {
     for (const due of [undefined, null, 0, "false", true]) {
       expect((await readRepairDue(fixture(due).database)).due).toBe(true);

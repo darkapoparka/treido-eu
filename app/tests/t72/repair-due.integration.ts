@@ -90,10 +90,12 @@ const branches = {
 beforeAll(async () => {
   native = await startLaunchCluster({
     messageImageDispatch: true,
-    evidenceDirectory: resolve(
-      import.meta.dirname,
-      "../../../.qa/launch-jobs-cost-20261006/native",
-    ),
+    evidenceDirectory:
+      process.env.TREIDO_NATIVE_EVIDENCE_DIRECTORY ??
+      resolve(
+        import.meta.dirname,
+        "../../../.qa/launch-jobs-cost-20261006/native",
+      ),
   });
   const client = await native.admin.connect();
   try {

@@ -13,6 +13,7 @@ import { parseSellContinuation } from "@/features/sellers/sell-entry";
 import { readVerifiedIdentity } from "@/server/identity/clerk.server";
 import { parseWorkspaceContinuation } from "@/features/sellers/workspace-continuation";
 import { WorkspaceSession } from "@/features/sellers/workspace-session";
+import { randomUUID } from "node:crypto";
 
 export const metadata: Metadata = {
   title: "Treido admin",
@@ -49,7 +50,14 @@ export default async function SellerLayout({
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
     >
-      <WorkspaceSession actorSubject={identity.subject}>
+      <WorkspaceSession
+        actorSubject={identity.subject}
+        sellerAccess={sellers.map(({ sellerId, capabilities }) => ({
+          sellerId,
+          capabilities,
+        }))}
+        serverFrame={randomUUID()}
+      >
         <AdminShell
           sellers={sellers.map(({ sellerId, name, kind, capabilities }) => ({
             sellerId,

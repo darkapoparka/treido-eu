@@ -29,6 +29,7 @@ import { PurchaseFeedback } from "./purchase-feedback";
 import { publicSearchQuery } from "./public-search-model";
 import type { PromotionPlacement } from "../promotions/placement";
 import { useSponsoredObservation } from "./use-sponsored-observation";
+import { discoveryDestination } from "./browse-scope-route";
 import { ShopSurface } from "./hydration-boundary";
 import "./buyer-surface.css";
 import "./public-search-store.css";
@@ -291,7 +292,10 @@ function PublishedMerchant({
                   onRetry={() => {
                     if (params.has("feedbackPage"))
                       router.replace(
-                        `/stores/${seller.id}/info?lang=${locale}`,
+                        discoveryDestination(
+                          `/stores/${seller.id}/info?lang=${locale}`,
+                          new URLSearchParams(params),
+                        ),
                       );
                     else router.refresh();
                   }}

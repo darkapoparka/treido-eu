@@ -285,7 +285,7 @@ function CompatibilityWorkspace({
   }
   const content = (
     <MiniShell name={t.compatibility}>
-      <main className={s.content}>
+      <section className={s.content}>
         <h1>{t.compatibility}</h1>
         <p className={s.note}>{t.compatibilityIntro}</p>
         <p className={s.note}>{t.compatibilityLimit}</p>
@@ -596,7 +596,7 @@ function CompatibilityWorkspace({
             </button>
           </div>
         </Sheet>
-      </main>
+      </section>
     </MiniShell>
   );
   return (

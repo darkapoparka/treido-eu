@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { getDatabase } from "../../server/db/database";
+import { BackendConfigurationError } from "../../server/config/backend-bindings.server";
 import { readLocaleRequest } from "../locale/request.server";
 import { readPromotionDiscovery } from "../promotions/projection.server";
 import {
@@ -55,8 +56,32 @@ export async function readBuyerPublicView(
           surface: options.home ? "home" : "search",
         });
     return { input: parsed.input, page };
-  } catch {
-    console.error("Buyer discovery query unavailable.");
+  } catch (error) {
+    // Log classifications only; provider errors may carry connection strings,
+    // statement inputs or other private details in their message/cause.
+    const sqlState =
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      typeof error.code === "string" &&
+      /^[0-9A-Z]{5}$/.test(error.code)
+        ? error.code
+        : null;
+    console.error("Buyer discovery query unavailable.", {
+      boundary:
+        error instanceof BackendConfigurationError
+          ? "configuration"
+          : sqlState
+            ? "database"
+            : "projection-or-connection",
+      ...(error instanceof BackendConfigurationError
+        ? { variables: error.issues.map((issue) => issue.variable) }
+        : {}),
+      ...(sqlState ? { sqlState } : {}),
+      cursorReady: /^[a-f0-9]{64}$/i.test(
+        process.env.TREIDO_DISCOVERY_CURSOR_KEY ?? "",
+      ),
+    });
     return { input: parsed.input, unavailable: true };
   }
 }

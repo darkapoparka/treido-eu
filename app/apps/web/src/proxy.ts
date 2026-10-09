@@ -13,9 +13,12 @@ import {
   resolveLocale,
 } from "./features/locale/locale";
 
-function isPrivacyEntry(pathname: string) {
-  return /^\/account\/privacy(?:\/(?:data|download|preferences|security|closure|promotions))?$/.test(
-    pathname,
+function isPrivateAccountEntry(pathname: string) {
+  return (
+    pathname === "/account/notifications" ||
+    /^\/account\/privacy(?:\/(?:data|download|preferences|security|closure|promotions))?$/.test(
+      pathname,
+    )
   );
 }
 
@@ -47,7 +50,7 @@ const authenticate = clerkMiddleware(
       request.nextUrl.pathname + request.nextUrl.search,
     );
     const response = NextResponse.next({ request: { headers } });
-    if (isPrivacyEntry(request.nextUrl.pathname)) {
+    if (isPrivateAccountEntry(request.nextUrl.pathname)) {
       response.headers.set("Cache-Control", "private, no-store");
       response.headers.append("Vary", "Cookie");
     }
@@ -81,7 +84,8 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
   const paymentEntry = /^\/(?:checkout\/payments|orders)(\/|$)/.test(
     request.nextUrl.pathname,
   );
-  const privacyEntry = !reference && isPrivacyEntry(request.nextUrl.pathname);
+  const privacyEntry =
+    !reference && isPrivateAccountEntry(request.nextUrl.pathname);
   const sessionApi = !reference && isSessionApi(request.nextUrl.pathname);
   if (
     !(

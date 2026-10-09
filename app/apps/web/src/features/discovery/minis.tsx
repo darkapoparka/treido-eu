@@ -3,7 +3,6 @@ import { displayCount } from "../locale/number-display";
 import { useLocale as useIntlLocale } from "next-intl";
 import { useCaption } from "../locale/use-caption";
 import { useTranslations } from "next-intl";
-import { ShopSurface } from "./hydration-boundary";
 /* eslint-disable @next/next/no-img-element */
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -38,6 +37,11 @@ import {
 import styles from "./minis.module.css";
 import "./live-minis.css";
 import { useMiniRoute } from "./mini-navigation";
+import {
+  MiniCatalogHeading,
+  MiniCatalogRowContent,
+  MiniCatalogSurface,
+} from "./minis-catalog";
 export { Sol } from "./sol";
 export function Minis({ android = false }: { android?: boolean }) {
   const ui = useTranslations("discoveryUI");
@@ -113,13 +117,11 @@ export function Minis({ android = false }: { android?: boolean }) {
   );
   const row = (m: { id: string; name: string; description: string }) => {
     const content = (
-      <>
-        <img src={miniIcon(m.id, android)} alt="" />
-        <span>
-          <strong>{m.name}</strong>
-          <p>{m.description}</p>
-        </span>
-      </>
+      <MiniCatalogRowContent
+        icon={<img src={miniIcon(m.id, android)} alt="" />}
+        name={m.name}
+        description={m.description}
+      />
     );
     return findMini(m.id)?.available ? (
       <SourceLink
@@ -172,10 +174,7 @@ export function Minis({ android = false }: { android?: boolean }) {
     nativeResults.sort((a, b) => rank(a.name) - rank(b.name));
   }
   return (
-    <ShopSurface
-      className={`shop-page minis-page ${styles.catalog} ${android ? "android-live android-minis" : ""}`}
-      data-searching={nativeSearch || undefined}
-    >
+    <MiniCatalogSurface android={android} searching={nativeSearch}>
       {nativeSearch ? (
         <>
           <header className="native-mini-searchbar">
@@ -225,8 +224,7 @@ export function Minis({ android = false }: { android?: boolean }) {
         </>
       ) : (
         <>
-          <header className="section-heading">
-            <h1>Minis</h1>
+          <MiniCatalogHeading>
             <IconButton
               icon="search"
               label={ui("searchMinis")}
@@ -242,7 +240,7 @@ export function Minis({ android = false }: { android?: boolean }) {
               }}
               data-ui-label="searchMinis"
             />
-          </header>
+          </MiniCatalogHeading>
           <div
             className="mini-carousel"
             aria-label={ui("featuredMinis")}
@@ -427,7 +425,7 @@ export function Minis({ android = false }: { android?: boolean }) {
         </p>
       </Sheet>
       <FloatingNav android={android} back fade />
-    </ShopSurface>
+    </MiniCatalogSurface>
   );
 }
 export { useMiniRoute } from "./mini-navigation";

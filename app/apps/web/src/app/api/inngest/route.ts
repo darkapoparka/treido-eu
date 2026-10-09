@@ -19,6 +19,7 @@ import { requireMediaStorage } from "../../../server/media/storage.server";
 import { processMediaJob } from "../../../features/selling/media.server";
 import { processCatalogueImport } from "../../../features/catalogue-import/process.server";
 import { processSavedSearchJob } from "../../../features/saved-searches/jobs.server";
+import { processNotificationEmail } from "../../../features/notification-delivery/jobs.server";
 import {
   processPaymentObservation,
   processPaymentRefund,
@@ -51,6 +52,8 @@ async function handle(
       expireAttachmentJob(getDatabase(), job),
     "catalogue.import": (job) => processCatalogueImport(getDatabase(), job),
     "buyer.saved-search": (job) => processSavedSearchJob(getDatabase(), job),
+    "buyer.notification-email": (job) =>
+      processNotificationEmail(getDatabase(), job),
     "media.process": (job) =>
       processMediaJob(getDatabase(), job, requireMediaStorage()),
     "payment.reconcile": (job) => processPaymentObservation(getDatabase(), job),

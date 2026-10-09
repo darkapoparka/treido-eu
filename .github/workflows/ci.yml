@@ -91,8 +91,20 @@ jobs:
       - name: Independent seller declaration review database regressions
         run: pnpm exec vitest run --config apps/web/src/features/seller-declarations/native.config.mjs --configLoader native
 
+      - name: Notification consent, delivery and recovery database regressions
+        run: |
+          pnpm exec prettier --check tests/t61/notification.integration.ts tests/t61/notification.config.mjs tests/t61/notification-fixture.ts
+          pnpm exec eslint tests/t61/notification.integration.ts tests/t61/notification.config.mjs tests/t61/notification-fixture.ts --max-warnings=0
+          pnpm exec vitest run --config tests/t61/notification.config.mjs --configLoader native
+
       - name: Billing recovery database constraints
         run: node tests/t72/billing-native.mjs
+
+      - name: Refund authority, observation races and repair fairness
+        run: |
+          pnpm exec prettier --check tests/t61/aftercare.integration.ts tests/t61/aftercare.config.mjs
+          pnpm exec eslint tests/t61/aftercare.integration.ts tests/t61/aftercare.config.mjs --max-warnings=0
+          pnpm exec vitest run --config tests/t61/aftercare.config.mjs --configLoader native
 
       - name: Install privacy-test browser
         run: pnpm exec playwright install --with-deps chromium
@@ -100,6 +112,13 @@ jobs:
       # Real components with deferred test adapters; not live Clerk acceptance.
       - name: Browser session privacy regressions
         run: node tests/t71/session-browser.mjs
+
+      - name: Restored account, privacy, notification and workspace sessions
+        run: |
+          node tests/t56/privacy-session-browser.mjs
+          node tests/t56/notification-preferences-browser.mjs
+          node tests/t56/workspace-session-browser.mjs
+          node tests/t56/account-settings-session-browser.mjs
 
       - name: Private attachment browser regressions
         run: node tests/t72/attachment-browser.mjs

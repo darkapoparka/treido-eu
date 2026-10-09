@@ -6,8 +6,10 @@ import { getDatabase } from "../../server/db/database";
 import { readBuyerReferenceMode } from "./buyer-data-mode.server";
 import { readPublishedListing } from "./published.server";
 import { readPublicSeller } from "./public-discovery.server";
+import type { DiscoveryParams } from "./discovery-input";
 import {
   buyerPageMetadata,
+  explorePageMetadata,
   listingMetadata,
   sellerMetadata,
   siteMetadata,
@@ -63,6 +65,14 @@ export async function readBuyerPageMetadata(
   return (await readBuyerReferenceMode())
     ? { robots: { index: false, follow: false } }
     : buyerPageMetadata(await readPublicMetadataContext(), kind);
+}
+export async function readExploreMetadata(
+  source: DiscoveryParams,
+  available: boolean,
+): Promise<Metadata> {
+  return (await readBuyerReferenceMode())
+    ? { robots: { index: false, follow: false } }
+    : explorePageMetadata(await readPublicMetadataContext(), source, available);
 }
 export async function readListingMetadata(id: string): Promise<Metadata> {
   if (await readBuyerReferenceMode())

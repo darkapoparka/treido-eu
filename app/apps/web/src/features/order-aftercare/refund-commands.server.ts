@@ -346,7 +346,7 @@ export async function executeOrderRefund(
       );
       verifyOriginalRefund(prepared.row, refund);
       await database.pool.query(
-        "UPDATE treido.order_refund_intents SET provider_id=$2,provider_status=$3,state='reconciling',updated_at=clock_timestamp() WHERE id=$1 AND state IN ('creating','reconciling') AND (provider_id IS NULL OR provider_id=$2)",
+        "UPDATE treido.order_refund_intents SET provider_id=coalesce(provider_id,$2),provider_status=CASE WHEN provider_status IN ('succeeded','failed','canceled') THEN provider_status ELSE $3 END,state='reconciling',updated_at=clock_timestamp() WHERE id=$1 AND state IN ('creating','reconciling') AND (provider_id IS NULL OR provider_id=$2)",
         [prepared.row.id, refund.id, refund.status],
       );
     } catch {

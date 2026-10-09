@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { pageLocale } from "../locale/page-locale.server";
 import { backendConfigured } from "../sellers/backend-status.server";
 import { BackendUnavailable } from "../sellers/workspace";
@@ -33,9 +34,14 @@ export async function InvitationPage({
   } catch (error) {
     initialError = error instanceof SellerError ? error.code : "NOT_AVAILABLE";
   }
+  // This island keeps local items. A changed current recipient projection must
+  // replace that state and retire callbacks belonging to the former projection.
+  const projection = createHash("sha256")
+    .update(JSON.stringify({ initial, initialError }))
+    .digest("hex");
   return (
     <Invitations
-      key={actor.subject + "/" + (selectedId ?? "all")}
+      key={actor.subject + "/" + (selectedId ?? "all") + "/" + projection}
       initial={initial}
       actorSubject={actor.subject}
       language={language}

@@ -9,6 +9,20 @@ export const toolCopy = {
     gift: "Gift Finder",
     photo: "Photo Match",
     voice: "Voice search",
+    catalogIntro: "Choose a tool for real Treido listings.",
+    catalogDiscover: "Discover",
+    catalogChoose: "Choose",
+    catalogSell: "Sell",
+    catalogFind: "Describe what you need, with text or voice.",
+    catalogDeal: "Compare item prices within your criteria.",
+    catalogPhoto: "Choose a photo and review search suggestions.",
+    catalogCompare: "Review current facts for up to four items.",
+    catalogGift: "Find ideas from your interests and budget.",
+    catalogCompatibility: "Check declared facts and unknowns.",
+    catalogSellHelper: "Prepare changes to your own listing draft.",
+    catalogProviderNote:
+      "Photo and voice processing asks for your permission. If unavailable, enter your own search criteria.",
+    catalogNoResults: "No tools match this search. Try another word.",
     photoNote:
       "Review suggested search criteria from your photo, then find current publications. Matching does not prove identity or suitability.",
     voiceNote:
@@ -207,6 +221,20 @@ export const toolCopy = {
     gift: "Помощник за подаръци",
     photo: "Търсене по снимка",
     voice: "Гласово търсене",
+    catalogIntro: "Избери инструмент за реални обяви в Treido.",
+    catalogDiscover: "Открий",
+    catalogChoose: "Избери",
+    catalogSell: "Продай",
+    catalogFind: "Опиши какво търсиш с текст или глас.",
+    catalogDeal: "Сравни цени според избраните критерии.",
+    catalogPhoto: "Избери снимка и прегледай идеи за търсене.",
+    catalogCompare: "Прегледай текущите факти за до четири артикула.",
+    catalogGift: "Намери идеи според интересите и бюджета.",
+    catalogCompatibility: "Провери описаните факти и неизвестните.",
+    catalogSellHelper: "Подготви промени в собствена чернова.",
+    catalogProviderNote:
+      "Обработката на снимки и глас изисква разрешение. Ако не е достъпна, въведи самостоятелно критерии за търсене.",
+    catalogNoResults: "Няма инструменти за това търсене. Опитай друга дума.",
     photoNote:
       "Прегледай предложените критерии от своя снимка и намери текущи публикации. Сходството не доказва идентичност или пригодност.",
     voiceNote:

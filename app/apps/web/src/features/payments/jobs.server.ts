@@ -295,10 +295,29 @@ export async function processPaymentRefund(
       await lockAllocation(tx, prepared.attempt.allocationId);
     },
     apply: async (tx) => {
-      await tx.client.query(
-        `SELECT id FROM treido.payment_refunds WHERE id=$1 FOR UPDATE`,
-        [prepared.row.id],
-      );
+      const current = (
+        await tx.client.query<Pick<RefundRow, "state" | "providerId">>(
+          `SELECT state,provider_id AS "providerId" FROM treido.payment_refunds
+           WHERE id=$1 AND seller_id=$2 AND attempt_id=$3 AND order_id=$4 FOR UPDATE`,
+          [
+            prepared.row.id,
+            prepared.row.sellerId,
+            prepared.row.attemptId,
+            prepared.row.orderId,
+          ],
+        )
+      ).rows[0];
+      if (!current) throw new SellerError("NOT_FOUND");
+      if (current.providerId && observed && current.providerId !== observed.id)
+        throw new SellerError("CONFLICT");
+      // Provider reads occur outside the lock. A delayed/empty read cannot
+      // replace a newer terminal result or forget an already identified refund.
+      if (
+        current.state === "succeeded" ||
+        current.state === "failed" ||
+        (current.providerId && !observed)
+      )
+        return;
       await appendFacts(tx, prepared.attempt, facts);
       const complete =
         observed?.status === "succeeded" && reversalVerified && feeVerified;

@@ -152,6 +152,26 @@ it("database failure is visibly unavailable and never falls back to reference ca
   expect(source.catalog).not.toHaveBeenCalled();
   log.mockRestore();
 });
+it("retains a safe failure category without logging private provider error details", async () => {
+  const privateDetail = "SYNTHETIC-PROVIDER-DETAILS-DO-NOT-LOG";
+  source.query.mockRejectedValue(
+    Object.assign(new Error(privateDetail), {
+      code: "42501",
+      detail: privateDetail,
+    }),
+  );
+  const log = vi.spyOn(console, "error").mockImplementation(() => {});
+  try {
+    expect((await readBuyerHomeData({})).publicView?.unavailable).toBe(true);
+    expect(log).toHaveBeenCalledWith(
+      "Buyer discovery query unavailable.",
+      expect.objectContaining({ boundary: "database", sqlState: "42501" }),
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain(privateDetail);
+  } finally {
+    log.mockRestore();
+  }
+});
 it("empty live supply remains empty rather than displaying fixtures", async () => {
   const page = {
     items: [],

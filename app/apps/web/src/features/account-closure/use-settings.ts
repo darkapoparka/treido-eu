@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useClerk, useReverification } from "@clerk/nextjs";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   changeAccountSettingsAction,
   executeOwnSessionRevocationAction,
@@ -26,19 +27,47 @@ export function useAccountSettings(subject: string, mode: SettingsMode) {
     change = useReverification(changeAccountSettingsAction),
     recover = useReverification(recoverAccountSettingsAction),
     revoke = useReverification(executeOwnSessionRevocationAction);
+  const pathname = usePathname(),
+    search = useSearchParams();
+  const entry = pathname + (search.size ? "?" + search.toString() : "");
+  const context = [
+    subject,
+    mode,
+    entry,
+    clerk.user?.id ?? "",
+    clerk.session?.id ?? "",
+    clerk.session?.status ?? "",
+  ].join("\0");
   const [view, setView] = useState<SettingsView | null>(null),
     [pending, setPending] = useState<ClosureCommand | null>(null),
     [error, setError] = useState<ClosureCode | "STORAGE" | null>(null),
+    [errorContext, setErrorContext] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
-    [ready, setReady] = useState(false);
-  const life = useRef({ mounted: false, sequence: 0, busy: false }),
+    [busyContext, setBusyContext] = useState<string | null>(null),
+    [authority, setAuthority] = useState<string | null>(null);
+  const life = useRef({
+      mounted: false,
+      visible: false,
+      generation: 0,
+      sequence: 0,
+      busy: null as number | null,
+      nextOperation: 0,
+    }),
     attempt = useRef<ClosureCommand | null>(null);
   const active = useCallback(
     () =>
       life.current.mounted &&
+      life.current.visible &&
       clerk.user?.id === subject &&
-      clerk.session?.status === "active",
-    [clerk, subject],
+      clerk.session?.status === "active" &&
+      !!clerk.session.id &&
+      document.visibilityState === "visible" &&
+      location.pathname +
+        (location.search
+          ? "?" + new URLSearchParams(location.search).toString()
+          : "") ===
+        entry,
+    [clerk, subject, entry],
   );
   const clear = useCallback(() => {
     if (attempt.current) {
@@ -51,18 +80,33 @@ export function useAccountSettings(subject: string, mode: SettingsMode) {
   }, []);
   const refresh = useCallback(
     async (prompt = false) => {
-      if (!active() || document.visibilityState !== "visible") return;
+      // A visible explicit check also recovers after blur without a focus event.
+      if (!life.current.mounted || document.visibilityState !== "visible")
+        return;
+      life.current.visible = true;
+      if (!active()) return;
       const sequence = ++life.current.sequence,
+        generation = life.current.generation,
         sessionId = clerk.session?.id;
-      setReady(false);
+      const requestContext = [
+        subject,
+        mode,
+        entry,
+        clerk.user?.id ?? "",
+        sessionId ?? "",
+        clerk.session?.status ?? "",
+      ].join("\0");
+      const requestCurrent = () =>
+        active() &&
+        generation === life.current.generation &&
+        sequence === life.current.sequence &&
+        clerk.session?.id === sessionId;
+      setAuthority(null);
+      setErrorContext(requestContext);
+      setError(null);
       try {
         const result = await read(mode, prompt);
-        if (
-          !active() ||
-          sequence !== life.current.sequence ||
-          clerk.session?.id !== sessionId
-        )
-          return;
+        if (!requestCurrent()) return;
         if (!result?.ok) {
           setError(result?.code ?? "NOT_AVAILABLE");
           if (
@@ -99,86 +143,119 @@ export function useAccountSettings(subject: string, mode: SettingsMode) {
             }
           } catch {
             setView(current);
-            setReady(false);
+            setAuthority(null);
             setError("STORAGE");
             return;
           }
         }
         setView(current);
-        setReady(true);
+        setAuthority(requestContext);
         setError(null);
       } catch {
-        if (active() && sequence === life.current.sequence)
-          setError("NOT_AVAILABLE");
+        if (requestCurrent()) setError("NOT_AVAILABLE");
       }
     },
-    [active, clerk, subject, mode, read, clear],
+    [active, clerk, subject, mode, entry, read, clear],
   );
   useEffect(() => {
     const current = life.current;
     current.mounted = true;
-    let previous: string | null = null;
+    current.visible = document.visibilityState === "visible";
+    ++current.generation;
+    const hidden = () => {
+      ++current.sequence;
+      ++current.generation;
+      current.visible = false;
+      current.busy = null;
+      setBusy(false);
+      setAuthority(null);
+      setView(null);
+    };
+    let previous: string | null = null,
+      subscribed = true;
     const unsubscribe = clerk.addListener((resources) => {
+      if (!subscribed || !current.mounted) return;
       const identity = [
         resources.user?.id ?? "",
         resources.session?.id ?? "",
         resources.session?.status ?? "",
       ].join(":");
       if (identity === previous) return;
-      const changed = previous !== null;
       previous = identity;
-      ++current.sequence;
-      if (
-        changed ||
-        resources.user?.id !== subject ||
-        resources.session?.status !== "active"
-      ) {
-        clear();
-        setView(null);
-        setReady(false);
+      hidden();
+      // Replacing/reverifying a session never retires an uncertain command.
+      // A different actor cannot see the attempt; its journal stays actor scoped
+      // and can be recovered only after a matching current server read.
+      if (resources.user?.id !== subject) {
+        attempt.current = null;
+        setPending(null);
       }
       if (
         resources.user?.id === subject &&
-        resources.session?.status === "active"
+        resources.session?.status === "active" &&
+        resources.session.id
       )
         void refresh();
     });
-    const hidden = () => {
-        ++current.sequence;
-        setReady(false);
-      },
-      visible = () => {
+    const visible = () => {
         if (document.visibilityState === "visible") void refresh();
       },
       visibility = () => {
         if (document.visibilityState === "hidden") hidden();
         else visible();
       };
+    const restored = () => {
+      hidden();
+      visible();
+    };
+    const online = () => {
+      if (current.visible) visible();
+    };
     window.addEventListener("focus", visible);
     window.addEventListener("blur", hidden);
-    window.addEventListener("pageshow", visible);
+    window.addEventListener("pageshow", restored);
+    window.addEventListener("online", online);
     document.addEventListener("visibilitychange", visibility);
     return () => {
+      subscribed = false;
       current.mounted = false;
+      current.visible = false;
+      current.busy = null;
       ++current.sequence;
+      ++current.generation;
       unsubscribe();
       window.removeEventListener("focus", visible);
       window.removeEventListener("blur", hidden);
-      window.removeEventListener("pageshow", visible);
+      window.removeEventListener("pageshow", restored);
+      window.removeEventListener("online", online);
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, [clerk, subject, clear, refresh]);
+  }, [clerk, subject, context, clear, refresh]);
+  const ready =
+    authority === context &&
+    clerk.user?.id === subject &&
+    clerk.session?.status === "active" &&
+    !!clerk.session.id;
   const run = async (command: ClosureCommand, recovery = false) => {
-    if (!active() || life.current.busy || !ready) return;
-    const sessionId = clerk.session?.id;
-    life.current.busy = true;
+    if (!active() || life.current.busy !== null || !ready) return;
+    const sessionId = clerk.session?.id,
+      generation = life.current.generation,
+      operation = ++life.current.nextOperation;
+    life.current.busy = operation;
+    const requestCurrent = () =>
+      active() &&
+      generation === life.current.generation &&
+      clerk.session?.id === sessionId &&
+      life.current.busy === operation;
     setBusy(true);
+    setBusyContext(context);
+    setErrorContext(context);
     setError(null);
     if (!recovery) {
       try {
         sessionStorage.setItem(key(command.actorKey), JSON.stringify(command));
       } catch {
-        life.current.busy = false;
+        life.current.busy = null;
         setBusy(false);
         setError("STORAGE");
         return;
@@ -188,18 +265,25 @@ export function useAccountSettings(subject: string, mode: SettingsMode) {
     }
     try {
       const result = recovery ? await recover(command) : await change(command);
-      if (!active() || clerk.session?.id !== sessionId) return;
+      if (!requestCurrent()) return;
       if (!result?.ok) {
         const code = result?.code ?? "NOT_AVAILABLE";
         setError(code);
-        if (code !== "NOT_AVAILABLE" && code !== "UNKNOWN_OUTCOME") clear();
-        setReady(false);
+        if (
+          ![
+            "NOT_AVAILABLE",
+            "UNKNOWN_OUTCOME",
+            "RECENT_AUTH_REQUIRED",
+          ].includes(code)
+        )
+          clear();
+        setAuthority(null);
         return;
       }
       if (result.data.subject !== subject) {
         clear();
         setView(null);
-        setReady(false);
+        setAuthority(null);
         setError("FORBIDDEN");
         return;
       }
@@ -211,10 +295,11 @@ export function useAccountSettings(subject: string, mode: SettingsMode) {
       clear();
       if (command.operation.kind === "revokeSession" && !recovery) {
         const outcome = await revoke(acknowledgment.resourceId);
+        if (!requestCurrent()) return;
         if (
-          active() &&
-          clerk.session?.id === sessionId &&
-          (!outcome?.ok || outcome.data.state !== "confirmed")
+          !outcome?.ok ||
+          outcome.data.subject !== subject ||
+          outcome.data.state !== "confirmed"
         )
           setError(
             outcome?.ok
@@ -222,15 +307,18 @@ export function useAccountSettings(subject: string, mode: SettingsMode) {
               : (outcome?.code ?? "UNKNOWN_OUTCOME"),
           );
       }
-      await refresh();
+      if (requestCurrent()) await refresh();
     } catch {
-      if (active() && clerk.session?.id === sessionId) {
+      if (requestCurrent()) {
         setError("UNKNOWN_OUTCOME");
-        setReady(false);
+        setAuthority(null);
       }
     } finally {
-      life.current.busy = false;
-      if (life.current.mounted) setBusy(false);
+      if (life.current.busy === operation) {
+        life.current.busy = null;
+        if (life.current.mounted && generation === life.current.generation)
+          setBusy(false);
+      }
     }
   };
   const execute = (operation: ClosureOperation) => {
@@ -245,32 +333,63 @@ export function useAccountSettings(subject: string, mode: SettingsMode) {
     });
   };
   const checkSession = async (id: string) => {
-    if (!ready || !active() || life.current.busy) return;
-    const sessionId = clerk.session?.id;
-    life.current.busy = true;
+    if (!ready || !active() || life.current.busy !== null) return;
+    const sessionId = clerk.session?.id,
+      generation = life.current.generation,
+      operation = ++life.current.nextOperation;
+    life.current.busy = operation;
+    const requestCurrent = () =>
+      active() &&
+      generation === life.current.generation &&
+      clerk.session?.id === sessionId &&
+      life.current.busy === operation;
     setBusy(true);
+    setBusyContext(context);
+    setErrorContext(context);
+    setError(null);
     try {
       const result = await revoke(id);
-      if (!active() || clerk.session?.id !== sessionId) return;
+      if (!requestCurrent()) return;
       if (!result?.ok || result.data.subject !== subject) {
-        setError(result?.ok ? "FORBIDDEN" : (result?.code ?? "NOT_AVAILABLE"));
+        const code = result?.ok
+          ? "FORBIDDEN"
+          : (result?.code ?? "NOT_AVAILABLE");
+        setError(code);
+        if (["FORBIDDEN", "UNAUTHENTICATED"].includes(code)) {
+          clear();
+          setView(null);
+          setAuthority(null);
+        }
         return;
       }
       if (result.data.state !== "confirmed") setError("UNKNOWN_OUTCOME");
       await refresh();
     } catch {
-      if (active() && clerk.session?.id === sessionId)
-        setError("UNKNOWN_OUTCOME");
+      if (requestCurrent()) setError("UNKNOWN_OUTCOME");
     } finally {
-      life.current.busy = false;
-      if (life.current.mounted) setBusy(false);
+      if (life.current.busy === operation) {
+        life.current.busy = null;
+        if (life.current.mounted && generation === life.current.generation)
+          setBusy(false);
+      }
     }
   };
   return {
-    view,
-    pending,
-    error,
-    busy,
+    view: ready ? view : null,
+    pending: ready ? pending : null,
+    error:
+      errorContext === context &&
+      clerk.user?.id === subject &&
+      clerk.session?.status === "active" &&
+      !!clerk.session.id
+        ? error
+        : null,
+    busy:
+      busyContext === context &&
+      clerk.user?.id === subject &&
+      clerk.session?.status === "active" &&
+      !!clerk.session.id &&
+      busy,
     ready,
     refresh,
     execute,

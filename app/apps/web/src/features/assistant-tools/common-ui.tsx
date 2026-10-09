@@ -26,7 +26,7 @@ export function AssistantSession({
   if (!isLoaded || !userId)
     return (
       <MiniShell name={t[kind]}>
-        <main className={s.content}>
+        <section className={s.content}>
           <h1>{t[kind]}</h1>
           <p role="status">{isLoaded ? t.guest : t.loading}</p>
           {isLoaded && (
@@ -46,7 +46,7 @@ export function AssistantSession({
               {t.signIn}
             </SourceLink>
           )}
-        </main>
+        </section>
       </MiniShell>
     );
   return children(userId);

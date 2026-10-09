@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { Locale } from "../locale/locale";
 import type { PublishedListing } from "./published-model";
 import type { PublicSeller } from "./public-discovery-model";
+import type { DiscoveryParams } from "./discovery-input";
 
 export type PublicMetadataContext = {
   locale: Locale;
@@ -13,6 +14,7 @@ const copy = {
   bg: {
     home: "Обяви от хора и бизнеси",
     search: "Търсене на обяви",
+    explore: "Разгледай категории",
     saved: "Запазени",
     following: "Следвани продавачи",
     description:
@@ -28,6 +30,7 @@ const copy = {
   en: {
     home: "Listings from people and businesses",
     search: "Search listings",
+    explore: "Explore categories",
     saved: "Saved",
     following: "Followed sellers",
     description:
@@ -110,6 +113,40 @@ export function buyerPageMetadata(
     copy[context.locale][privatePage ? "privateDescription" : "description"],
     kind === "home" ? "/" : null,
     kind === "home",
+  );
+}
+/** Only the available public root is a landing page. Criteria and private or
+ * unrecognized URL parameters never create indexable Explore variants. */
+export function explorePageMetadata(
+  context: PublicMetadataContext,
+  source: DiscoveryParams,
+  available: boolean,
+): Metadata {
+  const parameters =
+    typeof source === "string" ? new URLSearchParams(source) : source;
+  const entries =
+    parameters instanceof URLSearchParams
+      ? parameters.entries()
+      : Object.entries(parameters);
+  let root = available;
+  let localeCount = 0;
+  for (const [key, value] of entries) {
+    if (
+      key !== "lang" ||
+      typeof value !== "string" ||
+      !["bg", "en"].includes(value) ||
+      ++localeCount > 1
+    ) {
+      root = false;
+      break;
+    }
+  }
+  return pageMetadata(
+    context,
+    copy[context.locale].explore,
+    copy[context.locale].description,
+    root ? "/explore" : null,
+    root,
   );
 }
 /** The input is the accepted public projection, never a draft/saved-card fallback. */

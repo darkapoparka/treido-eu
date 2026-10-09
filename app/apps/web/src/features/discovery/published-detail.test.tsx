@@ -9,8 +9,13 @@ import { PublicInventoryPanel } from "../inventory/public-panel";
 import type { PublishedListing } from "../catalog/published-model";
 import type { PublicInventory } from "../inventory/model";
 import type { ProductDetailProduct } from "../catalog/product-detail-model";
+import { readDiscoveryInput } from "../catalog/discovery-input";
 import { messages } from "../locale/messages";
 
+const navigation = vi.hoisted(() => ({
+  locale: "bg" as "bg" | "en",
+  params: new URLSearchParams(),
+}));
 const library = vi.hoisted(() => ({
   status: "guest",
   busy: false,
@@ -33,16 +38,19 @@ vi.mock("../library/provider", () => ({
   useBuyerLibrary: () => library,
 }));
 vi.mock("next-intl", () => ({
-  useLocale: () => "bg",
+  useLocale: () => navigation.locale,
   useTranslations: (namespace: string) => (key: string) =>
     `${namespace}.${key}`,
 }));
 vi.mock("../locale/provider", () => ({
-  useLocale: () => ({ locale: "bg", messages: messages.bg }),
+  useLocale: () => ({
+    locale: navigation.locale,
+    messages: messages[navigation.locale],
+  }),
 }));
 vi.mock("next/navigation", () => ({
   usePathname: () => "/products/10000000-0000-4000-8000-000000000001",
-  useSearchParams: () => new URLSearchParams("lang=bg&seller=business"),
+  useSearchParams: () => navigation.params,
   useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
 }));
 vi.mock("next/link", () => ({
@@ -112,11 +120,68 @@ const stocked: PublicInventory = {
 };
 
 beforeEach(() => {
+  navigation.locale = "bg";
+  navigation.params = new URLSearchParams("lang=bg&seller=business");
   library.execute.mockClear();
   library.status = "guest";
   library.busy = false;
   library.view.savedIds = [];
 });
+
+function publicContext(
+  locale: "bg" | "en",
+  seller: "all" | "personal" | "business",
+  category = listing.categoryId,
+) {
+  navigation.locale = locale;
+  navigation.params = new URLSearchParams({
+    lang: locale,
+    seller,
+    q: "phone",
+    category,
+    condition: "good",
+    minPrice: "12.50",
+    maxPrice: "300",
+    location: "София",
+    sort: "price_desc",
+    "attr.brand": "Apple",
+    "attr.storageGB": "128",
+    "attr.unsupported": "ignored",
+    cursor: `payload.${"a".repeat(43)}`,
+    sellerId: "private-operating-seller",
+    feedbackPage: "9",
+    miniSearch: "1",
+    miniQuery: "Find",
+  });
+}
+
+function contextualLink(html: string, path: string) {
+  const links = [...html.matchAll(/<a\b[^>]*>/g)].map(([anchor]) => {
+    const href = anchor.match(/\bhref="([^"]+)"/)?.[1].replaceAll("&amp;", "&");
+    const target = anchor
+      .match(/\bdata-source-return="([^"]+)"/)?.[1]
+      .replaceAll("&amp;", "&");
+    return { href, target };
+  });
+  const link = links.find(
+    ({ href }) =>
+      href && new URL(href, "https://treido.invalid").pathname === path,
+  );
+  expect(link?.href).toBeDefined();
+  const href = link!.href!;
+  const destination = new URL(href, "https://treido.invalid");
+  expect(link!.target?.startsWith(`${href}|`)).toBe(true);
+  for (const key of [
+    "cursor",
+    "sellerId",
+    "feedbackPage",
+    "miniSearch",
+    "miniQuery",
+    "attr.unsupported",
+  ])
+    expect(destination.searchParams.has(key)).toBe(false);
+  return destination;
+}
 
 describe("public product presentation boundaries", () => {
   it("selects the shared product shell without reference assets and keeps actual content/actions", () => {
@@ -133,7 +198,9 @@ describe("public product presentation boundaries", () => {
     expect(html).toContain(listing.deliveryDetails);
     expect(html).toContain("София");
     expect(html).toContain(`/messages/new?listing=${listing.id}&amp;lang=bg`);
-    expect(html).toContain(`/stores/${listing.seller.id}?lang=bg`);
+    expect(html).toContain(
+      `/stores/${listing.seller.id}?seller=business&amp;lang=bg`,
+    );
     expect(html).toMatch(
       /product-heading[^]*<h1>Real item<\/h1>[^]*aria-label="library.save Real item"[^]*aria-label="publication.share"/,
     );
@@ -144,6 +211,71 @@ describe("public product presentation boundaries", () => {
       sellerIds: [listing.seller.id],
     });
   });
+
+  it.each([
+    ["bg", "all"],
+    ["bg", "personal"],
+    ["bg", "business"],
+    ["en", "all"],
+    ["en", "personal"],
+    ["en", "business"],
+  ] as const)(
+    "%s / %s item continuations retain public criteria and their contextual return targets",
+    (locale, seller) => {
+      publicContext(locale, seller);
+      const html = renderToStaticMarkup(
+        <PublishedProductDetail listing={listing} />,
+      );
+      for (const path of [
+        `/stores/${listing.seller.id}`,
+        `/explore/${encodeURIComponent(listing.categoryId)}`,
+      ]) {
+        const destination = contextualLink(html, path);
+        expect(destination.searchParams.get("lang")).toBe(locale);
+        expect(readDiscoveryInput(destination.searchParams).input).toEqual({
+          q: "phone",
+          category: listing.categoryId,
+          seller,
+          condition: "good",
+          location: "София",
+          minPriceMinor: 1250,
+          maxPriceMinor: 30000,
+          currency: "EUR",
+          sort: "price_desc",
+          locale,
+          attributes: { brand: "Apple", storageGB: 128 },
+        });
+      }
+    },
+  );
+
+  it.each(["bg", "en"] as const)(
+    "%s item category continuation replaces a different category and retires its attributes",
+    (locale) => {
+      publicContext(locale, "personal", "cat:electronics/laptops");
+      const html = renderToStaticMarkup(
+        <PublishedProductDetail listing={listing} />,
+      );
+      const destination = contextualLink(
+        html,
+        `/explore/${encodeURIComponent(listing.categoryId)}`,
+      );
+      expect(destination.searchParams.get("lang")).toBe(locale);
+      expect(readDiscoveryInput(destination.searchParams).input).toEqual({
+        q: "phone",
+        category: listing.categoryId,
+        seller: "personal",
+        condition: "good",
+        location: "София",
+        minPriceMinor: 1250,
+        maxPriceMinor: 30000,
+        currency: "EUR",
+        sort: "price_desc",
+        locale,
+        attributes: {},
+      });
+    },
+  );
 
   it.each([
     stocked,

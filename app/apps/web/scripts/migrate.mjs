@@ -156,6 +156,7 @@ async function main() {
         "0052_repair_due",
         "0053_category_navigation",
         "0054_seller_declaration_reviews",
+        "0055_notification_delivery",
       ]) {
         const source = await readFile(
           new URL(`../migrations/${version}.sql`, import.meta.url),

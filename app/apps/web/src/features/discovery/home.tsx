@@ -361,6 +361,7 @@ function HomeContent({ catalog, publicView }: BuyerEntryData) {
           <BuyerAvailability
             unavailable={publicView.unavailable}
             home
+            input={publicView.input}
             categoryLabel={
               publicView.input.category
                 ? getBrowseCategory(publicView.input.category)?.labels[

@@ -20,6 +20,7 @@ import {
   type AttachmentJobRow,
   isShippingJob,
   type ShippingJobRow,
+  type NotificationJobRow,
 } from "./outbox.server";
 import { authorizeSearchJob } from "../../features/saved-searches/job-authority.server";
 import {
@@ -37,6 +38,7 @@ import { authorizeInvitationMailJob } from "../../features/team/mail-persistence
 import { authorizeAttachmentJob } from "../../features/message-attachments/jobs.server";
 import { authorizeShippingArtifact } from "./shipping-authority.server";
 import { authorizeLifecycleArtifact } from "./lifecycle-authority.server";
+import { authorizeNotificationJob } from "../../features/notification-delivery/persistence.server";
 
 export type AssistantEffectContext = AssistantJobRow & {
   executionToken: string;
@@ -48,6 +50,9 @@ export type AttachmentEffectContext = AttachmentJobRow & {
 };
 export type EffectContext = SellerJobRow & { executionToken: string };
 export type BuyerEffectContext = BuyerJobRow & { executionToken: string };
+export type NotificationEffectContext = NotificationJobRow & {
+  executionToken: string;
+};
 export type EffectResult = {
   resultId: string;
   providerObjectId?: string;
@@ -65,6 +70,9 @@ export type JobHandlers = Partial<
   > & {
     "buyer.saved-search"?: (
       context: BuyerEffectContext,
+    ) => Promise<EffectResult>;
+    "buyer.notification-email"?: (
+      context: NotificationEffectContext,
     ) => Promise<EffectResult>;
     "account.closure"?: (
       context: ClosureEffectContext,
@@ -118,6 +126,21 @@ async function currentAuthority(
   }
   if (job.kind === "buyer.saved-search") {
     await authorizeSearchJob(tx, job);
+    return;
+  }
+  if (job.kind === "buyer.notification-email") {
+    try {
+      await authorizeNotificationJob(tx, job, executionToken);
+    } catch (error) {
+      // Missing storage or a concurrent revision is retryable; only actual
+      // authority removal may permanently cancel this original delivery.
+      if (
+        error instanceof SellerError &&
+        ["CONFLICT", "NOT_AVAILABLE"].includes(error.code)
+      )
+        throw new JobError(error.code as "CONFLICT" | "NOT_AVAILABLE");
+      throw error;
+    }
     return;
   }
   if (job.authority === "service") return;
@@ -211,7 +234,8 @@ async function claimExecution(
       job.kind === "account.closure" ||
       isAssistantJob(job) ||
       isShippingJob(job) ||
-      isAttachmentJob(job)
+      isAttachmentJob(job) ||
+      job.kind === "buyer.notification-email"
     )
       await currentAuthority(tx, job, token);
     await tx.client.query(
@@ -253,6 +277,10 @@ export async function executeJob(
     // context.operationKey, including after lease expiry or explicit redrive.
     let result: EffectResult;
     if (context.kind === "buyer.saved-search") {
+      const handler = handlers[context.kind];
+      if (!handler) throw new JobError("NOT_AVAILABLE");
+      result = await handler(context);
+    } else if (context.kind === "buyer.notification-email") {
       const handler = handlers[context.kind];
       if (!handler) throw new JobError("NOT_AVAILABLE");
       result = await handler(context);

@@ -14,7 +14,7 @@ export function parseBuyerContinuation(value: unknown): string | null {
   if (
     typeof value === "string" &&
     !/[\u0000-\u0020\u007f]/.test(value) &&
-    /^\/account\/privacy\/(?:promotions|closure|preferences|security)(?:\?lang=(?:bg|en))?$/.test(
+    /^\/account\/(?:notifications|privacy\/(?:promotions|closure|preferences|security))(?:\?lang=(?:bg|en))?$/.test(
       value,
     )
   )

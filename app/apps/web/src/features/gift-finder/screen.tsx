@@ -26,7 +26,7 @@ export function GiftScreen({ continuation }: { continuation: string }) {
   if (!isLoaded || !userId)
     return (
       <MiniShell name={t.title}>
-        <main className={s.content}>
+        <section className={s.content}>
           <h1>{t.title}</h1>
           <p role="status">{isLoaded ? t.guest : "…"}</p>
           {isLoaded && (
@@ -45,7 +45,7 @@ export function GiftScreen({ continuation }: { continuation: string }) {
               {t.signIn}
             </SourceLink>
           )}
-        </main>
+        </section>
       </MiniShell>
     );
   return <GiftWorkspace key={userId} subject={userId} />;
@@ -91,7 +91,7 @@ function GiftWorkspace({ subject }: { subject: string }) {
   }
   const content = (
     <MiniShell name={t.title}>
-      <main className={s.content}>
+      <section className={s.content}>
         <h1>{t.title}</h1>
         <p className={s.note}>{t.intro}</p>
         <AssistantNavigation />
@@ -253,7 +253,7 @@ function GiftWorkspace({ subject }: { subject: string }) {
             </button>
           </div>
         </Sheet>
-      </main>
+      </section>
     </MiniShell>
   );
   return (

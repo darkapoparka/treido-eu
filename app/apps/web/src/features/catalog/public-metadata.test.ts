@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import {
   buyerPageMetadata,
+  explorePageMetadata,
   listingMetadata,
   sellerMetadata,
   siteMetadata,
@@ -43,6 +44,80 @@ const listing: PublishedListing = {
   ],
 };
 describe("Treido public metadata", () => {
+  it.each(["bg", "en"] as const)(
+    "publishes the available %s Explore root with qualified localized links",
+    (locale) => {
+      const result = explorePageMetadata(
+        { ...context, locale },
+        new URLSearchParams({ lang: locale }),
+        true,
+      );
+      expect(result.title).toBe(
+        (locale === "bg" ? "Разгледай категории" : "Explore categories") +
+          " | Treido",
+      );
+      expect(result.robots).toEqual({ index: true, follow: true });
+      expect(result.alternates).toEqual({
+        canonical: context.origin + "/explore?lang=" + locale,
+        languages: {
+          bg: context.origin + "/explore?lang=bg",
+          en: context.origin + "/explore?lang=en",
+        },
+      });
+      expect(result.openGraph).toMatchObject({
+        url: context.origin + "/explore?lang=" + locale,
+        locale: locale === "bg" ? "bg_BG" : "en_GB",
+      });
+      expect(explorePageMetadata(context, {}, true).robots).toEqual({
+        index: true,
+        follow: true,
+      });
+    },
+  );
+  it("keeps Explore criteria, private parameters, adjusted URLs and unavailable supply non-indexable", () => {
+    for (const source of [
+      "q=phone",
+      "q=",
+      "category=cat%3Aelectronics%2Fphones",
+      "seller=personal",
+      "seller=all",
+      "condition=good",
+      "location=Sofia",
+      "minPrice=10",
+      "maxPrice=20",
+      "currency=EUR",
+      "sort=newest",
+      "sort=relevance",
+      "attr.brand=example",
+      "cursor=invalid",
+      "sellerId=" + sellerId,
+      "collectionId=private",
+      "reference=1",
+      "platform=android",
+      "unknown=value",
+      "lang=invalid",
+      "lang=bg&lang=en",
+    ]) {
+      const result = explorePageMetadata(context, source, true);
+      expect(result.robots, source).toEqual({ index: false, follow: false });
+      expect(result.alternates, source).toBeUndefined();
+      expect(result.openGraph, source).not.toHaveProperty("url");
+    }
+    expect(
+      explorePageMetadata(context, { lang: ["bg", "en"] }, true).robots,
+    ).toEqual({ index: false, follow: false });
+    const unavailable = explorePageMetadata(context, { lang: "bg" }, false);
+    expect(unavailable.robots).toEqual({ index: false, follow: false });
+    expect(unavailable.alternates).toBeUndefined();
+    const development = explorePageMetadata(
+      { ...context, origin: null, indexable: false },
+      {},
+      true,
+    );
+    expect(development.robots).toEqual({ index: false, follow: false });
+    expect(development.alternates).toBeUndefined();
+    expect(development.metadataBase).toBeUndefined();
+  });
   it("keeps root and private destinations non-indexable without leaking collection or account information", () => {
     expect(siteMetadata(context)).toMatchObject({
       title: "Treido",

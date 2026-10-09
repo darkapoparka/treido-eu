@@ -56,6 +56,7 @@ export type JobKind =
   | AttachmentJobKind
   | SellerJobKind
   | "buyer.saved-search"
+  | "buyer.notification-email"
   | AssistantJobKind
   | "account.closure"
   | ShippingJobKind;
@@ -66,7 +67,9 @@ export type JobAuthority =
   | "assistant"
   | "closure"
   | "shipping"
-  | "attachment";
+  | "attachment"
+  | "notification";
+// Email delivery has current human/consent authority, independent of seller operation.
 export type JobState =
   "pending" | "accepted" | "completed" | "cancelled" | "dead";
 export type SellerJobIntent = {
@@ -107,13 +110,21 @@ export type ShippingJobIntent = Omit<
   AssistantJobIntent,
   "kind" | "authority"
 > & { kind: ShippingJobKind; authority: "shipping" };
+export type NotificationJobIntent = Omit<
+  AssistantJobIntent,
+  "kind" | "authority"
+> & {
+  kind: "buyer.notification-email";
+  authority: "notification";
+};
 export type JobIntent =
   | AttachmentJobIntent
   | SellerJobIntent
   | BuyerJobIntent
   | AssistantJobIntent
   | ClosureJobIntent
-  | ShippingJobIntent;
+  | ShippingJobIntent
+  | NotificationJobIntent;
 export type JobEvent = {
   jobId: string;
   sellerId: string | null;
@@ -139,6 +150,18 @@ export class JobError extends Error {
   }
 }
 export function validateJobIntent(input: JobIntent) {
+  if (input?.kind === "buyer.notification-email") {
+    if (
+      input.sellerId !== null ||
+      !validId(input.buyerId) ||
+      input.actorId !== null ||
+      input.authority !== "notification" ||
+      !validId(input.resourceId) ||
+      input.operationKey !== input.resourceId
+    )
+      throw new JobError("INVALID_INPUT");
+    return;
+  }
   if (isAttachmentJobKind(input?.kind)) {
     if (
       !validId(input.sellerId) ||

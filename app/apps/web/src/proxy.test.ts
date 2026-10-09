@@ -96,6 +96,7 @@ describe("locale request routing without changing private authentication", () =>
     "/account/privacy/promotions",
     "/account/privacy/data",
     "/account/privacy/download",
+    "/account/notifications",
   ])(
     "provides Clerk session context to the real private entry %s",
     async (path) => {
@@ -107,7 +108,10 @@ describe("locale request routing without changing private authentication", () =>
         {} as NextFetchEvent,
       )) as NextResponse;
       expect(mocks.authenticate).toHaveBeenCalledOnce();
-      if (path.startsWith("/account/privacy/")) {
+      if (
+        path.startsWith("/account/privacy/") ||
+        path === "/account/notifications"
+      ) {
         expect(response.headers.get("Cache-Control")).toBe("private, no-store");
         expect(response.headers.get("Vary")).toContain("Cookie");
       }

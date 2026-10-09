@@ -1,6 +1,27 @@
 import { expect, it } from "vitest";
 import { parseBuyerContinuation } from "./buyer-continuation";
 
+it.each(["", "?lang=bg", "?lang=en"])(
+  "returns only to read-only notification settings %s",
+  (suffix) => {
+    const path = "/account/notifications" + suffix;
+    expect(parseBuyerContinuation(path)).toBe(path);
+  },
+);
+it.each([
+  "?lang=bg&consent=true",
+  "?savedSearchEmail=true",
+  "?requestId=00000000-0000-4000-8000-000000000001",
+  "?lang=bg&lang=en",
+  "?lang=fr",
+  "/../notifications",
+  "#save",
+  "\n",
+  "\\",
+])("rejects notification settings actions and normalization %s", (suffix) => {
+  expect(parseBuyerContinuation("/account/notifications" + suffix)).toBeNull();
+});
+
 it("returns to the original read-only shipping source or review without accepting consent or effects", () => {
   const uuid = "00000000-0000-4000-8000-000000000001";
   const cart = `/checkout/payments/shipping?lang=bg&source=cart&sellerId=${uuid}&cartRevision=2`;

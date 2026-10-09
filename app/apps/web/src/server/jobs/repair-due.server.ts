@@ -8,12 +8,17 @@ export async function readRepairDue(
   database: SellerDatabase,
 ): Promise<RepairDue> {
   try {
-    const ready = await database.pool.query<{ ready: boolean }>(
-      "SELECT to_regprocedure('treido.repair_any_due_v1()') IS NOT NULL AS ready",
+    const ready = await database.pool.query<{
+      ready: boolean;
+      notifications?: boolean;
+    }>(
+      "SELECT to_regprocedure('treido.repair_any_due_v1()') IS NOT NULL AS ready, to_regprocedure('treido.repair_any_due_v2()') IS NOT NULL AS notifications",
     );
     if (ready.rows[0]?.ready !== true) return { version: 1, due: true };
     const result = await database.pool.query<{ due: boolean }>(
-      "SELECT treido.repair_any_due_v1() AS due",
+      ready.rows[0]?.notifications === true
+        ? "SELECT treido.repair_any_due_v2() AS due"
+        : "SELECT treido.repair_any_due_v1() AS due",
     );
     return { version: 1, due: result.rows[0]?.due !== false };
   } catch {

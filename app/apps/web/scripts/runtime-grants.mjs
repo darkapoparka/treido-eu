@@ -12,6 +12,7 @@ import { applyOrderFeedbackGrants } from "../src/features/order-feedback/runtime
 import { applyAccountClosureGrants } from "../src/features/account-closure/closure-grants.mjs";
 import { applyAftercareClosureGrants } from "../src/features/order-aftercare/closure-grants.mjs";
 import { applyLifecycleJobGrants } from "../src/server/jobs/lifecycle-grants.mjs";
+import { applyNotificationDeliveryGrants } from "../src/features/notification-delivery/runtime-grants.mjs";
 /** Same reviewed least-privilege data grants for isolated migrations and native QA. */
 import { applyTrustCaseGrants } from "./trust-case-grants.mjs";
 import { applyShoppingToolsGrants } from "./shopping-tools-grants.mjs";
@@ -109,6 +110,7 @@ export async function applyRuntimeGrants(client, role) {
   await applySavedSearchGrants(client, role);
   await applyAssistantToolsGrants(client, role);
   await applyAccountPrivacyGrants(client, role);
+  await applyNotificationDeliveryGrants(client, role);
   await applyGiftFinderGrants(client, role);
   await applySellerBillingGrants(client, role);
   await applyPromotionGrants(client, role);

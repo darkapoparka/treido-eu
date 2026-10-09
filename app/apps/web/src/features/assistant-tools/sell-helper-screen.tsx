@@ -101,7 +101,7 @@ function HelperSellerChoice({
   }, [subject]);
   return (
     <MiniShell name={t.sellHelper}>
-      <main className={s.content}>
+      <section className={s.content}>
         <h1>{t.sellHelper}</h1>
         <p className={s.note}>{t.helperIntro}</p>
         <AssistantNavigation />
@@ -145,7 +145,7 @@ function HelperSellerChoice({
             {t.workspace}
           </SourceLink>
         </nav>
-      </main>
+      </section>
     </MiniShell>
   );
 }

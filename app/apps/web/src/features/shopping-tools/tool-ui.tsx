@@ -4,10 +4,7 @@ import { useLocale } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getCategoryLabel, getCategory } from "@treido/contracts/categories";
 import { MiniShell } from "../discovery/mini-frame";
-import { ShopSurface } from "../discovery/hydration-boundary";
 import { SourceLink } from "../discovery/return-navigation";
-import { FloatingNav } from "../discovery/components";
-import { Icon } from "../discovery/icons";
 import { ProductCard } from "../discovery/product-card";
 import { LibraryProvider } from "../library/provider";
 import {
@@ -31,80 +28,14 @@ import {
 import { useComparison } from "./comparison-provider";
 import { observe, type ToolListing, type ToolResults } from "./model";
 import { readCurrentToolListingAction } from "./actions";
-import {
-  SaveSearchControl,
-  SearchManageLink,
-} from "../saved-searches/controls";
+import { SaveSearchControl } from "../saved-searches/controls";
+import { ProductMiniCatalogue } from "./tool-catalogue";
 import s from "./tools.module.css";
 export function useToolLocale(): ToolLocale {
   return useLocale() === "en" ? "en" : "bg";
 }
 export function ToolHub() {
-  const locale = useToolLocale(),
-    t = toolCopy[locale];
-  return (
-    <ShopSurface className="shop-page minis-page">
-      <main className={s.content}>
-        <header className="section-heading">
-          <h1>{t.hub}</h1>
-        </header>
-        <p className={s.note}>{t.intro}</p>
-        <div className={s.tools}>
-          {(
-            [
-              ["find-for-me", "find", "findNote"],
-              ["deal-finder", "deal", "dealNote"],
-              ["compare", "compare", "compareNote"],
-              ["gift-finder", "gift", "giftNote"],
-              ["photo-match", "photo", "photoNote"],
-              ["find-for-me/voice", "voice", "voiceNote"],
-              ["compatibility", "compatibility", "compatibilityNote"],
-              ["sell-helper", "sellHelper", "sellHelperNote"],
-            ] as const
-          ).map(([path, title, note]) => (
-            <SourceLink
-              preserveDiscoveryContext={false}
-              href={"/minis/" + path + "?lang=" + locale}
-              key={path}
-              className={s.tool}
-            >
-              <Icon name={path === "compare" ? "heart" : "search"} />
-              <span>
-                <strong>{t[title]}</strong>
-                <p>{t[note]}</p>
-              </span>
-            </SourceLink>
-          ))}
-        </div>
-        <p className={s.note}>{t.deterministic}</p>
-        <p className={s.note}>{t.providerPending}</p>
-        <nav className={s.nav}>
-          <SourceLink href={"/search?lang=" + locale}>{t.viewAll}</SourceLink>
-          <SourceLink href={"/saved?lang=" + locale}>{t.viewSaved}</SourceLink>
-          <SearchManageLink />
-          <SourceLink
-            preserveDiscoveryContext={false}
-            href={"/sell/start?lang=" + locale}
-          >
-            {t.sellingGuide}
-          </SourceLink>
-          <SourceLink
-            preserveDiscoveryContext={false}
-            href={"/account/privacy?lang=" + locale}
-          >
-            {t.accountPrivacy}
-          </SourceLink>
-          <SourceLink
-            preserveDiscoveryContext={false}
-            href={"/account/privacy/promotions?lang=" + locale}
-          >
-            {t.promotionPrivacy}
-          </SourceLink>
-        </nav>
-      </main>
-      <FloatingNav back fade />
-    </ShopSurface>
-  );
+  return <ProductMiniCatalogue />;
 }
 export function ToolUnavailable({
   title,
@@ -118,17 +49,23 @@ export function ToolUnavailable({
     router = useRouter();
   return (
     <MiniShell name={title}>
-      <main className={s.content}>
+      <section className={s.content}>
         <h1>{title}</h1>
         <p role="alert">{t[error]}</p>
         <button className={s.button} onClick={() => router.refresh()}>
           {t.retry}
         </button>
-      </main>
+      </section>
     </MiniShell>
   );
 }
-export function ToolNavigation({ intent }: { intent: ToolIntent }) {
+export function ToolNavigation({
+  intent,
+  voice = false,
+}: {
+  intent: ToolIntent;
+  voice?: boolean;
+}) {
   const t = toolCopy[intent.discovery.locale];
   return (
     <nav className={s.nav} aria-label={t.hub}>
@@ -138,6 +75,14 @@ export function ToolNavigation({ intent }: { intent: ToolIntent }) {
       >
         {t.find}
       </SourceLink>
+      {voice && (
+        <SourceLink
+          preserveDiscoveryContext={false}
+          href={"/minis/find-for-me/voice?lang=" + intent.discovery.locale}
+        >
+          {t.voice}
+        </SourceLink>
+      )}
       <SourceLink
         preserveDiscoveryContext={false}
         href={toolHref("deal-finder", {
@@ -535,12 +480,12 @@ export function Finder({ data, mode }: { data: ToolResults; mode: ToolMode }) {
       }}
     >
       <MiniShell name={title}>
-        <main className={s.content}>
+        <section className={s.content}>
           <h1>{title}</h1>
           <p className={s.note}>
             {mode === "deal-finder" ? t.dealNote : t.findNote}
           </p>
-          <ToolNavigation intent={data.intent} />
+          <ToolNavigation intent={data.intent} voice={mode === "find-for-me"} />
           <FinderCriteria
             key={mode + ":" + findScope(data.intent)}
             initial={data.intent}
@@ -634,7 +579,7 @@ export function Finder({ data, mode }: { data: ToolResults; mode: ToolMode }) {
             </time>
           </p>
           <p className={s.note}>{t.deterministic}</p>
-        </main>
+        </section>
       </MiniShell>
     </LibraryProvider>
   );
@@ -654,7 +599,7 @@ export function FinderFailure({
     title = mode === "deal-finder" ? t.deal : t.find;
   return (
     <MiniShell name={title}>
-      <main className={s.content}>
+      <section className={s.content}>
         <h1>{title}</h1>
         <p role="alert">{t[error]}</p>
         <p className={s.note}>{t.noAutomatically}</p>
@@ -663,7 +608,7 @@ export function FinderFailure({
         </button>
         <ToolNavigation intent={initial} />
         <IntentControls initial={initial} mode={mode} />
-      </main>
+      </section>
     </MiniShell>
   );
 }

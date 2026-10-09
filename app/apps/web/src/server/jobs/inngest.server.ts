@@ -31,6 +31,8 @@ import { JOB_EVENT, JobError } from "./model";
 import { SellerError } from "../../features/sellers/errors";
 import { schedulePaymentRepair } from "../../features/payments/jobs.server";
 import { scheduleSavedSearches } from "../../features/saved-searches/jobs.server";
+import { scheduleNotificationEmails } from "../../features/notification-delivery/scheduler.server";
+import { maintainNotificationEmails } from "../../features/notification-delivery/jobs.server";
 import { observeJob } from "./observations.server";
 import { jobObservationTime, jobObservationDuration } from "./observations";
 import { withRepairDueCheckpoint } from "./repair-due.server";
@@ -178,6 +180,9 @@ export function createJobExecutor(
           await step.run("schedule-buyer-search-matches-v1", () =>
             scheduleSavedSearches(database()),
           );
+          await step.run("schedule-current-notification-mail-v1", () =>
+            scheduleNotificationEmails(database()),
+          );
           await step.run("schedule-owned-assistant-maintenance-v1", () =>
             scheduleLifecycleMaintenance(database(), "assistant"),
           );
@@ -212,6 +217,9 @@ export function createJobExecutor(
           });
           await step.run("cleanup-private-message-images-v1", () =>
             maintainMessageAttachments(database()),
+          );
+          await step.run("reconcile-known-notification-mail-v1", () =>
+            maintainNotificationEmails(database()),
           );
           await step.run("expire-business-invitations-v1", () =>
             expireTeamInvitations(database()),

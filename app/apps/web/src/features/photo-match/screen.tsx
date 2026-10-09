@@ -27,7 +27,7 @@ export function InputScreen({
   return (
     <ComparisonProvider>
       <MiniShell name={t.titles[inputMode]}>
-        <main className={s.content}>
+        <section className={s.content}>
           <h1>{t.titles[inputMode]}</h1>
           <AssistantNavigation />
           {!isLoaded || !userId ? (
@@ -57,7 +57,7 @@ export function InputScreen({
               mode={inputMode}
             />
           )}
-        </main>
+        </section>
       </MiniShell>
     </ComparisonProvider>
   );

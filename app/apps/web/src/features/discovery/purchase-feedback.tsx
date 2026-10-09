@@ -79,7 +79,7 @@ export function PurchaseFeedback({
         <nav aria-label={text.title}>
           {data.page > 0 && (
             <SourceLink
-              preserveDiscoveryContext={false}
+              preserveDiscoveryContext
               href={purchaseFeedbackHref(sellerId, locale, data.page - 1)}
             >
               {text.previous}
@@ -87,7 +87,7 @@ export function PurchaseFeedback({
           )}
           {data.more && data.page < 9 && (
             <SourceLink
-              preserveDiscoveryContext={false}
+              preserveDiscoveryContext
               href={purchaseFeedbackHref(sellerId, locale, data.page + 1)}
             >
               {text.next}

@@ -22,7 +22,7 @@ export function PublicSearchResults({
 }) {
   const t = useTranslations("marketplace");
   if (unavailable || !page?.items.length)
-    return <BuyerAvailability unavailable={unavailable} />;
+    return <BuyerAvailability unavailable={unavailable} input={page?.input} />;
   const placements =
     page.placements ??
     page.items.map((listing) => ({ listing, sponsored: null }));

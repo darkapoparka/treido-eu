@@ -28,16 +28,48 @@ export function usePrivacy(subject: string) {
     [pending, setPending] = useState<PrivacyCommand | null>(null),
     [acknowledgment, setAcknowledgment] = useState<Acknowledgment | null>(null);
   const live = useRef(false),
-    started = useRef(false),
-    working = useRef(false),
-    pendingRef = useRef<PrivacyCommand | null>(null);
+    working = useRef<number | null>(null),
+    pendingRef = useRef<PrivacyCommand | null>(null),
+    generation = useRef(0),
+    visible = useRef(true),
+    restoreRequested = useRef(false),
+    refreshRef = useRef<(prompt: boolean) => Promise<void>>(async () => {});
   const current = useCallback(
-    () => live.current && clerk.user?.id === subject,
+    () =>
+      live.current &&
+      visible.current &&
+      document.visibilityState === "visible" &&
+      clerk.user?.id === subject &&
+      clerk.session?.status === "active",
     [clerk, subject],
+  );
+  const requestCurrent = useCallback(
+    (ticket: number, sessionId: string | undefined) =>
+      current() &&
+      ticket === generation.current &&
+      clerk.session?.id === sessionId,
+    [current, clerk],
+  );
+  const finish = useCallback(
+    (ticket: number) => {
+      if (working.current !== ticket) return;
+      working.current = null;
+      if (!live.current) return;
+      setBusy(false);
+      if (restoreRequested.current && current()) {
+        restoreRequested.current = false;
+        void refreshRef.current(false);
+      }
+    },
+    [current],
   );
   const acceptView = useCallback(
     (next: PrivacyView) => {
       if (!current()) return;
+      if (pendingRef.current && pendingRef.current.actorKey !== next.actorKey) {
+        pendingRef.current = null;
+        setPending(null);
+      }
       setView(next);
       try {
         const recovered = decodePending(
@@ -55,8 +87,23 @@ export function usePrivacy(subject: string) {
   );
   const refresh = useCallback(
     async (prompt = true) => {
-      if (working.current || !current()) return;
-      working.current = true;
+      if (
+        prompt &&
+        live.current &&
+        document.visibilityState === "visible" &&
+        clerk.user?.id === subject &&
+        clerk.session?.status === "active"
+      )
+        visible.current = true;
+      if (!current()) return;
+      if (working.current) {
+        restoreRequested.current = true;
+        return;
+      }
+      restoreRequested.current = false;
+      const ticket = ++generation.current,
+        sessionId = clerk.session?.id;
+      working.current = ticket;
       setBusy(true);
       setCode(null);
       setView(null);
@@ -64,7 +111,7 @@ export function usePrivacy(subject: string) {
         const result = prompt
           ? await readVerified(true)
           : await readPrivacyAction(false);
-        if (!current()) return;
+        if (!requestCurrent(ticket, sessionId)) return;
         if (result && "ok" in result) {
           if (result.ok && result.data.subject === subject)
             acceptView(result.data.view);
@@ -72,25 +119,87 @@ export function usePrivacy(subject: string) {
           else setCode("UNAUTHENTICATED");
         } else setCode("RECENT_AUTH_REQUIRED");
       } catch {
-        if (current()) setCode("NOT_AVAILABLE");
+        if (requestCurrent(ticket, sessionId)) setCode("NOT_AVAILABLE");
       } finally {
-        working.current = false;
-        if (current()) setBusy(false);
+        finish(ticket);
       }
     },
-    [current, readVerified, subject, acceptView],
+    [current, readVerified, subject, acceptView, clerk, requestCurrent, finish],
   );
   useEffect(() => {
+    refreshRef.current = refresh;
+  }, [refresh]);
+  useEffect(() => {
+    const lifecycleGeneration = generation;
     live.current = true;
+    visible.current = document.visibilityState === "visible";
+    let previous: string | null = null,
+      observed = false;
+    const conceal = () => {
+      ++generation.current;
+      working.current = null;
+      visible.current = false;
+      restoreRequested.current = true;
+      setView(null);
+      setAcknowledgment(null);
+      setCode(null);
+      setBusy(false);
+    };
+    const restore = () => {
+      if (document.visibilityState !== "visible") return;
+      visible.current = true;
+      void refresh(false);
+    };
+    const unsubscribe = clerk.addListener((resources) => {
+      observed = true;
+      const identity = [
+        resources.user?.id ?? "",
+        resources.session?.id ?? "",
+        resources.session?.status ?? "",
+      ].join(":");
+      if (identity === previous) return;
+      const changed = previous !== null;
+      previous = identity;
+      if (
+        changed ||
+        resources.user?.id !== subject ||
+        resources.session?.status !== "active"
+      )
+        conceal();
+      if (
+        resources.user?.id === subject &&
+        resources.session?.status === "active"
+      )
+        restore();
+    });
+    const visibility = () => {
+      if (document.visibilityState === "hidden") conceal();
+      else restore();
+    };
+    const restored = () => {
+      conceal();
+      restore();
+    };
+    const online = () => {
+      if (visible.current) restore();
+    };
+    if (!observed) void refresh(false);
+    window.addEventListener("focus", restore);
+    window.addEventListener("blur", conceal);
+    window.addEventListener("pageshow", restored);
+    window.addEventListener("online", online);
+    document.addEventListener("visibilitychange", visibility);
     return () => {
       live.current = false;
+      ++lifecycleGeneration.current;
+      unsubscribe();
+      window.removeEventListener("focus", restore);
+      window.removeEventListener("blur", conceal);
+      window.removeEventListener("pageshow", restored);
+      window.removeEventListener("online", online);
+      document.removeEventListener("visibilitychange", visibility);
     };
-  }, []);
-  useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    void refresh(false);
-  }, [refresh]);
+  }, [clerk, subject, refresh]);
   const execute = async (operation?: PrivacyOperation) => {
     if (
       working.current ||
@@ -129,14 +238,17 @@ export function usePrivacy(subject: string) {
     }
     pendingRef.current = command;
     setPending(command);
-    working.current = true;
     setBusy(true);
     setCode(null);
     setAcknowledgment(null);
+    const ticket = ++generation.current,
+      sessionId = clerk.session?.id;
+    working.current = ticket;
     try {
       const result = await changeVerified(command);
-      if (!current()) return;
+      if (!requestCurrent(ticket, sessionId)) return;
       if (!result) {
+        setView(null);
         setCode("RECENT_AUTH_REQUIRED");
         return;
       }
@@ -148,13 +260,15 @@ export function usePrivacy(subject: string) {
         // An acknowledgment is immutable; separately fetch current state instead of substituting it.
         setView(null);
         const read = await readPrivacyAction(false);
-        if (current() && "ok" in read) {
+        if (requestCurrent(ticket, sessionId) && "ok" in read) {
           if (read.ok && read.data.subject === subject)
             acceptView(read.data.view);
           else if (!read.ok) setCode(read.code);
         }
       } else if (!result.ok) {
         setCode(result.code);
+        if (["UNAUTHENTICATED", "FORBIDDEN"].includes(result.code))
+          setView(null);
         if (
           [
             "INVALID_INPUT",
@@ -174,25 +288,29 @@ export function usePrivacy(subject: string) {
         setCode("UNAUTHENTICATED");
       }
     } catch {
-      if (current()) setCode("NOT_AVAILABLE");
+      if (requestCurrent(ticket, sessionId)) setCode("NOT_AVAILABLE");
     } finally {
-      working.current = false;
-      if (current()) setBusy(false);
+      finish(ticket);
     }
   };
   const download = async (id: string) => {
     if (working.current || pendingRef.current || !current() || !view) return;
-    working.current = true;
     setBusy(true);
     setCode(null);
+    const ticket = ++generation.current,
+      sessionId = clerk.session?.id;
+    working.current = ticket;
     try {
       const result = await downloadVerified({ id, actorKey: view.actorKey });
-      if (!current()) return;
+      if (!requestCurrent(ticket, sessionId)) return;
       if (!result) {
+        setView(null);
         setCode("RECENT_AUTH_REQUIRED");
         return;
       }
       if (!result.ok) {
+        if (["UNAUTHENTICATED", "FORBIDDEN"].includes(result.code))
+          setView(null);
         setCode(result.code);
         return;
       }
@@ -214,10 +332,9 @@ export function usePrivacy(subject: string) {
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
-      if (current()) setCode("NOT_AVAILABLE");
+      if (requestCurrent(ticket, sessionId)) setCode("NOT_AVAILABLE");
     } finally {
-      working.current = false;
-      if (current()) setBusy(false);
+      finish(ticket);
     }
   };
   return {

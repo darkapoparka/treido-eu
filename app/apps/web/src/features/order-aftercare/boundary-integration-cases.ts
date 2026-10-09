@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import type Stripe from "stripe";
@@ -18,6 +18,11 @@ import {
 } from "../payments/settlement.server";
 import { attemptColumns, type AttemptRow } from "../payments/attempts.server";
 import type { PaymentBindings } from "../payments/bindings.server";
+import { processOrderRefund, scheduleOrderRefundRepair } from "./jobs.server";
+import { readRefundIntent, type RefundIntent } from "./refund-storage.server";
+import * as refundProvider from "./refund-provider.server";
+import { jobColumns, type SellerJobRow } from "../../server/jobs/outbox.server";
+import type { EffectResult } from "../../server/jobs/execution.server";
 export type AftercareFixtureName =
   | "foreign-participant"
   | "case-replay"
@@ -31,7 +36,11 @@ export type AftercareFixtureName =
   | "public-withdrawn"
   | "accepted-after-restriction"
   | "first-settlement-inactive"
-  | "one-post-unknown";
+  | "one-post-unknown"
+  | "stale-refund-observation"
+  | "late-refund-acknowledgment"
+  | "refund-repair-fairness"
+  | "active-refund-repair-fairness";
 export type AftercareNativeFixture = {
   database: SellerDatabase;
   admin: Pool;
@@ -100,6 +109,89 @@ export function defineAftercareBoundaryCases(
     reason: "SYNTHETIC reviewed one-unit refund",
     selection: "lines",
     lines: [{ skuId: f.skuId, quantity: 1 }],
+  });
+  const currentRefund = async (f: AftercareNativeFixture, id: string) => {
+    const row = await inTransaction(f.database, (tx) =>
+      readRefundIntent(tx, id),
+    );
+    if (!row) throw Error("Original native refund intent missing");
+    return row;
+  };
+  const execute = (f: AftercareNativeFixture, intentId: string) => ({
+    actorKey: libraryActorKey(f.merchant),
+    orderId: f.orderId,
+    sellerId: f.sellerId,
+    requestId: randomUUID(),
+    expectedRevision: 0,
+    language: "en",
+    action: "execute_refund",
+    intentId,
+  });
+  // Explicit provider-boundary facts only. All command/processor/SQL writes
+  // and original allocation/receipt/lease behavior remain native and unchanged.
+  const syntheticRefund = (
+    row: RefundIntent,
+    status: "pending" | "succeeded",
+  ): Stripe.Response<Stripe.Refund> => {
+    const sourceMetadata = row.parameters.metadata;
+    if (!sourceMetadata || typeof sourceMetadata !== "object")
+      throw Error("Original synthetic refund metadata missing");
+    const metadata: Stripe.Metadata = {};
+    for (const [key, value] of Object.entries(sourceMetadata)) {
+      if (typeof value !== "string")
+        throw Error("Original synthetic refund metadata must contain strings");
+      metadata[key] = value;
+    }
+    return {
+      id: "re_Native" + row.id.replaceAll("-", ""),
+      object: "refund",
+      created: Math.floor((row.firstAttemptAt ?? new Date()).getTime() / 1000),
+      amount: row.amountMinor,
+      currency: "eur",
+      balance_transaction: null,
+      charge: row.chargeId,
+      customer: null,
+      customer_account: null,
+      payment_intent: row.paymentIntentId,
+      payment_method: null,
+      metadata,
+      reason: null,
+      receipt_number: null,
+      source_transfer_reversal: null,
+      status,
+      transfer_reversal: null,
+      lastResponse: {
+        headers: { "request-id": "req_NativeSynthetic" },
+        requestId: "req_NativeSynthetic",
+        statusCode: 200,
+      },
+    };
+  };
+  const syntheticObservation = (
+    row: RefundIntent,
+    status: "pending" | "succeeded" | null,
+    verified = false,
+  ): refundProvider.RefundObservation => ({
+    providerId: status ? syntheticRefund(row, "pending").id : null,
+    providerStatus: status,
+    state: verified
+      ? "succeeded"
+      : status === "pending"
+        ? "pending"
+        : "reconciling",
+    settlementState: verified ? "verified" : "reconciling",
+    fact: {
+      refundId: status ? syntheticRefund(row, "pending").id : null,
+      status,
+      amountMinor: row.amountMinor,
+      chargeId: row.chargeId,
+      amountRefundedMinor: status === "succeeded" ? row.amountMinor : 0,
+      chargeDisputed: false,
+      reversalId: null,
+      reversalMinor: null,
+      feeRefundedMinor: null,
+      feeRefundIds: [],
+    },
   });
   describe("T64 original aftercare authority on disposable native PostgreSQL", () => {
     it("one original execute race emits one POST and unknown outcomes keep the original budget/expiry while jobs only read", async () => {
@@ -488,5 +580,271 @@ export function defineAftercareBoundaryCases(
         fulfilment_state: "blocked",
       });
     });
+    it.each([null, "pending"] as const)(
+      "native same-generation refund: older %s observation cannot replace a succeeded create acknowledgment",
+      async (status) => {
+        const f = await get("stale-refund-observation"),
+          prepared = await prepareOrderRefund(
+            f.database,
+            f.merchant,
+            refund(f),
+          );
+        if (!prepared.intentId) throw Error("Original prepare failed");
+        const original = await currentRefund(f, prepared.intentId),
+          provider = await refundProvider.orderRefundProvider(),
+          find = vi
+            .spyOn(refundProvider, "findOriginalRefund")
+            .mockResolvedValue(null),
+          observe = vi
+            .spyOn(refundProvider, "observeOriginalRefund")
+            .mockResolvedValue(syntheticObservation(original, status));
+        let pending: EffectResult | null = null;
+        const create = vi
+          .spyOn(provider.stripe.refunds, "create")
+          .mockImplementation(async () => {
+            const job = (
+              await f.admin.query<SellerJobRow>(
+                `SELECT ${jobColumns} FROM treido.outbox_jobs WHERE kind='payment.aftercare' AND resource_id=$1 ORDER BY created_at DESC LIMIT 1`,
+                [original.id],
+              )
+            ).rows[0];
+            if (!job) throw Error("Original accepted refund job missing");
+            pending = await processOrderRefund(f.database, {
+              ...job,
+              executionToken: randomUUID(),
+            });
+            return syntheticRefund(
+              await currentRefund(f, original.id),
+              "succeeded",
+            );
+          });
+        try {
+          const command = execute(f, original.id),
+            acknowledged = await executeOrderRefund(
+              f.database,
+              f.merchant,
+              command,
+            ),
+            before = await currentRefund(f, original.id);
+          expect(before.providerStatus).toBe("succeeded");
+          expect(before.state).toBe("reconciling");
+          if (!pending) throw Error("Original external observation missing");
+          const older: EffectResult = pending;
+          await inTransaction(f.database, async (tx) => {
+            await older.lock?.(tx);
+            await older.apply?.(tx);
+          });
+          expect(await currentRefund(f, original.id)).toEqual(before);
+          expect(
+            (
+              await f.admin.query(
+                "SELECT count(*)::int AS n FROM treido.order_refund_observations WHERE intent_id=$1",
+                [original.id],
+              )
+            ).rows[0].n,
+          ).toBe(0);
+          observe.mockResolvedValue(
+            syntheticObservation(original, "succeeded", true),
+          );
+          find.mockResolvedValue(syntheticRefund(original, "succeeded"));
+          await f.runRefundJob(original.id);
+          expect(await currentRefund(f, original.id)).toMatchObject({
+            providerStatus: "succeeded",
+            state: "succeeded",
+            settlementState: "verified",
+          });
+          expect(
+            await executeOrderRefund(f.database, f.merchant, command),
+          ).toEqual(acknowledged);
+          expect(create).toHaveBeenCalledTimes(1);
+        } finally {
+          create.mockRestore();
+          observe.mockRestore();
+          find.mockRestore();
+        }
+      },
+    );
+    it("native late pending create acknowledgment preserves already observed succeeded-but-unverified settlement", async () => {
+      const f = await get("late-refund-acknowledgment"),
+        prepared = await prepareOrderRefund(f.database, f.merchant, refund(f));
+      if (!prepared.intentId) throw Error("Original prepare failed");
+      const original = await currentRefund(f, prepared.intentId),
+        provider = await refundProvider.orderRefundProvider(),
+        find = vi
+          .spyOn(refundProvider, "findOriginalRefund")
+          .mockResolvedValue(syntheticRefund(original, "succeeded")),
+        observe = vi
+          .spyOn(refundProvider, "observeOriginalRefund")
+          .mockResolvedValue(syntheticObservation(original, "succeeded")),
+        create = vi
+          .spyOn(provider.stripe.refunds, "create")
+          .mockImplementation(async () => {
+            await f.runRefundJob(original.id);
+            expect(await currentRefund(f, original.id)).toMatchObject({
+              providerStatus: "succeeded",
+              state: "reconciling",
+              settlementState: "reconciling",
+            });
+            return syntheticRefund(
+              await currentRefund(f, original.id),
+              "pending",
+            );
+          });
+      try {
+        await executeOrderRefund(
+          f.database,
+          f.merchant,
+          execute(f, original.id),
+        );
+        expect(await currentRefund(f, original.id)).toMatchObject({
+          providerId: syntheticRefund(original, "succeeded").id,
+          providerStatus: "succeeded",
+          state: "reconciling",
+          settlementState: "reconciling",
+        });
+        await f.database.pool.query(
+          "UPDATE treido.order_refund_intents SET reconcile_at=clock_timestamp() WHERE id=$1",
+          [original.id],
+        );
+        expect(
+          await scheduleOrderRefundRepair(f.database),
+        ).toBeGreaterThanOrEqual(1);
+        observe.mockResolvedValue(
+          syntheticObservation(original, "succeeded", true),
+        );
+        await f.runRefundJob(original.id);
+        expect(await currentRefund(f, original.id)).toMatchObject({
+          state: "succeeded",
+          settlementState: "verified",
+        });
+        expect(create).toHaveBeenCalledTimes(1);
+      } finally {
+        create.mockRestore();
+        observe.mockRestore();
+        find.mockRestore();
+      }
+    });
+    it("native refund repair reaches due recovery behind twenty unexpired prepared requests", async () => {
+      const preparedIds: string[] = [];
+      for (let n = 0; n < 20; n++) {
+        const f = await get("refund-repair-fairness"),
+          prepared = await prepareOrderRefund(
+            f.database,
+            f.merchant,
+            refund(f),
+          );
+        if (!prepared.intentId) throw Error("Original prepare failed");
+        preparedIds.push(prepared.intentId);
+      }
+      const f = await get("refund-repair-fairness"),
+        prepared = await prepareOrderRefund(f.database, f.merchant, refund(f));
+      if (!prepared.intentId) throw Error("Original prepare failed");
+      await executeOrderRefund(
+        f.database,
+        f.merchant,
+        execute(f, prepared.intentId),
+      );
+      await f.runRefundJob(prepared.intentId);
+      // Advance only the owned fixture's actual retry eligibility, not its state,
+      // original parameters, expiry, provider identity or ownership constraints.
+      await f.database.pool.query(
+        "UPDATE treido.order_refund_intents SET reconcile_at=clock_timestamp() WHERE id=$1",
+        [prepared.intentId],
+      );
+      const posts = f.providerCounts().posts;
+      expect(
+        await scheduleOrderRefundRepair(f.database),
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        (
+          await f.admin.query(
+            "SELECT count(*)::int AS n FROM treido.outbox_jobs WHERE kind='payment.aftercare' AND resource_id=$1 AND state IN ('pending','accepted')",
+            [prepared.intentId],
+          )
+        ).rows[0].n,
+      ).toBe(1);
+      expect(
+        (
+          await f.admin.query(
+            "SELECT count(*)::int AS n FROM treido.order_refund_intents WHERE id=ANY($1::uuid[]) AND state='prepared' AND first_attempt_at IS NULL AND provider_id IS NULL AND expires_at>clock_timestamp()",
+            [preparedIds],
+          )
+        ).rows[0].n,
+      ).toBe(20);
+      expect(f.providerCounts().posts).toBe(posts);
+    }, 60000);
+    it("native refund repair reaches due recovery behind twenty existing active observations", async () => {
+      const activeIds: string[] = [],
+        activeFixtures: AftercareNativeFixture[] = [];
+      for (let n = 0; n < 20; n++) {
+        const f = await get("active-refund-repair-fairness"),
+          prepared = await prepareOrderRefund(
+            f.database,
+            f.merchant,
+            refund(f),
+          );
+        if (!prepared.intentId) throw Error("Original prepare failed");
+        await executeOrderRefund(
+          f.database,
+          f.merchant,
+          execute(f, prepared.intentId),
+        );
+        activeIds.push(prepared.intentId);
+        activeFixtures.push(f);
+      }
+      const f = await get("active-refund-repair-fairness"),
+        prepared = await prepareOrderRefund(f.database, f.merchant, refund(f));
+      if (!prepared.intentId) throw Error("Original prepare failed");
+      await executeOrderRefund(
+        f.database,
+        f.merchant,
+        execute(f, prepared.intentId),
+      );
+      await f.runRefundJob(prepared.intentId);
+      // The twenty earlier original commands retain their existing observations.
+      // Advance only fixture retry timing so they precede the unscheduled intent.
+      await f.database.pool.query(
+        "UPDATE treido.order_refund_intents SET reconcile_at=clock_timestamp()-interval '1 minute' WHERE id=ANY($1::uuid[])",
+        [activeIds],
+      );
+      await f.database.pool.query(
+        "UPDATE treido.order_refund_intents SET reconcile_at=clock_timestamp() WHERE id=$1",
+        [prepared.intentId],
+      );
+      const readActive = async () =>
+        (
+          await f.admin.query(
+            "SELECT to_jsonb(r) AS intent,(SELECT jsonb_agg(to_jsonb(j) ORDER BY j.id) FROM treido.outbox_jobs j WHERE j.kind='payment.aftercare' AND j.resource_id=r.id) AS jobs FROM treido.order_refund_intents r WHERE r.id=ANY($1::uuid[]) ORDER BY r.id",
+            [activeIds],
+          )
+        ).rows;
+      expect(
+        (
+          await f.admin.query(
+            "SELECT count(*)::int AS n FROM treido.order_refund_intents r WHERE r.id=ANY($1::uuid[]) AND r.state='reconciling' AND r.first_attempt_at IS NOT NULL AND r.reconcile_at<=clock_timestamp() AND EXISTS (SELECT 1 FROM treido.outbox_jobs j WHERE j.kind='payment.aftercare' AND j.resource_id=r.id AND j.state IN ('pending','accepted'))",
+            [activeIds],
+          )
+        ).rows[0].n,
+      ).toBe(20);
+      const activeBefore = await readActive(),
+        countsBefore = [...activeFixtures, f].map((item) =>
+          item.providerCounts(),
+        );
+      expect(
+        await scheduleOrderRefundRepair(f.database),
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        (
+          await f.admin.query(
+            "SELECT count(*)::int AS n FROM treido.outbox_jobs WHERE kind='payment.aftercare' AND resource_id=$1 AND state IN ('pending','accepted')",
+            [prepared.intentId],
+          )
+        ).rows[0].n,
+      ).toBe(1);
+      expect(await readActive()).toEqual(activeBefore);
+      expect(
+        [...activeFixtures, f].map((item) => item.providerCounts()),
+      ).toEqual(countsBefore);
+    }, 60000);
   });
 }

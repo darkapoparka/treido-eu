@@ -2,7 +2,8 @@
   width: min(100%, 1060px);
   margin: 0 auto;
   padding: 24px 20px 100px;
-  color: inherit;
+  background: var(--surface, #fff);
+  color: var(--text-primary, #171717);
 }
 .content h1 {
   font-size: 28px;
