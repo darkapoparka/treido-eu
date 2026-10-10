@@ -61,6 +61,7 @@ export const ClerkProvider=({children})=>children;
       "readSellHelperAction",
       "changeSellHelperAction",
     ],
+    "assistant-tools/helper-history-actions": ["readHelperHistoryAction"],
     "sellers/studio-search-actions": ["searchStudioAction"],
     "purchase-reviews/actions": ["createPurchaseReviewAction"],
     "promotions/metric-actions": ["recordPromotionMetricAction"],
