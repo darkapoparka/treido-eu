@@ -2,7 +2,7 @@ name: Treido CI
 
 on:
   push:
-    branches: [main, "codex/**"]
+    branches: [main, PRO, "codex/**"]
   pull_request:
   workflow_dispatch:
 
@@ -67,7 +67,7 @@ jobs:
       - name: Focused web, contracts and tooling lint
         run: |
           pnpm ci:lint
-          pnpm exec eslint tests/t71 tests/t72 tests/smoke/seller-onboarding.spec.ts tests/smoke/declaration-review.spec.ts --max-warnings=0
+          pnpm exec eslint tests/t71 tests/t72 tests/pro-a tests/smoke/seller-onboarding.spec.ts tests/smoke/declaration-review.spec.ts --max-warnings=0
 
       - name: Unit tests
         run: pnpm test:unit --maxWorkers=1 --no-file-parallelism
@@ -84,6 +84,9 @@ jobs:
 
       - name: Launch, lifecycle, draft and billing recovery database regressions
         run: pnpm exec vitest run --config tests/t72/message-lifecycle.config.mjs --configLoader native
+
+      - name: Current-schema private support and report-image evidence
+        run: pnpm exec vitest run --config tests/pro-a/current-platform.config.mjs --configLoader native
 
       - name: Maintenance due-work database regressions
         run: pnpm exec vitest run --config tests/t72/repair-due.config.mjs --configLoader native
