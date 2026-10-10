@@ -15,6 +15,8 @@ import {
 
 function isPrivateAccountEntry(pathname: string) {
   return (
+    pathname === "/profile" ||
+    pathname === "/account" ||
     pathname === "/account/notifications" ||
     /^\/account\/privacy(?:\/(?:data|download|preferences|security|closure|promotions))?$/.test(
       pathname,

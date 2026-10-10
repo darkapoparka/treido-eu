@@ -16,14 +16,15 @@ const { build } = await import(pathToFileURL(vite.resolve("vite")).href);
 const auth = `import {useSyncExternalStore} from 'react';import {flushSync} from 'react-dom';
 const observers=new Set(), listeners=new Set();
 let state={isLoaded:true,isSignedIn:true,userId:'A',sessionId:'session-A',status:'active'};
-const clerk={get user(){return state.userId?{id:state.userId}:null},get session(){return state.sessionId?{id:state.sessionId,status:state.status}:null},addListener(listener){listeners.add(listener);listener(state);return()=>listeners.delete(listener)}};
-function change(value){state={...state,...value};listeners.forEach(f=>f(state));observers.forEach(f=>f())}
+let user={id:'A'},session={id:'session-A',status:'active'};
+const clerk={get user(){return user},get session(){return session},addListener(listener){listeners.add(listener);listener(state);return()=>listeners.delete(listener)}};
+function change(value){state={...state,...value};user=state.userId?{id:state.userId}:null;session=state.sessionId?{id:state.sessionId,status:state.status}:null;listeners.forEach(f=>f(state));observers.forEach(f=>f())}
 window.__auth={set(value){flushSync(()=>change(value))},roundTrip(){flushSync(()=>{change({sessionId:'session-other'});change({sessionId:'session-A'})})}};
 export const useClerk=()=>clerk;
 export const useAuth=()=>useSyncExternalStore(f=>{observers.add(f);return()=>observers.delete(f)},()=>state);
 export function useUser(){const value=useAuth();return {isLoaded:value.isLoaded,user:clerk.user}}
 window.__requests=[];
-window.__settle=(index,result)=>window.__requests[index].resolve(result);
+window.__settle=(index,result)=>{window.__requests[index].done=true;window.__requests[index].resolve(result)};
 window.__reject=index=>window.__requests[index].reject(Error('unavailable fixture transport'));
 `;
 const built = await build({
@@ -50,7 +51,17 @@ const built = await build({
       name: "reply-session-fixture",
       enforce: "pre",
       resolveId(id, importer) {
+        const owner = importer?.replaceAll("\\", "/");
         if (id === "@clerk/nextjs") return "\0auth";
+        if (id === "next-intl") return "\0intl";
+        if (id === "next/link") return "\0link";
+        if (owner?.endsWith("/messaging/conversation.tsx")) {
+          if (id === "./actions") return "\0conversation-actions";
+          if (id === "./reply-composer") return "\0composer";
+          if (id === "../offers/panel") return "\0offers";
+          if (id === "../trust/report-form") return "\0report";
+          if (id === "../message-attachments/controls") return "\0images";
+        }
         if (
           id === "./reply-actions" &&
           importer
@@ -61,6 +72,20 @@ const built = await build({
       },
       load(id) {
         if (id === "\0auth") return auth;
+        if (id === "\0intl")
+          return "export const useTranslations=()=>key=>key;export const useFormatter=()=>({dateTime:()=> 'Synthetic date'});";
+        if (id === "\0link")
+          return "import React from 'react';export default function Link({href,children,...props}){return React.createElement('a',{...props,href},children)}";
+        if (id === "\0conversation-actions")
+          return `const request=(kind,command)=>new Promise((resolve,reject)=>window.__requests.push({kind,command,resolve,reject}));export const readConversationAction=command=>request('read',command);export const markReadAction=command=>request('ack',command);export const blockContactAction=command=>request('block',command);`;
+        if (id === "\0composer")
+          return "export function ReplyComposer(){return null}";
+        if (id === "\0offers")
+          return "export function OfferPanel(){return null}export function OfferMessageCard(){return null}";
+        if (id === "\0report")
+          return "export function ReportForm(){return null}";
+        if (id === "\0images")
+          return "export function PrivateAttachmentImage(){return null}";
         if (id === "\0actions")
           return `export const sendRecoverableReplyAction=command=>new Promise((resolve,reject)=>window.__requests.push({command,resolve,reject}));`;
       },
@@ -124,6 +149,38 @@ async function check(name, operation) {
   } catch (error) {
     outcomes.push({ name, status: "FAIL", error: String(error) });
   }
+}
+async function qualifyConversation() {
+  await page.waitForFunction(
+    () => window.__requests.some((item) => item.kind === "read" && !item.done),
+    null,
+    { timeout: 1500 },
+  );
+  await page.evaluate(() => {
+    const index = window.__requests.findLastIndex(
+      (item) => item.kind === "read" && !item.done,
+    );
+    window.__settle(index, { ok: true, data: window.__conversation });
+  });
+  await page
+    .getByRole("button", { name: "block", exact: true })
+    .waitFor({ timeout: 1500 });
+}
+async function freshConversation() {
+  await page.goto(origin + "/?conversation");
+  await qualifyConversation();
+  await page.waitForFunction(
+    () => window.__requests.some((item) => item.kind === "ack"),
+    null,
+    { timeout: 1500 },
+  );
+}
+async function startBlock() {
+  await page.getByRole("button", { name: "block", exact: true }).click();
+  await page.getByRole("button", { name: "confirm", exact: true }).click();
+  return page.evaluate(() =>
+    window.__requests.findLastIndex((item) => item.kind === "block"),
+  );
 }
 try {
   await check(
@@ -246,6 +303,306 @@ try {
       );
     },
   );
+  await check(
+    "Renewed session retries an unresolved visible read acknowledgment and ignores its old success",
+    async () => {
+      await freshConversation();
+      const old = await page.evaluate(() =>
+        window.__requests.findIndex((item) => item.kind === "ack"),
+      );
+      await page.evaluate(() =>
+        window.__auth.set({ sessionId: "renewed-session" }),
+      );
+      await qualifyConversation();
+      await page.waitForFunction(
+        () =>
+          window.__requests.filter((item) => item.kind === "ack").length === 2,
+        null,
+        { timeout: 1500 },
+      );
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: true, data: { sequence: 1 } }),
+        old,
+      );
+      await idle();
+      assert.equal(
+        await page.locator("output").getAttribute("data-changed"),
+        "0",
+      );
+      const current = await page.evaluate(() =>
+        window.__requests.findLastIndex((item) => item.kind === "ack"),
+      );
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: true, data: { sequence: 1 } }),
+        current,
+      );
+      await idle();
+      assert.equal(
+        await page.locator("output").getAttribute("data-changed"),
+        "1",
+      );
+    },
+  );
+  for (const rejects of [false, true])
+    await check(
+      "Obsolete read " +
+        (rejects ? "exception" : "denial") +
+        " cannot reset the newer acknowledged watermark",
+      async () => {
+        await freshConversation();
+        const old = await page.evaluate(() =>
+          window.__requests.findIndex((item) => item.kind === "ack"),
+        );
+        await page.evaluate(() => window.__auth.roundTrip());
+        await qualifyConversation();
+        await page.waitForFunction(
+          () =>
+            window.__requests.filter((item) => item.kind === "ack").length ===
+            2,
+          null,
+          { timeout: 1500 },
+        );
+        const current = await page.evaluate(() =>
+          window.__requests.findLastIndex((item) => item.kind === "ack"),
+        );
+        await page.evaluate(
+          (index) =>
+            window.__settle(index, { ok: true, data: { sequence: 1 } }),
+          current,
+        );
+        if (rejects)
+          await page.evaluate((index) => window.__reject(index), old);
+        else
+          await page.evaluate(
+            (index) =>
+              window.__settle(index, { ok: false, code: "NOT_AVAILABLE" }),
+            old,
+          );
+        await page.evaluate(() =>
+          window.dispatchEvent(new window.Event("focus")),
+        );
+        await qualifyConversation();
+        await idle();
+        assert.equal(
+          await page.evaluate(
+            () =>
+              window.__requests.filter((item) => item.kind === "ack").length,
+          ),
+          2,
+        );
+      },
+    );
+  for (const result of [
+    { ok: true, data: { revision: 2 } },
+    { ok: false, code: "CONFLICT" },
+    null,
+  ])
+    await check(
+      "Obsolete contact completion preserves a newer confirmation after a batched session round trip: " +
+        (result?.ok ? "success" : (result?.code ?? "exception")),
+      async () => {
+        await freshConversation();
+        const old = await startBlock();
+        await page.evaluate(() => window.__auth.roundTrip());
+        await qualifyConversation();
+        await page.getByRole("button", { name: "cancel", exact: true }).click();
+        await page.getByRole("button", { name: "block", exact: true }).click();
+        if (result)
+          await page.evaluate(
+            ({ index, value }) => window.__settle(index, value),
+            { index: old, value: result },
+          );
+        else await page.evaluate((index) => window.__reject(index), old);
+        await idle();
+        assert.equal(await page.getByRole("dialog").count(), 1);
+        assert.equal(await page.getByRole("alert").count(), 0);
+        assert.equal(
+          await page.getByText("contactConflict", { exact: true }).count(),
+          0,
+        );
+        assert.equal(
+          await page.locator("output").getAttribute("data-changed"),
+          "0",
+        );
+      },
+    );
+  await check(
+    "Current contact completion refreshes the authoritative conversation and notifies the inbox once",
+    async () => {
+      await freshConversation();
+      const current = await startBlock();
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: true, data: { revision: 2 } }),
+        current,
+      );
+      await qualifyConversation();
+      await idle();
+      assert.equal(await page.getByRole("dialog").count(), 0);
+      assert.equal(
+        await page.locator("output").getAttribute("data-changed"),
+        "1",
+      );
+    },
+  );
+  await check(
+    "Session renewal during contact refresh cannot apply the old inbox notification",
+    async () => {
+      await freshConversation();
+      const old = await startBlock();
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: true, data: { revision: 2 } }),
+        old,
+      );
+      await page.waitForFunction(
+        () =>
+          window.__requests.some((item) => item.kind === "read" && !item.done),
+        null,
+        { timeout: 1500 },
+      );
+      const oldRead = await page.evaluate(() =>
+        window.__requests.findLastIndex((item) => item.kind === "read"),
+      );
+      await page.evaluate(() =>
+        window.__auth.set({ sessionId: "renewed-session" }),
+      );
+      await qualifyConversation();
+      await page.evaluate(
+        (index) =>
+          window.__settle(index, { ok: true, data: window.__conversation }),
+        oldRead,
+      );
+      await idle();
+      assert.equal(
+        await page.locator("output").getAttribute("data-changed"),
+        "0",
+      );
+    },
+  );
+  await check(
+    "In-place conversation replacement invalidates the old read and contact completions",
+    async () => {
+      await freshConversation();
+      const oldAck = await page.evaluate(() =>
+        window.__requests.findIndex((item) => item.kind === "ack"),
+      );
+      const oldBlock = await startBlock();
+      await page.evaluate(() => window.__replaceConversation());
+      await qualifyConversation();
+      assert.equal(await page.getByRole("dialog").count(), 0);
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: true, data: { sequence: 1 } }),
+        oldAck,
+      );
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: false, code: "CONFLICT" }),
+        oldBlock,
+      );
+      await idle();
+      assert.equal(
+        await page.locator("output").getAttribute("data-changed"),
+        "0",
+      );
+      assert.equal(
+        await page.getByText("contactConflict", { exact: true }).count(),
+        0,
+      );
+      assert.equal(
+        await page.evaluate(
+          () => window.__requests.filter((item) => item.kind === "ack").length,
+        ),
+        2,
+      );
+    },
+  );
+  await check(
+    "Current uncertain contact retry retains its exact command and conflict still requests current authority",
+    async () => {
+      await freshConversation();
+      const first = await startBlock();
+      const command = await page.evaluate(
+        (index) => window.__requests[index].command,
+        first,
+      );
+      await page.evaluate((index) => window.__reject(index), first);
+      await page.getByRole("alert").waitFor();
+      await page.getByRole("button", { name: "confirm", exact: true }).click();
+      const retry = await page.evaluate(() =>
+        window.__requests.findLastIndex((item) => item.kind === "block"),
+      );
+      assert.deepEqual(
+        await page.evaluate((index) => window.__requests[index].command, retry),
+        command,
+      );
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: false, code: "CONFLICT" }),
+        retry,
+      );
+      await qualifyConversation();
+      await idle();
+      assert.equal(await page.getByRole("dialog").count(), 0);
+      assert.equal(
+        await page.getByText("contactConflict", { exact: true }).count(),
+        1,
+      );
+    },
+  );
+  for (const result of [
+    { ok: true, data: { revision: 2 } },
+    { ok: false, code: "CONFLICT" },
+    null,
+  ])
+    await check(
+      "Cancelled contact request cannot alter a new confirmation in the same session: " +
+        (result?.ok ? "success" : (result?.code ?? "exception")),
+      async () => {
+        await freshConversation();
+        const old = await startBlock();
+        await page.getByRole("button", { name: "cancel", exact: true }).click();
+        await page.getByRole("button", { name: "block", exact: true }).click();
+        if (result)
+          await page.evaluate(
+            ({ index, value }) => window.__settle(index, value),
+            { index: old, value: result },
+          );
+        else await page.evaluate((index) => window.__reject(index), old);
+        await idle();
+        assert.equal(await page.getByRole("dialog").count(), 1);
+        assert.equal(await page.getByRole("alert").count(), 0);
+        assert.equal(
+          await page.getByText("contactConflict", { exact: true }).count(),
+          0,
+        );
+        assert.equal(
+          await page.locator("output").getAttribute("data-changed"),
+          "0",
+        );
+      },
+    );
+  await check(
+    "Unmounted conversation cannot apply pending read or contact completions to its parent",
+    async () => {
+      await freshConversation();
+      const ack = await page.evaluate(() =>
+        window.__requests.findIndex((item) => item.kind === "ack"),
+      );
+      const block = await startBlock();
+      await page.evaluate(() => window.__unmountConversation());
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: true, data: { sequence: 1 } }),
+        ack,
+      );
+      await page.evaluate(
+        (index) => window.__settle(index, { ok: true, data: { revision: 2 } }),
+        block,
+      );
+      await idle();
+      assert.equal(
+        await page.locator("output").getAttribute("data-changed"),
+        "0",
+      );
+      assert.equal(await page.getByRole("dialog").count(), 0);
+    },
+  );
   assert.deepEqual(errors, []);
 } finally {
   await browser.close();
@@ -259,6 +616,7 @@ try {
     outcomes,
     errors,
     actualHook: true,
+    actualConversation: true,
     syntheticClerkAndTransport: true,
     actualProvider: false,
   };

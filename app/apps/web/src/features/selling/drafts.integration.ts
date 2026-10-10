@@ -1,4 +1,5 @@
 import { definePurchaseReviewIntegrationCases } from "../purchase-reviews/integration-cases";
+import { definePaymentMaintenanceIntegrationCases } from "../payments/maintenance-integration-cases";
 import { defineLaunchIntegrationCases } from "../seller-settings/launch-integration-cases";
 import { defineTeamIntegrationCases } from "../team/integration-cases";
 import { defineImportIntegrationCases } from "../catalogue-import/integration-cases";
@@ -1831,3 +1832,10 @@ defineTeamIntegrationCases(() => ({ database, admin, owner }));
 defineLaunchIntegrationCases(() => ({ database, admin, owner }));
 
 definePurchaseReviewIntegrationCases(() => ({ database, admin, owner }));
+
+definePaymentMaintenanceIntegrationCases(() => ({
+  database,
+  admin,
+  owner,
+  other,
+}));

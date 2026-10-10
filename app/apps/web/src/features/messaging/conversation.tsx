@@ -3,7 +3,15 @@ import { ReplyComposer } from "./reply-composer";
 import { notificationsHref } from "../notifications/model";
 import { OfferPanel, OfferMessageCard } from "../offers/panel";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import type { Locale } from "../locale/locale";
 import { ReportForm } from "../trust/report-form";
@@ -21,7 +29,17 @@ import { useInboxRefresh } from "./use-inbox-refresh";
 import { ConversationDialog } from "./dialog";
 import s from "./messaging.module.css";
 import { PrivateAttachmentImage } from "../message-attachments/controls";
-export function Conversation({
+export function Conversation(props: Parameters<typeof ConversationBody>[0]) {
+  return (
+    <ConversationBody
+      key={
+        props.actorSubject + ":" + props.scope.sellerId + ":" + props.initial.id
+      }
+      {...props}
+    />
+  );
+}
+function ConversationBody({
   initial,
   actorSubject,
   scope,
@@ -58,14 +76,115 @@ export function Conversation({
   const [blockPending, startBlock] = useTransition(),
     [blockError, setBlockError] = useState(false),
     [contactChanged, setContactChanged] = useState(false);
-  const alive = useRef(true),
-    read = useRef(0);
-  useEffect(() => {
-    alive.current = true;
+  const confirmation = useRef(block);
+  useLayoutEffect(() => {
+    confirmation.current = block;
+  }, [block]);
+  const clerk = useClerk(),
+    auth = useAuth({ treatPendingAsSignedOut: true });
+  const sessionId = auth.isLoaded && auth.isSignedIn ? auth.sessionId : null;
+  const context = JSON.stringify([actorSubject, sellerId, threadId, sessionId]);
+  const read = useRef(0);
+  const life = useRef({
+    mounted: true,
+    generation: 0,
+    readAttempt: 0,
+    context,
+    source: initial,
+    status,
+  });
+  // Retire callbacks during the unmount commit, before passive listener cleanup.
+  useLayoutEffect(() => {
+    const current = life.current;
+    current.mounted = true;
     return () => {
-      alive.current = false;
+      current.mounted = false;
+      ++current.generation;
+      ++current.readAttempt;
+      read.current = 0;
     };
   }, []);
+  useLayoutEffect(() => {
+    const current = life.current;
+    if (current.context !== context || current.source !== initial) {
+      ++current.generation;
+      ++current.readAttempt;
+      read.current = 0;
+    }
+    current.context = context;
+    current.source = initial;
+    current.status = status;
+  }, [context, initial, status]);
+  useEffect(() => {
+    const current = life.current;
+    const invalidate = () => {
+      ++current.generation;
+      ++current.readAttempt;
+      read.current = 0;
+    };
+    const signature = () =>
+      JSON.stringify([
+        clerk.user?.id,
+        clerk.session?.id,
+        clerk.session?.status,
+      ]);
+    let previous = signature(),
+      user = clerk.user,
+      session = clerk.session;
+    const unsubscribe = clerk.addListener(() => {
+      const next = signature();
+      if (
+        next !== previous ||
+        user !== clerk.user ||
+        session !== clerk.session
+      ) {
+        previous = next;
+        user = clerk.user;
+        session = clerk.session;
+        invalidate();
+      }
+    });
+    window.addEventListener("blur", invalidate);
+    document.addEventListener("visibilitychange", invalidate);
+    return () => {
+      invalidate();
+      unsubscribe();
+      window.removeEventListener("blur", invalidate);
+      document.removeEventListener("visibilitychange", invalidate);
+    };
+  }, [clerk]);
+  const captureCurrent = useCallback(() => {
+    const current = life.current,
+      generation = current.generation,
+      user = clerk.user,
+      session = clerk.session;
+    return () =>
+      current.mounted &&
+      current.generation === generation &&
+      current.context === context &&
+      current.source === initial &&
+      current.status !== "denied" &&
+      current.status !== "unavailable" &&
+      auth.isLoaded &&
+      auth.isSignedIn &&
+      auth.userId === actorSubject &&
+      !!sessionId &&
+      clerk.user === user &&
+      clerk.session === session &&
+      clerk.user?.id === actorSubject &&
+      clerk.session?.id === sessionId &&
+      clerk.session?.status === "active" &&
+      document.visibilityState === "visible";
+  }, [
+    clerk,
+    context,
+    initial,
+    auth.isLoaded,
+    auth.isSignedIn,
+    auth.userId,
+    actorSubject,
+    sessionId,
+  ]);
   const [previousStatus, setPreviousStatus] = useState(status);
   if (previousStatus !== status) {
     setPreviousStatus(status);
@@ -83,17 +202,20 @@ export function Conversation({
       sequence <= Math.max(view.readSequence, read.current)
     )
       return;
+    const current = captureCurrent(),
+      attempt = ++life.current.readAttempt;
+    if (!current()) return;
     read.current = sequence;
     void markReadAction({ sellerId, threadId, sequence })
       .then((result) => {
-        if (!alive.current) return;
+        if (!current() || attempt !== life.current.readAttempt) return;
         if (result.ok) onChanged();
         else read.current = 0;
       })
       .catch(() => {
-        read.current = 0;
+        if (current() && attempt === life.current.readAttempt) read.current = 0;
       });
-  }, [view, status, sellerId, threadId, onChanged]);
+  }, [view, status, sellerId, threadId, onChanged, captureCurrent]);
   if (status !== "ready")
     return (
       <section className={s.conversation} role="status">
@@ -285,15 +407,25 @@ export function Conversation({
               disabled={blockPending}
               className={s.button + " " + s.primary}
               onClick={() => {
+                const current = captureCurrent();
+                if (
+                  life.current.status !== "ready" ||
+                  !current() ||
+                  confirmation.current !== block
+                )
+                  return;
                 const command = { ...block, sellerId, threadId };
+                const ownsConfirmation = () =>
+                  current() &&
+                  confirmation.current?.requestId === command.requestId;
                 startBlock(async () => {
                   try {
                     const result = await blockContactAction(command);
-                    if (!alive.current) return;
+                    if (!ownsConfirmation()) return;
                     if (result.ok) {
                       setBlock(null);
                       await refresh();
-                      onChanged();
+                      if (current()) onChanged();
                     } else {
                       setBlockError(true);
                       if (result.code === "CONFLICT") {
@@ -303,7 +435,7 @@ export function Conversation({
                       }
                     }
                   } catch {
-                    if (alive.current) setBlockError(true);
+                    if (ownsConfirmation()) setBlockError(true);
                   }
                 });
               }}

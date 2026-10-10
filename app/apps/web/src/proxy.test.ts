@@ -97,6 +97,8 @@ describe("locale request routing without changing private authentication", () =>
     "/account/privacy/data",
     "/account/privacy/download",
     "/account/notifications",
+    "/profile",
+    "/account",
   ])(
     "provides Clerk session context to the real private entry %s",
     async (path) => {
@@ -110,7 +112,9 @@ describe("locale request routing without changing private authentication", () =>
       expect(mocks.authenticate).toHaveBeenCalledOnce();
       if (
         path.startsWith("/account/privacy/") ||
-        path === "/account/notifications"
+        path === "/account/notifications" ||
+        path === "/profile" ||
+        path === "/account"
       ) {
         expect(response.headers.get("Cache-Control")).toBe("private, no-store");
         expect(response.headers.get("Vary")).toContain("Cookie");
@@ -131,23 +135,29 @@ describe("locale request routing without changing private authentication", () =>
       false,
     );
   });
-  it.each(["/api/assistants/runs", "/account/privacy/security"])(
-    "does not call Clerk on a reference or unbound entry %s",
-    async (path) => {
-      vi.stubEnv("SHOP_REFERENCE_PREVIEW", "1");
-      vi.stubEnv("NODE_ENV", "development");
-      await proxy(
-        new NextRequest(`http://localhost:6418${path}`),
-        {} as NextFetchEvent,
-      );
-      expect(mocks.authenticate).not.toHaveBeenCalled();
-      vi.stubEnv("SHOP_REFERENCE_PREVIEW", "0");
-      mocks.configured.mockReturnValue({ ok: false });
-      await proxy(
-        new NextRequest(`http://localhost:6419${path}`),
-        {} as NextFetchEvent,
-      );
-      expect(mocks.authenticate).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    "/api/assistants/runs",
+    "/account/privacy/security",
+    "/profile",
+    "/account",
+  ])("does not call Clerk on a reference or unbound entry %s", async (path) => {
+    vi.stubEnv("SHOP_REFERENCE_PREVIEW", "1");
+    vi.stubEnv("NODE_ENV", "development");
+    await proxy(
+      new NextRequest(`http://localhost:6418${path}`),
+      {} as NextFetchEvent,
+    );
+    expect(mocks.authenticate).not.toHaveBeenCalled();
+    vi.stubEnv("SHOP_REFERENCE_PREVIEW", "0");
+    mocks.configured.mockReturnValue({ ok: false });
+    const response = (await proxy(
+      new NextRequest(`http://localhost:6419${path}`),
+      {} as NextFetchEvent,
+    )) as NextResponse;
+    expect(mocks.authenticate).not.toHaveBeenCalled();
+    if (path === "/profile" || path === "/account") {
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+      expect(response.headers.get("Vary")).toContain("Cookie");
+    }
+  });
 });

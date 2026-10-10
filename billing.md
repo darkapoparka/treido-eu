@@ -85,6 +85,14 @@ Connected-account readiness consumes the current approved payment policy when cr
 
 Keep payment, order, fulfillment and settlement status separate. Provider-collected card details/tokens replace simulated cards; never store full card numbers or security codes. Refund totals are bounded atomically; simultaneous partial refunds cannot exceed the refundable balance. Settlement postings are append-only with reversals and reconcile per currency/provider identity.
 
+### Initial TEST payment registry setup
+
+The [payment maintenance command](app/apps/web/scripts/payment-registry-maintenance.mjs) provides the initial registry setup for one current public pickup listing, its active seller and an existing BG/EUR Express account. Run its `--help` from `app/` for the exact review format and plan/apply commands. This scope accepts Development, test and Preview with Stripe TEST credentials; Production and live mode are rejected. It creates no provider account, account link, payment or transfer.
+
+Supply separate, actual review references for the financial policy and Bulgarian/English buyer terms, the seller/account mapping and the accepted publication revision. Qualify the intended database branch, roles, application, environment and account ownership before preparing a plan. The plan reads current publication, owner, category and media facts plus the intended Stripe platform and connected account. Review its exact bytes before an authorized apply. The command uses verified TLS and fixed table locks to compare the complete preimage and append the policy, binding and listing terms atomically. Identical original replay preserves those records; stale facts, conflicting terms and existing different or revoked mappings abort the packet. Runtime write privileges, including reachable alternate roles, are rejected. No grants or existing-record edits are performed.
+
+An approved mapping may precede completed Stripe-hosted onboarding. Current capabilities and requirements remain separate runtime readiness checks. This command cannot establish seller ownership, approve a category or publication, enable collection, qualify signed webhooks/jobs or approve aftercare terms. Retain the review, plan and receipt alongside the existing release evidence; registry rows alone do not prove a purchase or fulfilment.
+
 ## Failure cases that must pass before release
 
 Wrong actor/seller/environment/signature; changed amount/currency; duplicate and delayed webhook; double click; two buyers; reservation expiry racing payment; late payment after another buyer acquires the item; duplicate subscription creation; invoice replay; final quota slot; concurrent invites; downgrade; partial/concurrent refunds; transfer failure and reconciliation after restore.
