@@ -28,12 +28,10 @@ import { NewQuoteAftercareControl } from "../order-aftercare/quote-choice";
 import { readShippingStartEligibility } from "../order-shipping/start.server";
 import { readPaidOrders } from "./orders.server";
 import { readPaymentOverview } from "./overview.server";
-import { readConnectReadiness } from "./connect.server";
 import { SellerError } from "../sellers/errors";
 import {
   PaymentBoundary,
   CreateQuoteButton,
-  OnboardingButton,
   OrderControls,
 } from "./controls";
 import { PaymentCheckout } from "./checkout";
@@ -553,90 +551,4 @@ export async function PaidOrdersPage(props: PaymentPageProps) {
     </PaymentBoundary>,
   );
 }
-export async function SellerPaymentSettingsPage(props: PaymentPageProps) {
-  await connection();
-  const { sellerId } = await props.params,
-    language = await pageLocale((await props.searchParams).lang),
-    t = paymentText(language);
-  if (!sellerId) notFound();
-  if (!backendConfigured()) return <p>{t.unavailable}</p>;
-  const path = `/app/sellers/${sellerId}/settings/payments`,
-    identity = await requirePageIdentity(path + `?lang=${language}`),
-    context = await readPrivatePage(() =>
-      readSellerContext(getDatabase(), identity, sellerId),
-    );
-  let readiness: Awaited<ReturnType<typeof readConnectReadiness>> | null = null;
-  try {
-    readiness = await readConnectReadiness(getDatabase(), identity, sellerId);
-  } catch (error) {
-    if (!(error instanceof SellerError && error.code === "NOT_AVAILABLE"))
-      throw new Error("Payment account status is unavailable.");
-  }
-  return (
-    <main className={s.merchant}>
-      <header className={a.pageBar}>
-        <h1>{t.payments}</h1>
-      </header>
-      <div className={a.pageBody}>
-        <PaymentBoundary actorSubject={identity.subject} language={language}>
-          <div className={s.stack}>
-            <section className={s.card}>
-              <h2>{context.name}</h2>
-              <p>
-                {readiness
-                  ? readiness.ready
-                    ? t.ready
-                    : t.notReady
-                  : t.unavailable}
-              </p>
-              <p className={s.muted}>{t.noRedirect}</p>
-              {readiness && (
-                <>
-                  <p>{t.requirements}</p>
-                  <ul>
-                    {[
-                      ...new Set([
-                        ...readiness.currentlyDue,
-                        ...readiness.pastDue,
-                        ...readiness.pendingVerification,
-                      ]),
-                    ].map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  {context.capabilities.includes("payment.setup") && (
-                    <OnboardingButton
-                      actorKey={libraryActorKey(identity)}
-                      actorSubject={identity.subject}
-                      sellerId={sellerId}
-                      language={language}
-                    />
-                  )}
-                </>
-              )}
-            </section>
-            <nav className={s.actions}>
-              <Link
-                className={s.secondary}
-                href={`/app/sellers/${sellerId}/orders?lang=${language}`}
-              >
-                {t.orders}
-              </Link>
-              <Link
-                className={s.secondary}
-                href={`/app/sellers/${sellerId}/settings/contact?lang=${language}`}
-              >
-                {language === "bg"
-                  ? "Настройки за контакт"
-                  : "Contact settings"}
-              </Link>
-              <Link className={s.secondary} href={path + `?lang=${language}`}>
-                {t.refresh}
-              </Link>
-            </nav>
-          </div>
-        </PaymentBoundary>
-      </div>
-    </main>
-  );
-}
+export { SellerConnectPage as SellerPaymentSettingsPage } from "./seller-connect-page.server";

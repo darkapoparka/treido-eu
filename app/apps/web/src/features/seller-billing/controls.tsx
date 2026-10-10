@@ -179,7 +179,7 @@ export function BillingControls({
       : null;
   return (
     <div className={s.stack}>
-      {view.available && (
+      {(view.available || view.subscription) && (
         <div className={s.actions}>
           {!view.subscription &&
             view.plans.slice(0, 1).map((p) => (
@@ -193,9 +193,9 @@ export function BillingControls({
             ))}
           {view.subscription && (
             <>
-              <button disabled={pending} onClick={() => command("portal")}>
+              {view.available && <button disabled={pending} onClick={() => command("portal")}>
                 {t.portal}
-              </button>
+              </button>}
               {!view.subscription.cancelAtPeriodEnd && (
                 <button
                   disabled={pending}

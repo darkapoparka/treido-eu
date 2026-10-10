@@ -21,6 +21,8 @@ import {
   type BillingIntent,
 } from "./commands.server";
 
+export type BillingRecoveryReceipt = { id: string; intentId: string; operation: "observe" | "abandon" | "escalate"; state: string; createdAt: string; updatedAt: string };
+
 export async function readSellerBilling(
   database: SellerDatabase,
   identity: VerifiedIdentity,
@@ -42,11 +44,13 @@ export async function readSellerBilling(
       await tx.client.query<{
         active: string;
         seats: string;
+        pendingSeats: string;
         variants: string;
       }>(
         `SELECT
       (SELECT count(*) FROM treido.listings WHERE seller_id=$1 AND publication='published')::text AS active,
-      CASE WHEN $2='personal' THEN '1' ELSE (SELECT count(*) FROM treido.seller_memberships WHERE seller_id=$1 AND status='active')::text END AS seats,
+      CASE WHEN $2='personal' THEN '1' ELSE (SELECT count(*) FROM treido.seller_memberships WHERE seller_id=$1 AND status IN ('active','invited'))::text END AS seats,
+      CASE WHEN $2='personal' THEN '0' ELSE (SELECT count(*) FROM treido.seller_invitations WHERE seller_id=$1 AND status='pending' AND expires_at>clock_timestamp())::text END AS "pendingSeats",
       (SELECT COALESCE(max(n),0) FROM (SELECT count(*) AS n FROM treido.inventory_skus WHERE seller_id=$1 AND active GROUP BY listing_id) v)::text AS variants`,
         [sellerId, access.seller.kind],
       )
@@ -61,7 +65,9 @@ export async function readSellerBilling(
       usage: {
         drafts: limits.draftCount,
         active: Number(usage.active),
-        seats: Number(usage.seats),
+        seats: Number(usage.seats) + Number(usage.pendingSeats),
+        occupiedSeats: Number(usage.seats),
+        pendingSeats: Number(usage.pendingSeats),
         variants: Number(usage.variants),
       },
     };
@@ -73,7 +79,12 @@ export async function readSellerBilling(
         subscription: null,
         invoices: [],
         intents: [],
+        recoveryRequests: [] as BillingRecoveryReceipt[],
+        financialHistoryAvailable: false,
       };
+    const recoveryRequests: BillingRecoveryReceipt[] = (await tx.client.query<Omit<BillingRecoveryReceipt, "createdAt" | "updatedAt"> & { createdAt: Date; updatedAt: Date }>(
+      'SELECT id,intent_id AS "intentId",operation,state,created_at AS "createdAt",updated_at AS "updatedAt" FROM treido.billing_recovery_requests WHERE seller_id=$1 ORDER BY created_at DESC,id DESC LIMIT 30', [sellerId],
+    )).rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() }));
     const pendingHistory = (
       await tx.client.query<BillingIntent>(
         `SELECT ${intentColumns} FROM treido.billing_intents WHERE seller_id=$1
@@ -96,6 +107,8 @@ export async function readSellerBilling(
         subscription: null,
         invoices: [],
         intents: pendingHistory.map((i) => ({ ...i, url: null })),
+        recoveryRequests,
+        financialHistoryAvailable: false,
       };
     }
     const plans = (
@@ -169,6 +182,8 @@ export async function readSellerBilling(
         observedAt: i.observedAt.toISOString(),
       })),
       intents,
+      recoveryRequests,
+      financialHistoryAvailable: true,
     };
   });
 }

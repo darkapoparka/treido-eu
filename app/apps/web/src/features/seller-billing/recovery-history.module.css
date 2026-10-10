@@ -1,0 +1,8 @@
+.receipts { list-style: none; margin: 0; padding: 0; }
+.receipts li { border-top: 1px solid #e3e3e3; padding: 16px 0; }
+.receipts h3 { font-size: 13px; font-weight: 650; margin: 0 0 6px; }
+.receipts p, .receipts dl { font-size: 13px; line-height: 1.5; margin: 8px 0; }
+.receipts dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 8px 0; }
+.receipts dt { color: #616161; }
+.receipts dd { min-width: 0; margin: 0; }
+.receipts code { font-size: 12px; overflow-wrap: anywhere; user-select: all; }
