@@ -464,6 +464,9 @@ try {
     await readOnly(page);
     await retry.click();
     const change = await latest(page, "change");
+    // Transport starts before React commits its pending button. Observe the
+    // existing two-frame settled UI, without resolving or weakening the request.
+    await flush(page);
     assert.deepEqual(change.input, original);
     assert.equal(
       await page
