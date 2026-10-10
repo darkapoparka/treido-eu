@@ -1,0 +1,113 @@
+.editor {
+  max-width: 1100px;
+}
+.editor [data-studio-panel="gift-product-core"] input:disabled,
+.editor [data-studio-panel="gift-product-denominations"] input:disabled {
+  background: #f7f7f7;
+}
+.media {
+  border: 1px dashed #8a8a8a;
+  border-radius: 12px;
+  padding: 32px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.media > p {
+  width: 100%;
+  text-align: center;
+  margin: 0;
+}
+.media > div {
+  position: relative;
+}
+.media > div > button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: white;
+}
+.media img {
+  object-fit: contain;
+  border-radius: 8px;
+}
+.boundary {
+  padding: 16px;
+  border-radius: 10px;
+  background: #f7f7f7;
+  color: #616161;
+  margin: 0;
+}
+.denominations {
+  display: grid;
+  gap: 8px;
+}
+.denominations > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow:
+    0 0 0 1px #00000024,
+    0 2px 3px #00000008;
+  border-radius: 10px;
+  padding-left: 12px;
+}
+.denominations input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  font: inherit;
+  min-height: 30px;
+  background: white;
+}
+.denominations > div:focus-within {
+  outline: 2px solid #005bd3;
+  outline-offset: 1px;
+}
+.denominations > div:has(input[aria-invalid="true"]) {
+  box-shadow: 0 0 0 1px #b42318;
+}
+.denominations svg {
+  width: 16px;
+  height: 16px;
+}
+.addDenomination {
+  justify-self: start;
+  border-radius: 20px;
+  background: #f1f1f1;
+  border: 0;
+  box-shadow: none;
+}
+.editor [data-studio-panel="gift-product-templates"] h3 {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 500;
+}
+.editor [data-studio-panel="gift-product-metafields"] {
+  padding: 12px;
+  background: #f7f7f7;
+}
+.editor [data-studio-panel="gift-product-metafields"] button {
+  justify-self: start;
+  align-self: start;
+  min-height: 24px;
+  padding: 2px 8px;
+  background: #e3e3e3;
+  border-radius: 8px;
+  font-weight: 500;
+}
+@media (max-width: 767px) {
+  .editor > [data-studio-part="save-bar"] {
+    display: none;
+  }
+  .editor [data-studio-part="editor-layout"] {
+    gap: 32px;
+  }
+  .editor [data-studio-part="editor-side"] {
+    gap: 32px;
+  }
+  .editor [data-studio-panel="gift-product-denominations"] {
+    margin-top: -16px;
+  }
+}

@@ -4,14 +4,33 @@ import { useCaption } from "../../locale/use-caption";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminIcon } from "../admin-icons";
 import { usePreview } from "./context";
+import { UnavailableSurface } from "./unavailable-surface";
+import { CampaignIntroduction } from "./campaign-introduction";
+import { DiscountItemPicker } from "./discount-item-picker";
+import { validDraftDate, validDraftTime } from "./local-draft-model";
+import { currentDraftDateTime } from "./draft-date-fields";
+import { DiscountTargets, DiscountShippingCountries } from "./discount-targets";
+import {
+  DiscountLimits,
+  DiscountCombinations,
+  DiscountSummary,
+} from "./discount-rule-controls";
+import { DiscountSchedule } from "./discount-schedule";
+import { DiscountEligibility } from "./discount-eligibility";
+import { DiscountBuyGetValue } from "./discount-buy-get-value";
+import {
+  validDiscountBuyRequirement,
+  validDiscountPlanningTargets,
+} from "./discount-eligibility-model";
+import { DraftEditorActions } from "./draft-editor-actions";
 import {
   money,
-  orderTotal,
   parseMoney,
+  orderTotal,
   put,
   type Discount,
   type Entry,
@@ -25,6 +44,8 @@ import {
   Confirm,
   Empty,
   Field,
+  EditorSection,
+  EditorBreadcrumb,
   Header,
   Modal,
   Panel,
@@ -71,7 +92,7 @@ export function Discounts({ detail }: { detail?: string }) {
     (d) => `${d.title} ${d.code}`,
   );
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={ui("discounts")}
         icon="discount"
@@ -109,13 +130,13 @@ export function Discounts({ detail }: { detail?: string }) {
           </Button>
         </Empty>
       ) : (
-        <div className={s.tablePanel}>
+        <div className={s.tablePanel} data-studio-part="table-panel">
           <Toolbar
             {...list}
             tabs={["All", "Active", "Scheduled", "Expired", "Disabled"]}
           />
           {list.selected.length > 0 && (
-            <div className={s.bulk}>
+            <div className={s.bulk} data-studio-part="bulk">
               <strong>
                 {list.selected.length} {ui("selected_d7cbbb")}
               </strong>
@@ -139,8 +160,8 @@ export function Discounts({ detail }: { detail?: string }) {
               </Button>
             </div>
           )}
-          <div className={s.tableScroll}>
-            <table className={s.table}>
+          <div className={s.tableScroll} data-studio-part="table-scroll">
+            <table className={s.table} data-studio-part="table">
               <thead>
                 <tr>
                   <th>
@@ -181,6 +202,7 @@ export function Discounts({ detail }: { detail?: string }) {
                     <td>
                       <Link
                         className={s.cellLink}
+                        data-studio-part="cell-link"
                         href={href(`discounts/${d.id}`)}
                       >
                         {d.method === "Discount code" ? d.code : d.title}
@@ -202,18 +224,25 @@ export function Discounts({ detail }: { detail?: string }) {
       {create && (
         <Modal
           title={ui("selectDiscountType")}
+          surface="discount-type"
           onClose={() => setCreate(false)}
+          footer={
+            <Button onClick={() => setCreate(false)}>{ui("cancel")}</Button>
+          }
         >
           {discountTypes.map((d) => (
             <Link
               className={s.choice}
+              data-studio-part="choice"
               key={d.slug}
               href={href(`discounts/new-${d.slug}`)}
             >
               <AdminIcon name="discount" />
               <span>
                 <strong>{d.title}</strong>
-                <span className={s.muted}>{d.body}</span>
+                <span className={s.muted} data-studio-part="muted">
+                  {d.body}
+                </span>
               </span>
               <AdminIcon name="arrow" />
             </Link>
@@ -241,10 +270,9 @@ export function Discounts({ detail }: { detail?: string }) {
   );
 }
 function DiscountEditor({ id }: { id: string }) {
-  const intlLocale = useIntlLocale();
   const caption = useCaption();
   const ui = useTranslations("merchantUI");
-  const { store, href, update, notify } = usePreview();
+  const { store, href, update, notify, text } = usePreview();
   const router = useRouter();
   const existing = store.discounts.find((d) => d.id === id);
   const kind =
@@ -260,39 +288,146 @@ function DiscountEditor({ id }: { id: string }) {
         valueMode: "Percentage",
         eligibility: "All customers",
         appliesTo: "All products",
-        buyQuantity: 1,
-        getQuantity: 1,
+        targetKind: "Collections",
+        targetIds: [],
+        buyQuantity: kind.title === "Buy X get Y" ? 0 : 1,
+        getQuantity: kind.title === "Buy X get Y" ? 0 : 1,
         minimumKind: "None",
-        value: 10,
+        value: kind.title === "Buy X get Y" ? 0 : 10,
         minimum: 0,
         limit: 0,
         once: false,
         combines: false,
-        start: "2026-10-02",
+        start: currentDraftDateTime().date,
+        startTime: currentDraftDateTime().time,
         end: "",
-        status: "Active",
+        status: "Draft",
       },
   );
   const [error, setError] = useState("");
+  const [itemPicker, setItemPicker] = useState<"buy" | "get" | null>(null);
+  const [buyQuery, setBuyQuery] = useState("");
+  const [getQuery, setGetQuery] = useState("");
+  const [buyAmount, setBuyAmount] = useState(() =>
+    (
+      (discount.buyMinimumAmountMinor ??
+        Math.round((discount.buyMinimumAmount ?? 0) * 100)) / 100
+    ).toFixed(2),
+  );
+  const [initial] = useState(discount);
+  const [resetCount, setResetCount] = useState(0);
+  const form = useRef<HTMLFormElement>(null);
+  const dirty = JSON.stringify(discount) !== JSON.stringify(initial);
   const patch = (change: Partial<Discount>) =>
     setDiscount({ ...discount, ...change });
   if (!existing && !id.startsWith("new"))
     return (
-      <main className={s.editor}>
+      <main className={s.editor} data-studio-part="editor">
         <Header title={ui("discountNotFound")} back={href("discounts")} />
       </main>
     );
   return (
-    <main className={s.editor}>
-      <Header
-        title={existing ? discount.title : ui("createDiscount")}
-        back={href("discounts")}
+    <main
+      className={s.editor}
+      data-studio-part="editor"
+      data-studio-builder="discount"
+    >
+      <DraftEditorActions
+        dirty={dirty}
+        onSave={() => form.current?.requestSubmit()}
+        onDiscard={() => {
+          setDiscount(initial);
+          setError("");
+          setBuyQuery("");
+          setGetQuery("");
+          setBuyAmount(
+            (
+              (initial.buyMinimumAmountMinor ??
+                Math.round((initial.buyMinimumAmount ?? 0) * 100)) / 100
+            ).toFixed(2),
+          );
+          setItemPicker(null);
+          setResetCount((value) => value + 1);
+        }}
       />
+      <EditorBreadcrumb
+        href={href("discounts")}
+        title={ui("discounts")}
+        icon="discount"
+      />
+      <Header title={existing ? discount.title : ui("createDiscount")} />
       <form
+        ref={form}
         onSubmit={(e) => {
           e.preventDefault();
+          const title =
+            discount.method === "Discount code"
+              ? discount.code.trim()
+              : discount.title.trim();
+          if (!validDiscountPlanningTargets(discount, store)) {
+            setError(
+              text(
+                "Review local eligibility records, discount value, and the per-order limit.",
+                "Проверете локалните записи, стойността на отстъпката и лимита на поръчка.",
+              ),
+            );
+            return;
+          }
+          if (discount.type === "Buy X get Y") {
+            const validItems = (
+              kind: "Products" | "Collections" | undefined,
+              ids: string[] | undefined,
+            ) =>
+              !!ids?.length &&
+              ids.every((id) =>
+                kind === "Collections"
+                  ? store.collections.some((item) => item.id === id)
+                  : store.products.some(
+                      (item) => item.id === id && item.status !== "Archived",
+                    ),
+              );
+            if (
+              !validDiscountBuyRequirement(discount) ||
+              !Number.isInteger(discount.getQuantity) ||
+              discount.getQuantity < 1 ||
+              discount.getQuantity > 999 ||
+              !validItems(discount.buyKind, discount.buyItemIds) ||
+              !validItems(discount.getKind, discount.getItemIds)
+            ) {
+              setError(
+                text(
+                  "Select saved items for both Customer buys and Customer gets, and enter positive quantities or a purchase amount.",
+                  "Изберете запазени артикули за двете групи и въведете положителен брой или сума на покупката.",
+                ),
+              );
+              return;
+            }
+          }
           if (
-            !discount.title.trim() ||
+            (discount.type === "Amount off products" &&
+              discount.targetKind &&
+              (!discount.targetIds?.length ||
+                discount.targetIds.some((id) =>
+                  discount.targetKind === "Collections"
+                    ? !store.collections.some((item) => item.id === id)
+                    : !store.products.some(
+                        (item) => item.id === id && item.status !== "Archived",
+                      ),
+                ))) ||
+            (discount.type === "Free shipping" &&
+              discount.countriesMode === "Selected" &&
+              !discount.countryCodes?.length) ||
+            (discount.excludeShippingRate &&
+              (!Number.isSafeInteger(discount.maximumShippingRate) ||
+                (discount.maximumShippingRate ?? -1) < 0 ||
+                (discount.maximumShippingRate ?? 0) > 100000000)) ||
+            (discount.limitEnabled && discount.limit < 1) ||
+            !validDraftTime(discount.startTime ?? "") ||
+            !validDraftTime(discount.endTime ?? "") ||
+            (discount.end &&
+              `${discount.end}T${discount.endTime || "23:59"}` <
+                `${discount.start}T${discount.startTime || "00:00"}`) ||
+            !title ||
             (discount.method === "Discount code" &&
               !/^[A-Z0-9_-]{2,40}$/.test(discount.code)) ||
             !Number.isFinite(discount.value) ||
@@ -300,9 +435,19 @@ function DiscountEditor({ id }: { id: string }) {
             (discount.valueMode === "Percentage" && discount.value > 100) ||
             discount.limit < 0 ||
             discount.minimum < 0 ||
+            !Number.isFinite(discount.minimum) ||
+            !Number.isInteger(discount.limit) ||
+            discount.limit > 999999 ||
+            !validDraftDate(discount.start) ||
+            (discount.end && !validDraftDate(discount.end)) ||
             (discount.end && discount.end < discount.start)
           ) {
-            setError(ui("enterATitleAValidCodeValueAndAnEnd"));
+            setError(
+              text(
+                "Enter a valid code or automatic title, discount value, and date range.",
+                "Въведете валиден код или автоматично заглавие, стойност на отстъпката и период.",
+              ),
+            );
             return;
           }
           if (
@@ -314,6 +459,8 @@ function DiscountEditor({ id }: { id: string }) {
           }
           const saved = {
             ...discount,
+            title,
+            status: "Draft",
             id: existing ? id : `discount-${crypto.randomUUID()}`,
           };
           update({ discounts: put(store.discounts, saved) });
@@ -322,18 +469,26 @@ function DiscountEditor({ id }: { id: string }) {
         }}
       >
         {error && (
-          <p className={s.error} role="alert">
+          <p className={s.error} data-studio-part="error" role="alert">
             {error}
           </p>
         )}
-        <div className={s.editorColumns}>
-          <div className={s.stack}>
-            <Panel title={discount.type}>
+        <div className={s.editorColumns} data-studio-part="editor-layout">
+          <div className={s.stack} data-studio-part="editor-main">
+            <EditorSection
+              title={caption(discount.type)}
+              part="discount-method"
+            >
+              <p data-studio-part="discount-method-label">
+                {text("Method", "Метод")}
+              </p>
               <div
                 className={s.tabs}
+                data-studio-part="list-tabs"
                 role="tablist"
                 aria-label={ui("discountMethod")}
                 data-ui-label="discountMethod"
+                data-discount-part="method-control"
               >
                 {["Discount code", "Automatic discount"].map((v) => (
                   <button
@@ -341,6 +496,7 @@ function DiscountEditor({ id }: { id: string }) {
                     type="button"
                     role="tab"
                     className={s.tab}
+                    data-studio-part="list-tab"
                     aria-selected={discount.method === v}
                     onClick={() => patch({ method: v })}
                   >
@@ -348,289 +504,421 @@ function DiscountEditor({ id }: { id: string }) {
                   </button>
                 ))}
               </div>
-              <Field label={ui("discountTitle")}>
-                <input
-                  required
-                  maxLength={100}
-                  value={discount.title}
-                  onChange={(e) => patch({ title: e.target.value })}
-                />
-              </Field>
+              {discount.method !== "Discount code" && (
+                <Field label={ui("discountTitle")}>
+                  <input
+                    required
+                    maxLength={100}
+                    value={discount.title}
+                    onChange={(e) => patch({ title: e.target.value })}
+                  />
+                </Field>
+              )}
               {discount.method === "Discount code" && (
                 <>
-                  <Field label={ui("discountCode")}>
+                  <div data-studio-part="discount-code-heading">
+                    <span>{ui("discountCode")}</span>
+                    <Button
+                      plain
+                      data-studio-part="discount-code-generate-desktop"
+                      onClick={() =>
+                        patch({
+                          code: `TREIDO${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+                        })
+                      }
+                    >
+                      {ui("generateRandomCode")}
+                    </Button>
+                  </div>
+                  <div data-studio-part="discount-code-row">
                     <input
+                      aria-label={ui("discountCode")}
                       required
                       maxLength={40}
                       value={discount.code}
-                      onChange={(e) =>
+                      onChange={(event) =>
                         patch({
-                          code: e.target.value
+                          code: event.target.value
                             .toUpperCase()
                             .replaceAll(" ", ""),
                         })
                       }
                     />
-                  </Field>
-                  <Button
-                    plain
-                    onClick={() =>
-                      patch({
-                        code: `TREIDO${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-                      })
-                    }
-                  >
-                    {ui("generateRandomCode")}
-                  </Button>
-                  <p className={s.help}>
+                    <Button
+                      plain
+                      data-studio-part="discount-code-generate-phone"
+                      aria-label={ui("generateRandomCode")}
+                      onClick={() =>
+                        patch({
+                          code: `TREIDO${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+                        })
+                      }
+                    >
+                      <svg viewBox="0 0 20 20" aria-hidden="true" fill="none">
+                        <path
+                          d="M5 7h10l-3-3m3 3-3 3M15 13H5l3 3m-3-3 3-3"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Button>
+                  </div>
+                  <p className={s.help} data-studio-part="field-help">
                     {ui("customersEnterThisCodeAtCheckout")}
                   </p>
                 </>
               )}
-            </Panel>
+            </EditorSection>
             {discount.type !== "Free shipping" && (
-              <Panel
-                title={
-                  discount.type === "Buy X get Y"
-                    ? ui("customerBuysGets")
-                    : ui("discountValue")
-                }
-              >
-                <div className={s.fields}>
-                  <Field label={ui("valueType")}>
-                    <select
-                      value={discount.valueMode}
-                      onChange={(e) =>
-                        patch({
-                          valueMode: e.target.value as Discount["valueMode"],
-                        })
+              <EditorSection title={ui("discountValue")} part="discount-value">
+                {discount.type === "Buy X get Y" && (
+                  <>
+                    {bogoGroup("buy")}
+                    {bogoGroup("get")}
+                  </>
+                )}
+                {discount.type === "Buy X get Y" ? (
+                  <DiscountBuyGetValue
+                    key={`value-${resetCount}`}
+                    discount={discount}
+                    patch={patch}
+                  />
+                ) : (
+                  <div className={s.fields} data-studio-part="fields">
+                    <Field label={ui("valueType")}>
+                      <select
+                        value={discount.valueMode}
+                        onChange={(e) =>
+                          patch({
+                            valueMode: e.target.value as Discount["valueMode"],
+                          })
+                        }
+                      >
+                        <option value="Percentage">{ui("percentage")}</option>
+                        <option value="Fixed amount">
+                          {ui("fixedAmount")}
+                        </option>
+                      </select>
+                    </Field>
+                    <Field
+                      label={
+                        discount.valueMode === "Percentage"
+                          ? ui("percentage_91d63b")
+                          : ui("amountEUR")
                       }
                     >
-                      <option value="Percentage">{ui("percentage")}</option>
-                      <option value="Fixed amount">{ui("fixedAmount")}</option>
-                    </select>
-                  </Field>
-                  <Field
-                    label={
-                      discount.valueMode === "Percentage"
-                        ? ui("percentage_91d63b")
-                        : ui("amountEUR")
-                    }
-                  >
-                    <input
-                      type="number"
-                      min={0}
-                      max={discount.valueMode === "Percentage" ? 100 : 1000000}
-                      step={discount.valueMode === "Percentage" ? 1 : 0.01}
-                      value={discount.value}
-                      onChange={(e) => patch({ value: Number(e.target.value) })}
-                    />
-                  </Field>
-                </div>
-                {["Amount off products", "Buy X get Y"].includes(
-                  discount.type,
-                ) && (
-                  <Field label={ui("appliesTo")}>
-                    <select
-                      value={discount.appliesTo}
-                      onChange={(e) => patch({ appliesTo: e.target.value })}
-                    >
-                      <option value="All products">{ui("allProducts")}</option>
-                      {store.collections.map((c) => (
-                        <option key={c.id}>{c.title}</option>
-                      ))}
-                      {store.products.map((p) => (
-                        <option key={p.id}>{p.title}</option>
-                      ))}
-                    </select>
-                  </Field>
-                )}
-                {discount.type === "Buy X get Y" && (
-                  <div className={s.fields}>
-                    <Field label={ui("customerBuysQuantity")}>
                       <input
                         type="number"
-                        min={1}
-                        max={999}
-                        value={discount.buyQuantity}
-                        onChange={(e) =>
-                          patch({ buyQuantity: Number(e.target.value) })
+                        min={0}
+                        max={
+                          discount.valueMode === "Percentage" ? 100 : 1000000
                         }
-                      />
-                    </Field>
-                    <Field label={ui("customerGetsQuantity")}>
-                      <input
-                        type="number"
-                        min={1}
-                        max={999}
-                        value={discount.getQuantity}
+                        step={discount.valueMode === "Percentage" ? 1 : 0.01}
+                        value={discount.value}
                         onChange={(e) =>
-                          patch({ getQuantity: Number(e.target.value) })
+                          patch({ value: Number(e.target.value) })
                         }
                       />
                     </Field>
                   </div>
                 )}
-              </Panel>
+                {discount.type === "Amount off products" && (
+                  <DiscountTargets discount={discount} patch={patch} />
+                )}
+              </EditorSection>
             )}
-            <Panel title={ui("eligibility")}>
-              <Field label={ui("customerEligibility")}>
-                <select
-                  value={discount.eligibility}
-                  onChange={(e) => patch({ eligibility: e.target.value })}
-                >
-                  <option value="All customers">{ui("allCustomers")}</option>
-                  <option value="Specific customer segments">
-                    {ui("specificCustomerSegments")}
-                  </option>
-                  <option value="Specific customers">
-                    {ui("specificCustomers")}
-                  </option>
-                  {store.entries
-                    .filter((e) => e.type === "Segment")
-                    .map((e) => (
-                      <option key={e.id}>{e.title}</option>
-                    ))}
-                </select>
-              </Field>
-            </Panel>
-            <Panel title={ui("minimumPurchaseRequirements")}>
-              {[
-                "None",
-                "Minimum purchase amount",
-                "Minimum quantity of items",
-              ].map((v) => (
-                <Check
-                  key={v}
-                  radio
-                  name="minimum"
-                  label={caption(v)}
-                  checked={discount.minimumKind === v}
-                  onChange={() => patch({ minimumKind: v })}
-                />
-              ))}
-              {discount.minimumKind !== "None" && (
-                <Field
-                  label={
-                    discount.minimumKind === "Minimum purchase amount"
-                      ? ui("minimumAmountEUR")
-                      : ui("minimumQuantity")
-                  }
-                >
-                  <input
-                    type="number"
-                    min={0}
-                    value={discount.minimum}
-                    onChange={(e) => patch({ minimum: Number(e.target.value) })}
-                  />
-                </Field>
-              )}
-            </Panel>
-            <Panel title={ui("maximumDiscountUses")}>
-              <Field
-                label={ui("totalUsageLimit")}
-                help={ui("text0MeansNoLimitInThisPreview")}
+            {discount.type === "Free shipping" && (
+              <DiscountShippingCountries
+                key={`countries-${resetCount}`}
+                discount={discount}
+                patch={patch}
+              />
+            )}
+            <DiscountEligibility
+              key={`eligibility-${resetCount}`}
+              discount={discount}
+              patch={patch}
+            />
+            {discount.type !== "Buy X get Y" && (
+              <EditorSection
+                title={ui("minimumPurchaseRequirements")}
+                part="discount-minimum"
               >
-                <input
-                  type="number"
-                  min={0}
-                  max={999999}
-                  value={discount.limit}
-                  onChange={(e) => patch({ limit: Number(e.target.value) })}
-                />
-              </Field>
-              <Check
-                label={ui("limitToOneUsePerCustomer")}
-                checked={discount.once}
-                onChange={() => patch({ once: !discount.once })}
-              />
-            </Panel>
-            <Panel title={ui("combinations")}>
-              <Check
-                label={ui("combineWithOtherProductOrderOrShippingDiscounts")}
-                checked={discount.combines}
-                onChange={() => patch({ combines: !discount.combines })}
-              />
-            </Panel>
-            <Panel title={ui("activeDates")}>
-              <div className={s.fields}>
-                <Field label={ui("startDate")}>
-                  <input
-                    type="date"
-                    required
-                    value={discount.start}
-                    onChange={(e) => patch({ start: e.target.value })}
+                {[
+                  "None",
+                  "Minimum purchase amount",
+                  "Minimum quantity of items",
+                ].map((v) => (
+                  <Check
+                    key={v}
+                    radio
+                    name="minimum"
+                    label={caption(v)}
+                    checked={discount.minimumKind === v}
+                    onChange={() => patch({ minimumKind: v })}
                   />
-                </Field>
-                <Field label={ui("endDateOptional")}>
-                  <input
-                    type="date"
-                    min={discount.start}
-                    value={discount.end}
-                    onChange={(e) => patch({ end: e.target.value })}
-                  />
-                </Field>
-              </div>
-            </Panel>
-          </div>
-          <aside className={s.editorSide}>
-            <Panel title={discount.title || ui("noTitleYet")}>
-              <h3>{discount.type}</h3>
-              <Badge>{discount.method}</Badge>
-              <ul>
-                <li>
-                  {discount.type === "Free shipping"
-                    ? ui("freeShipping")
-                    : discount.valueMode === "Percentage"
-                      ? `${discount.value}% off`
-                      : `${money(parseMoney(String(discount.value)) ?? 0, intlLocale)} off`}
-                </li>
-                <li>{discount.eligibility}</li>
-                <li>{discount.minimumKind}</li>
-                <li>
-                  {discount.once
-                    ? ui("oneUsePerCustomer")
-                    : ui("multipleUsesPerCustomer")}
-                </li>
-                <li>
-                  {discount.combines
-                    ? ui("combinesWithOtherDiscounts")
-                    : ui("doesNotCombine")}
-                </li>
-              </ul>
-              <Field label={ui("status")}>
-                <select
-                  value={discount.status}
-                  onChange={(e) => patch({ status: e.target.value })}
-                >
-                  {["Active", "Scheduled", "Expired", "Disabled"].map((v) => (
-                    <option key={v} value={v}>
-                      {caption(v)}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+                ))}
+                {discount.minimumKind !== "None" && (
+                  <Field
+                    label={
+                      discount.minimumKind === "Minimum purchase amount"
+                        ? ui("minimumAmountEUR")
+                        : ui("minimumQuantity")
+                    }
+                  >
+                    <input
+                      type="number"
+                      min={0}
+                      value={discount.minimum}
+                      onChange={(e) =>
+                        patch({ minimum: Number(e.target.value) })
+                      }
+                    />
+                  </Field>
+                )}
+              </EditorSection>
+            )}
+            <DiscountLimits discount={discount} patch={patch} />
+            <DiscountCombinations discount={discount} patch={patch} />
+            <DiscountSchedule discount={discount} patch={patch} />
+            <EditorSection
+              title={text(
+                "Sales channel access",
+                "Достъп до канали за продажба",
+              )}
+              part="discount-channel-access"
+            >
+              <Check
+                disabled
+                checked={false}
+                label={text(
+                  "Allow discount to be featured on selected channels",
+                  "Показване на отстъпката в избрани канали",
+                )}
+                onChange={() => {}}
+              />
               <p className={s.help}>
-                {ui("localPreviewOnlyThisDoesNotAffectCheckout")}
+                {text(
+                  "Requires connected sales channels",
+                  "Изисква свързани канали за продажба",
+                )}
               </p>
-            </Panel>
+            </EditorSection>
+          </div>
+          <aside className={s.editorSide} data-studio-part="editor-side">
+            <DiscountSummary discount={discount} patch={patch} />
           </aside>
         </div>
-        <div className={s.saveBar}>
+        <div className={s.saveBar} data-studio-part="save-bar">
           <Action href={href("discounts")}>{ui("cancel")}</Action>
           <Button primary type="submit">
-            {ui("saveDiscount")}
+            {text("Save draft", "Запазване на чернова")}
           </Button>
         </div>
       </form>
+      {itemPicker && (
+        <DiscountItemPicker
+          kind={
+            (itemPicker === "buy" ? discount.buyKind : discount.getKind) ??
+            "Products"
+          }
+          selected={
+            (itemPicker === "buy"
+              ? discount.buyItemIds
+              : discount.getItemIds) ?? []
+          }
+          query={itemPicker === "buy" ? buyQuery : getQuery}
+          onClose={() => setItemPicker(null)}
+          onApply={(ids) => {
+            patch(
+              itemPicker === "buy" ? { buyItemIds: ids } : { getItemIds: ids },
+            );
+            setItemPicker(null);
+          }}
+        />
+      )}
     </main>
   );
+  function bogoGroup(side: "buy" | "get") {
+    const buy = side === "buy";
+    const selectedKind =
+      (buy ? discount.buyKind : discount.getKind) ?? "Products";
+    const selectedIds = (buy ? discount.buyItemIds : discount.getItemIds) ?? [];
+    const items =
+      selectedKind === "Products" ? store.products : store.collections;
+    const amount = buy && discount.buyMinimumKind === "Amount";
+    return (
+      <section data-studio-part={`discount-${side}-group`}>
+        <h3>
+          {buy
+            ? text("Customer buys", "Клиентът купува")
+            : text("Customer gets", "Клиентът получава")}
+        </h3>
+        {buy ? (
+          <>
+            <Check
+              radio
+              name="buy-minimum"
+              label={text(
+                "Minimum quantity of items",
+                "Минимален брой артикули",
+              )}
+              checked={!amount}
+              onChange={() => patch({ buyMinimumKind: "Quantity" })}
+            />
+            <Check
+              radio
+              name="buy-minimum"
+              label={text(
+                "Minimum purchase amount",
+                "Минимална сума на покупката",
+              )}
+              checked={amount}
+              onChange={() => patch({ buyMinimumKind: "Amount" })}
+            />
+          </>
+        ) : (
+          <p className={s.help}>
+            {text(
+              "Customers must add the quantity of items specified below to their cart.",
+              "Клиентите трябва да добавят посочения по-долу брой артикули в количката си.",
+            )}
+          </p>
+        )}
+        <div className={s.fields} data-studio-part="discount-quantity-from">
+          <Field
+            label={
+              amount ? text("Amount EUR", "Сума EUR") : text("Quantity", "Брой")
+            }
+          >
+            <input
+              type="number"
+              min={amount ? 0.01 : 1}
+              max={amount ? 1000000 : 999}
+              step={amount ? 0.01 : 1}
+              value={
+                amount
+                  ? buyAmount
+                  : buy
+                    ? discount.buyQuantity || ""
+                    : discount.getQuantity || ""
+              }
+              onChange={(event) => {
+                if (amount) {
+                  setBuyAmount(event.target.value);
+                  patch({
+                    buyMinimumAmountMinor: parseMoney(event.target.value) ?? -1,
+                  });
+                } else
+                  patch(
+                    buy
+                      ? { buyQuantity: Number(event.target.value) }
+                      : { getQuantity: Number(event.target.value) },
+                  );
+              }}
+            />
+          </Field>
+          <Field label={text("Any items from", "Артикули от")}>
+            <select
+              value={selectedKind}
+              onChange={(event) =>
+                patch(
+                  buy
+                    ? {
+                        buyKind: event.target.value as
+                          "Products" | "Collections",
+                        buyItemIds: [],
+                      }
+                    : {
+                        getKind: event.target.value as
+                          "Products" | "Collections",
+                        getItemIds: [],
+                      },
+                )
+              }
+            >
+              <option value="Products">
+                {text("Specific products", "Конкретни продукти")}
+              </option>
+              <option value="Collections">
+                {text("Specific collections", "Конкретни колекции")}
+              </option>
+            </select>
+          </Field>
+        </div>
+        <div data-studio-part="discount-item-search" data-bogo-search>
+          <AdminIcon name="search" />
+          <input
+            aria-label={`${buy ? text("Customer buys", "Клиентът купува") : text("Customer gets", "Клиентът получава")} ${selectedKind === "Products" ? text("search products", "търсене на продукти") : text("search collections", "търсене на колекции")}`}
+            type="search"
+            placeholder={
+              selectedKind === "Products"
+                ? text("Search products", "Търсене на продукти")
+                : text("Search collections", "Търсене на колекции")
+            }
+            value={buy ? buyQuery : getQuery}
+            maxLength={160}
+            onChange={(event) =>
+              buy
+                ? setBuyQuery(event.target.value)
+                : setGetQuery(event.target.value)
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                setItemPicker(side);
+              }
+            }}
+          />
+          <Button onClick={() => setItemPicker(side)}>
+            {text("Browse", "Преглед")}
+          </Button>
+        </div>
+        <Button
+          data-studio-part="discount-bogo-add"
+          onClick={() => setItemPicker(side)}
+        >
+          <AdminIcon name="plus" />
+          {selectedKind === "Products"
+            ? text("Add products", "Добавяне на продукти")
+            : text("Add collections", "Добавяне на колекции")}
+        </Button>
+        {selectedIds.map((id) => (
+          <div className={s.dataRow} key={id}>
+            <span>
+              {items.find((item) => item.id === id)?.title ??
+                text("Unavailable local item", "Недостъпен локален артикул")}
+            </span>
+            <Button
+              plain
+              aria-label={`${text("Remove", "Премахване")} ${id}`}
+              onClick={() =>
+                patch(
+                  buy
+                    ? {
+                        buyItemIds: selectedIds.filter((value) => value !== id),
+                      }
+                    : {
+                        getItemIds: selectedIds.filter((value) => value !== id),
+                      },
+                )
+              }
+            >
+              <AdminIcon name="close" />
+            </Button>
+          </div>
+        ))}
+      </section>
+    );
+  }
 }
 export function Growth({ detail }: { detail?: string }) {
   const intlLocale = useIntlLocale();
   const caption = useCaption();
   const ui = useTranslations("merchantUI");
-  const { store, href, update, notify } = usePreview();
+  const { store, href, update, notify, text } = usePreview();
   const [dialog, setDialog] = useState(false);
   const [title, setTitle] = useState("");
   const [channel, setChannel] = useState("Email");
@@ -651,19 +939,40 @@ export function Growth({ detail }: { detail?: string }) {
             : "2026-09-03") &&
       o.date <= "2026-10-02",
   );
-  const campaigns = detail
-    ? store.campaigns.filter((c) => c.id === detail)
-    : store.campaigns;
+  if (detail === "attribution" || detail === "autopilot")
+    return <UnavailableSurface section={detail} />;
+  const campaigns =
+    detail && detail !== "campaigns"
+      ? store.campaigns.filter((c) => c.id === detail)
+      : store.campaigns;
   return (
-    <main className={s.growthPage}>
-      <Header title={ui("growth")} />
-      <div className={s.stack}>
-        {intro && (
-          <div className={s.hero}>
-            <div className={s.heroCopy}>
+    <main
+      className={detail === "campaigns" ? s.page : s.growthPage}
+      data-studio-part={detail === "campaigns" ? "page" : "growth-page"}
+    >
+      <Header
+        title={
+          detail === "campaigns" ? text("Campaigns", "Кампании") : ui("growth")
+        }
+        icon={detail === "campaigns" ? "growth" : undefined}
+        actions={
+          detail === "campaigns" ? (
+            <Button primary onClick={() => setDialog(true)}>
+              {ui("createCampaign")}
+            </Button>
+          ) : undefined
+        }
+      />
+      <div className={s.stack} data-studio-part="stack">
+        {detail === "campaigns" && !campaigns.length && (
+          <CampaignIntroduction create={() => setDialog(true)} />
+        )}
+        {intro && detail !== "campaigns" && (
+          <div className={s.hero} data-studio-part="hero">
+            <div className={s.heroCopy} data-studio-part="hero-copy">
               <Badge>Treido marketing</Badge>
               <h2>{ui("makeYourNextIdeaACampaign")}</h2>
-              <p className={s.muted}>
+              <p className={s.muted} data-studio-part="muted">
                 {ui("planOffersChooseAnAudienceAndReviewPerformanceFromOne")}
               </p>
               <Button primary onClick={() => setDialog(true)}>
@@ -675,118 +984,156 @@ export function Growth({ detail }: { detail?: string }) {
               width={960}
               height={472}
               className={s.heroImage}
+              data-studio-part="hero-image"
               src="/images/admin/onboarding-review-v1.webp"
               alt={ui("treidoCampaignIllustration")}
             />
             <Button
               plain
               className={s.growthDismiss}
+              data-studio-part="growth-dismiss"
               onClick={() => setIntro(false)}
             >
               {ui("dismiss_d7633b")}
             </Button>
           </div>
         )}
-        <div className={s.sectionHeading}>
-          <h2>{ui("performance")}</h2>
-          <div className={s.actions}>
-            <select
-              className={s.button}
-              aria-label={ui("performancePeriod")}
-              value={view}
-              onChange={(e) => setView(e.target.value)}
-              data-ui-label="performancePeriod"
-            >
-              {["Last 30 days", "Last 7 days", "Today"].map((v) => (
-                <option key={v} value={v}>
-                  {caption(v)}
-                </option>
-              ))}
-            </select>
-            <Action href={href("analytics")}>{ui("viewDetails")}</Action>
-          </div>
-        </div>
-        <div className={s.metricGrid}>
-          <Panel title={ui("totalSales")}>
-            <p className={s.metric}>
-              {money(
-                paid.reduce((v, o) => v + orderTotal(o) - o.refunded, 0),
-                intlLocale,
-              )}
-            </p>
-            <Chart values={paid.map(orderTotal)} compact />
-          </Panel>
-          <Panel title={ui("orders")}>
-            <p className={s.metric}>{paid.length}</p>
-            {paid.length ? (
-              <Chart values={paid.map(() => 1)} compact />
+        {detail !== "campaigns" && (
+          <>
+            <div className={s.sectionHeading} data-studio-part="panel-heading">
+              <h2>{ui("performance")}</h2>
+              <div className={s.actions} data-studio-part="actions">
+                <select
+                  className={s.button}
+                  data-studio-part="button"
+                  aria-label={ui("performancePeriod")}
+                  value={view}
+                  onChange={(e) => setView(e.target.value)}
+                  data-ui-label="performancePeriod"
+                >
+                  {["Last 30 days", "Last 7 days", "Today"].map((v) => (
+                    <option key={v} value={v}>
+                      {caption(v)}
+                    </option>
+                  ))}
+                </select>
+                <Action href={href("analytics")}>{ui("viewDetails")}</Action>
+              </div>
+            </div>
+            <div className={s.metricGrid} data-studio-part="metric-grid">
+              <Panel title={ui("totalSales")}>
+                <p className={s.metric} data-studio-part="metric">
+                  {money(
+                    paid.reduce((v, o) => v + orderTotal(o) - o.refunded, 0),
+                    intlLocale,
+                  )}
+                </p>
+                <Chart values={paid.map(orderTotal)} compact />
+              </Panel>
+              <Panel title={ui("orders")}>
+                <p className={s.metric} data-studio-part="metric">
+                  {paid.length}
+                </p>
+                {paid.length ? (
+                  <Chart values={paid.map(() => 1)} compact />
+                ) : (
+                  <p
+                    className={s.growthNoData}
+                    data-studio-part="growth-no-data"
+                  >
+                    {ui("noOrdersForThisDateRange")}
+                  </p>
+                )}
+              </Panel>
+              <Panel title={ui("emailSubscribers")}>
+                <p className={s.metric} data-studio-part="metric">
+                  {
+                    store.customers.filter((customer) => customer.marketing)
+                      .length
+                  }
+                </p>
+                <p className={s.growthNoData} data-studio-part="growth-no-data">
+                  {text(
+                    "Saved customer preferences in this preview",
+                    "Запазени клиентски предпочитания в прегледа",
+                  )}
+                </p>
+              </Panel>
+            </div>
+          </>
+        )}
+        {detail !== "campaigns" && (
+          <EditorSection title={ui("campaignChannels")} part="growth-planning">
+            <div className={s.dataRow} data-studio-part="data-row">
+              <div>
+                <h3>{ui("email")}</h3>
+                <p className={s.help} data-studio-part="field-help">
+                  {ui("chooseAnAudienceBeforePreparingACampaign")}
+                </p>
+              </div>
+              <Action href={href("segments")}>{ui("setUpAudience")}</Action>
+            </div>
+            <div className={s.dataRow} data-studio-part="data-row">
+              <div>
+                <h3>{ui("treidoMarketplace")}</h3>
+                <p className={s.help} data-studio-part="field-help">
+                  {ui("prepareProductsAndOffersForYourPublicStore")}
+                </p>
+              </div>
+              <Action href={href("store")}>{ui("manageStore")}</Action>
+            </div>
+          </EditorSection>
+        )}
+        {(detail !== "campaigns" || campaigns.length > 0) && (
+          <Panel
+            title={ui("recentCampaigns")}
+            action={
+              <Button onClick={() => setDialog(true)}>
+                {ui("createCampaign")}
+              </Button>
+            }
+          >
+            {campaigns.length ? (
+              campaigns.map((c) => (
+                <div
+                  key={c.id}
+                  className={s.dataRow}
+                  data-studio-part="data-row"
+                >
+                  <div>
+                    <strong>{c.title}</strong>
+                    <p className={s.help} data-studio-part="field-help">
+                      {c.type} · {c.body}
+                    </p>
+                  </div>
+                  <Badge>{c.status}</Badge>
+                  <Button
+                    onClick={() => {
+                      update({
+                        campaigns: store.campaigns.map((v) =>
+                          v.id === c.id
+                            ? {
+                                ...v,
+                                status:
+                                  v.status === "Draft" ? "Scheduled" : "Draft",
+                              }
+                            : v,
+                        ),
+                      });
+                      notify(ui("campaignStatusSavedLocallyNothingWasSent"));
+                    }}
+                  >
+                    {c.status === "Draft" ? ui("schedule") : ui("moveToDraft")}
+                  </Button>
+                </div>
+              ))
             ) : (
-              <p className={s.growthNoData}>{ui("noOrdersForThisDateRange")}</p>
+              <p className={s.muted} data-studio-part="muted">
+                {ui("yourCampaignPlansWillAppearHere")}
+              </p>
             )}
           </Panel>
-        </div>
-        <Panel
-          title={ui("recentCampaigns")}
-          action={
-            <Button onClick={() => setDialog(true)}>
-              {ui("createCampaign")}
-            </Button>
-          }
-        >
-          {campaigns.length ? (
-            campaigns.map((c) => (
-              <div key={c.id} className={s.dataRow}>
-                <div>
-                  <strong>{c.title}</strong>
-                  <p className={s.help}>
-                    {c.type} · {c.body}
-                  </p>
-                </div>
-                <Badge>{c.status}</Badge>
-                <Button
-                  onClick={() => {
-                    update({
-                      campaigns: store.campaigns.map((v) =>
-                        v.id === c.id
-                          ? {
-                              ...v,
-                              status:
-                                v.status === "Draft" ? "Scheduled" : "Draft",
-                            }
-                          : v,
-                      ),
-                    });
-                    notify(ui("campaignStatusSavedLocallyNothingWasSent"));
-                  }}
-                >
-                  {c.status === "Draft" ? ui("schedule") : ui("moveToDraft")}
-                </Button>
-              </div>
-            ))
-          ) : (
-            <p className={s.muted}>{ui("yourCampaignPlansWillAppearHere")}</p>
-          )}
-        </Panel>
-        <Panel title={ui("campaignChannels")}>
-          <div className={s.dataRow}>
-            <div>
-              <h3>{ui("email")}</h3>
-              <p className={s.help}>
-                {ui("chooseAnAudienceBeforePreparingACampaign")}
-              </p>
-            </div>
-            <Action href={href("segments")}>{ui("setUpAudience")}</Action>
-          </div>
-          <div className={s.dataRow}>
-            <div>
-              <h3>{ui("treidoMarketplace")}</h3>
-              <p className={s.help}>
-                {ui("prepareProductsAndOffersForYourPublicStore")}
-              </p>
-            </div>
-            <Action href={href("store")}>{ui("manageStore")}</Action>
-          </div>
-        </Panel>
+        )}
       </div>
       {dialog && (
         <Modal
@@ -829,7 +1176,7 @@ export function Growth({ detail }: { detail?: string }) {
               onChange={(e) => setTitle(e.target.value)}
             />
           </Field>
-          <div className={s.fields}>
+          <div className={s.fields} data-studio-part="fields">
             <Field label={ui("channel")}>
               <select
                 value={channel}
@@ -859,7 +1206,9 @@ export function Growth({ detail }: { detail?: string }) {
               />
             </Field>
           )}
-          <p className={s.help}>{ui("reviewTheCampaignFlowWithLocalData")}</p>
+          <p className={s.help} data-studio-part="field-help">
+            {ui("reviewTheCampaignFlowWithLocalData")}
+          </p>
         </Modal>
       )}
     </main>

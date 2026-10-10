@@ -7,6 +7,10 @@ import { useState } from "react";
 import { usePreview } from "./context";
 import { money, orderTotal, type Order } from "./model";
 import { customerName } from "./orders";
+import { AdminIcon } from "../admin-icons";
+import { ReportDirectory } from "./report-directory";
+import { ReportExplorer } from "./report-explorer";
+import { UnavailableSurface } from "./unavailable-surface";
 import {
   Action,
   Badge,
@@ -42,12 +46,13 @@ export function Analytics({
 }) {
   const intlLocale = useIntlLocale();
   const ui = useTranslations("merchantUI");
-  const { store, href } = usePreview();
+  const { store, href, text } = usePreview();
   const [start, setStart] = useState("2026-09-03");
   const [end, setEnd] = useState("2026-10-02");
   const [dates, setDates] = useState(false);
   const [compare, setCompare] = useState(false);
   const [intro, setIntro] = useState(true);
+  const [more, setMore] = useState(false);
   const [report, setReport] = useState(detail ?? "sales");
   const rows = ordersInPeriod(store.orders, start, end);
   const paid = rows.filter((o) => o.payment !== "Pending");
@@ -139,26 +144,46 @@ export function Analytics({
   const previousTotal = previous
     .filter((o) => o.payment !== "Pending")
     .reduce((v, o) => v + orderTotal(o) - o.refunded, 0);
+  if (reports && !detail) return <ReportDirectory />;
+  if (reports && detail) return <ReportExplorer key={detail} id={detail} />;
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={reports ? ui("reports") : ui("analytics")}
         icon="analytics"
         actions={
           <>
-            <Button onClick={exportReport}>{ui("export")}</Button>
+            <Button data-studio-part="analytics-export" onClick={exportReport}>
+              {ui("export")}
+            </Button>
             {reports ? (
               <Action href={href("analytics")}>{ui("dashboard")}</Action>
             ) : (
-              <Action href={href("reports")}>{ui("newExploration")}</Action>
+              <Action primary href={href("reports")}>
+                {ui("newExploration")}
+              </Action>
             )}
+            <Button
+              plain
+              data-studio-part="analytics-more"
+              aria-label={text("More actions", "Още действия")}
+              aria-haspopup="dialog"
+              onClick={() => setMore(true)}
+            >
+              <AdminIcon name="more" />
+            </Button>
           </>
         }
       />
       {!reports && intro && (
-        <div className={s.analyticsIntro}>
+        <div className={s.analyticsIntro} data-studio-part="analytics-intro">
           <span aria-hidden="true">ⓘ</span>
-          <p>{ui("exploreYourStorePerformanceByDateProductAndCustomer")}</p>
+          <p>
+            {text(
+              "Explore store performance using the orders saved in this preview.",
+              "Разгледайте представянето на магазина с поръчките, запазени в този преглед.",
+            )}
+          </p>
           <Button
             plain
             onClick={() => setIntro(false)}
@@ -169,9 +194,13 @@ export function Analytics({
           </Button>
         </div>
       )}
-      <div className={s.actions} style={{ marginBottom: 16 }}>
+      <div
+        className={s.actions}
+        data-studio-part="analytics-period"
+        style={{ marginBottom: 16 }}
+      >
         <Button onClick={() => setDates(true)}>
-          {start} – {end}
+          {start === end ? start : `${start.slice(5)} – ${end.slice(5)}`}
         </Button>
         <Button onClick={() => setCompare(!compare)}>
           {compare ? ui("comparingPreviousPeriod") : ui("noComparison")}
@@ -179,7 +208,11 @@ export function Analytics({
         <Badge>EUR · preview data</Badge>
       </div>
       {compare && (
-        <div className={s.success} style={{ marginBottom: 16 }}>
+        <div
+          className={s.success}
+          data-studio-part="success"
+          style={{ marginBottom: 16 }}
+        >
           {ui("previousPeriod")} {money(previousTotal, intlLocale)} ·{" "}
           {previous.length} {ui("ordersCurrentChange")}{" "}
           {previousTotal
@@ -189,10 +222,11 @@ export function Analytics({
         </div>
       )}
       {reports ? (
-        <div className={s.stack}>
+        <div className={s.stack} data-studio-part="stack">
           <Panel title={ui("exploreYourData")}>
             <div
               className={s.tabs}
+              data-studio-part="list-tabs"
               role="tablist"
               aria-label={ui("report")}
               data-ui-label="report"
@@ -207,6 +241,7 @@ export function Analytics({
                   role="tab"
                   key={v.id}
                   className={s.tab}
+                  data-studio-part="list-tab"
                   aria-selected={report === v.id}
                   onClick={() => setReport(v.id)}
                 >
@@ -217,8 +252,8 @@ export function Analytics({
             {report === "sales" ? (
               <>
                 <Chart values={daily.map((v) => v / 100)} />
-                <div className={s.tableScroll}>
-                  <table className={s.table}>
+                <div className={s.tableScroll} data-studio-part="table-scroll">
+                  <table className={s.table} data-studio-part="table">
                     <thead>
                       <tr>
                         <th>{ui("order_6be090")}</th>
@@ -247,8 +282,8 @@ export function Analytics({
                 </div>
               </>
             ) : report === "customers" ? (
-              <div className={s.tableScroll}>
-                <table className={s.table}>
+              <div className={s.tableScroll} data-studio-part="table-scroll">
+                <table className={s.table} data-studio-part="table">
                   <thead>
                     <tr>
                       <th>{ui("customer")}</th>
@@ -279,8 +314,8 @@ export function Analytics({
                 </table>
               </div>
             ) : (
-              <div className={s.tableScroll}>
-                <table className={s.table}>
+              <div className={s.tableScroll} data-studio-part="table-scroll">
+                <table className={s.table} data-studio-part="table">
                   <thead>
                     <tr>
                       <th>{ui("product")}</th>
@@ -340,32 +375,50 @@ export function Analytics({
         </div>
       ) : (
         <>
-          <div className={`${s.metricGrid} ${s.analyticsMetrics}`}>
+          <div
+            className={`${s.metricGrid} ${s.analyticsMetrics}`}
+            data-studio-part="analytics-metrics"
+          >
             <Panel title={ui("grossSales")}>
-              <p className={s.metric}>{money(total, intlLocale)}</p>
+              <p className={s.metric} data-studio-part="metric">
+                {money(total, intlLocale)}
+              </p>
             </Panel>
             <Panel title={ui("returningCustomers")}>
-              <p className={s.metric}>{returning}</p>
+              <p className={s.metric} data-studio-part="metric">
+                {returning}
+              </p>
             </Panel>
             <Panel title={ui("ordersFulfilled")}>
-              <p className={s.metric}>
+              <p className={s.metric} data-studio-part="metric">
                 {rows.filter((o) => o.fulfillment === "Fulfilled").length}
               </p>
             </Panel>
             <Panel title={ui("orders")}>
-              <p className={s.metric}>{rows.length}</p>
+              <p className={s.metric} data-studio-part="metric">
+                {rows.length}
+              </p>
             </Panel>
           </div>
-          <div className={s.charts}>
-            <section className={`${s.panel} ${s.chartWide}`}>
-              <Link href={href("reports/sales")} className={s.reportHeading}>
+          <div className={s.charts} data-studio-part="charts">
+            <section
+              className={`${s.panel} ${s.chartWide}`}
+              data-studio-part="analytics-chart"
+            >
+              <Link
+                href={href("reports/sales")}
+                className={s.reportHeading}
+                data-studio-part="report-heading"
+              >
                 <h2>{ui("totalSalesOverTime")}</h2>
               </Link>
-              <p className={s.metric}>{money(total, intlLocale)}</p>
+              <p className={s.metric} data-studio-part="metric">
+                {money(total, intlLocale)}
+              </p>
               <Chart values={daily.map((v) => v / 100)} />
             </section>
             <Panel title={ui("totalSalesBreakdown")}>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("productSales")}</span>
                 <span>
                   {money(
@@ -379,11 +432,11 @@ export function Analytics({
                   )}
                 </span>
               </div>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("discounts")}</span>
                 <span>{money(0, intlLocale)}</span>
               </div>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("salesReversals")}</span>
                 <span>
                   −
@@ -393,7 +446,7 @@ export function Analytics({
                   )}
                 </span>
               </div>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("netSales")}</span>
                 <span>
                   {money(
@@ -408,7 +461,7 @@ export function Analytics({
                   )}
                 </span>
               </div>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("shipping")}</span>
                 <span>
                   {money(
@@ -417,17 +470,17 @@ export function Analytics({
                   )}
                 </span>
               </div>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("taxes")}</span>
                 <span>—</span>
               </div>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <strong>{ui("totalSales")}</strong>
                 <strong>{money(total, intlLocale)}</strong>
               </div>
             </Panel>
             <Panel title={ui("averageOrderValue")}>
-              <p className={s.metric}>
+              <p className={s.metric} data-studio-part="metric">
                 {money(
                   paid.length ? Math.round(total / paid.length) : 0,
                   intlLocale,
@@ -439,7 +492,11 @@ export function Analytics({
             </Panel>
             <Panel title={ui("salesByProduct")}>
               {store.products.slice(0, 4).map((p) => (
-                <div key={p.id} className={s.dataRow}>
+                <div
+                  key={p.id}
+                  className={s.dataRow}
+                  data-studio-part="data-row"
+                >
                   <span>{p.title}</span>
                   <span>
                     {money(
@@ -453,17 +510,19 @@ export function Analytics({
                 </div>
               ))}
               {!store.products.length && (
-                <p className={s.muted}>{ui("noDataForThisDateRange")}</p>
+                <p className={s.muted} data-studio-part="muted">
+                  {ui("noDataForThisDateRange")}
+                </p>
               )}
             </Panel>
             <Panel title={ui("ordersByFulfillment")}>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("fulfilled")}</span>
                 <span>
                   {rows.filter((o) => o.fulfillment === "Fulfilled").length}
                 </span>
               </div>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("unfulfilled")}</span>
                 <span>
                   {rows.filter((o) => o.fulfillment === "Unfulfilled").length}
@@ -472,6 +531,21 @@ export function Analytics({
             </Panel>
           </div>
         </>
+      )}
+      {more && (
+        <Modal
+          title={text("More actions", "Още действия")}
+          onClose={() => setMore(false)}
+        >
+          <Button
+            onClick={() => {
+              exportReport();
+              setMore(false);
+            }}
+          >
+            {ui("export")}
+          </Button>
+        </Modal>
       )}
       {dates && (
         <Modal
@@ -487,7 +561,7 @@ export function Analytics({
             </Button>
           }
         >
-          <div className={s.actions}>
+          <div className={s.actions} data-studio-part="actions">
             {[
               { title: "Today", start: "2026-10-02" },
               { title: "Last 7 days", start: "2026-09-26" },
@@ -504,7 +578,7 @@ export function Analytics({
               </Button>
             ))}
           </div>
-          <div className={s.fields}>
+          <div className={s.fields} data-studio-part="fields">
             <Field label={ui("startDate")}>
               <input
                 type="date"
@@ -528,8 +602,10 @@ export function Analytics({
 }
 export function Finance({
   section,
+  detail,
 }: {
   section: "finance" | "payouts" | "billing";
+  detail?: string;
 }) {
   const intlLocale = useIntlLocale();
   const caption = useCaption();
@@ -544,10 +620,12 @@ export function Finance({
       o.fulfillment !== "Cancelled",
   );
   const balance = paid.reduce((v, o) => v + orderTotal(o) - o.refunded, 0);
+  if (section === "payouts" && detail !== "preview")
+    return <UnavailableSurface section="payouts" />;
   return (
     <main className={`${s.page} ${section === "finance" ? s.financePage : ""}`}>
       {section === "finance" ? (
-        <header className={s.financeActions}>
+        <header className={s.financeActions} data-studio-part="finance-actions">
           <Button onClick={() => setDocuments(true)}>{ui("documents")}</Button>
         </header>
       ) : (
@@ -566,8 +644,13 @@ export function Finance({
       >
         {section === "finance" ? (
           <>
-            <h1 className={s.financeTitle}>{ui("finance")}</h1>
-            <div className={s.securityBanner}>
+            <h1 className={s.financeTitle} data-studio-part="finance-title">
+              {ui("finance")}
+            </h1>
+            <div
+              className={s.securityBanner}
+              data-studio-part="security-banner"
+            >
               <div>
                 <h2>{ui("reviewYourAccountSecurity")}</h2>
                 <p>
@@ -627,29 +710,40 @@ export function Finance({
                 />
               </svg>
             </div>
-            <div className={s.financeGrid}>
+            <div className={s.financeGrid} data-studio-part="finance-grid">
               <section>
                 <h2>{ui("taxes")}</h2>
-                <Link href={href("settings/taxes")} className={s.taxLink}>
+                <Link
+                  href={href("settings/taxes")}
+                  className={s.taxLink}
+                  data-studio-part="tax-link"
+                >
                   <span>{ui("setUpTaxDisplay")}</span>
                   <span>›</span>
                 </Link>
               </section>
               <section>
                 <h2>{ui("previewPayoutBalance")}</h2>
-                <div className={s.payoutPanel}>
+                <div className={s.payoutPanel} data-studio-part="payout-panel">
                   <div>
                     <strong>{money(balance, intlLocale)}</strong>
                     <Link href={href("payouts")}>{ui("viewPayouts")}</Link>
                   </div>
-                  <div className={s.currencyBalance}>
+                  <div
+                    className={s.currencyBalance}
+                    data-studio-part="currency-balance"
+                  >
                     <span>🇪🇺 EUR</span>
                     <span>{money(balance, intlLocale)}</span>
                   </div>
                 </div>
-                <p className={s.learn}>
+                <p className={s.learn} data-studio-part="learn">
                   {ui("fictionalOrders")}{" "}
-                  <Link className={s.link} href={href("billing")}>
+                  <Link
+                    className={s.link}
+                    data-studio-part="link"
+                    href={href("billing")}
+                  >
                     {ui("billingOverview")}
                   </Link>
                 </p>
@@ -659,15 +753,18 @@ export function Finance({
         ) : section === "payouts" ? (
           <>
             <Panel title={ui("previewBalance")}>
-              <p className={s.metric}>{money(balance, intlLocale)}</p>
-              <p className={s.help}>
+              <p className={s.metric} data-studio-part="metric">
+                {money(balance, intlLocale)}
+              </p>
+              <p className={s.help} data-studio-part="field-help">
                 {ui("simulatedPayoutEntriesForFrontendReview")}
               </p>
             </Panel>
-            <div className={s.tablePanel}>
-              <div className={s.toolbar}>
+            <div className={s.tablePanel} data-studio-part="table-panel">
+              <div className={s.toolbar} data-studio-part="list-toolbar">
                 <div
                   className={s.tabs}
+                  data-studio-part="list-tabs"
                   role="tablist"
                   aria-label={ui("payoutStatus")}
                   data-ui-label="payoutStatus"
@@ -677,6 +774,7 @@ export function Finance({
                       key={v}
                       role="tab"
                       className={s.tab}
+                      data-studio-part="list-tab"
                       aria-selected={status === v}
                       onClick={() => setStatus(v)}
                     >
@@ -685,7 +783,7 @@ export function Finance({
                   ))}
                 </div>
               </div>
-              <table className={s.table}>
+              <table className={s.table} data-studio-part="table">
                 <thead>
                   <tr>
                     <th>{ui("reference")}</th>
@@ -720,16 +818,16 @@ export function Finance({
         ) : (
           <>
             <Panel title={ui("currentPlan")}>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <strong>{store.settings.plan}</strong>
                 <Action href={href("settings/plan")}>{ui("managePlan")}</Action>
               </div>
-              <p className={s.help}>
+              <p className={s.help} data-studio-part="field-help">
                 {ui("planSelectionIsPreviewStateNoSubscriptionIsActivated")}
               </p>
             </Panel>
             <Panel title={ui("billingInformation")}>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <div>
                   <h3>{store.settings.name}</h3>
                   <p>{store.settings.email}</p>
@@ -740,7 +838,7 @@ export function Finance({
               </div>
             </Panel>
             <Panel title={ui("pastBills")}>
-              <p className={s.muted}>
+              <p className={s.muted} data-studio-part="muted">
                 {ui("noInvoicesThisFrontendPreviewHasNoBillingProvider")}
               </p>
             </Panel>

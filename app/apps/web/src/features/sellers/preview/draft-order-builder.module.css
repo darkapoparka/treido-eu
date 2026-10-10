@@ -1,0 +1,133 @@
+.heading {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+.addProducts {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  border: 1px dashed #8a8a8a;
+  border-radius: 8px;
+  min-height: 60px;
+  padding: 16px;
+}
+.lines {
+  display: grid;
+}
+.lines > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 70px 90px 28px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+.lines > div + div {
+  border-top: 1px solid #ddd;
+}
+.lines > div > div {
+  overflow-wrap: anywhere;
+}
+.lines input {
+  min-width: 0;
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.payment {
+  display: grid;
+  gap: 16px;
+}
+.payment > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+.payment button {
+  padding: 0;
+  min-height: 20px;
+  color: #616161;
+}
+.paymentFooter {
+  margin: 0 -16px -16px;
+  padding: 12px 16px;
+  background: #f5f5f5;
+  color: #616161;
+  border-radius: 0 0 20px 20px;
+}
+.empty {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: #616161;
+}
+.empty > span {
+  font-size: 20px;
+}
+.selectionCount {
+  margin-right: auto;
+  color: #616161;
+}
+@media (max-width: 767px) {
+  .lines > div {
+    grid-template-columns: minmax(0, 1fr) 60px 28px;
+    gap: 8px;
+  }
+  .lines > div > span {
+    grid-column: 1;
+  }
+  .lines > div > button {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .addProducts {
+    flex-wrap: wrap;
+    border: 0;
+    border-radius: 20px;
+    background: white;
+    box-shadow:
+      0 0 0 1px #e3e3e3,
+      0 2px 6px #0000000c;
+    padding: 16px;
+    gap: 8px;
+  }
+  .addProducts > button:first-child {
+    order: 1;
+    flex: 1;
+    background: #eee;
+  }
+  .addProducts > button:last-child {
+    order: 0;
+    flex: 1;
+    color: white;
+    background: #222;
+  }
+  .addProducts > button:last-child svg {
+    display: none;
+  }
+  .payment {
+    gap: 0;
+  }
+  .payment > div {
+    min-height: 44px;
+    padding: 10px 0;
+  }
+  .payment > div + div {
+    border-top: 1px solid #f1f1f1;
+  }
+}
+.customerTrigger {
+  width: 100%;
+  min-height: 32px;
+  justify-content: flex-start;
+  border-radius: 10px;
+}
+.customerTrigger > span {
+  display: none;
+}

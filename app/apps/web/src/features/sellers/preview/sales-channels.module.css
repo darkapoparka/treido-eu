@@ -1,0 +1,43 @@
+.root {
+  min-width: 0;
+}
+.card {
+  overflow: hidden;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px #00000008;
+  background: white;
+}
+.card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+}
+.card > header > span {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #f1f1f1;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin: 0 12px;
+}
+.row > svg {
+  width: 24px;
+  height: 24px;
+  color: #23734b;
+}
+.row > a {
+  padding: 0;
+  justify-content: flex-start;
+}
+.row > button {
+  margin-left: auto;
+}

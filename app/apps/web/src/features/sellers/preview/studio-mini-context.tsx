@@ -5,6 +5,7 @@ export type MiniMode = "chat" | "recents" | "about" | "attachments" | "voice";
 export const StudioMiniContext = createContext<{
   open: (mode?: MiniMode) => void;
   ask: (prompt: string) => void;
+  docked: boolean;
 } | null>(null);
 export function useStudioMini() {
   const context = useContext(StudioMiniContext);

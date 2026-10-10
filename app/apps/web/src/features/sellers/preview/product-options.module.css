@@ -1,0 +1,60 @@
+.root {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+.saved {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+}
+.saved p {
+  color: #616161;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.editor {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+}
+.editor > div:last-child {
+  justify-content: flex-end;
+}
+.menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: min(276px, calc(100vw - 32px));
+  padding: 8px;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 4px 12px #0002;
+}
+.menu:popover-open {
+  display: grid;
+  gap: 4px;
+}
+.menu input {
+  margin-bottom: 8px;
+}
+.menu p {
+  padding: 8px;
+  color: #616161;
+  font-size: 12px;
+}
+.menu button {
+  justify-content: flex-start;
+  width: 100%;
+  border-radius: 8px;
+}
+.menu button:last-child {
+  margin-top: 8px;
+  border-top: 1px solid #eee;
+}

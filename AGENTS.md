@@ -19,7 +19,7 @@ The current user request and these product-root contracts govern Treido. Nested 
 
 1. Read this file, the relevant current claim/receipt and executable row in [tasks.md](tasks.md), and the task's named documents. Do not load the entire historical receipt archive for a small change.
 2. Inspect the actual implementation, package scripts, local changes and relevant tests. Explain the intended change and identify the smallest useful slice.
-3. Claim one task and file boundary. One writer per overlapping file group. Existing unrelated changes are not yours to fix or revert.
+3. Use the relevant existing task and identify the affected files. Record a claim only when work overlaps another active writer; independent edits need no claim ceremony. Preserve unrelated changes and serialize shared Git/build operations.
 4. Implement, run appropriate checks, inspect the diff, and update the same task with evidence and the next step. A later “continue/build” request authorizes the next ready local task; do not start another planning cycle.
 
 ## Non-negotiable boundaries

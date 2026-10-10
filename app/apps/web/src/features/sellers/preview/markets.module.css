@@ -1,0 +1,588 @@
+.page .create svg {
+  display: none;
+}
+.views {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+.views > div {
+  flex: 1;
+}
+.views > button {
+  width: 28px;
+  min-height: 28px;
+  padding: 4px;
+  border-radius: 50%;
+}
+.search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+}
+.search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.table {
+  overflow: auto;
+  border-top: 1px solid #ddd;
+}
+.table td:first-child a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+.suggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 16px;
+  background: #f0e5ff;
+  color: #202020;
+}
+.suggestion > span {
+  color: #8050d5;
+  font-size: 20px;
+}
+.suggestion a {
+  flex: 1;
+}
+.suggestion button {
+  border: 0;
+  background: none;
+  color: inherit;
+  min-width: 24px;
+  min-height: 24px;
+  cursor: pointer;
+}
+.noResults {
+  padding: 24px 16px;
+  text-align: center;
+  color: #616161;
+}
+.split {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 24px;
+}
+.graph {
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+}
+.graph a {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+.fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 8px;
+}
+.includes {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.includes > div {
+  flex: 1;
+  min-width: 0;
+}
+.includes h3 {
+  font-size: 13px;
+  font-weight: 500;
+}
+.includes p {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.group h2 {
+  margin: 12px 0 16px;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.inheritedRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  color: #171717;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 12px 0;
+}
+.inheritedRow + .inheritedRow {
+  border-top: 1px solid #ddd;
+}
+.inheritedRow > span:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+.inheritedRow svg {
+  flex: 0 0 20px;
+}
+.inheritedRow strong {
+  display: block;
+  font-weight: 500;
+}
+.inheritedRow small {
+  display: block;
+  color: #616161;
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+.inheritedRow > span:last-child {
+  font-size: 22px;
+  color: #616161;
+}
+@media (max-width: 767px) {
+  .page .create {
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+    min-height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .page .create svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
+  .page .create span {
+    display: none;
+  }
+  .page [data-studio-part="market-graph-toggle"] {
+    display: none;
+  }
+  .views {
+    padding: 0 8px 12px;
+    gap: 8px;
+  }
+  .table table {
+    min-width: 0;
+    width: 100%;
+  }
+  .table thead {
+    display: none;
+  }
+  .table tbody {
+    display: grid;
+  }
+  .table tr {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    min-height: 48px;
+    padding: 8px 16px;
+  }
+  .table td {
+    padding: 0;
+    border: 0;
+  }
+  .table td:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+  .table td:first-child svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    color: #616161;
+  }
+  .table td:nth-child(n + 3) {
+    display: none;
+  }
+  .table td:first-child a {
+    overflow-wrap: anywhere;
+  }
+  .table {
+    overflow: visible;
+  }
+  .suggestion {
+    font-size: 13px;
+    line-height: 20px;
+    gap: 12px;
+  }
+  .split {
+    display: block;
+  }
+  .fields {
+    grid-template-columns: minmax(0, 1fr) 76px;
+  }
+  .editor .fields select {
+    padding: 6px;
+  }
+}
+.status {
+  align-self: center;
+  width: 100%;
+  padding: 4px 8px;
+  min-height: 32px;
+  font: inherit;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+.includes > strong {
+  width: 220px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.includes > button {
+  justify-content: flex-start;
+  flex: 1;
+  font-weight: 400;
+}
+.inherited {
+  padding: 0 16px;
+}
+.inherited .inheritedRow {
+  padding: 10px 0;
+  gap: 8px;
+  border-top: 0;
+  min-height: 40px;
+}
+.inherited .inheritedRow > strong {
+  width: 220px;
+  flex-shrink: 0;
+  font-weight: 400;
+}
+.inherited .inheritedRow > span:first-of-type {
+  font-size: 13px;
+  line-height: 20px;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.inherited .inheritedRow > span:last-child {
+  flex: 0;
+  font-size: 16px;
+}
+.hierarchy {
+  background: #f7f7f7;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.hierarchy svg {
+  width: 100%;
+  height: 140px;
+}
+.conditionModal {
+  width: 620px;
+}
+.conditionModal [data-studio-part="modal-body"] {
+  min-height: 360px;
+}
+.conditionScope {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.conditionScope select {
+  font: inherit;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  min-height: 32px;
+  padding: 4px 8px;
+}
+.regions {
+  display: grid;
+}
+.regions > label {
+  min-height: 40px;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+.regionFlag {
+  width: 28px;
+  height: 21px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.selectRegions {
+  padding: 6px 8px;
+  background: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+}
+.mobileChevron {
+  display: none;
+}
+.inherited [data-studio-part="market-inherited-action"] svg {
+  width: 16px;
+  height: 16px;
+}
+.inherited [data-studio-part="market-inherited-origin"] {
+  display: inline-flex;
+  margin-right: 6px;
+  vertical-align: middle;
+  color: #8a8a8a;
+}
+.inherited [data-studio-part="market-inherited-origin"] svg {
+  width: 14px;
+  height: 14px;
+}
+.conditionType,
+.regionSearch {
+  position: relative;
+  min-width: 0;
+}
+.conditionType > svg,
+.regionSearch > svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+.regionSearch > svg {
+  color: #8a8a8a;
+}
+.regionSearch input {
+  width: 100%;
+  padding-left: 32px;
+}
+.conditionScope .conditionType select {
+  padding-left: 32px;
+}
+@media (max-width: 767px) {
+  .editor .fields {
+    grid-template-columns: minmax(0, 1fr) 78px;
+    align-items: end;
+  }
+  .editor .fields select {
+    min-height: 30px;
+    padding-block: 4px;
+  }
+  .includes > strong {
+    width: auto;
+  }
+  .includes {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 12px 16px;
+  }
+  .includes > button {
+    font-size: 13px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    min-height: 28px;
+    padding: 4px 0;
+    margin-left: -4px;
+    white-space: normal;
+    text-align: left;
+  }
+  .includes > button svg {
+    flex-shrink: 0;
+  }
+  .group h2 {
+    margin: 0 0 16px;
+  }
+  .inherited .inheritedRow > strong {
+    width: auto;
+    min-width: 0;
+    grid-column: 2;
+    grid-row: 1;
+    overflow-wrap: anywhere;
+  }
+  .inherited {
+    padding: 0;
+    margin: 0 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .inherited .inheritedRow {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) 16px;
+    column-gap: 8px;
+    row-gap: 0;
+    align-items: start;
+    min-height: 62px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .inherited .inheritedRow + .inheritedRow {
+    border-top: 1px solid #ddd;
+  }
+  .inheritedRow > svg {
+    grid-column: 1;
+    grid-row: 1;
+    width: 16px;
+    height: 20px;
+  }
+  .inherited .inheritedRow > span:first-of-type {
+    font-size: 12px;
+    color: #707070;
+    grid-column: 2;
+    grid-row: 2;
+    line-height: 18px;
+  }
+  .inherited [data-studio-part="market-inherited-action"] {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    align-self: center;
+    display: flex;
+  }
+  .inherited [data-studio-part="market-inherited-origin"],
+  .inherited [data-studio-part="market-inherited-action"] > svg:first-child {
+    display: none;
+  }
+  .inherited .mobileChevron {
+    display: block;
+    transform: rotate(-90deg);
+  }
+  .conditionModal {
+    max-width: 100dvw;
+    width: 100dvw;
+  }
+  .conditionModal[data-studio-part="modal"][data-studio-surface="market-conditions"] {
+    width: 100dvw;
+    max-width: 100dvw;
+    position: fixed;
+    inset: auto 0 0;
+    margin: 0;
+    height: 583px;
+    max-height: calc(100dvh - 16px);
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .conditionModal[data-studio-surface="market-conditions"]
+    > [data-studio-part="modal-header"] {
+    flex-shrink: 0;
+    min-height: 64px;
+    padding: 16px 20px;
+  }
+  .conditionModal[data-studio-surface="market-conditions"]::backdrop {
+    background: #0008;
+  }
+  .conditionModal[data-studio-surface="market-conditions"]
+    > [data-studio-part="modal-header"]
+    > button {
+    width: 28px;
+    min-height: 28px;
+    padding: 6px;
+    margin-right: -4px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1px #0000000d,
+      0 2px 8px #0000000a;
+  }
+  .conditionModal[data-studio-surface="market-conditions"]
+    > [data-studio-part="modal-body"] {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 20px 16px;
+    overflow: hidden;
+  }
+  .conditionModal .conditionScope {
+    flex-shrink: 0;
+    min-height: 62px;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 11px;
+  }
+  .conditionModal .conditionScope select {
+    min-height: 44px;
+    padding: 8px 12px;
+    min-width: 0;
+  }
+  .conditionModal .conditionScope .conditionType select {
+    padding-left: 32px;
+  }
+  .conditionModal .regionPicker {
+    flex: 1;
+    min-height: 0;
+    border: 1px solid #ddd;
+    border-radius: 11px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .regionPicker [data-studio-part="field"] {
+    flex-shrink: 0;
+    padding: 5px;
+  }
+  .regionPicker [data-studio-part="field"] > span:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .regionPicker .selectRegions {
+    flex-shrink: 0;
+    padding: 4px 16px;
+    min-height: 28px;
+  }
+  .regionPicker .regions {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: block;
+  }
+  .regionPicker .regions > label {
+    padding: 8px 16px;
+    min-height: 38px;
+    gap: 8px;
+    align-items: flex-start;
+    min-width: 0;
+  }
+  .regionPicker .regions > label > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .regionPicker .regions {
+    scrollbar-width: thin;
+  }
+  .conditionModal[data-studio-surface="market-conditions"]
+    > [data-studio-part="modal-footer"] {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column-reverse;
+    padding: 8px 16px 14px;
+    gap: 8px;
+    border: 0;
+  }
+  .conditionModal [data-studio-part="modal-footer"] button {
+    width: 100%;
+    min-height: 28px;
+    padding-block: 4px;
+  }
+  .hierarchy {
+    display: none;
+  }
+}

@@ -4,7 +4,15 @@ import { useCaption } from "../../locale/use-caption";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { ProductRichEditor } from "./product-rich-editor";
+import { ProductOptions } from "./product-options";
+import { MediaLibrary } from "./media-library";
+import {
+  ProductPrice,
+  ProductInventory,
+  ProductShipping,
+} from "./product-details";
 import { useRouter } from "next/navigation";
 import { AdminIcon } from "../admin-icons";
 import { AdminProductArt } from "../admin-product-art";
@@ -16,10 +24,10 @@ import {
   Action,
   Badge,
   Button,
-  Check,
   Confirm,
   Empty,
   Field,
+  EditorSection,
   Header,
   Panel,
   TableFooter,
@@ -63,7 +71,7 @@ export function Products({
     );
   };
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={text("Products", "Продукти")}
         icon="product"
@@ -105,10 +113,10 @@ export function Products({
           <Action href={href("imports")}>{ui("importProducts")}</Action>
         </Empty>
       ) : (
-        <div className={s.tablePanel}>
+        <div className={s.tablePanel} data-studio-part="table-panel">
           <Toolbar {...list} tabs={["All", "Active", "Draft", "Archived"]} />
           {list.selected.length > 0 && (
-            <div className={s.bulk}>
+            <div className={s.bulk} data-studio-part="bulk">
               <strong>
                 {list.selected.length} {ui("selected_d7cbbb")}
               </strong>
@@ -122,8 +130,8 @@ export function Products({
               </Button>
             </div>
           )}
-          <div className={s.tableScroll}>
-            <table className={s.table}>
+          <div className={s.tableScroll} data-studio-part="table-scroll">
+            <table className={s.table} data-studio-part="table">
               <thead>
                 <tr>
                   <th>
@@ -175,9 +183,10 @@ export function Products({
                             src={p.image}
                             alt=""
                             className={s.thumb}
+                            data-studio-part="thumb"
                           />
                         ) : (
-                          <span className={s.thumb}>
+                          <span className={s.thumb} data-studio-part="thumb">
                             <AdminIcon name="product" />
                           </span>
                         )}
@@ -198,7 +207,7 @@ export function Products({
             </table>
           </div>
           {!rows.length && (
-            <div className={s.empty}>
+            <div className={s.empty} data-studio-part="empty">
               <h2>{ui("noProductsFound")}</h2>
               <Button
                 onClick={() => {
@@ -240,12 +249,12 @@ function EmptyProducts() {
   const list = useList();
   return (
     <main>
-      <header className={admin.pageBar}>
+      <header className={admin.pageBar} data-studio-part="page-bar">
         <h1>
           <AdminIcon name="product" />
           {text("Products", "Продукти")}
         </h1>
-        <details className={admin.pageActions}>
+        <details className={admin.pageActions} data-studio-part="page-actions">
           <summary aria-label={ui("pageActions")} data-ui-label="pageActions">
             <AdminIcon name="more" />
           </summary>
@@ -255,15 +264,20 @@ function EmptyProducts() {
           </div>
         </details>
       </header>
-      <div className={admin.pageBody}>
+      <div className={admin.pageBody} data-studio-part="page-body">
         <section
           className={admin.productPanel}
+          data-studio-part="product-panel"
           aria-label={ui("sellerProducts")}
           data-ui-label="sellerProducts"
         >
-          <div className={admin.productToolbar}>
+          <div
+            className={admin.productToolbar}
+            data-studio-part="product-toolbar"
+          >
             <nav
               className={admin.statusTabs}
+              data-studio-part="status-tabs"
               aria-label={ui("productStatus")}
               data-ui-label="productStatus"
             >
@@ -271,10 +285,14 @@ function EmptyProducts() {
                 {ui("all")}
               </Link>
             </nav>
-            <div className={admin.toolbarTools}>
+            <div
+              className={admin.toolbarTools}
+              data-studio-part="toolbar-tools"
+            >
               <button
                 type="button"
                 className={admin.toolbarIcon}
+                data-studio-part="toolbar-icon"
                 onClick={() => setFilters(!filters)}
                 aria-label={ui("searchAndFilterResults")}
                 data-ui-label="searchAndFilterResults"
@@ -284,6 +302,7 @@ function EmptyProducts() {
               <button
                 type="button"
                 className={admin.toolbarIcon}
+                data-studio-part="toolbar-icon"
                 onClick={() => setFilters(!filters)}
                 aria-label={ui("sortTheResults")}
                 data-ui-label="sortTheResults"
@@ -293,7 +312,7 @@ function EmptyProducts() {
             </div>
           </div>
           {filters && <Toolbar {...list} />}
-          <div className={admin.empty}>
+          <div className={admin.empty} data-studio-part="empty">
             <div>
               <h2>{text("Add your products", "Добави твоите продукти")}</h2>
               <p>
@@ -302,19 +321,30 @@ function EmptyProducts() {
                   "Започни с продуктите, които твоите купувачи ще харесат.",
                 )}
               </p>
-              <div className={admin.emptyActions}>
-                <Link href={href("products/new")} className={admin.primary}>
+              <div
+                className={admin.emptyActions}
+                data-studio-part="empty-actions"
+              >
+                <Link
+                  href={href("products/new")}
+                  className={admin.primary}
+                  data-studio-part="primary"
+                >
                   <AdminIcon name="plus" />
                   {text("Add product", "Добави продукт")}
                 </Link>
-                <Link href={href("imports")} className={admin.secondary}>
+                <Link
+                  href={href("imports")}
+                  className={admin.secondary}
+                  data-studio-part="secondary"
+                >
                   {text("Import", "Импорт")}
                 </Link>
               </div>
             </div>
             <AdminProductArt />
           </div>
-          <div className={admin.emptyFooter}>
+          <div className={admin.emptyFooter} data-studio-part="empty-footer">
             <h3>
               {text(
                 "From a draft to your first buyer",
@@ -327,7 +357,11 @@ function EmptyProducts() {
                 "Добави снимки, категория и цена. Прегледай запазения продукт, за да видиш какво още е нужно преди публикуване.",
               )}
             </p>
-            <Link className={admin.secondary} href={href()}>
+            <Link
+              className={admin.secondary}
+              data-studio-part="secondary"
+              href={href()}
+            >
               {text("Go to Home", "Към началото")}
             </Link>
           </div>
@@ -339,7 +373,7 @@ function EmptyProducts() {
 function ProductEditor({ id }: { id: string }) {
   const caption = useCaption();
   const ui = useTranslations("merchantUI");
-  const { store, href, update, notify } = usePreview();
+  const { store, href, text, update, notify } = usePreview();
   const router = useRouter();
   const existing = store.products.find((p) => p.id === id);
   const [product, setProduct] = useState<Product>(
@@ -348,10 +382,11 @@ function ProductEditor({ id }: { id: string }) {
   const [price, setPrice] = useState((product.price / 100).toFixed(2));
   const [error, setError] = useState("");
   const [remove, setRemove] = useState(false);
-  const description = useRef<HTMLTextAreaElement>(null);
+  const [mediaPicker, setMediaPicker] = useState(false);
+  const [seoEditor, setSeoEditor] = useState(false);
   if (id !== "new" && !existing)
     return (
-      <main className={s.editor}>
+      <main className={s.editor} data-studio-part="editor">
         <Header title={ui("productNotFound")} back={href("products")} />
         <Empty
           title={ui("thisPreviewProductIsNoLongerAvailable")}
@@ -386,25 +421,11 @@ function ProductEditor({ id }: { id: string }) {
     notify(ui("productSavedInThisFrontendPreview"));
     router.push(href(`products/${saved.id}`));
   };
-  const format = (marker: string) => {
-    const field = description.current;
-    if (!field) return;
-    const a = field.selectionStart,
-      b = field.selectionEnd;
-    patch({
-      description:
-        product.description.slice(0, a) +
-        marker +
-        product.description.slice(a, b) +
-        marker +
-        product.description.slice(b),
-    });
-    field.focus();
-  };
   return (
-    <main className={s.editor}>
+    <main className={s.editor} data-studio-part="editor">
       <nav
         className={s.editorBreadcrumb}
+        data-studio-part="editor-breadcrumb"
         aria-label={ui("productNavigation")}
         data-ui-label="productNavigation"
       >
@@ -445,13 +466,13 @@ function ProductEditor({ id }: { id: string }) {
       />
       <form onSubmit={save}>
         {error && (
-          <div className={s.error} role="alert">
+          <div className={s.error} data-studio-part="error" role="alert">
             {error}
           </div>
         )}
-        <div className={s.editorColumns}>
-          <div className={s.stack}>
-            <Panel>
+        <div className={s.editorColumns} data-studio-part="editor-layout">
+          <div className={s.stack} data-studio-part="stack">
+            <Panel part="product-core-panel">
               <Field label={ui("title")}>
                 <input
                   required
@@ -462,46 +483,15 @@ function ProductEditor({ id }: { id: string }) {
                 />
               </Field>
               <Field label={ui("description")}>
-                <div className={s.rich}>
-                  <div className={s.richTools}>
-                    <button
-                      type="button"
-                      onClick={() => format("**")}
-                      aria-label={ui("boldDescription")}
-                      data-ui-label="boldDescription"
-                    >
-                      B
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => format("_")}
-                      aria-label={ui("italicDescription")}
-                      data-ui-label="italicDescription"
-                    >
-                      <i>I</i>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        patch({ description: product.description + "\n• " })
-                      }
-                      aria-label={ui("addListItem")}
-                      data-ui-label="addListItem"
-                    >
-                      ☷
-                    </button>
-                  </div>
-                  <textarea
-                    ref={description}
-                    aria-label={ui("description")}
-                    maxLength={5000}
-                    value={product.description}
-                    onChange={(e) => patch({ description: e.target.value })}
-                    data-ui-label="description"
-                  />
-                </div>
+                <ProductRichEditor
+                  value={product.description}
+                  html={product.descriptionHtml}
+                  onChange={(description, descriptionHtml) =>
+                    patch({ description, descriptionHtml })
+                  }
+                />
               </Field>
-              <div className={s.stack}>
+              <div className={s.stack} data-studio-part="product-media">
                 <h2>{ui("media")}</h2>
                 {product.image && (
                   <>
@@ -510,6 +500,7 @@ function ProductEditor({ id }: { id: string }) {
                       width={960}
                       height={472}
                       className={s.mediaImage}
+                      data-studio-part="media-image"
                       src={product.image}
                       alt={product.title || ui("productPreview")}
                     />
@@ -518,41 +509,52 @@ function ProductEditor({ id }: { id: string }) {
                     </Button>
                   </>
                 )}
-                <div className={s.upload}>
-                  <label className={s.button}>
-                    {ui("uploadImage")}
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      aria-label={ui("uploadProductImage")}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (
-                          file.size > 120000 ||
-                          !["image/png", "image/jpeg", "image/webp"].includes(
-                            file.type,
-                          )
-                        ) {
-                          setError(
-                            ui("forThisDeviceOnlyPreviewChooseAPNGJPEGOr"),
-                          );
-                          return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = () =>
-                          patch({ image: String(reader.result) });
-                        reader.readAsDataURL(file);
-                      }}
-                      data-ui-label="uploadProductImage"
-                    />
-                  </label>
-                  <span className={s.help}>
+                <div className={s.upload} data-studio-part="upload">
+                  <div className={s.actions} data-studio-part="actions">
+                    <label className={s.button} data-studio-part="button">
+                      {text("Upload new", "Качи нова")}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        aria-label={ui("uploadProductImage")}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (
+                            file.size > 120000 ||
+                            !["image/png", "image/jpeg", "image/webp"].includes(
+                              file.type,
+                            )
+                          ) {
+                            setError(
+                              ui("forThisDeviceOnlyPreviewChooseAPNGJPEGOr"),
+                            );
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () =>
+                            patch({ image: String(reader.result) });
+                          reader.readAsDataURL(file);
+                        }}
+                        data-ui-label="uploadProductImage"
+                      />
+                    </label>
+                    <Button plain onClick={() => setMediaPicker(true)}>
+                      {text("Select existing", "Избери съществуваща")}
+                    </Button>
+                  </div>
+                  <span className={s.help} data-studio-part="field-help">
                     {ui("addASmallImageToPreviewYourProduct")}
                   </span>
                 </div>
               </div>
-              <Field label={ui("category")}>
+              <Field
+                label={ui("category")}
+                help={text(
+                  "Organizes your product for search and filters in this preview.",
+                  "Подрежда продукта за търсене и филтри в този преглед.",
+                )}
+              >
                 <select
                   value={product.category}
                   onChange={(e) => patch({ category: e.target.value })}
@@ -574,101 +576,110 @@ function ProductEditor({ id }: { id: string }) {
                 </select>
               </Field>
             </Panel>
-            <Panel title={ui("price")}>
-              <div className={s.fields}>
-                <Field label={ui("price")}>
-                  <input
-                    inputMode="decimal"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                  />
-                  <span className={s.help}>EUR</span>
-                </Field>
-                <Field label={ui("condition")}>
-                  <select
-                    value={product.condition}
-                    onChange={(e) => patch({ condition: e.target.value })}
-                  >
-                    <option value="">{ui("chooseProductCondition")}</option>
-                    {[
-                      "New",
-                      "Used - like new",
-                      "Used - good",
-                      "Refurbished",
-                    ].map((v) => (
-                      <option key={v} value={v}>
-                        {caption(v)}
+            <ProductPrice
+              product={product}
+              patch={patch}
+              price={price}
+              setPrice={setPrice}
+            />
+            <Panel title={ui("condition")} part="product-condition">
+              <Field label={ui("condition")}>
+                <select
+                  value={product.condition}
+                  onChange={(event) => patch({ condition: event.target.value })}
+                >
+                  <option value="">{ui("chooseProductCondition")}</option>
+                  {["New", "Used - like new", "Used - good", "Refurbished"].map(
+                    (value) => (
+                      <option key={value} value={value}>
+                        {caption(value)}
                       </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
+                    ),
+                  )}
+                </select>
+              </Field>
             </Panel>
-            <Panel title={ui("inventory")}>
-              <div className={s.fields}>
-                <Field label={ui("sKUStockKeepingUnit")}>
-                  <input
-                    maxLength={80}
-                    value={product.sku}
-                    onChange={(e) => patch({ sku: e.target.value })}
-                  />
-                </Field>
-                <Field label={ui("availableQuantity")}>
-                  <input
-                    type="number"
-                    min={0}
-                    max={999999}
-                    step={1}
-                    value={product.quantity}
-                    onChange={(e) =>
-                      patch({ quantity: Number(e.target.value) })
+            <ProductInventory product={product} patch={patch} />
+            <ProductShipping product={product} patch={patch} />
+            <EditorSection title={ui("variants")} part="product-variants">
+              <ProductOptions product={product} patch={patch} />
+            </EditorSection>
+            <EditorSection
+              title={text("Product metafields", "Метаполета на продукта")}
+              part="product-metafields"
+            >
+              <details data-studio-part="product-metafield">
+                <summary>{text("Disclosures", "Уточнения")}</summary>
+                <Field
+                  label={text("Product disclosures", "Уточнения за продукта")}
+                  help={text(
+                    "Saved only in this device's preview.",
+                    "Запазва се само в прегледа на това устройство.",
+                  )}
+                >
+                  <textarea
+                    maxLength={5000}
+                    value={product.disclosures ?? ""}
+                    onChange={(event) =>
+                      patch({ disclosures: event.target.value })
                     }
                   />
                 </Field>
-              </div>
-            </Panel>
-            <Panel title={ui("shipping")}>
-              <Check
-                label={ui("thisIsAPhysicalProduct")}
-                checked={product.shipping}
-                onChange={() => patch({ shipping: !product.shipping })}
-              />
-              <p className={s.help}>
-                {ui("ratesAndPickupOptionsAreConfiguredInShippingAndDelivery")}
-              </p>
-              <Action href={href("settings/shipping")}>
-                {ui("manageShipping")}
-              </Action>
-            </Panel>
-            <Panel title={ui("variants")}>
-              <Field
-                label={ui("options")}
-                help={ui("addSizesColorsOrOtherChoicesForThisProduct")}
-              >
-                <input
-                  placeholder={ui("sizeSML")}
-                  maxLength={300}
-                  value={product.options}
-                  onChange={(e) => patch({ options: e.target.value })}
-                />
-              </Field>
-              {product.options && (
-                <div className={s.success}>{product.options}</div>
+              </details>
+            </EditorSection>
+            <EditorSection
+              title={ui("searchEngineListing")}
+              part="product-seo"
+              action={
+                <Button
+                  plain
+                  aria-expanded={seoEditor}
+                  onClick={() => setSeoEditor(!seoEditor)}
+                >
+                  {text("Edit", "Редактиране")}
+                </Button>
+              }
+            >
+              {seoEditor ? (
+                <>
+                  <Field label={text("Page title", "Заглавие на страницата")}>
+                    <input
+                      maxLength={160}
+                      value={product.seoTitle ?? product.title}
+                      onChange={(event) =>
+                        patch({ seoTitle: event.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label={text("Meta description", "Мета описание")}>
+                    <textarea
+                      maxLength={5000}
+                      value={product.seoDescription ?? product.description}
+                      onChange={(event) =>
+                        patch({ seoDescription: event.target.value })
+                      }
+                    />
+                  </Field>
+                </>
+              ) : product.title ? (
+                <>
+                  <h3>{product.seoTitle || product.title}</h3>
+                  <p className={s.help}>treido.eu · {store.settings.handle}</p>
+                  <p>
+                    {(product.seoDescription ?? product.description).slice(
+                      0,
+                      160,
+                    )}
+                  </p>
+                </>
+              ) : (
+                <p className={s.muted}>
+                  {ui("addADescriptionToSeeAPreviewOfYourListing")}
+                </p>
               )}
-            </Panel>
-            <Panel title={ui("searchEngineListing")}>
-              <h3>{product.title || ui("productTitle")}</h3>
-              <p className={s.help}>
-                treido.eu · {store.settings.handle} · {product.id}
-              </p>
-              <p>
-                {product.description.slice(0, 160) ||
-                  ui("addADescriptionToSeeAPreviewOfYourListing")}
-              </p>
-            </Panel>
+            </EditorSection>
           </div>
-          <aside className={s.editorSide}>
+          <aside className={s.editorSide} data-studio-part="editor-side">
             <Panel title={ui("status")}>
               <Field label={ui("productStatus")}>
                 <select
@@ -684,18 +695,28 @@ function ProductEditor({ id }: { id: string }) {
                   ))}
                 </select>
               </Field>
-              <p className={s.help}>
+              <p className={s.help} data-studio-part="field-help">
                 {ui("previewStatusOnlyProductsAreNotPublished")}
               </p>
             </Panel>
             <Panel title={ui("publishing")}>
               <p>{ui("treidoMarketplace")}</p>
               <Badge>{product.status}</Badge>
-              <p className={s.help}>
+              <p className={s.help} data-studio-part="field-help">
                 {ui("visibilityInYourStorefrontPreviewFollowsThisStatus")}
               </p>
             </Panel>
-            <Panel title={ui("productOrganization")}>
+            <Panel
+              title={ui("productOrganization")}
+              part="product-organization"
+            >
+              <Field label={text("Type", "Тип")}>
+                <input
+                  value={product.type ?? ""}
+                  maxLength={100}
+                  onChange={(event) => patch({ type: event.target.value })}
+                />
+              </Field>
               <Field label={ui("vendor")}>
                 <input
                   value={product.vendor}
@@ -725,9 +746,21 @@ function ProductEditor({ id }: { id: string }) {
                 />
               </Field>
             </Panel>
+            <Panel
+              title={text("Theme template", "Шаблон на магазина")}
+              part="product-template"
+            >
+              <p>{text("Default product", "Стандартен продукт")}</p>
+              <p className={s.help}>
+                {text(
+                  "The Treido storefront preview uses one fixed layout.",
+                  "Прегледът на магазина в Treido използва един фиксиран изглед.",
+                )}
+              </p>
+            </Panel>
           </aside>
         </div>
-        <div className={s.saveBar}>
+        <div className={s.saveBar} data-studio-part="save-bar">
           {existing && (
             <Button danger onClick={() => setRemove(true)}>
               {ui("deleteProduct")}
@@ -739,6 +772,12 @@ function ProductEditor({ id }: { id: string }) {
           </Button>
         </div>
       </form>
+      {mediaPicker && (
+        <MediaLibrary
+          onClose={() => setMediaPicker(false)}
+          onSelect={(image) => patch({ image })}
+        />
+      )}
       {remove && (
         <Confirm
           title={ui("deletePreviewProduct")}
@@ -782,7 +821,7 @@ export function Inventory() {
     notify(ui("previewInventoryUpdated"));
   };
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={ui("inventory")}
         icon="product"
@@ -792,10 +831,10 @@ export function Inventory() {
           </Button>
         }
       />
-      <div className={s.tablePanel}>
+      <div className={s.tablePanel} data-studio-part="table-panel">
         <Toolbar {...list} />
-        <div className={s.tableScroll}>
-          <table className={s.table}>
+        <div className={s.tableScroll} data-studio-part="table-scroll">
+          <table className={s.table} data-studio-part="table">
             <thead>
               <tr>
                 <th>{ui("product")}</th>
@@ -810,6 +849,7 @@ export function Inventory() {
                   <td>
                     <Link
                       className={s.cellLink}
+                      data-studio-part="cell-link"
                       href={href(`products/${p.id}`)}
                     >
                       {p.title}
@@ -818,7 +858,7 @@ export function Inventory() {
                   <td>{p.sku || "—"}</td>
                   <td>{store.settings.city || ui("primaryLocation")}</td>
                   <td>
-                    <label className={s.field}>
+                    <label className={s.field} data-studio-part="field">
                       <input
                         aria-label={ui("quantityForValue1", {
                           value1: p.title ?? "",
@@ -884,14 +924,14 @@ export function Imports() {
     setCsv("");
   };
   return (
-    <main className={s.editor}>
+    <main className={s.editor} data-studio-part="editor">
       <Header title={ui("importProducts")} back={href("products")} />
-      <div className={s.stack}>
+      <div className={s.stack} data-studio-part="stack">
         <Panel title={ui("addProductsWithACSV")}>
           <p>
             {ui("reviewTheRowsBeforeImportingMatchingSKUsUpdateTheExisting")}
           </p>
-          <div className={s.upload}>
+          <div className={s.upload} data-studio-part="upload">
             <input
               type="file"
               accept=".csv,text/csv"
@@ -950,14 +990,14 @@ export function Imports() {
           </Button>
         </Panel>
         {error && (
-          <p className={s.error} role="alert">
+          <p className={s.error} data-studio-part="error" role="alert">
             {error}
           </p>
         )}
         {result && (
           <Panel title={ui("importReview")}>
             {result.errors.length > 0 ? (
-              <div className={s.error} role="alert">
+              <div className={s.error} data-studio-part="error" role="alert">
                 {result.errors.map((e) => (
                   <p key={e}>{e}</p>
                 ))}
@@ -967,8 +1007,8 @@ export function Imports() {
                 {result.products.length} {ui("validProductsReadyToImport")}
               </p>
             )}
-            <div className={s.tableScroll}>
-              <table className={s.table}>
+            <div className={s.tableScroll} data-studio-part="table-scroll">
+              <table className={s.table} data-studio-part="table">
                 <thead>
                   <tr>
                     <th>{ui("title")}</th>

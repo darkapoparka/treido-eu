@@ -1,6 +1,9 @@
 .frame {
   min-height: 100dvh;
 }
+.resize {
+  display: none;
+}
 .settingsPhoneMini {
   display: none;
 }
@@ -193,6 +196,7 @@
 .surface[open] {
   display: flex;
   flex-direction: column;
+  z-index: 40;
 }
 .surface::backdrop {
   background: transparent;
@@ -454,17 +458,26 @@
 }
 @media (min-width: 1100px) {
   .frame[data-mini-docked] [data-admin-shell] {
-    padding-right: 364px;
+    padding-right: calc(var(--studio-mini-width, 356px) + 8px);
   }
   .frame[data-mini-docked] [id="settings-content"] {
-    margin-right: 364px;
+    margin-right: calc(var(--studio-mini-width, 356px) + 8px);
   }
   .frame[data-mini-docked] .dock {
     visibility: hidden;
   }
   .frame[data-mini-docked] .surface {
     inset: 4px 4px 4px auto;
-    width: 356px;
+    width: var(--studio-mini-width, 356px);
+  }
+  .frame[data-mini-docked] .resize {
+    display: block;
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 6px;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 5;
   }
   .frame[data-mini-docked] .surface .body {
     padding-inline: 16px;

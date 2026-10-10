@@ -3,6 +3,7 @@ export type AdminIconName =
   | "product"
   | "search"
   | "menu"
+  | "hamburger"
   | "close"
   | "back"
   | "plus"
@@ -18,16 +19,27 @@ export type AdminIconName =
   | "analytics"
   | "bell"
   | "sort"
+  | "filter"
   | "more"
   | "store"
   | "arrow"
-  | "check";
+  | "chevron"
+  | "delete"
+  | "edit"
+  | "check"
+  | "calendar";
 
 const paths: Record<AdminIconName, string> = {
+  calendar:
+    "M5 2v4m8-4v4M3 8h12M3 4h12v7M3 4v12h7m7-2a4 4 0 1 0-8 0 4 4 0 0 0 8 0Zm-4-2v2l1 1",
+  filter: "M3 5h14M3 10h14M3 15h14M7 3v4M13 8v4M8 13v4",
+  delete: "M4 5h12M8 2h4l1 3M6 5l1 12h6l1-12M9 8v6m2-6v6",
+  edit: "m4 13 9-9 3 3-9 9-4 1 1-4ZM12 5l3 3",
   home: "m3 9 7-6 7 6v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9Zm4 8v-5h6v5",
   product: "M10 3h5l2 6-7 8-7-5 4-8 3-1ZM13 6h.01",
   search: "M8.5 14a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11Zm4-1 4 4",
   menu: "M4 3h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 0v14",
+  hamburger: "M3 5h14M3 10h14M3 15h14",
   close: "m5 5 10 10M15 5 5 15",
   back: "m11 5-5 5 5 5M6 10h10",
   plus: "M10 4v12M4 10h12",
@@ -50,6 +62,7 @@ const paths: Record<AdminIconName, string> = {
   more: "M4 10h.01M10 10h.01M16 10h.01",
   store: "M3 8h14l-2-5H5L3 8Zm1 0v9h12V8M8 17v-5h4v5",
   arrow: "M4 10h12m-5-5 5 5-5 5",
+  chevron: "m5 8 5 5 5-5",
   check: "m4 10 4 4 8-8",
 };
 

@@ -47,6 +47,7 @@ export function useSettingsSearch() {
     overlay: (
       <dialog
         ref={dialog}
+        data-studio-part="search-dialog"
         className={`${admin.searchDialog} ${admin.previewSearchDialog}`}
         aria-label={text("Search your store", "Търси в магазина")}
         onClose={() => {

@@ -1,0 +1,125 @@
+.combinationText {
+  margin: 0;
+  line-height: 20px;
+}
+.combinationPicker {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: min(350px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid #e3e3e3;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px #0003;
+  background: white;
+  color: #303030;
+  font:
+    13px/20px TreidoAdmin,
+    Inter,
+    Helvetica,
+    sans-serif;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+.combinationPicker h3 {
+  font: inherit;
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+.combinationPicker > div + div {
+  margin-top: 16px;
+}
+.combinationPicker p {
+  margin: 0 0 0 24px;
+}
+.summary {
+  display: grid;
+  gap: 32px;
+  padding-top: 8px;
+}
+.summary section {
+  display: grid;
+  gap: 8px;
+}
+.summary h3,
+.summary p {
+  margin: 0;
+}
+.summary ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.summary li {
+  margin: 8px 0;
+}
+.scheduleButton {
+  justify-content: space-between;
+  width: 100%;
+  background: #f7f7f7;
+  border-radius: 20px;
+}
+.schedulePopover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 16px;
+  box-sizing: border-box;
+  width: 286px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  background: white;
+  color: #303030;
+  border: 1px solid #e3e3e3;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px #0003;
+  font:
+    13px/20px TreidoAdmin,
+    Inter,
+    Helvetica,
+    sans-serif;
+}
+.schedulePopover [data-studio-part="draft-date-fields"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.schedulePopover [data-studio-part="draft-date-fields"] > div:first-child {
+  order: 3;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.schedulePopover
+  [data-studio-part="draft-date-fields"]
+  > div:first-child
+  > label
+  > span:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.schedulePopover [data-studio-part="draft-date-fields"] > div:nth-child(2) {
+  order: 1;
+  margin-bottom: -32px;
+}
+.schedulePopover [data-studio-part="draft-date-fields"] > div:nth-child(3) {
+  order: 2;
+}
+.schedulePopover input {
+  min-height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 4px 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.scheduleActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}

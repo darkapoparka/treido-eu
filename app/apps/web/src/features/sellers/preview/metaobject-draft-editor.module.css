@@ -1,0 +1,487 @@
+.editor {
+  max-width: 1000px;
+}
+.editor > section {
+  margin-bottom: 32px;
+}
+.editor [data-studio-panel="definition-core"] button {
+  justify-content: flex-start;
+  width: fit-content;
+  padding-left: 0;
+}
+.editor [data-editor-section="definition-fields"] [data-studio-part="panel"] {
+  padding: 0;
+  overflow: visible;
+}
+.editor
+  [data-editor-section="definition-fields"]
+  [data-studio-part="panel"]
+  > div {
+  gap: 0;
+}
+.editor
+  [data-editor-section="definition-fields"]
+  [data-studio-part="panel"]
+  > div
+  > button {
+  justify-content: flex-start;
+  padding: 12px 16px;
+  min-height: 44px;
+}
+.field {
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid #e3e3e3;
+}
+.fields {
+  display: grid;
+  gap: 0;
+}
+.fieldRow {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 8px;
+}
+.drag {
+  width: 12px;
+  flex: 0 0 12px;
+  color: #aaa;
+}
+.fieldRow > button {
+  grid-column: 3;
+  grid-row: 1;
+  width: 24px;
+  padding: 4px;
+}
+.fieldRow > button[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.labelInput {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+}
+.labelInput > input {
+  width: 100%;
+  padding-right: 32px !important;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid #8a8a8a;
+  border-radius: 10px;
+  background: white;
+  color: #303030;
+  font: inherit;
+}
+.required {
+  position: absolute;
+  inset: 0 4px 0 auto;
+  width: 28px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.required input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  cursor: pointer;
+}
+.required > span {
+  color: #8a8a8a;
+  font-size: 15px;
+  pointer-events: none;
+}
+.required input:checked + span {
+  color: #303030;
+  padding: 2px;
+  border-radius: 4px;
+  background: #e3e3e3;
+}
+.required input:focus-visible + span {
+  outline: 2px solid #005bd3;
+  outline-offset: 3px;
+}
+.typeRow {
+  display: flex;
+  align-items: center;
+  border: 1px solid #8a8a8a;
+  border-radius: 10px;
+  padding: 4px;
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0;
+  min-width: 0;
+}
+.typeRow select {
+  width: 72px;
+  flex: 0 0 72px;
+  background-color: #f1f1f1;
+  border: 0;
+  box-shadow: none;
+  min-height: 32px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+.typeRow > button {
+  min-width: 0;
+  flex: 1;
+  padding: 4px 6px;
+  justify-content: space-between;
+}
+.typeRow svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.expanded {
+  padding: 12px 0 4px 20px;
+  display: grid;
+  gap: 12px;
+}
+.expanded p {
+  margin: 0 0 8px;
+}
+.tabs {
+  display: flex;
+  border-bottom: 0;
+  gap: 12px;
+}
+.tabs button[aria-selected="true"] {
+  background: #e3e3e3;
+  border-radius: 6px;
+}
+.bounds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.bounds label > span:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.validationGroup {
+  background: #f7f7f7;
+  padding: 12px;
+  border-radius: 8px;
+}
+.search input:focus-visible {
+  outline: 0 !important;
+  box-shadow: none;
+}
+.fieldActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.options {
+  margin: -16px;
+}
+.toggle {
+  position: relative;
+  display: flex;
+  min-height: 48px;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e3e3e3;
+  cursor: pointer;
+}
+.toggle:last-child {
+  border: 0;
+}
+.toggle > input {
+  position: absolute;
+  width: 32px;
+  height: 18px;
+  inset: auto 16px auto auto;
+  opacity: 0;
+}
+.toggle > span:last-child {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  flex: 0 0 32px;
+  border-radius: 20px;
+  background: #aaa;
+  border: 1px solid #aaa;
+}
+.toggle > span:last-child::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+}
+.toggle > input:checked + span {
+  background: #303030;
+  border-color: #303030;
+}
+.toggle > input:checked + span::after {
+  left: 16px;
+}
+.toggle > input:focus-visible + span {
+  outline: 2px solid #005bd3;
+  outline-offset: 3px;
+}
+.toggle:has(input:disabled) {
+  cursor: default;
+  color: #616161;
+}
+.optionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  margin: 0 -16px;
+}
+.editor
+  [data-editor-section="definition-field-options"]
+  [data-studio-part="panel"]
+  > div {
+  gap: 0;
+}
+.optionRow:first-child {
+  margin-top: -16px;
+}
+.optionRow:last-child {
+  margin-bottom: -16px;
+}
+.optionRow + .optionRow {
+  border-top: 1px solid #e3e3e3;
+}
+.optionRow > button,
+.filterControls > button {
+  background: #f1f1f1;
+  border-radius: 20px;
+  min-height: 28px;
+  padding: 2px 8px;
+  gap: 8px;
+}
+.optionRow > button > span:nth-child(2) {
+  flex: 1;
+}
+.optionRow svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.filterControls {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.filterChips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.filterChips > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #e3e3e3;
+  border-radius: 6px;
+  padding-left: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.filterChips button {
+  padding: 4px;
+  min-height: 24px;
+}
+.optionPopover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 200px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid #e3e3e3;
+  border-radius: 18px;
+  background: white;
+  color: #303030;
+  box-shadow: 0 8px 20px #0003;
+  font:
+    13px/20px TreidoAdmin,
+    Inter,
+    Helvetica,
+    sans-serif;
+  overflow: auto;
+}
+.optionPopover button,
+.optionPopover label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.optionPopover button[aria-selected="true"],
+.optionPopover button:hover,
+.optionPopover label:hover {
+  background: #f1f1f1;
+}
+.optionPopover input {
+  accent-color: #303030;
+}
+.help {
+  color: #616161;
+  font-size: 12px;
+}
+.keyModal [data-studio-part="modal-header"] {
+  border: 0;
+  background: white;
+}
+.keyModal [data-studio-part="modal-body"] {
+  gap: 4px;
+  padding-top: 8px;
+  padding-bottom: 0;
+}
+.keyModal .help {
+  margin: 0;
+}
+.keyModal [data-studio-part="modal-footer"] {
+  border: 0;
+}
+.legacy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #616161;
+}
+.typePicker {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 16px;
+  width: min(360px, calc(100vw - 32px));
+  height: 345px;
+  box-sizing: border-box;
+  border: 1px solid #e3e3e3;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px #0003;
+  color: #303030;
+  font:
+    13px/20px TreidoAdmin,
+    Inter,
+    Helvetica,
+    sans-serif;
+  background: white;
+  overflow: hidden;
+}
+.typePicker:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+.search svg {
+  width: 16px;
+  height: 16px;
+}
+.search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  outline: 0;
+}
+.search:focus-within {
+  outline: 2px solid #005bd3;
+  outline-offset: 1px;
+}
+.typeChoices {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+.typeChoices section + section {
+  border-top: 1px solid #e3e3e3;
+}
+.typeChoices h3 {
+  font: inherit;
+  color: #616161;
+  margin: 8px 0;
+}
+.typeChoices button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.typeChoices button:hover,
+.typeChoices button:focus-visible {
+  background: #f1f1f1;
+}
+.typeChoices button span {
+  width: 16px;
+  flex: 0 0 16px;
+  font-weight: 600;
+}
+@media (max-width: 420px) {
+  .bounds {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .optionRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .optionRow > button,
+  .filterControls > button {
+    width: 100%;
+  }
+}
+@media (min-width: 768px) {
+  .fieldRow {
+    grid-template-columns: 12px minmax(0, 1fr) minmax(0, 1fr) 24px;
+  }
+  .typeRow {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .fieldRow > button {
+    grid-column: 4;
+  }
+}

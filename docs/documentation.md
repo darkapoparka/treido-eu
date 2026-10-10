@@ -28,9 +28,9 @@ Keep historical receipts dated and immutable in meaning. Add a newer result rath
 
 ## Reviewable claims and concurrent writers
 
-Claim exact files in the existing task before editing. Re-read a shared document immediately before a surgical patch; compare against the version actually inspected and stop on a conflicting change. Preserve other writers' completed receipts and dirty files. New source/config/lockfile changes need their own checks, even when accompanying a documentation task. Do not run broad formatting or type generation against a running preview's files.
+Record exact file ownership in the existing task when another active writer overlaps. A small independent edit needs no new task or claim. Re-read a shared document immediately before a surgical patch; compare against the version actually inspected and stop on a conflicting change. Preserve other writers' completed receipts and dirty files. New source/config/lockfile changes need their own checks, even when accompanying a documentation task. Do not run broad formatting or type generation against a running preview's files.
 
-A handoff contains the task ID, canonical path, changed files, current authority/data mode, commands actually run, visual evidence and allowed differences, blockers, one concrete next action, and any owned running resources. Release the claim. It does not say “everything finished” when mandatory checks remain blocked.
+Keep ordinary handoffs to the result, affected files, checks and material limitations. Include detailed revision/data-mode/visual/resource evidence when integration or release requires it; release an actual overlapping-work claim when finished. It does not say “everything finished” when mandatory checks remain blocked.
 
 ## Maintained documentation check
 

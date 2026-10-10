@@ -24,6 +24,16 @@ export const previewSections = [
   "team",
   "settings",
   "notifications",
+  "purchase-orders",
+  "transfers",
+  "gift-cards",
+  "companies",
+  "menus",
+  "blog-posts",
+  "catalogs",
+  "rollouts",
+  "live",
+  "agentic",
 ] as const;
 export type PreviewSection = (typeof previewSections)[number];
 export type PreviewRoute = { section: PreviewSection; detail?: string };
@@ -32,6 +42,8 @@ export const settingsSections = [
   "plan",
   "billing",
   "users",
+  "roles",
+  "security",
   "payments",
   "checkout",
   "customer-accounts",
@@ -40,6 +52,7 @@ export const settingsSections = [
   "locations",
   "markets",
   "apps",
+  "sales-channels",
   "domains",
   "events",
   "notifications",
@@ -84,6 +97,7 @@ export function adminPreviewEnabled(env: Record<string, string | undefined>) {
 }
 
 export const labels: Record<PreviewSection, readonly [string, string]> = {
+  agentic: ["Agentic", "AI канали"],
   home: ["Home", "Начало"],
   products: ["Products", "Продукти"],
   collections: ["Collections", "Колекции"],
@@ -109,4 +123,13 @@ export const labels: Record<PreviewSection, readonly [string, string]> = {
   team: ["Team", "Екип"],
   settings: ["Settings", "Настройки"],
   notifications: ["Notifications", "Известия"],
+  "purchase-orders": ["Purchase orders", "Поръчки към доставчици"],
+  transfers: ["Transfers", "Трансфери"],
+  "gift-cards": ["Gift cards", "Подаръчни карти"],
+  companies: ["Companies", "Компании"],
+  menus: ["Menus", "Менюта"],
+  "blog-posts": ["Blog posts", "Публикации в блога"],
+  catalogs: ["Catalogs", "Каталози"],
+  rollouts: ["Rollouts", "Пускания"],
+  live: ["Live view", "Изглед на живо"],
 };

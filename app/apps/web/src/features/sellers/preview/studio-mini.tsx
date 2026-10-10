@@ -2,7 +2,14 @@
 import { useLocale as useIntlLocale } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useCallback,
+  useRef,
+  useState,
+  type ReactNode,
+  type CSSProperties,
+} from "react";
 import { AdminIcon } from "../admin-icons";
 import { usePreview } from "./context";
 import { money, put } from "./model";
@@ -15,7 +22,6 @@ import {
   MiniAvatar,
   StudioMiniComposer,
   StudioMiniDock,
-  StudioMiniLauncher,
 } from "./studio-mini-composer";
 import {
   miniDraft,
@@ -25,6 +31,17 @@ import {
 } from "./studio-mini-model";
 import s from "./studio-mini.module.css";
 
+type DockSession = {
+  mode: MiniMode;
+  width: number;
+  question: string;
+  answer: MiniAnswer | null;
+  recents: string[];
+};
+// Client navigation can remount the catch-all preview page. Retain only the
+// current document's nonmodal assistant session; a reload starts closed.
+const dockSessions = new Map<string, DockSession>();
+
 export function StudioMiniProvider({ children }: { children: ReactNode }) {
   const { store, storeId, text, href, update, notify, largeText } =
     usePreview();
@@ -33,30 +50,97 @@ export function StudioMiniProvider({ children }: { children: ReactNode }) {
   const inSettings = pathname.includes("/settings");
   const panel = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
-  const [opened, setOpened] = useState(false);
-  const [expanded, setExpanded] = useState(true);
-  const [mode, setMode] = useState<MiniMode>("chat");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<MiniAnswer | null>(null);
-  const [recents, setRecents] = useState<string[]>([]);
+  const [retained] = useState(() =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 1100px)").matches
+      ? dockSessions.get(storeId)
+      : undefined,
+  );
+  const [opening, setOpening] = useState({ pathname, opened: !!retained });
+  const [expanded, setExpanded] = useState(!retained);
+  const [panelWidth, setPanelWidth] = useState(retained?.width ?? 356);
+  const [desktopDock, setDesktopDock] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1100px)").matches,
+  );
+  const modal = !desktopDock || expanded;
+  if (opening.pathname !== pathname)
+    setOpening({ pathname, opened: opening.opened && !modal });
+  const opened = opening.opened && (opening.pathname === pathname || !modal);
+  const resizeOrigin = useRef<{ x: number; width: number } | null>(null);
+  const resize = (width: number) =>
+    setPanelWidth(
+      Math.max(
+        320,
+        Math.min(Math.min(600, Math.max(320, window.innerWidth - 288)), width),
+      ),
+    );
+  const [mode, setMode] = useState<MiniMode>(retained?.mode ?? "chat");
+  const [question, setQuestion] = useState(retained?.question ?? "");
+  const [answer, setAnswer] = useState<MiniAnswer | null>(
+    retained?.answer ?? null,
+  );
+  const [recents, setRecents] = useState<string[]>(retained?.recents ?? []);
   const storageKey = `treido-studio-mini-${storeId}-recents`;
-  const close = () => {
+  const close = useCallback(() => {
+    dockSessions.delete(storeId);
     panel.current?.close();
-    setOpened(false);
+    setOpening((previous) => ({ ...previous, opened: false }));
     if (returnFocus.current?.isConnected)
       returnFocus.current.focus({ preventScroll: true });
-  };
+  }, [storeId]);
   useEffect(() => {
-    panel.current?.close();
-  }, [pathname]);
+    if (opened && !modal)
+      dockSessions.set(storeId, {
+        mode,
+        width: panelWidth,
+        question,
+        answer,
+        recents,
+      });
+    else dockSessions.delete(storeId);
+  }, [opened, modal, storeId, mode, panelWidth, question, answer, recents]);
+  useEffect(() => {
+    const breakpoint = window.matchMedia("(min-width: 1100px)");
+    const updateDock = () => setDesktopDock(breakpoint.matches);
+    updateDock();
+    breakpoint.addEventListener("change", updateDock);
+    return () => breakpoint.removeEventListener("change", updateDock);
+  }, []);
+  useEffect(() => {
+    const dialog = panel.current;
+    if (!dialog) return;
+    if (!opened) {
+      dialog.close();
+      return;
+    }
+    if (dialog.open && dialog.matches(":modal") === modal) return;
+    const focus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    dialog.close();
+    if (modal) dialog.showModal();
+    else dialog.show();
+    if (focus && dialog.contains(focus)) focus.focus({ preventScroll: true });
+  }, [opened, modal]);
   useEffect(() => {
     if (!opened) return;
     const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (modal) document.body.style.overflow = "hidden";
     const shortcut = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         panel.current?.close();
-        setOpened(false);
+        setOpening((previous) => ({ ...previous, opened: false }));
+      }
+      if (
+        event.key === "Escape" &&
+        !modal &&
+        !document.querySelector("dialog:modal")
+      ) {
+        event.preventDefault();
+        close();
       }
     };
     document.addEventListener("keydown", shortcut, true);
@@ -64,16 +148,16 @@ export function StudioMiniProvider({ children }: { children: ReactNode }) {
       document.body.style.overflow = previous;
       document.removeEventListener("keydown", shortcut, true);
     };
-  }, [opened]);
+  }, [opened, modal, close]);
   useEffect(() => {
     if (opened && mode === "chat")
       panel.current
         ?.querySelector<HTMLTextAreaElement>("form textarea")
-        ?.focus();
+        ?.focus({ preventScroll: true });
   }, [opened, mode]);
   const open = (next: MiniMode = "chat") => {
     if (!panel.current?.open) {
-      setExpanded(pathname === "/admin-preview");
+      setExpanded(false);
       try {
         setRecents(readMiniRecents(sessionStorage.getItem(storageKey)));
       } catch {
@@ -83,10 +167,9 @@ export function StudioMiniProvider({ children }: { children: ReactNode }) {
         document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
-      panel.current?.showModal();
     }
     setMode(next);
-    setOpened(true);
+    setOpening({ pathname, opened: true });
   };
   const ask = (prompt: string) => {
     const bounded = prompt.trim().slice(0, 500);
@@ -129,33 +212,94 @@ export function StudioMiniProvider({ children }: { children: ReactNode }) {
     router.push(href(`products/${product.id}`));
   };
   return (
-    <StudioMiniContext.Provider value={{ open, ask }}>
+    <StudioMiniContext.Provider value={{ open, ask, docked: opened && !modal }}>
       <div
         className={s.frame}
+        data-studio-part="mini-frame"
+        style={{ "--studio-mini-width": `${panelWidth}px` } as CSSProperties}
         data-mini-settings={inSettings || undefined}
         data-mini-docked={(opened && !expanded) || undefined}
       >
         {children}
         {pathname !== "/admin-preview" && <StudioMiniDock />}
-        {inSettings && (
-          <div className={s.settingsPhoneMini}>
-            <StudioMiniLauncher phone />
-          </div>
-        )}
         <dialog
           data-studio-mini=""
+          data-studio-part="mini-surface"
+          data-mini-expanded={expanded}
+          aria-modal={opened && modal ? true : undefined}
+          role={opened && !modal ? "complementary" : undefined}
           ref={panel}
           className={`${s.surface} ${largeText ? s.large : ""}`}
           aria-label={text("Sell Helper Mini", "Мини помощник за продажби")}
           onClose={() => {
-            setOpened(false);
+            if (panel.current?.open) return;
+            setOpening((previous) => ({ ...previous, opened: false }));
             if (returnFocus.current?.isConnected)
               returnFocus.current.focus({ preventScroll: true });
           }}
+          onCancel={() => close()}
         >
           {opened && (
             <>
-              <header className={s.header}>
+              {!expanded && (
+                <div
+                  className={s.resize}
+                  data-studio-part="mini-resize"
+                  role="separator"
+                  aria-orientation="vertical"
+                  aria-label={text(
+                    "Resize Sell Helper",
+                    "Промяна на ширината на помощника",
+                  )}
+                  aria-valuemin={320}
+                  aria-valuemax={600}
+                  aria-valuenow={panelWidth}
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (
+                      ["ArrowLeft", "ArrowRight", "Home", "End"].includes(
+                        event.key,
+                      )
+                    ) {
+                      event.preventDefault();
+                      resize(
+                        event.key === "Home"
+                          ? 320
+                          : event.key === "End"
+                            ? 600
+                            : panelWidth +
+                              (event.key === "ArrowLeft" ? 20 : -20),
+                      );
+                    }
+                  }}
+                  onPointerDown={(event) => {
+                    resizeOrigin.current = {
+                      x: event.clientX,
+                      width: panelWidth,
+                    };
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                  }}
+                  onPointerMove={(event) => {
+                    if (resizeOrigin.current)
+                      resize(
+                        resizeOrigin.current.width +
+                          resizeOrigin.current.x -
+                          event.clientX,
+                      );
+                  }}
+                  onPointerUp={(event) => {
+                    resizeOrigin.current = null;
+                    if (event.currentTarget.hasPointerCapture(event.pointerId))
+                      event.currentTarget.releasePointerCapture(
+                        event.pointerId,
+                      );
+                  }}
+                  onPointerCancel={() => {
+                    resizeOrigin.current = null;
+                  }}
+                />
+              )}
+              <header data-studio-part="mini-header" className={s.header}>
                 <button
                   type="button"
                   className={s.recentPill}
@@ -254,9 +398,12 @@ export function StudioMiniProvider({ children }: { children: ReactNode }) {
                 </section>
               ) : (
                 <>
-                  <div className={s.body}>
+                  <div data-studio-part="mini-body" className={s.body}>
                     {mode === "chat" && !answer ? (
-                      <div className={s.greeting}>
+                      <div
+                        data-studio-part="mini-greeting"
+                        className={s.greeting}
+                      >
                         <MiniAvatar size={36} />
                         <h2>
                           {text(
@@ -341,7 +488,7 @@ export function StudioMiniProvider({ children }: { children: ReactNode }) {
                       </div>
                     )}
                   </div>
-                  <div className={s.bottom}>
+                  <div data-studio-part="mini-bottom" className={s.bottom}>
                     <StudioMiniComposer />
                   </div>
                 </>

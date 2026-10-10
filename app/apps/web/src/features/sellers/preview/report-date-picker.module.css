@@ -1,0 +1,240 @@
+.popover {
+  position: fixed;
+  margin: 0;
+  width: 700px;
+  max-width: calc(100dvw - 32px);
+  height: 392px;
+  max-height: calc(100dvh - 32px);
+  border: 1px solid #e3e3e3;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 4px 12px #0002;
+  padding: 0;
+  overflow: hidden;
+}
+.popover:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+.body {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  min-height: 0;
+  flex: 1;
+}
+.popover[data-comparison="true"] .body {
+  display: flex;
+  flex-direction: column;
+}
+.phonePreset {
+  flex-shrink: 0;
+  width: calc(100% - 32px);
+  margin: 16px 16px 0;
+  min-height: 32px;
+}
+.presets {
+  padding: 12px 8px;
+  border-right: 1px solid #eee;
+  background: #f7f7f7;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+.presets button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  padding: 5px 8px;
+  border-radius: 6px;
+  min-height: 25px;
+  cursor: pointer;
+}
+.presets button[aria-pressed="true"] {
+  background: #eaeaea;
+  font-weight: 600;
+}
+.presets button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.presets button:nth-child(5),
+.presets button:nth-child(8) {
+  margin-top: 12px;
+}
+.range {
+  padding: 16px;
+  min-width: 0;
+  overflow-y: auto;
+}
+.last {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.last > input {
+  min-width: 0;
+  width: 130px;
+  min-height: 32px;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font: inherit;
+}
+.last select {
+  min-width: 0;
+  width: 130px;
+  min-height: 32px;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font: inherit;
+}
+.last label {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.inputs label {
+  margin: 0;
+}
+.monthNavigation {
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  inset: 0 0 auto;
+  pointer-events: none;
+}
+.monthNavigation button {
+  pointer-events: auto;
+  min-height: 24px;
+  width: 24px;
+  padding: 2px;
+}
+.monthNavigation svg {
+  width: 16px;
+  height: 16px;
+}
+.monthNavigation button:last-child svg {
+  transform: rotate(180deg);
+}
+.calendar {
+  position: relative;
+}
+.months {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.month h3 {
+  margin: 0 0 12px;
+  padding-top: 2px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.days > span {
+  font-size: 11px;
+  line-height: 32px;
+  text-align: center;
+  color: #616161;
+}
+.days button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  padding: 0;
+  min-height: 32px;
+  cursor: pointer;
+}
+.days button[data-in-range="true"] {
+  background: #f1f1f1;
+}
+.days button[aria-pressed="true"] {
+  color: white;
+  background: #303030;
+  border-radius: 8px;
+}
+.days button:focus-visible,
+.presets button:focus-visible {
+  outline: 2px solid #005bd3;
+  outline-offset: 1px;
+}
+.popover > footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #eee;
+  padding: 12px 16px;
+  min-height: 52px;
+}
+.summary {
+  margin-right: auto;
+  font-size: 12px;
+}
+@media (max-width: 767px) {
+  .popover {
+    height: 440px;
+    width: calc(100dvw - 32px);
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+  }
+  .presets {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+  }
+  .presets button {
+    flex-shrink: 0;
+  }
+  .presets button:nth-child(5),
+  .presets button:nth-child(8) {
+    margin-top: 0;
+  }
+  .range {
+    padding: 8px 16px 12px;
+  }
+  .last {
+    gap: 4px;
+    margin-bottom: 16px;
+    font-size: 12px;
+  }
+  .last > input,
+  .last select {
+    width: 60px;
+  }
+  .months {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .days button {
+    min-height: 32px;
+  }
+  .summary {
+    font-size: 11px;
+    min-width: 0;
+  }
+  .popover > footer {
+    padding: 12px 16px;
+  }
+  .popover > footer button {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+}

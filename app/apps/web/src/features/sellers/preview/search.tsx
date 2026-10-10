@@ -93,15 +93,22 @@ export function PreviewSearch({
   };
   return (
     <div
+      data-studio-part="search-panel"
       className={`${s.panel} ${largeText ? s.large : ""}`}
       onKeyDownCapture={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();
-          onClose();
+          event.stopPropagation();
+          if (query) {
+            setQuery("");
+            setActive(0);
+            setLimit(20);
+            input.current?.focus({ preventScroll: true });
+          } else onClose();
         }
       }}
     >
-      <div className={s.header}>
+      <div data-studio-part="search-header" className={s.header}>
         <AdminIcon name="search" />
         <input
           ref={input}
@@ -130,6 +137,7 @@ export function PreviewSearch({
         />
         {query && (
           <button
+            data-studio-part="search-clear"
             className={`${s.iconButton} ${s.clear}`}
             aria-label={text("Clear search text", "Изчисти търсенето")}
             onClick={() => {
@@ -169,6 +177,7 @@ export function PreviewSearch({
       </div>
       {filters && (
         <div
+          data-studio-part="search-filter"
           className={s.filters}
           role="group"
           aria-label={text("Search filters", "Филтри за търсене")}
@@ -193,6 +202,7 @@ export function PreviewSearch({
         </div>
       )}
       <div
+        data-studio-part="search-categories"
         className={s.categories}
         role="group"
         aria-label={text("Search categories", "Категории за търсене")}
@@ -218,7 +228,7 @@ export function PreviewSearch({
           </button>
         ))}
       </div>
-      <div className={s.body}>
+      <div data-studio-part="search-body" className={s.body}>
         {!ready ? (
           <p className={s.hint} role="status">
             {text("Loading your store…", "Зареждане на магазина…")}
@@ -256,6 +266,7 @@ export function PreviewSearch({
         ) : (
           <>
             <ul
+              data-studio-part="search-results"
               ref={list}
               className={s.results}
               aria-label={text("Search results", "Резултати от търсенето")}
@@ -263,6 +274,7 @@ export function PreviewSearch({
               {visible.map((item, index) => (
                 <li key={item.id}>
                   <Link
+                    data-studio-part="search-result"
                     href={href(item.destination)}
                     prefetch={false}
                     className={`${s.result} ${active === index ? s.active : ""}`}
@@ -270,16 +282,25 @@ export function PreviewSearch({
                     onClick={onNavigate}
                     onKeyDown={(event) => onResultKey(event, index)}
                   >
-                    <span className={s.resultIcon}>
+                    <span
+                      data-studio-part="search-result-icon"
+                      className={s.resultIcon}
+                    >
                       <AdminIcon name={item.icon} />
                     </span>
-                    <span className={s.resultCopy}>
+                    <span
+                      data-studio-part="search-result-copy"
+                      className={s.resultCopy}
+                    >
                       <strong>
                         <Highlight title={item.title} query={query} />
                       </strong>
                       <small>{item.description}</small>
                     </span>
-                    <span className={s.resultCategory}>
+                    <span
+                      data-studio-part="search-result-category"
+                      className={s.resultCategory}
+                    >
                       {categoryText(item.category)}
                     </span>
                   </Link>
@@ -294,7 +315,7 @@ export function PreviewSearch({
           </>
         )}
       </div>
-      <div className={s.footer}>
+      <div data-studio-part="search-footer" className={s.footer}>
         <span>{text("↑ ↓ to navigate", "↑ ↓ за навигация")}</span>
         <button onClick={open} disabled={!selected}>
           {text("Open", "Отвори")}

@@ -1,0 +1,75 @@
+.names {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.phone {
+  display: flex;
+  gap: 4px;
+}
+.phoneCountry {
+  position: relative;
+  width: 58px;
+  flex: 0 0 58px;
+}
+.phoneCountry > span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  pointer-events: none;
+}
+.phoneCountry select {
+  width: 100%;
+  color: transparent;
+  padding: 4px;
+}
+.phoneCountry select option {
+  color: #303030;
+}
+.phone input {
+  flex: 1;
+  min-width: 0;
+}
+.modal [data-studio-part="field"] {
+  gap: 8px;
+}
+.modal [data-studio-part="modal-header"] {
+  background: white;
+  border: 0;
+}
+.modal [data-studio-part="modal-header"] h2 {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+}
+@media (max-width: 767px) {
+  .modal[data-studio-part="modal"][data-studio-surface="gift-card-customer"] {
+    position: fixed;
+    inset: auto 0 0;
+    margin: 0;
+    border-radius: 0;
+    width: 100dvw;
+    max-width: 100dvw;
+  }
+  .modal[data-studio-surface="gift-card-customer"]
+    [data-studio-part="modal-body"] {
+    padding: 8px 20px 12px;
+    gap: 12px;
+  }
+  .names {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .modal [data-studio-part="modal-footer"] {
+    border: 0;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    padding: 0 16px 12px;
+  }
+  .modal [data-studio-part="modal-footer"] button {
+    width: 100%;
+  }
+}

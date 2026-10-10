@@ -7,8 +7,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminIcon } from "../admin-icons";
 import { usePreview } from "./context";
-import { money, orderTotal, put, type Customer, type Entry } from "./model";
+import { money, orderTotal, put, type Customer } from "./model";
 import { customerName } from "./orders";
+import { SegmentBuilder } from "./segment-builder";
+import draftStyles from "./local-draft-editors.module.css";
+import { customerMatchesSegment } from "./segments-model";
 import {
   Action,
   Badge,
@@ -17,7 +20,9 @@ import {
   Confirm,
   Empty,
   Field,
+  EditorSection,
   Header,
+  EditorBreadcrumb,
   Modal,
   Panel,
   TableFooter,
@@ -63,7 +68,7 @@ export function Customers({ detail }: { detail?: string }) {
     (c) => `${customerName(c)} ${c.email}`,
   );
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={ui("customers")}
         icon="customers"
@@ -92,7 +97,7 @@ export function Customers({ detail }: { detail?: string }) {
           </>
         }
       />
-      <div className={s.segmentPrompt}>
+      <div className={s.segmentPrompt} data-studio-part="segment-prompt">
         <select
           aria-label={ui("customerSegment")}
           value={list.tab}
@@ -109,14 +114,18 @@ export function Customers({ detail }: { detail?: string }) {
               </option>
             ))}
         </select>
-        <Link className={s.button} href={href("segments")}>
+        <Link
+          className={s.button}
+          data-studio-part="button"
+          href={href("segments")}
+        >
           {ui("manageSegments")}
         </Link>
       </div>
       <div className={`${s.tablePanel} ${s.customerPanel}`}>
         <Toolbar {...list} tabs={["All", "Email subscribers"]} />
         {list.selected.length > 0 && (
-          <div className={s.bulk}>
+          <div className={s.bulk} data-studio-part="bulk">
             <strong>
               {list.selected.length} {ui("selected_d7cbbb")}
             </strong>
@@ -126,8 +135,8 @@ export function Customers({ detail }: { detail?: string }) {
           </div>
         )}
         {!!rows.length && (
-          <div className={s.tableScroll}>
-            <table className={s.table}>
+          <div className={s.tableScroll} data-studio-part="table-scroll">
+            <table className={s.table} data-studio-part="table">
               <thead>
                 <tr>
                   <th>
@@ -173,11 +182,14 @@ export function Customers({ detail }: { detail?: string }) {
                       <td>
                         <Link
                           className={s.cellLink}
+                          data-studio-part="cell-link"
                           href={href(`customers/${c.id}`)}
                         >
                           {customerName(c)}
                         </Link>
-                        <p className={s.help}>{c.email}</p>
+                        <p className={s.help} data-studio-part="field-help">
+                          {c.email}
+                        </p>
                       </td>
                       <td>
                         <Badge>
@@ -205,14 +217,14 @@ export function Customers({ detail }: { detail?: string }) {
           </div>
         )}
         {!rows.length && (
-          <div className={s.customersEmpty}>
+          <div className={s.customersEmpty} data-studio-part="customers-empty">
             <AdminIcon name="search" />
             <h2>
               {store.customers.length
                 ? ui("noCustomersFound")
                 : ui("noCustomersYet")}
             </h2>
-            <p className={s.muted}>
+            <p className={s.muted} data-studio-part="muted">
               {ui("yourCustomerProfilesAndPurchaseHistoryWillAppearHere")}
             </p>
           </div>
@@ -220,7 +232,7 @@ export function Customers({ detail }: { detail?: string }) {
         {!!rows.length && <TableFooter count={rows.length} />}
       </div>
       {!rows.length && (
-        <p className={s.learn}>
+        <p className={s.learn} data-studio-part="learn">
           <Button plain onClick={() => setGuide(true)}>
             {ui("learnMoreAboutCustomers")}
           </Button>
@@ -326,7 +338,7 @@ export function Customers({ detail }: { detail?: string }) {
             />
           </Field>
           {error && (
-            <p className={s.error} role="alert">
+            <p className={s.error} data-studio-part="error" role="alert">
               {error}
             </p>
           )}
@@ -355,13 +367,15 @@ function CustomerEditor({ id }: { id: string }) {
   const intlLocale = useIntlLocale();
   const caption = useCaption();
   const ui = useTranslations("merchantUI");
-  const { store, href, update, notify } = usePreview();
+  const { store, href, update, notify, text } = usePreview();
   const router = useRouter();
   const existing = store.customers.find((c) => c.id === id);
   const [customer, setCustomer] = useState<Customer>(
     () => existing ?? emptyCustomer("new"),
   );
   const [address, setAddress] = useState(false);
+  const [notes, setNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
   const [remove, setRemove] = useState(false);
   const [error, setError] = useState("");
   const patch = (change: Partial<Customer>) =>
@@ -371,16 +385,24 @@ function CustomerEditor({ id }: { id: string }) {
   );
   if (id !== "new" && !existing)
     return (
-      <main className={s.editor}>
+      <main className={s.editor} data-studio-part="editor">
         <Header title={ui("customerNotFound")} back={href("customers")} />
         <Action href={href("customers")}>{ui("backToCustomers")}</Action>
       </main>
     );
   return (
-    <main className={s.editor}>
+    <main
+      className={s.editor}
+      data-studio-part="editor"
+      data-studio-builder="customer"
+    >
+      <EditorBreadcrumb
+        href={href("customers")}
+        title={ui("customers")}
+        icon="customers"
+      />
       <Header
         title={existing ? customerName(customer) : ui("newCustomer")}
-        back={href("customers")}
         actions={
           existing && (
             <Button danger onClick={() => setRemove(true)}>
@@ -409,18 +431,18 @@ function CustomerEditor({ id }: { id: string }) {
         }}
       >
         {error && (
-          <p className={s.error} role="alert">
+          <p className={s.error} data-studio-part="error" role="alert">
             {error}
           </p>
         )}
-        <div className={s.editorColumns}>
-          <div className={s.stack}>
+        <div className={s.editorColumns} data-studio-part="editor-layout">
+          <div className={s.stack} data-studio-part="editor-main">
             {existing && (
               <Panel title={ui("customerOverview")}>
-                <div className={s.fields}>
+                <div className={s.fields} data-studio-part="fields">
                   <div>
                     <h3>{ui("amountSpent")}</h3>
-                    <p className={s.metric}>
+                    <p className={s.metric} data-studio-part="metric">
                       {money(
                         orders
                           .filter((o) => o.payment !== "Pending")
@@ -431,17 +453,20 @@ function CustomerEditor({ id }: { id: string }) {
                   </div>
                   <div>
                     <h3>{ui("orders")}</h3>
-                    <p className={s.metric}>{orders.length}</p>
+                    <p className={s.metric} data-studio-part="metric">
+                      {orders.length}
+                    </p>
                   </div>
                 </div>
               </Panel>
             )}
-            <Panel
+            <EditorSection
+              part="customer-overview"
               title={
                 existing ? ui("contactInformation") : ui("customerOverview")
               }
             >
-              <div className={s.fields}>
+              <div className={s.fields} data-studio-part="fields">
                 <Field label={ui("firstName")}>
                   <input
                     required
@@ -458,6 +483,29 @@ function CustomerEditor({ id }: { id: string }) {
                   />
                 </Field>
               </div>
+              <Field
+                label={text("Language", "Език")}
+                help={text(
+                  "The language used for this customer's preview preferences.",
+                  "Езикът за предпочитанията на клиента в прегледа.",
+                )}
+              >
+                <select
+                  value={customer.language ?? "English"}
+                  onChange={(event) =>
+                    patch({
+                      language: event.target.value as "English" | "Bulgarian",
+                    })
+                  }
+                >
+                  <option value="English">
+                    {text("English", "Английски")}
+                  </option>
+                  <option value="Bulgarian">
+                    {text("Bulgarian", "Български")}
+                  </option>
+                </select>
+              </Field>
               <Field label={ui("email")}>
                 <input
                   type="email"
@@ -468,31 +516,94 @@ function CustomerEditor({ id }: { id: string }) {
                 />
               </Field>
               <Field label={ui("phoneNumber")}>
-                <input
-                  type="tel"
-                  value={customer.phone}
-                  maxLength={40}
-                  onChange={(e) => patch({ phone: e.target.value })}
-                />
+                <div
+                  className={s.phoneField}
+                  data-studio-part="customer-phone-field"
+                >
+                  <div
+                    className={draftStyles.phoneCountry}
+                    data-studio-part="customer-phone-country"
+                  >
+                    <span aria-hidden="true">
+                      {customer.phoneCountry ??
+                        (customer.country === "Greece"
+                          ? "GR"
+                          : customer.country === "Romania"
+                            ? "RO"
+                            : "BG")}
+                    </span>
+                    <select
+                      aria-label={text(
+                        "Phone country",
+                        "Държава за телефонния номер",
+                      )}
+                      value={
+                        customer.phoneCountry ??
+                        (customer.country === "Greece"
+                          ? "GR"
+                          : customer.country === "Romania"
+                            ? "RO"
+                            : "BG")
+                      }
+                      onChange={(event) =>
+                        patch({
+                          phoneCountry: event.target
+                            .value as Customer["phoneCountry"],
+                        })
+                      }
+                    >
+                      <option value="BG">🇧🇬 +359</option>
+                      <option value="GR">🇬🇷 +30</option>
+                      <option value="RO">🇷🇴 +40</option>
+                      <option value="DE">🇩🇪 +49</option>
+                      <option value="GB">🇬🇧 +44</option>
+                    </select>
+                  </div>
+                  <input
+                    type="tel"
+                    aria-label={ui("phoneNumber")}
+                    value={customer.phone}
+                    maxLength={40}
+                    onChange={(e) => patch({ phone: e.target.value })}
+                  />
+                </div>
               </Field>
               <Check
                 label={ui("customerAgreedToReceiveMarketingEmails")}
                 checked={customer.marketing}
                 onChange={() => patch({ marketing: !customer.marketing })}
               />
-              <p className={s.help}>
+              <Check
+                label={text(
+                  "Customer agreed to receive SMS marketing text messages.",
+                  "Клиентът е съгласен да получава маркетингови SMS съобщения.",
+                )}
+                checked={false}
+                disabled
+                onChange={() => {}}
+              />
+              <Check
+                label={text(
+                  "Customer agreed to receive WhatsApp marketing messages.",
+                  "Клиентът е съгласен да получава маркетингови WhatsApp съобщения.",
+                )}
+                checked={false}
+                disabled
+                onChange={() => {}}
+              />
+              <p className={s.help} data-studio-part="customer-footer">
                 {ui("previewPreferenceOnlyNoEmailsAreSent")}
               </p>
-            </Panel>
-            <Panel
+            </EditorSection>
+            <EditorSection
               title={ui("defaultAddress")}
-              action={
-                <Button plain onClick={() => setAddress(true)}>
-                  {customer.address ? ui("edit") : ui("addAddress")}
-                </Button>
-              }
+              part="customer-address"
+              description={text(
+                "The primary address of this customer",
+                "Основният адрес на този клиент",
+              )}
             >
-              {customer.address ? (
+              {customer.address && (
                 <p>
                   {customer.address}
                   <br />
@@ -500,16 +611,31 @@ function CustomerEditor({ id }: { id: string }) {
                   <br />
                   {customer.country}
                 </p>
-              ) : (
-                <p className={s.muted}>{ui("noAddressProvided")}</p>
               )}
-            </Panel>
+              <Button
+                plain
+                data-studio-part="customer-address-button"
+                onClick={() => setAddress(true)}
+              >
+                <AdminIcon name="plus" />
+                {customer.address ? ui("edit") : ui("addAddress")}
+                <AdminIcon name="chevron" />
+              </Button>
+            </EditorSection>
             {existing && (
               <Panel title={ui("recentOrders")}>
                 {orders.length ? (
                   orders.map((o) => (
-                    <div className={s.dataRow} key={o.id}>
-                      <Link className={s.link} href={href(`orders/${o.id}`)}>
+                    <div
+                      className={s.dataRow}
+                      data-studio-part="data-row"
+                      key={o.id}
+                    >
+                      <Link
+                        className={s.link}
+                        data-studio-part="link"
+                        href={href(`orders/${o.id}`)}
+                      >
                         #{o.id} · {o.date}
                       </Link>
                       <Badge>{o.fulfillment}</Badge>
@@ -517,7 +643,7 @@ function CustomerEditor({ id }: { id: string }) {
                     </div>
                   ))
                 ) : (
-                  <p className={s.muted}>
+                  <p className={s.muted} data-studio-part="muted">
                     {ui("thisCustomerHasNoPreviewOrdersYet")}
                   </p>
                 )}
@@ -525,15 +651,26 @@ function CustomerEditor({ id }: { id: string }) {
               </Panel>
             )}
           </div>
-          <aside className={s.editorSide}>
-            <Panel title={ui("notes")}>
-              <Field label={ui("customerNotes")}>
-                <textarea
-                  value={customer.notes}
-                  maxLength={2000}
-                  onChange={(e) => patch({ notes: e.target.value })}
-                />
-              </Field>
+          <aside className={s.editorSide} data-studio-part="editor-side">
+            <Panel
+              title={ui("notes")}
+              part="customer-notes"
+              action={
+                <Button
+                  plain
+                  aria-label={text("Edit notes", "Редактиране на бележките")}
+                  onClick={() => {
+                    setNotesDraft(customer.notes);
+                    setNotes(true);
+                  }}
+                >
+                  <AdminIcon name="plus" />
+                </Button>
+              }
+            >
+              <p className={s.muted}>
+                {customer.notes || text("No notes", "Няма бележки")}
+              </p>
             </Panel>
             <Panel title={ui("tags")}>
               <Field label={ui("customerTags")}>
@@ -545,7 +682,7 @@ function CustomerEditor({ id }: { id: string }) {
               </Field>
             </Panel>
             <Panel title={ui("customerPrivacy")}>
-              <p className={s.help}>
+              <p className={s.help} data-studio-part="field-help">
                 {ui("useFictionalInformationWhileReviewingTheFrontend")}
               </p>
               <Action href={href("settings/privacy")}>
@@ -554,13 +691,38 @@ function CustomerEditor({ id }: { id: string }) {
             </Panel>
           </aside>
         </div>
-        <div className={s.saveBar}>
+        <div className={s.saveBar} data-studio-part="save-bar">
           <Action href={href("customers")}>{ui("cancel")}</Action>
           <Button primary type="submit">
             {ui("save")}
           </Button>
         </div>
       </form>
+      {notes && (
+        <Modal
+          title={ui("notes")}
+          onClose={() => setNotes(false)}
+          footer={
+            <Button
+              primary
+              onClick={() => {
+                patch({ notes: notesDraft });
+                setNotes(false);
+              }}
+            >
+              {ui("done")}
+            </Button>
+          }
+        >
+          <Field label={ui("customerNotes")}>
+            <textarea
+              maxLength={2000}
+              value={notesDraft}
+              onChange={(event) => setNotesDraft(event.target.value)}
+            />
+          </Field>
+        </Modal>
+      )}
       {address && (
         <Modal
           title={ui("defaultAddress")}
@@ -578,7 +740,7 @@ function CustomerEditor({ id }: { id: string }) {
               onChange={(e) => patch({ address: e.target.value })}
             />
           </Field>
-          <div className={s.fields}>
+          <div className={s.fields} data-studio-part="fields">
             <Field label={ui("city")}>
               <input
                 value={customer.city}
@@ -608,7 +770,9 @@ function CustomerEditor({ id }: { id: string }) {
               )}
             </select>
           </Field>
-          <p className={s.help}>{ui("saveTheCustomerToKeepThisAddress")}</p>
+          <p className={s.help} data-studio-part="field-help">
+            {ui("saveTheCustomerToKeepThisAddress")}
+          </p>
         </Modal>
       )}
       {remove && (
@@ -628,104 +792,13 @@ function CustomerEditor({ id }: { id: string }) {
   );
 }
 export function Segments({ detail }: { detail?: string }) {
-  const caption = useCaption();
   const ui = useTranslations("merchantUI");
-  const { store, href, update, notify } = usePreview();
-  const router = useRouter();
+  const { store, href, text } = usePreview();
   const list = useList();
-  const existing = store.entries.find(
-    (e) => e.type === "Segment" && e.id === detail,
-  );
-  const [title, setTitle] = useState(existing?.title ?? "");
-  const [condition, setCondition] = useState(existing?.body ?? "All customers");
   const segments = store.entries.filter((e) => e.type === "Segment");
-  const matches = store.customers.filter(
-    (c) =>
-      condition === "All customers" ||
-      (condition === "Email subscribers"
-        ? c.marketing
-        : condition === "Returning customers"
-          ? store.orders.filter(
-              (o) => o.kind === "Order" && o.customerId === c.id,
-            ).length > 1
-          : c.country === condition),
-  );
-  if (detail)
-    return (
-      <main className={s.editor}>
-        <Header
-          title={existing ? ui("editSegment") : ui("createSegment")}
-          back={href("segments")}
-        />
-        <form
-          className={s.stack}
-          onSubmit={(e) => {
-            e.preventDefault();
-            const entry: Entry = {
-              id: existing?.id ?? `segment-${crypto.randomUUID()}`,
-              title: title.trim(),
-              body: condition,
-              type: "Segment",
-              status: "Active",
-              tags: "",
-            };
-            update({ entries: put(store.entries, entry) });
-            notify(ui("customerSegmentSaved"));
-            router.push(href("segments"));
-          }}
-        >
-          <Panel title={ui("customerSegment")}>
-            <Field label={ui("segmentName")}>
-              <input
-                required
-                maxLength={100}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </Field>
-            <Field label={ui("customersMatching")}>
-              <select
-                value={condition}
-                onChange={(e) => setCondition(e.target.value)}
-              >
-                {[
-                  "All customers",
-                  "Email subscribers",
-                  "Returning customers",
-                  "Bulgaria",
-                  "Greece",
-                  "Romania",
-                ].map((v) => (
-                  <option key={v} value={v}>
-                    {caption(v)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <p>
-              {matches.length} {ui("customersMatchThisSegment")}
-            </p>
-            {matches.map((c) => (
-              <Link
-                className={s.link}
-                key={c.id}
-                href={href(`customers/${c.id}`)}
-              >
-                {customerName(c)}
-              </Link>
-            ))}
-          </Panel>
-          <div className={s.saveBar}>
-            <Action href={href("segments")}>{ui("cancel")}</Action>
-            <Button primary type="submit">
-              {ui("saveSegment")}
-            </Button>
-          </div>
-        </form>
-      </main>
-    );
+  if (detail) return <SegmentBuilder key={detail} id={detail} />;
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={ui("segments")}
         icon="customers"
@@ -748,14 +821,15 @@ export function Segments({ detail }: { detail?: string }) {
           </Action>
         </Empty>
       ) : (
-        <div className={s.tablePanel}>
+        <div className={s.tablePanel} data-studio-part="table-panel">
           <Toolbar {...list} />
-          <table className={s.table}>
+          <table className={s.table} data-studio-part="table">
             <thead>
               <tr>
                 <th>{ui("segment")}</th>
-                <th>{ui("filter")}</th>
-                <th>{ui("status")}</th>
+                <th>{text("% of customers", "% от клиентите")}</th>
+                <th>{text("Last activity", "Последна активност")}</th>
+                <th>{text("Created by", "Създаден от")}</th>
               </tr>
             </thead>
             <tbody>
@@ -765,15 +839,26 @@ export function Segments({ detail }: { detail?: string }) {
                     <td>
                       <Link
                         className={s.cellLink}
+                        data-studio-part="cell-link"
                         href={href(`segments/${e.id}`)}
                       >
                         {e.title}
                       </Link>
                     </td>
-                    <td>{e.body}</td>
                     <td>
-                      <Badge>{e.status}</Badge>
+                      {store.customers.length
+                        ? Math.round(
+                            (store.customers.filter((customer) =>
+                              customerMatchesSegment(store, customer, e.body),
+                            ).length /
+                              store.customers.length) *
+                              100,
+                          )
+                        : 0}
+                      %
                     </td>
+                    <td>—</td>
+                    <td>{text("Local preview", "Локален преглед")}</td>
                   </tr>
                 ),
               )}

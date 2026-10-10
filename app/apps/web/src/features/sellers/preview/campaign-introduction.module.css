@@ -1,0 +1,72 @@
+.card {
+  overflow: hidden;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px #00000008;
+  background: white;
+}
+.card > header {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+.card > header > span {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #f5f5f5;
+  color: #999;
+}
+.introduction {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: center;
+  padding: 32px;
+}
+.introduction h2 {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  margin-bottom: 8px;
+}
+.introduction img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.apps {
+  padding: 24px 40px;
+  background: #f7f7f7;
+}
+.apps h3 {
+  font-size: 13px;
+  line-height: 20px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.apps p {
+  margin-bottom: 16px;
+  max-width: 760px;
+}
+@media (max-width: 767px) {
+  .introduction {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 40px 32px 24px;
+  }
+  .introduction img {
+    display: none;
+  }
+  .apps {
+    padding: 24px 40px;
+  }
+}

@@ -28,7 +28,9 @@ export function AdminShell({
   preview?: {
     storeId: "studio" | "personal";
     name: string;
+    settings?: boolean;
     navigation: React.ReactNode;
+    accountLinks?: React.ReactNode;
     AssistantButton?: React.ReactNode;
     Search?: React.ComponentType<{
       onClose: () => void;
@@ -70,11 +72,30 @@ export function AdminShell({
       ? `${base}/listings`
       : "/app/products";
   const suffix = `?lang=${language}${preview ? `&store=${preview.storeId}` : ""}`;
-  const [collapsed, setCollapsed] = useState(false);
+  const [manualCollapsed, setCollapsed] = useState<boolean | null>(null);
+  const [compactNavigation, setCompactNavigation] = useState(false);
+  const [compactExpanded, setCompactExpanded] = useState(false);
+  const collapsed = compactNavigation
+    ? !compactExpanded
+    : (manualCollapsed ?? false);
+  const previewMode = Boolean(preview);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const search = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (!previewMode) return;
+    const breakpoint = window.matchMedia(
+      "(min-width: 768px) and (max-width: 799px)",
+    );
+    const updateCompact = () => {
+      setCompactNavigation(breakpoint.matches);
+      setCompactExpanded(false);
+    };
+    updateCompact();
+    breakpoint.addEventListener("change", updateCompact);
+    return () => breakpoint.removeEventListener("change", updateCompact);
+  }, [previewMode]);
   const menuButton = useRef<HTMLButtonElement>(null);
   const close = () => {
     drawer.current?.close();
@@ -96,6 +117,7 @@ export function AdminShell({
   }, [menuOpen, searchOpen]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (preview?.settings) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         drawer.current?.close();
@@ -106,7 +128,7 @@ export function AdminShell({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  }, [preview?.settings]);
   const openSearch = () => {
     search.current?.showModal();
     setSearchOpen(true);
@@ -132,19 +154,31 @@ export function AdminShell({
   );
   const navigation = (
     <>
-      <div className={styles.brandRow}>
-        <Link
-          href={`${preview ? base : "/app"}${suffix}`}
-          className={styles.brand}
-          onClick={close}
-          aria-label="Treido"
-        >
-          <span className={styles.brandMark}>t</span>
-          <span className={styles.brandText}>treido</span>
-        </Link>
+      <div className={styles.brandRow} data-studio-part="brand-row">
+        {!(preview && collapsed) && (
+          <Link
+            href={`${preview ? base : "/app"}${suffix}`}
+            className={styles.brand}
+            data-studio-part="brand"
+            onClick={close}
+            aria-label="Treido"
+          >
+            <span className={styles.brandMark} data-studio-part="brand-mark">
+              t
+            </span>
+            <span className={styles.brandText} data-studio-part="brand-text">
+              treido
+            </span>
+          </Link>
+        )}
         <button
-          className={styles.collapse}
-          onClick={() => setCollapsed(!collapsed)}
+          className={`${styles.collapse} ${preview && collapsed ? styles.compactCollapse : ""}`}
+          data-studio-part="collapse"
+          onClick={() =>
+            compactNavigation
+              ? setCompactExpanded(!compactExpanded)
+              : setCollapsed(!collapsed)
+          }
           aria-expanded={!collapsed}
           aria-label={
             collapsed
@@ -156,11 +190,17 @@ export function AdminShell({
                 : "Collapse navigation"
           }
         >
+          {preview && collapsed && (
+            <span className={styles.brandMark} data-studio-part="brand-mark">
+              t
+            </span>
+          )}
           <AdminIcon name="menu" />
         </button>
       </div>
       <button
         className={styles.sidebarSearch}
+        data-studio-part="sidebar-search"
         onClick={openSearch}
         aria-label={searchLabel}
         aria-keyshortcuts="Control+K Meta+K"
@@ -172,6 +212,7 @@ export function AdminShell({
       <nav
         aria-label={bg ? "Навигация за продавача" : "Seller navigation"}
         className={styles.nav}
+        data-studio-part="main-nav"
       >
         {preview ? (
           <div onClick={close}>{preview.navigation}</div>
@@ -384,7 +425,7 @@ export function AdminShell({
             ) : (
               unavailableTool("analytics", "Analytics", "Анализи")
             )}
-            <p className={styles.navHeading}>
+            <p className={styles.navHeading} data-studio-part="nav-heading">
               {bg ? "Канали за продажба" : "Sales channels"}
             </p>
             <Link
@@ -399,17 +440,18 @@ export function AdminShell({
           </>
         )}
       </nav>
-      <div className={styles.sidebarBottom}>
+      <div className={styles.sidebarBottom} data-studio-part="sidebar-bottom">
         <Link
           href={
             preview
-              ? `${base}/settings/general${suffix}`
+              ? `${base}/settings/general${suffix}&settings-navigation=1`
               : seller
                 ? `${base}/settings${suffix}`
                 : `/app${suffix}`
           }
           onClick={close}
           className={styles.settings}
+          data-studio-part="settings"
           aria-label={bg ? "Настройки" : "Settings"}
         >
           <AdminIcon name="settings" />
@@ -418,6 +460,7 @@ export function AdminShell({
         {preview ? (
           <Link
             className={styles.notifications}
+            data-studio-part="notifications"
             href={`${base}/notifications${suffix}`}
             onClick={close}
             aria-label={bg ? "Известия" : "Notifications"}
@@ -427,6 +470,7 @@ export function AdminShell({
         ) : !seller || seller.capabilities.includes("inbox.read") ? (
           <Link
             className={styles.notifications}
+            data-studio-part="notifications"
             href={
               seller
                 ? base + "/notifications" + suffix
@@ -444,6 +488,7 @@ export function AdminShell({
           <button
             type="button"
             className={styles.notifications}
+            data-studio-part="notifications"
             disabled
             aria-label={
               bg
@@ -454,13 +499,16 @@ export function AdminShell({
             <AdminIcon name="bell" />
           </button>
         )}
-        <details className={styles.sellerChooser}>
+        <details
+          className={styles.sellerChooser}
+          data-studio-part="seller-chooser"
+        >
           <summary
             aria-label={
               bg ? "Избери акаунт на продавач" : "Choose seller account"
             }
           >
-            <span className={styles.avatar}>
+            <span className={styles.avatar} data-studio-part="avatar">
               {(preview?.name ?? seller?.name ?? "Treido")
                 .slice(0, 2)
                 .toUpperCase()}
@@ -471,7 +519,11 @@ export function AdminShell({
                 (bg ? "Избери продавач" : "Select seller")}
             </span>
           </summary>
-          <div className={styles.sellerChoices}>
+          <div
+            className={styles.sellerChoices}
+            data-studio-part="seller-choices"
+          >
+            {preview?.accountLinks}
             {preview ? (
               <>
                 {(["studio", "personal"] as const).map((id) => (
@@ -522,7 +574,7 @@ export function AdminShell({
             )}
           </div>
         </details>
-        <div className={styles.sidebarNote}>
+        <div className={styles.sidebarNote} data-studio-part="sidebar-note">
           <span>
             {preview
               ? bg
@@ -573,22 +625,38 @@ export function AdminShell({
       <div
         data-admin-shell=""
         data-admin-preview-collapsed={preview ? collapsed : undefined}
-        className={`${styles.shell} ${collapsed ? styles.collapsed : ""}`}
+        className={`${styles.shell} ${collapsed ? styles.collapsed : ""} ${preview?.settings ? styles.settingsLayout : ""}`}
+        data-studio-part={preview?.settings ? "settings-admin-shell" : "shell"}
+        data-studio-collapsed={collapsed}
         lang={language}
       >
-        <a className={styles.skip} href="#merchant-content">
+        <a
+          className={styles.skip}
+          data-studio-part="skip"
+          href={preview?.settings ? "#settings-content" : "#merchant-content"}
+        >
           {bg ? "Към съдържанието" : "Skip to content"}
         </a>
-        <aside className={styles.sidebar}>{navigation}</aside>
-        <div
-          className={`${styles.canvas} ${preview ? styles.previewCanvas : ""}`}
-          id="merchant-content"
-          tabIndex={-1}
-        >
-          {children}
-        </div>
+        {!preview?.settings && (
+          <aside className={styles.sidebar} data-studio-part="sidebar">
+            {navigation}
+          </aside>
+        )}
+        {preview?.settings ? (
+          children
+        ) : (
+          <div
+            className={`${styles.canvas} ${preview ? styles.previewCanvas : ""}`}
+            data-studio-part="canvas"
+            id="merchant-content"
+            tabIndex={-1}
+          >
+            {children}
+          </div>
+        )}
         <nav
           className={styles.quickLinks}
+          data-studio-part="quick-links"
           aria-label={bg ? "Бързи връзки" : "Quick links"}
         >
           <button
@@ -598,7 +666,7 @@ export function AdminShell({
             aria-expanded={menuOpen}
             aria-label={bg ? "Меню" : "Menu"}
           >
-            <AdminIcon name="menu" />
+            <AdminIcon name={preview ? "hamburger" : "menu"} />
           </button>
           {preview?.AssistantButton ?? (
             <button
@@ -613,6 +681,7 @@ export function AdminShell({
         <dialog
           ref={drawer}
           className={styles.drawer}
+          data-studio-part="drawer"
           aria-label={bg ? "Навигация" : "Navigation"}
           onClose={() => setMenuOpen(false)}
           onClick={(event) => {
@@ -623,6 +692,7 @@ export function AdminShell({
         </dialog>
         <dialog
           ref={search}
+          data-studio-part={preview ? "search-dialog" : undefined}
           className={`${styles.searchDialog} ${SearchPanel ? styles.previewSearchDialog : ""}`}
           aria-label={
             preview
@@ -643,7 +713,11 @@ export function AdminShell({
               <SearchPanel onClose={closeSearch} onNavigate={close} />
             ) : (
               <>
-                <form action={products} className={styles.searchForm}>
+                <form
+                  action={products}
+                  className={styles.searchForm}
+                  data-studio-part="search-form"
+                >
                   <AdminIcon name="search" />
                   <input
                     name="q"
@@ -664,19 +738,23 @@ export function AdminShell({
                   <button
                     type="button"
                     className={styles.iconButton}
+                    data-studio-part="icon-button"
                     onClick={closeSearch}
                     aria-label={bg ? "Затвори търсенето" : "Close search"}
                   >
                     <AdminIcon name="close" />
                   </button>
-                  <button className={styles.primary}>
+                  <button className={styles.primary} data-studio-part="primary">
                     {bg ? "Търси" : "Search"}
                   </button>
                 </form>
-                <div className={styles.searchScope}>
+                <div
+                  className={styles.searchScope}
+                  data-studio-part="search-scope"
+                >
                   <span>{bg ? "Продукти" : "Products"}</span>
                 </div>
-                <p className={styles.searchHint}>
+                <p className={styles.searchHint} data-studio-part="search-hint">
                   {bg
                     ? "Намери продукт в твоя каталог"
                     : "Find a product in your catalog"}

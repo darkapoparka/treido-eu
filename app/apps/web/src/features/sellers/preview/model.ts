@@ -1,3 +1,7 @@
+import { sanitizeDescriptionHtml } from "./rich-text";
+import { validEditorDraft, type EditorDraft } from "./local-draft-model";
+import { countryOptions, parseCountry } from "../../locale/regions";
+
 export type Product = {
   id: string;
   title: string;
@@ -14,6 +18,29 @@ export type Product = {
   image: string;
   options: string;
   shipping: boolean;
+  descriptionHtml?: string;
+  compareAt?: number;
+  cost?: number;
+  chargeTax?: boolean;
+  unitAmount?: string;
+  unitMeasure?: string;
+  unitBaseAmount?: string;
+  unitBaseMeasure?: string;
+  countryOfOrigin?: string;
+  hsCode?: string;
+  trackInventory?: boolean;
+  sellOutOfStock?: boolean;
+  barcode?: string;
+  weight?: string;
+  weightUnit?: string;
+  length?: string;
+  width?: string;
+  height?: string;
+  dimensionUnit?: string;
+  type?: string;
+  disclosures?: string;
+  seoTitle?: string;
+  seoDescription?: string;
 };
 export type Customer = {
   id: string;
@@ -28,6 +55,8 @@ export type Customer = {
   notes: string;
   tags: string;
   marketing: boolean;
+  language?: "English" | "Bulgarian";
+  phoneCountry?: "BG" | "GR" | "RO" | "DE" | "GB";
 };
 export type Order = {
   id: string;
@@ -41,6 +70,7 @@ export type Order = {
   tracking: string;
   shipping: number;
   refunded: number;
+  tags?: string;
 };
 export type Discount = {
   id: string;
@@ -48,11 +78,33 @@ export type Discount = {
   code: string;
   type: string;
   method: string;
-  valueMode: "Percentage" | "Fixed amount";
+  valueMode: "Percentage" | "Fixed amount" | "Free";
   eligibility: string;
+  eligibilityIds?: string[];
+  maximumPerOrderEnabled?: boolean;
+  maximumPerOrder?: number;
   appliesTo: string;
   buyQuantity: number;
   getQuantity: number;
+  buyKind?: "Products" | "Collections";
+  getKind?: "Products" | "Collections";
+  buyItemIds?: string[];
+  getItemIds?: string[];
+  buyMinimumKind?: "Quantity" | "Amount";
+  buyMinimumAmount?: number;
+  buyMinimumAmountMinor?: number;
+  getValueMinor?: number;
+  targetKind?: "Products" | "Collections";
+  targetIds?: string[];
+  countryCodes?: string[];
+  countriesMode?: "All" | "Selected";
+  excludeShippingRate?: boolean;
+  maximumShippingRate?: number;
+  limitEnabled?: boolean;
+  combinations?: { product: boolean; order: boolean; shipping: boolean };
+  startTime?: string;
+  endTime?: string;
+  tags?: string;
   minimumKind: string;
   value: number;
   minimum: number;
@@ -70,11 +122,16 @@ export type Entry = {
   status: string;
   type: string;
   tags: string;
+  image?: string;
+  descriptionHtml?: string;
+  url?: string;
+  editorDraft?: EditorDraft;
 };
 export type Market = {
   id: string;
   title: string;
   countries: string;
+  countryCodes?: string[];
   currency: string;
   status: string;
 };
@@ -183,7 +240,7 @@ export function blankProduct(id: string): Product {
     sku: "",
     status: "Draft",
     category: "",
-    condition: "New",
+    condition: "",
     vendor: "",
     tags: "",
     collection: "",
@@ -486,12 +543,51 @@ export function safePreviewImage(src: string) {
     /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(src)
   );
 }
+/** A local external-file bookmark; never fetched or imported by the preview. */
+export function normalizePreviewFileUrl(value: string): string | null {
+  if (
+    value.length > 2048 ||
+    /[\u0000-\u0020\u007f]/.test(value) ||
+    !/^https?:\/\//i.test(value)
+  )
+    return null;
+  try {
+    const url = new URL(value);
+    if (
+      !url.hostname ||
+      url.username ||
+      url.password ||
+      !["http:", "https:"].includes(url.protocol)
+    )
+      return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
 const entryValid = (value: unknown) => {
   const e = identity(value);
   return (
     !!e &&
     strings(e, ["title", "body", "status", "type", "tags"]) &&
+    (e.editorDraft === undefined ||
+      (validEditorDraft(e.editorDraft) &&
+        e.type === `${e.editorDraft.kind}Draft`)) &&
+    (e.image === undefined ||
+      (typeof e.image === "string" &&
+        e.image.length <= 180000 &&
+        safePreviewImage(e.image))) &&
+    (e.descriptionHtml === undefined ||
+      (typeof e.descriptionHtml === "string" &&
+        e.descriptionHtml.length <= 20000 &&
+        sanitizeDescriptionHtml(e.descriptionHtml) === e.descriptionHtml)) &&
+    (e.url === undefined ||
+      (e.type === "File" &&
+        typeof e.url === "string" &&
+        normalizePreviewFileUrl(e.url) === e.url &&
+        e.body === "")) &&
     (e.type !== "File" ||
+      e.url !== undefined ||
       /^data:(image\/(png|jpeg|webp)|application\/pdf|text\/plain);base64,[A-Za-z0-9+/=]+$/.test(
         String(e.body),
       ))
@@ -519,7 +615,51 @@ const validators: Record<string, (value: unknown) => boolean> = {
       integer(p.quantity, 999999) &&
       typeof p.shipping === "boolean" &&
       ["Active", "Draft", "Archived"].includes(String(p.status)) &&
-      safePreviewImage(String(p.image))
+      safePreviewImage(String(p.image)) &&
+      (p.countryOfOrigin === undefined ||
+        ["", "BG", "GR", "RO", "DE", "GB"].includes(
+          String(p.countryOfOrigin),
+        )) &&
+      (p.hsCode === undefined ||
+        (typeof p.hsCode === "string" && /^[0-9]{0,10}$/.test(p.hsCode))) &&
+      ["compareAt", "cost"].every(
+        (key) => p[key] === undefined || integer(p[key]),
+      ) &&
+      ["chargeTax", "trackInventory", "sellOutOfStock"].every(
+        (key) => p[key] === undefined || typeof p[key] === "boolean",
+      ) &&
+      [
+        "unitAmount",
+        "unitBaseAmount",
+        "weight",
+        "length",
+        "width",
+        "height",
+      ].every(
+        (key) =>
+          p[key] === undefined ||
+          (typeof p[key] === "string" &&
+            /^(?:\d{1,6}(?:\.\d{1,3})?)?$/.test(p[key] as string)),
+      ) &&
+      [
+        "unitMeasure",
+        "unitBaseMeasure",
+        "weightUnit",
+        "dimensionUnit",
+        "barcode",
+        "type",
+        "disclosures",
+        "seoTitle",
+        "seoDescription",
+      ].every(
+        (key) =>
+          p[key] === undefined ||
+          (typeof p[key] === "string" && (p[key] as string).length <= 5000),
+      ) &&
+      (p.descriptionHtml === undefined ||
+        (typeof p.descriptionHtml === "string" &&
+          p.descriptionHtml.length <= 20000 &&
+          sanitizeDescriptionHtml(p.descriptionHtml) === p.descriptionHtml))
     );
   },
   customers: (value) => {
@@ -538,7 +678,11 @@ const validators: Record<string, (value: unknown) => boolean> = {
         "notes",
         "tags",
       ]) &&
-      typeof c.marketing === "boolean"
+      typeof c.marketing === "boolean" &&
+      (c.language === undefined ||
+        ["English", "Bulgarian"].includes(String(c.language))) &&
+      (c.phoneCountry === undefined ||
+        ["BG", "GR", "RO", "DE", "GB"].includes(String(c.phoneCountry)))
     );
   },
   orders: (value) => {
@@ -562,6 +706,8 @@ const validators: Record<string, (value: unknown) => boolean> = {
       /^\d{4}-\d{2}-\d{2}$/.test(String(o.date)) &&
       integer(o.shipping) &&
       integer(o.refunded) &&
+      (o.tags === undefined ||
+        (typeof o.tags === "string" && o.tags.length <= 300)) &&
       Array.isArray(o.lines) &&
       o.lines.length <= 100 &&
       o.lines.every((value) => {
@@ -595,7 +741,66 @@ const validators: Record<string, (value: unknown) => boolean> = {
       ]) &&
       integer(d.buyQuantity, 999) &&
       integer(d.getQuantity, 999) &&
-      ["Percentage", "Fixed amount"].includes(String(d.valueMode)) &&
+      ["buyKind", "getKind", "targetKind"].every(
+        (key) =>
+          d[key] === undefined ||
+          ["Products", "Collections"].includes(String(d[key])),
+      ) &&
+      ["buyItemIds", "getItemIds", "targetIds", "eligibilityIds"].every(
+        (key) =>
+          d[key] === undefined ||
+          (Array.isArray(d[key]) &&
+            d[key].length <= 100 &&
+            new Set(d[key]).size === d[key].length &&
+            d[key].every(
+              (id: unknown) =>
+                typeof id === "string" && id.length > 0 && id.length <= 160,
+            )),
+      ) &&
+      (d.countriesMode === undefined ||
+        ["All", "Selected"].includes(String(d.countriesMode))) &&
+      (d.countryCodes === undefined ||
+        (Array.isArray(d.countryCodes) &&
+          d.countryCodes.length <= countryOptions("en").length &&
+          d.countryCodes.every((code) => parseCountry(code) !== null) &&
+          new Set(d.countryCodes).size === d.countryCodes.length)) &&
+      (d.excludeShippingRate === undefined ||
+        typeof d.excludeShippingRate === "boolean") &&
+      (d.limitEnabled === undefined || typeof d.limitEnabled === "boolean") &&
+      (d.maximumShippingRate === undefined ||
+        integer(d.maximumShippingRate, 100000000)) &&
+      (d.combinations === undefined ||
+        (record(d.combinations) !== null &&
+          ["product", "order", "shipping"].every(
+            (key) =>
+              typeof (d.combinations as Record<string, unknown>)[key] ===
+              "boolean",
+          ))) &&
+      ["startTime", "endTime"].every(
+        (key) =>
+          d[key] === undefined ||
+          (typeof d[key] === "string" &&
+            (d[key] === "" || /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(d[key]))),
+      ) &&
+      (d.tags === undefined ||
+        (typeof d.tags === "string" && d.tags.length <= 500)) &&
+      (d.buyMinimumKind === undefined ||
+        ["Quantity", "Amount"].includes(String(d.buyMinimumKind))) &&
+      (d.buyMinimumAmount === undefined ||
+        (typeof d.buyMinimumAmount === "number" &&
+          Number.isFinite(d.buyMinimumAmount) &&
+          d.buyMinimumAmount >= 0 &&
+          d.buyMinimumAmount <= 1000000)) &&
+      ["buyMinimumAmountMinor", "getValueMinor"].every(
+        (key) => d[key] === undefined || integer(d[key], 100000000),
+      ) &&
+      ["Percentage", "Fixed amount", "Free"].includes(String(d.valueMode)) &&
+      (d.valueMode !== "Free" || (d.type === "Buy X get Y" && d.value === 0)) &&
+      (d.maximumPerOrderEnabled === undefined ||
+        typeof d.maximumPerOrderEnabled === "boolean") &&
+      (d.maximumPerOrder === undefined || integer(d.maximumPerOrder, 999999)) &&
+      (!d.maximumPerOrderEnabled ||
+        (typeof d.maximumPerOrder === "number" && d.maximumPerOrder > 0)) &&
       ["value", "minimum", "limit"].every(
         (key) =>
           typeof d[key] === "number" &&
@@ -611,7 +816,15 @@ const validators: Record<string, (value: unknown) => boolean> = {
   campaigns: entryValid,
   markets: (value) => {
     const m = identity(value);
-    return !!m && strings(m, ["title", "countries", "currency", "status"]);
+    return (
+      !!m &&
+      strings(m, ["title", "countries", "currency", "status"]) &&
+      (m.countryCodes === undefined ||
+        (Array.isArray(m.countryCodes) &&
+          m.countryCodes.length <= countryOptions("en").length &&
+          m.countryCodes.every((code) => parseCountry(code) !== null) &&
+          new Set(m.countryCodes).size === m.countryCodes.length))
+    );
   },
   members: (value) => {
     const m = identity(value);

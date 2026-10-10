@@ -9,6 +9,8 @@ import { useState } from "react";
 import { usePreview } from "./context";
 import { money, put, type Member } from "./model";
 import { customerName } from "./orders";
+import { StoreSummary } from "./store-summary";
+import { StorePreferences } from "./store-preferences";
 import {
   Action,
   Badge,
@@ -28,7 +30,7 @@ import {
 } from "./ui";
 export function Team({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations("studioTeam");
-  const { store, update, notify } = usePreview();
+  const { store, update, notify, text } = usePreview();
   const roleKeys = {
     Admin: "admin",
     Staff: "staff",
@@ -75,40 +77,51 @@ export function Team({ embedded = false }: { embedded?: boolean }) {
           }
         />
       )}
-      <Panel
-        title={t("users")}
-        action={
-          embedded && (
-            <Button
-              onClick={() =>
-                setMember({
-                  id: "new",
-                  name: "",
-                  email: "",
-                  role: "Staff",
-                  status: "Invited",
-                })
-              }
-            >
-              {t("inviteMember")}
-            </Button>
-          )
-        }
-      >
-        <p className={s.help}>
-          {t(
-            "reviewRolesAndInvitationsUsingFictionalUsersNoInvitationEmailsOrRealPermissionsAreIssued",
-          )}
-        </p>
-        <div className={s.tablePanel}>
-          <Toolbar {...list} />
-          <div className={s.tableScroll}>
-            <table className={s.table}>
+      {embedded && (
+        <div data-studio-part="team-actions">
+          <Button
+            onClick={() =>
+              setMember({
+                id: "new",
+                name: "",
+                email: "",
+                role: "Staff",
+                status: "Invited",
+              })
+            }
+          >
+            {t("inviteMember")}
+          </Button>
+        </div>
+      )}
+      <Panel title={embedded ? undefined : t("users")} part="team">
+        <div className={s.tablePanel} data-studio-part="table-panel">
+          {!embedded && <Toolbar {...list} />}
+          <div className={s.tableScroll} data-studio-part="table-scroll">
+            <table className={s.table} data-studio-part="team-table">
               <thead>
                 <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      aria-label={text(
+                        "Select all preview users",
+                        "Избери всички примерни потребители",
+                      )}
+                      checked={
+                        !!rows.length &&
+                        rows.every((m) => list.selected.includes(m.id))
+                      }
+                      onChange={(e) =>
+                        list.select(
+                          e.target.checked ? rows.map((m) => m.id) : [],
+                        )
+                      }
+                    />
+                  </th>
                   <th>{t("user")}</th>
-                  <th>{t("role")}</th>
                   <th>{t("status")}</th>
+                  <th>{t("role")}</th>
                   <th />
                 </tr>
               </thead>
@@ -116,16 +129,26 @@ export function Team({ embedded = false }: { embedded?: boolean }) {
                 {rows.map((m) => (
                   <tr key={m.id}>
                     <td>
-                      <strong>{m.name}</strong>
-                      <p className={s.help}>{m.email}</p>
+                      <input
+                        type="checkbox"
+                        aria-label={`${text("Select", "Избери")} ${m.name}`}
+                        checked={list.selected.includes(m.id)}
+                        onChange={() => list.toggle(m.id)}
+                      />
                     </td>
-                    <td>{roleText(m.role)}</td>
+                    <td>
+                      <strong>{m.name}</strong>
+                      <p className={s.help} data-studio-part="field-help">
+                        {m.email}
+                      </p>
+                    </td>
                     <td>
                       <Badge>{m.status}</Badge>
                     </td>
+                    <td>{roleText(m.role)}</td>
                     <td>
                       {m.role !== "Owner" && (
-                        <div className={s.actions}>
+                        <div className={s.actions} data-studio-part="actions">
                           <Button
                             onClick={() => {
                               setMember(m);
@@ -148,6 +171,12 @@ export function Team({ embedded = false }: { embedded?: boolean }) {
           <TableFooter count={rows.length} />
         </div>
       </Panel>
+      <p className={s.help} data-studio-part="team-notice">
+        {text(
+          "Fictional users. No invitations or permissions are issued.",
+          "Примерни потребители. Не се изпращат покани и не се дават права.",
+        )}
+      </p>
       {member && (
         <Modal
           title={
@@ -248,7 +277,7 @@ export function Team({ embedded = false }: { embedded?: boolean }) {
             </p>
           </Panel>
           {error && (
-            <p className={s.error} role="alert">
+            <p className={s.error} data-studio-part="error" role="alert">
               {error}
             </p>
           )}
@@ -285,7 +314,7 @@ export function Inbox({ detail }: { detail?: string }) {
   );
   const current = store.threads.find((t) => t.id === detail) ?? threads[0];
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={ui("inbox")}
         icon="inbox"
@@ -295,7 +324,11 @@ export function Inbox({ detail }: { detail?: string }) {
           </Button>
         }
       />
-      <div className={s.actions} style={{ marginBottom: 16 }}>
+      <div
+        className={s.actions}
+        data-studio-part="actions"
+        style={{ marginBottom: 16 }}
+      >
         {["Open", "Closed", "All"].map((v) => (
           <Button key={v} onClick={() => setStatus(v)} primary={v === status}>
             {caption(v)}
@@ -315,8 +348,8 @@ export function Inbox({ detail }: { detail?: string }) {
           </Button>
         </Empty>
       ) : (
-        <div className={s.inbox}>
-          <aside className={s.threads}>
+        <div className={s.inbox} data-studio-part="inbox">
+          <aside className={s.threads} data-studio-part="threads">
             {threads.map((t) => (
               <Link
                 key={t.id}
@@ -329,17 +362,22 @@ export function Inbox({ detail }: { detail?: string }) {
                   )}
                 </strong>
                 <p>{t.subject}</p>
-                <p className={s.help}>{t.messages.at(-1)?.body.slice(0, 70)}</p>
+                <p className={s.help} data-studio-part="field-help">
+                  {t.messages.at(-1)?.body.slice(0, 70)}
+                </p>
               </Link>
             ))}
             {!threads.length && (
               <p style={{ padding: 16 }}>{ui("noConversationsInThisView")}</p>
             )}
           </aside>
-          <section className={s.conversation}>
+          <section className={s.conversation} data-studio-part="conversation">
             {current ? (
               <>
-                <div className={s.sectionHeading}>
+                <div
+                  className={s.sectionHeading}
+                  data-studio-part="panel-heading"
+                >
                   <h2>{current.subject}</h2>
                   <Button
                     onClick={() => {
@@ -361,13 +399,13 @@ export function Inbox({ detail }: { detail?: string }) {
                       : ui("reopen")}
                   </Button>
                 </div>
-                <div className={s.messages}>
+                <div className={s.messages} data-studio-part="messages">
                   {current.messages.map((m, i) => (
                     <div
                       key={i}
                       className={`${s.bubble} ${m.from === "You" ? s.bubbleSelf : ""}`}
                     >
-                      <p className={s.help}>
+                      <p className={s.help} data-studio-part="field-help">
                         {m.from} · {m.time}
                       </p>
                       <p>{m.body}</p>
@@ -376,6 +414,7 @@ export function Inbox({ detail }: { detail?: string }) {
                 </div>
                 <form
                   className={s.stack}
+                  data-studio-part="stack"
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (!message.trim()) return;
@@ -484,7 +523,13 @@ export function Inbox({ detail }: { detail?: string }) {
     </main>
   );
 }
-export function Store({ standalone = false }: { standalone?: boolean }) {
+export function Store({
+  standalone = false,
+  detail,
+}: {
+  standalone?: boolean;
+  detail?: string;
+}) {
   const intlLocale = useIntlLocale();
   const ui = useTranslations("merchantUI");
   const { store, href, language, text, update, notify } = usePreview();
@@ -494,6 +539,9 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
   const products = store.products.filter(
     (p) => showDrafts || p.status === "Active",
   );
+  if (!standalone && detail === "preferences") return <StorePreferences />;
+  if (!standalone && detail !== "appearance" && !preview)
+    return <StoreSummary onPreview={() => setPreview(true)} />;
   return (
     <main className={`${s.page} ${standalone ? s.standaloneStore : ""}`}>
       <Header
@@ -521,9 +569,10 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
         }
       />
       {preview ? (
-        <div className={s.storePreview}>
+        <div className={s.storePreview} data-studio-part="store-preview">
           <header
             className={s.storeCover}
+            data-studio-part="store-cover"
             style={{ borderBottom: `4px solid ${settings.accent}` }}
           >
             <span
@@ -553,7 +602,7 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
               onChange={() => setShowDrafts(!showDrafts)}
             />
           </div>
-          <div className={s.storeGrid}>
+          <div className={s.storeGrid} data-studio-part="store-grid">
             {products.map((p) => (
               <Link key={p.id} href={href(`products/${p.id}`)}>
                 {p.image ? (
@@ -563,10 +612,11 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
                     height={472}
                     src={p.image}
                     className={s.thumb}
+                    data-studio-part="thumb"
                     alt={p.title}
                   />
                 ) : (
-                  <div className={s.thumb}>
+                  <div className={s.thumb} data-studio-part="thumb">
                     {text("Product image", "Снимка на продукта")}
                   </div>
                 )}
@@ -576,7 +626,7 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
             ))}
           </div>
           {!products.length && (
-            <p className={s.learn}>
+            <p className={s.learn} data-studio-part="learn">
               {text(
                 "No active products. Add products or include drafts.",
                 "Няма активни продукти. Добави продукт или покажи черновите.",
@@ -592,8 +642,8 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
             notify(ui("storeAppearanceSavedLocallyNothingWasPublished"));
           }}
         >
-          <div className={s.editorColumns}>
-            <div className={s.stack}>
+          <div className={s.editorColumns} data-studio-part="editor-layout">
+            <div className={s.stack} data-studio-part="stack">
               <Panel title={ui("storeIdentity")}>
                 <Field label={ui("storeName")}>
                   <input
@@ -614,7 +664,7 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
                     }
                   />
                 </Field>
-                <div className={s.fields}>
+                <div className={s.fields} data-studio-part="fields">
                   <Field label={ui("storeHandle")}>
                     <input
                       required
@@ -638,23 +688,23 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
                 </div>
               </Panel>
               <Panel title={ui("storeContent")}>
-                <div className={s.dataRow}>
+                <div className={s.dataRow} data-studio-part="data-row">
                   <span>{ui("collections")}</span>
                   <Action href={href("collections")}>
                     {ui("manageCollections")}
                   </Action>
                 </div>
-                <div className={s.dataRow}>
+                <div className={s.dataRow} data-studio-part="data-row">
                   <span>{ui("pages")}</span>
                   <Action href={href("pages")}>{ui("managePages")}</Action>
                 </div>
-                <div className={s.dataRow}>
+                <div className={s.dataRow} data-studio-part="data-row">
                   <span>{ui("imagesAndFiles")}</span>
                   <Action href={href("files")}>{ui("manageFiles")}</Action>
                 </div>
               </Panel>
             </div>
-            <aside className={s.editorSide}>
+            <aside className={s.editorSide} data-studio-part="editor-side">
               <Panel title={ui("publishing")}>
                 <Badge>Frontend preview</Badge>
                 <p>
@@ -674,7 +724,7 @@ export function Store({ standalone = false }: { standalone?: boolean }) {
               </Panel>
             </aside>
           </div>
-          <div className={s.saveBar}>
+          <div className={s.saveBar} data-studio-part="save-bar">
             <Button primary type="submit">
               {ui("saveAppearance")}
             </Button>
@@ -715,7 +765,7 @@ export function Notifications() {
       })),
   ];
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={ui("notifications")}
         icon="bell"
@@ -728,10 +778,12 @@ export function Notifications() {
       <Panel title={ui("storeUpdates")}>
         {items.length ? (
           items.map((i) => (
-            <div key={i.id} className={s.dataRow}>
+            <div key={i.id} className={s.dataRow} data-studio-part="data-row">
               <Link href={i.href}>
                 <strong>{i.title}</strong>
-                <p className={s.help}>{i.body}</p>
+                <p className={s.help} data-studio-part="field-help">
+                  {i.body}
+                </p>
               </Link>
               <Button
                 plain
@@ -748,7 +800,7 @@ export function Notifications() {
             </div>
           ))
         ) : (
-          <p className={s.muted}>
+          <p className={s.muted} data-studio-part="muted">
             {ui("youReAllCaughtUpUpdatesFromPreviewOrdersAnd")}
           </p>
         )}

@@ -1,0 +1,385 @@
+.heading {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+.heading nav {
+  margin: 0;
+}
+.heading h1 {
+  font-size: 13px;
+  font-weight: 500;
+}
+.nameRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 108px;
+  align-items: center;
+  gap: 8px;
+}
+.typeControl {
+  display: contents;
+}
+.allocationChoice {
+  display: contents;
+}
+.allocationChoice > span {
+  display: none;
+}
+.typeIcon,
+.typeChevron {
+  display: none;
+}
+.nameRow select {
+  font: inherit;
+  min-height: 32px;
+  border-radius: 18px;
+  border: 0;
+  padding: 4px 12px;
+  background: #f1f1f1;
+}
+.scheduleRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.scheduleRow > span {
+  width: 178px;
+  padding-block: 8px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.scheduleRow > div {
+  flex: 1;
+  min-width: 0;
+}
+.scheduleRow > button {
+  border-radius: 18px;
+  min-height: 28px;
+}
+.scheduleRow > button > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.dateTrigger {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  font-weight: 400;
+  min-height: 32px;
+}
+.changes {
+  text-align: center;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.changes p {
+  margin: 0;
+}
+.audience {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 296px;
+  gap: 24px;
+}
+.audience > div:first-child > label {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.audience select {
+  border: 0;
+  background: #f7f7f7;
+  border-radius: 18px;
+  padding: 4px 8px;
+  font: inherit;
+  width: auto;
+  max-width: 100%;
+  min-height: 28px;
+}
+.allocation {
+  border: 1px solid #eee;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.allocation svg {
+  width: 80px;
+  height: 80px;
+}
+.allocation > span {
+  font-size: 12px;
+  color: #616161;
+}
+.notes h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.notes p {
+  margin: 0;
+  color: #616161;
+  overflow-wrap: anywhere;
+}
+.notes button {
+  padding: 0;
+  min-height: 24px;
+}
+.notes svg {
+  width: 20px;
+  height: 20px;
+}
+.datePopover,
+.notePopover {
+  position: fixed;
+  margin: 0;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  background: white;
+  box-shadow: 0 4px 18px #0002;
+  max-width: calc(100dvw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+.datePopover {
+  width: 274px;
+}
+.datePopover footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #eee;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+.notePopover {
+  width: 321px;
+}
+.notePopover > button {
+  float: right;
+}
+.notePopover textarea {
+  width: 100%;
+  min-height: 80px;
+}
+@media (max-width: 767px) {
+  .typeControl {
+    display: inline-grid;
+    position: relative;
+    justify-self: start;
+  }
+  .typeIcon,
+  .typeChevron {
+    display: block;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .typeIcon {
+    left: 8px;
+  }
+  .typeChevron {
+    right: 8px;
+    color: #707070;
+  }
+  .nameRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+  .nameRow select {
+    justify-self: start;
+    min-height: 28px;
+    appearance: none;
+    padding: 4px 28px 4px 28px;
+    background: #eee;
+  }
+  .heading {
+    margin-bottom: 18px;
+    align-items: flex-start;
+  }
+  .heading nav {
+    min-width: 0;
+    flex: 1;
+    position: fixed;
+    top: 12px;
+    left: 16px;
+    right: 16px;
+    z-index: 20;
+    isolation: isolate;
+  }
+  .heading nav::before {
+    content: "";
+    position: absolute;
+    inset: -12px -16px;
+    background: white;
+    border-bottom: 1px solid #eee;
+    z-index: -1;
+  }
+  .heading h1 {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 140px;
+  }
+  .scheduleRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .scheduleRow > span {
+    width: 100%;
+    padding: 0;
+  }
+  .scheduleRow > div {
+    display: contents;
+  }
+  .scheduleRow > div > button {
+    order: 1;
+    font-size: 13px;
+  }
+  .scheduleRow > div > p {
+    order: 3;
+    width: 100%;
+    line-height: 20px;
+    margin-bottom: 0;
+  }
+  .scheduleRow > button {
+    order: 2;
+    font-size: 12px;
+    background: #eee;
+    padding: 4px 12px 4px 8px;
+    gap: 4px;
+    width: fit-content;
+  }
+  .changes > button {
+    background: #eee;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .audience {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .audience > div:first-child > label {
+    grid-template-columns: 108px minmax(0, 1fr);
+    margin-bottom: 12px;
+  }
+  .audience select {
+    box-shadow: none;
+    justify-self: start;
+    background: #f1f1f1;
+  }
+  .audience select:disabled {
+    background: #fafafa;
+  }
+  .audience > div:first-child > label:last-child {
+    margin-bottom: 0;
+  }
+  .allocation {
+    min-height: 110px;
+    gap: 12px;
+  }
+  .allocation svg {
+    width: 72px;
+    height: 72px;
+  }
+  .notes h2 {
+    margin-bottom: 8px;
+  }
+  .notes button {
+    width: 28px;
+    min-width: 28px;
+    padding: 4px;
+    border-radius: 50%;
+  }
+  .datePopover [data-studio-part="draft-date-fields"] {
+    display: flex;
+    flex-direction: column;
+  }
+  .datePopover [data-studio-part="draft-date-fields"] > div:first-child {
+    order: 2;
+    margin-top: 12px;
+    gap: 8px;
+  }
+  .datePopover [data-studio-part="date-calendar-nav"] {
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    right: 20px;
+    height: 28px;
+  }
+  .datePopover [data-studio-part="date-calendar-nav"] button {
+    min-width: 28px;
+    width: 28px;
+    min-height: 28px;
+    padding: 4px;
+  }
+  .datePopover [data-studio-part="date-calendar-months"] h3 {
+    line-height: 28px;
+    margin-bottom: 12px;
+    font-weight: 550;
+  }
+  .datePopover [data-studio-part="date-calendar-months"] [role="group"] {
+    gap: 0;
+  }
+  .datePopover [data-studio-part="date-calendar-months"] button {
+    min-height: 32px;
+  }
+  .datePopover [data-studio-part="field"] > div > span {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .datePopover [data-studio-part="field"] svg {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+  }
+  .datePopover input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+  }
+  .datePopover [data-studio-part="field"]:first-child > div > span {
+    right: 12px;
+  }
+  .datePopover footer {
+    position: sticky;
+    bottom: -12px;
+    margin: 12px -12px -12px;
+    padding: 8px 12px;
+    background: #f7f7f7;
+  }
+  .notePopover textarea {
+    min-height: 92px;
+    resize: none;
+    padding: 8px 12px;
+  }
+  .notePopover > button {
+    margin-top: 8px;
+  }
+  .notePopover label > span {
+    font-weight: 550;
+  }
+}
+@media (max-width: 359px) {
+  .audience > div:first-child > label {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

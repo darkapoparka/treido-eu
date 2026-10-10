@@ -12,7 +12,7 @@ import { applyReviewedMigration } from '../../apps/web/scripts/identity-draft-mi
 import { applyRuntimeGrants } from '../../apps/web/scripts/runtime-grants.mjs';
 import { loadVerifiedRemediationFreeze } from './remediation-freeze.mjs';
 const root = path.resolve(import.meta.dirname, '../../..');
-const evidence = path.join(root, '.qa/t61');
+const defaultEvidence = path.join(root, '.qa/t61');
 const requireWeb = createRequire(path.join(root, 'app/apps/web/package.json'));
 const { Pool } = requireWeb('pg');
 const embeddedRequire = createRequire(requireWeb.resolve('embedded-postgres'));
@@ -26,6 +26,8 @@ const pgctl = args => new Promise((resolve, reject) => {
 });
 export async function startNativeCluster(options = {}) {
   if (process.version !== 'v24.20.0') throw Error('Pinned Node required');
+  const evidence = options.evidenceDirectory ? path.resolve(options.evidenceDirectory) : defaultEvidence;
+  if (evidence === path.parse(evidence).root) throw Error('Ambiguous native evidence target');
   const qualification = await loadVerifiedRemediationFreeze();
   if (options.reviewedAdditionalMigrations &&
       JSON.stringify(options.reviewedAdditionalMigrations) !== JSON.stringify(qualification.reviewedAdditionalMigrations))

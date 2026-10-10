@@ -1,0 +1,446 @@
+.root {
+  max-width: 1030px;
+}
+.nameRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px;
+  gap: 8px;
+  align-items: center;
+}
+.nameRow select {
+  width: 100%;
+  font: inherit;
+  min-height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 4px;
+}
+.counted {
+  position: relative;
+}
+.counted input {
+  padding-right: 68px;
+}
+.counted > span {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #616161;
+  font-size: 12px;
+  pointer-events: none;
+}
+.markets {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 8px;
+}
+.markets > strong {
+  width: 200px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.markets > button {
+  font-weight: 400;
+}
+.pricingRows {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.pricingRows > label {
+  display: grid;
+  grid-template-columns: 200px 320px;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  margin: 0;
+}
+.pricingRows select {
+  font: inherit;
+  min-height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+.adjustment {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  border-top: 1px solid #ddd;
+  flex-wrap: wrap;
+}
+.adjustment > span:first-child {
+  width: 200px;
+  flex-shrink: 0;
+}
+.adjustmentValue {
+  display: flex;
+  align-items: center;
+  width: 100px;
+  min-width: 0;
+  position: relative;
+}
+.adjustmentValue > input {
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 24px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font: inherit;
+}
+.adjustmentValue > span {
+  position: absolute;
+  pointer-events: none;
+  color: #616161;
+}
+.adjustmentValue > span:first-child {
+  left: 8px;
+}
+.adjustmentValue > span:last-child {
+  right: 8px;
+}
+.marketSearch {
+  position: relative;
+  min-width: 0;
+}
+.marketSearch > svg {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #707070;
+  pointer-events: none;
+}
+.marketSearch input {
+  width: 100%;
+  padding-left: 32px;
+}
+.marketList {
+  min-width: 0;
+}
+.currencyChoice {
+  min-width: 0;
+}
+.currencyChoice > span {
+  display: none;
+}
+.currencyChoice select {
+  width: 100%;
+}
+.productActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.productActions label {
+  margin: 0;
+}
+.productViews {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 12px;
+}
+.productViews > div {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+.productViews button,
+.scopeTabs button {
+  border: 0;
+  background: transparent;
+  border-radius: 18px;
+  padding: 4px 12px;
+  font: inherit;
+  cursor: pointer;
+  min-height: 28px;
+}
+.productViews button[aria-selected="true"],
+.scopeTabs button[aria-selected="true"] {
+  background: #e3e3e3;
+}
+.productViews svg {
+  width: 16px;
+  height: 16px;
+}
+.empty {
+  min-height: 198px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+.empty strong {
+  font-weight: 500;
+}
+.empty p {
+  margin: 0;
+}
+.table {
+  overflow-x: auto;
+}
+.marketModal {
+  width: 620px;
+}
+.marketModal [data-studio-part="modal-body"] {
+  min-height: 380px;
+}
+.scopeTabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+@media (max-width: 767px) {
+  .nameRow {
+    grid-template-columns: minmax(0, 1fr) 78px;
+    align-items: end;
+  }
+  .nameRow select {
+    min-height: 30px;
+  }
+  .markets > strong {
+    width: auto;
+  }
+  .markets {
+    padding: 0;
+    gap: 8px;
+    border: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .markets > button {
+    text-align: left;
+    overflow-wrap: anywhere;
+    min-width: 0;
+    min-height: 46px;
+    justify-content: flex-start;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px 16px;
+    white-space: normal;
+  }
+  .markets > button svg {
+    flex-shrink: 0;
+  }
+  .pricingRows {
+    border: 0;
+  }
+  .pricingRows > label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 4px 12px;
+    border: 1px solid #ddd;
+    border-radius: 11px;
+  }
+  .pricingRows > label > span:first-child {
+    font-size: 12px;
+    color: #707070;
+  }
+  .pricingRows .currencyChoice > select {
+    border: 0;
+    padding: 0;
+    min-height: 26px;
+    box-shadow: none;
+    background-color: transparent;
+  }
+  .pricingRows select {
+    max-width: 100%;
+  }
+  .adjustment > span:first-child {
+    width: 100%;
+  }
+  .adjustment {
+    border: 0;
+    padding: 12px 0 0;
+  }
+  .adjustmentValue {
+    flex: 1;
+  }
+  .compareAt {
+    width: 100%;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 11px;
+  }
+  .compareAt label {
+    margin: 0;
+    align-items: flex-start;
+  }
+  .productActions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .productActions > div {
+    width: 100%;
+    font-size: 13px;
+  }
+  .root [data-studio-part="catalog-switch"] input {
+    appearance: none;
+    flex-shrink: 0;
+    width: 30px;
+    height: 18px;
+    min-height: 18px;
+    margin: 2px 0 0;
+    border: 0;
+    border-radius: 12px;
+    background: #8a8a8a radial-gradient(circle, #fff 65%, transparent 70%) 2px
+      center / 14px 14px no-repeat;
+    cursor: pointer;
+  }
+  .root [data-studio-part="catalog-switch"] input:checked {
+    background-color: #303030;
+    background-position: right 2px center;
+  }
+  .root [data-studio-part="catalog-switch"] input:focus-visible {
+    outline: 2px solid #005bd3;
+    outline-offset: 2px;
+  }
+  .table table {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .table th,
+  .table td {
+    padding: 12px 8px;
+    overflow-wrap: anywhere;
+  }
+  .table th:nth-child(2) {
+    width: 80px;
+  }
+  .table th:last-child {
+    width: 58px;
+  }
+  .table td:last-child label {
+    justify-content: center;
+  }
+  .table td:last-child label > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .productViews {
+    padding: 8px;
+    gap: 4px;
+  }
+  .productViews > div {
+    gap: 2px;
+    min-width: 0;
+  }
+  .productViews button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .marketModal[data-studio-part="modal"][data-studio-surface="catalog-market-selector"] {
+    max-width: 100dvw;
+    width: 100dvw;
+    position: fixed;
+    inset: auto 0 0;
+    margin: 0;
+    height: 600px;
+    max-height: calc(100dvh - 16px);
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .marketModal[data-studio-surface="catalog-market-selector"]
+    > [data-studio-part="modal-header"] {
+    flex-shrink: 0;
+    min-height: 64px;
+  }
+  .marketModal[data-studio-surface="catalog-market-selector"]::backdrop {
+    background: #0008;
+  }
+  .marketModal[data-studio-surface="catalog-market-selector"]
+    > [data-studio-part="modal-header"]
+    > button {
+    width: 28px;
+    min-height: 28px;
+    padding: 6px;
+    margin-right: -4px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1px #0000000d,
+      0 2px 8px #0000000a;
+  }
+  .marketModal[data-studio-surface="catalog-market-selector"]
+    > [data-studio-part="modal-body"] {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px 16px 12px;
+  }
+  .marketModal[data-studio-surface="catalog-market-selector"]
+    > [data-studio-part="modal-footer"] {
+    flex-shrink: 0;
+    flex-direction: column-reverse;
+    padding: 8px 16px 14px;
+    gap: 8px;
+    border: 0;
+  }
+  .marketModal [data-studio-part="modal-footer"] button {
+    width: 100%;
+    min-height: 28px;
+    padding-block: 4px;
+  }
+  .marketModal [data-studio-part="field"] {
+    flex-shrink: 0;
+  }
+  .marketModal .marketSearch input {
+    min-height: 32px;
+    height: 32px;
+  }
+  .marketList {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .marketList label {
+    min-height: 32px;
+    align-items: flex-start;
+    padding: 4px 0;
+  }
+  .marketModal [data-studio-part="field"] > span:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .marketModal .scopeTabs {
+    flex-shrink: 0;
+    margin: 0;
+    padding-bottom: 0;
+    border: 0;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .marketModal .scopeTabs button {
+    border-radius: 8px;
+    padding: 6px 12px;
+  }
+}

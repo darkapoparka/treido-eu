@@ -45,6 +45,9 @@ const settingsLabels: Record<
   languages: ["Languages", "Езици"],
   privacy: ["Customer privacy", "Поверителност"],
   policies: ["Policies", "Политики"],
+  roles: ["Roles", "Роли"],
+  security: ["Security", "Сигурност"],
+  "sales-channels": ["Sales channels", "Канали за продажба"],
 };
 
 /** Synthetic, current-store records only. Destinations cannot escape the guarded preview. */
@@ -94,7 +97,29 @@ export function previewSearchItems(
   }
   for (const e of store.entries) {
     const section =
-      e.type === "File" ? "files" : e.type === "Page" ? "pages" : "content";
+      e.type === "File"
+        ? "files"
+        : ["Page", "PageDraft"].includes(e.type)
+          ? "pages"
+          : e.type === "BlogDraft"
+            ? "blog-posts"
+            : e.type === "MenuDraft"
+              ? "menus"
+              : e.type === "CatalogDraft"
+                ? "catalogs"
+                : e.type === "RolloutDraft"
+                  ? "rollouts"
+                  : e.type === "ReportDraft"
+                    ? "reports"
+                    : e.type === "PurchaseOrderDraft"
+                      ? "purchase-orders"
+                      : e.type === "TransferDraft"
+                        ? "transfers"
+                        : ["GiftCardDraft", "GiftCardProductDraft"].includes(
+                              e.type,
+                            )
+                          ? "gift-cards"
+                          : "content";
     add({
       category: "content",
       title: e.title,

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePreview } from "./context";
+import { DraftOrderBuilder } from "./draft-order-builder";
 import { money, orderTotal, parseMoney, put, type Order } from "./model";
 import {
   Action,
@@ -35,6 +36,7 @@ export function Orders({
   const { store, href, update, notify } = usePreview();
   const list = useList();
   const [cancel, setCancel] = useState(false);
+  if (detail === "new") return <DraftOrderBuilder drafts={drafts} />;
   if (detail) return <OrderEditor key={detail} id={detail} drafts={drafts} />;
   const source = store.orders.filter(
     (o) => o.kind === (drafts ? "Draft" : "Order"),
@@ -56,7 +58,7 @@ export function Orders({
       (a, b) => b.date.localeCompare(a.date) || Number(b.id) - Number(a.id),
     );
   return (
-    <main className={s.page}>
+    <main className={s.page} data-studio-part="page">
       <Header
         title={drafts ? ui("drafts") : ui("orders")}
         icon="orders"
@@ -104,7 +106,7 @@ export function Orders({
           </Action>
         </Empty>
       ) : (
-        <div className={s.tablePanel}>
+        <div className={s.tablePanel} data-studio-part="table-panel">
           <Toolbar
             {...list}
             tabs={
@@ -112,7 +114,7 @@ export function Orders({
             }
           />
           {list.selected.length > 0 && (
-            <div className={s.bulk}>
+            <div className={s.bulk} data-studio-part="bulk">
               <strong>
                 {list.selected.length} {ui("selected_d7cbbb")}
               </strong>
@@ -137,8 +139,8 @@ export function Orders({
               </Button>
             </div>
           )}
-          <div className={s.tableScroll}>
-            <table className={s.table}>
+          <div className={s.tableScroll} data-studio-part="table-scroll">
+            <table className={s.table} data-studio-part="table">
               <thead>
                 <tr>
                   <th>
@@ -181,6 +183,7 @@ export function Orders({
                     <td>
                       <Link
                         className={s.cellLink}
+                        data-studio-part="cell-link"
                         href={href(`${drafts ? "drafts" : "orders"}/${o.id}`)}
                       >
                         #{o.id}
@@ -207,7 +210,7 @@ export function Orders({
           <TableFooter count={rows.length} />
         </div>
       )}
-      <p className={s.learn}>
+      <p className={s.learn} data-studio-part="learn">
         {ui("ordersInThisPreviewUseFictionalDeviceLocalData")}
       </p>
       {cancel && (
@@ -272,7 +275,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
   const customer = store.customers.find((c) => c.id === order.customerId);
   if (id !== "new" && !existing)
     return (
-      <main className={s.editor}>
+      <main className={s.editor} data-studio-part="editor">
         <Header
           title={ui("orderNotFound")}
           back={href(drafts ? "drafts" : "orders")}
@@ -307,7 +310,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
     setError("");
   };
   return (
-    <main className={s.editor}>
+    <main className={s.editor} data-studio-part="editor">
       <Header
         title={
           id === "new"
@@ -348,18 +351,18 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
       />
       <form onSubmit={save}>
         {error && (
-          <div role="alert" className={s.error}>
+          <div role="alert" className={s.error} data-studio-part="error">
             {error}
           </div>
         )}
-        <div className={s.editorColumns}>
-          <div className={s.stack}>
+        <div className={s.editorColumns} data-studio-part="editor-layout">
+          <div className={s.stack} data-studio-part="stack">
             <Panel
               title={order.fulfillment}
               action={<Badge>{order.fulfillment}</Badge>}
             >
-              <div className={s.tableScroll}>
-                <table className={s.table}>
+              <div className={s.tableScroll} data-studio-part="table-scroll">
+                <table className={s.table} data-studio-part="table">
                   <thead>
                     <tr>
                       <th>{ui("product")}</th>
@@ -374,12 +377,12 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                         <td>
                           {store.products.find((p) => p.id === line.productId)
                             ?.title ?? ui("removedProduct")}
-                          <p className={s.help}>
+                          <p className={s.help} data-studio-part="field-help">
                             {money(line.price, intlLocale)} {ui("each")}
                           </p>
                         </td>
                         <td>
-                          <label className={s.field}>
+                          <label className={s.field} data-studio-part="field">
                             <input
                               type="number"
                               min={1}
@@ -430,7 +433,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                   </tbody>
                 </table>
               </div>
-              <div className={s.fields}>
+              <div className={s.fields} data-studio-part="fields">
                 <Field label={ui("addProducts")}>
                   <select
                     value={productId}
@@ -446,7 +449,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                       ))}
                   </select>
                 </Field>
-                <div className={s.actions}>
+                <div className={s.actions} data-studio-part="actions">
                   <Button
                     disabled={!productId}
                     onClick={() => {
@@ -491,7 +494,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                 </Button>
               )}
               {order.tracking && (
-                <p className={s.help}>
+                <p className={s.help} data-studio-part="field-help">
                   {ui("tracking")} {order.tracking}
                 </p>
               )}
@@ -500,7 +503,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
               title={ui("payment")}
               action={<Badge>{order.payment}</Badge>}
             >
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <span>{ui("subtotal")}</span>
                 <span>
                   {money(
@@ -519,7 +522,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                   onChange={(e) => setShipping(e.target.value)}
                 />
               </Field>
-              <div className={s.dataRow}>
+              <div className={s.dataRow} data-studio-part="data-row">
                 <strong>{ui("total")}</strong>
                 <strong>
                   {money(
@@ -532,7 +535,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                 </strong>
               </div>
               {order.refunded > 0 && (
-                <div className={s.dataRow}>
+                <div className={s.dataRow} data-studio-part="data-row">
                   <span>{ui("refunded")}</span>
                   <span>{money(order.refunded, intlLocale)}</span>
                 </div>
@@ -565,7 +568,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
               )}
             </Panel>
             <Panel title={ui("timeline")}>
-              <p className={s.help}>
+              <p className={s.help} data-studio-part="field-help">
                 {order.date} ·{" "}
                 {existing
                   ? ui("orderSavedInLocalPreview")
@@ -595,7 +598,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
               </Field>
             </Panel>
           </div>
-          <aside className={s.editorSide}>
+          <aside className={s.editorSide} data-studio-part="editor-side">
             <Panel title={ui("customer")}>
               <Field label={ui("selectCustomer")}>
                 <select
@@ -618,6 +621,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                 <>
                   <Link
                     className={s.link}
+                    data-studio-part="link"
                     href={href(`customers/${customer.id}`)}
                   >
                     {customerName(customer)}
@@ -643,13 +647,13 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
                   onChange={(e) => setOrder({ ...order, date: e.target.value })}
                 />
               </Field>
-              <p className={s.help}>
+              <p className={s.help} data-studio-part="field-help">
                 {ui("allOrderEffectsAreSimulatedOnThisDevice")}
               </p>
             </Panel>
           </aside>
         </div>
-        <div className={s.saveBar}>
+        <div className={s.saveBar} data-studio-part="save-bar">
           <Action href={href(base)}>{ui("cancel")}</Action>
           <Button primary type="submit">
             {ui("saveOrder")}
@@ -685,7 +689,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
               onChange={(e) => setTracking(e.target.value)}
             />
           </Field>
-          <p className={s.help}>
+          <p className={s.help} data-studio-part="field-help">
             {ui("reviewTheFulfillmentStateWithoutBookingACarrier")}
           </p>
         </Modal>
@@ -740,7 +744,7 @@ function OrderEditor({ id, drafts }: { id: string; drafts: boolean }) {
             {money(orderTotal(order) - order.refunded, intlLocale)}
           </p>
           {error && (
-            <p role="alert" className={s.error}>
+            <p role="alert" className={s.error} data-studio-part="error">
               {error}
             </p>
           )}

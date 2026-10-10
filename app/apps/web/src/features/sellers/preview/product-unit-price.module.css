@@ -1,0 +1,80 @@
+.root {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 11px;
+  background: white;
+  color: #616161;
+  text-align: left;
+  cursor: pointer;
+}
+.trigger svg {
+  width: 16px;
+  height: 16px;
+}
+.popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  width: min(296px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  background: white;
+  color: #171717;
+  box-shadow: 0 4px 12px #0002;
+}
+.body {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+.measure {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #ddd;
+  border-radius: 11px;
+  overflow: hidden;
+}
+.measure input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.measure select {
+  width: 58px;
+  border: 0;
+  border-left: 1px solid #eee;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 8px;
+}
+.measure:focus-within {
+  outline: 2px solid #005bd3;
+  outline-offset: 1px;
+}
+.popover footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid #eee;
+  padding: 12px;
+}
+.popover footer > div {
+  display: flex;
+  gap: 8px;
+}

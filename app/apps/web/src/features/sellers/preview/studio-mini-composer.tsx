@@ -14,6 +14,7 @@ export function MiniAvatar({ size = 20 }: { size?: number }) {
       width={size}
       height={size}
       sizes={`${size}px`}
+      loading="eager"
       className={s.avatar}
     />
   );
@@ -42,6 +43,7 @@ export function StudioMiniDock() {
   const [prompt, setPrompt] = useState("");
   return (
     <form
+      data-studio-part="mini-dock"
       data-studio-mini=""
       className={`${s.dock} ${largeText ? s.large : ""}`}
       onSubmit={(event) => {
@@ -112,8 +114,11 @@ export function StudioMiniComposer({ home = false }: { home?: boolean }) {
     mini.ask(prompt);
     setPrompt("");
   };
+  if (home && mini.docked) return null;
   return (
     <form
+      data-studio-part="mini-composer"
+      data-mini-composer={home ? "home" : "chat"}
       data-studio-mini=""
       className={`${s.composer} ${home ? s.homeComposer : s.chatComposer} ${largeText ? s.large : ""}`}
       onSubmit={(e) => {
@@ -146,7 +151,10 @@ export function StudioMiniComposer({ home = false }: { home?: boolean }) {
           }
         }}
       />
-      <div className={s.composerActions}>
+      <div
+        data-studio-part="mini-composer-actions"
+        className={s.composerActions}
+      >
         {home && (
           <button
             type="button"
