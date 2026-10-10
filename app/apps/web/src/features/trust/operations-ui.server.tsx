@@ -14,7 +14,13 @@ export async function OperationsNav({
   active,
 }: {
   language: "bg" | "en";
-  active?: "reports" | "appeals" | "insights" | "aftercare" | "declarations";
+  active?:
+    | "reports"
+    | "appeals"
+    | "insights"
+    | "aftercare"
+    | "declarations"
+    | "support";
 }) {
   const t = await getTranslations({
     locale: language,
@@ -59,6 +65,14 @@ export async function OperationsNav({
         aria-current={active === "aftercare" ? "page" : undefined}
       >
         {language === "bg" ? "Помощ за поръчки" : "Order support"}
+      </Link>
+      <Link
+        className={w.button}
+        href={"/ops/support?lang=" + language}
+        prefetch={false}
+        aria-current={active === "support" ? "page" : undefined}
+      >
+        {language === "bg" ? "Заявки за помощ" : "Support requests"}
       </Link>
       <Link className={w.button} href={"/?lang=" + language}>
         {t("home")}

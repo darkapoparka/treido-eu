@@ -1,4 +1,5 @@
 import "server-only";
+import { ownSupportExport } from "../support/export.server";
 import type { PoolClient } from "pg";
 import {
   PRIVACY_LIMITS,
@@ -194,6 +195,7 @@ export async function projectExport(
     if (category === "account") {
       rows = rows.concat(await readOwnAccountLifecycleExport(client, userId));
       rows = rows.concat(await ownCommunicationMetadata(client, userId));
+      rows = rows.concat(await ownSupportExport(client, userId));
     }
     if (category === "purchases") {
       const purchases = await projectPurchaseData(client, userId, rows);

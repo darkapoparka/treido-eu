@@ -1,4 +1,5 @@
 import { CaseDecisionForm } from "./case-form";
+import { ReportEvidenceImages } from "./image-evidence";
 import "server-only";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -267,6 +268,7 @@ export async function OperatorReportPage({
               })}
             </p>
             <p className={s.notice}>{t("messageReportNote")}</p>
+            <ReportEvidenceImages reportId={reportId} language={language} />
           </section>
         )}
         <ListingFacts language={language} listing={data.listing} />

@@ -15,6 +15,7 @@ import {
 
 function isPrivateAccountEntry(pathname: string) {
   return (
+    /^\/(?:support\/requests|ops)(?:\/|$)/.test(pathname) ||
     pathname === "/profile" ||
     pathname === "/account" ||
     pathname === "/account/notifications" ||
@@ -25,7 +26,7 @@ function isPrivateAccountEntry(pathname: string) {
 }
 
 function isSessionApi(pathname: string) {
-  return /^\/api\/(?:seller-media|message-attachments|assistants\/(?:runs|media))(?:\/|$)/.test(
+  return /^\/api\/(?:ops\/reports|seller-media|message-attachments|assistants\/(?:runs|media))(?:\/|$)/.test(
     pathname,
   );
 }
@@ -116,6 +117,7 @@ export const config = {
     "/((?!api|_next|favicon.ico|robots.txt|sitemap.xml|fonts/).*)",
     "/api/seller-media/:path*",
     "/api/message-attachments/:path*",
+    "/api/ops/reports/:path*",
     "/api/assistants/runs",
     "/api/assistants/media/:path*",
   ],

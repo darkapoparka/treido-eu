@@ -158,6 +158,7 @@ async function main() {
         "0054_seller_declaration_reviews",
         "0055_notification_delivery",
         "0056_private_support",
+        "0057_report_image_evidence",
       ]) {
         const source = await readFile(
           new URL(`../migrations/${version}.sql`, import.meta.url),
