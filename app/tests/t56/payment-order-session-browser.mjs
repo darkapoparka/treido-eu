@@ -7,7 +7,7 @@ import path from "node:path";
 import process from "node:process";
 import console from "node:console";
 
-// Actual order controls and account boundary with deferred synthetic actions.
+// Actual order/checkout controls and account boundary with deferred synthetic actions.
 // Native receipt ordering is qualified separately; no provider or visual claim.
 const app = process.cwd(),
   req = createRequire(path.join(app, "package.json")),
@@ -32,14 +32,26 @@ window.__resolve=(index,result)=>window.__requests[index].resolve(result);
 window.__reject=index=>window.__requests[index].reject(Error('Synthetic uncertain transport'));
 export const createQuoteAction=()=>{throw Error('Unexpected quote effect')};
 export const startOnboardingAction=()=>{throw Error('Unexpected onboarding effect')};
+window.__paymentRequests=[];
+const paymentRequest=(kind,args)=>new Promise((resolve,reject)=>window.__paymentRequests.push({kind,args:JSON.parse(JSON.stringify(args)),resolve,reject}));
+export const beginPaymentAction=args=>paymentRequest('begin',args);
+export const cancelPaymentAction=args=>paymentRequest('cancel',args);
+window.__paymentResolve=(index,result)=>window.__paymentRequests[index].resolve(result);
+`;
+const stripe = `
+window.__stripeLoads=0;window.__stripeElements=[];window.__stripeConfirms=[];
+export async function loadStripe(){window.__stripeLoads++;return {elements(){const record={destroyed:false,mounted:false,events:{}};window.__stripeElements.push(record);return {create(){return {on(event,callback){record.events[event]=callback},mount(){record.mounted=true;record.events.ready?.()},destroy(){record.destroyed=true}}}}},confirmPayment(args){return new Promise(resolve=>window.__stripeConfirms.push({args,resolve}))}}}
 `;
 const entry = `
 import React from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';
 import {OrderControls,PaymentBoundary} from ${JSON.stringify(path.join(app, "apps/web/src/features/payments/controls.tsx"))};
+import {PaymentCheckout} from ${JSON.stringify(path.join(app, "apps/web/src/features/payments/checkout.tsx"))};
 const root=createRoot(document.getElementById('root'));
 const initial={actorKey:'a'.repeat(64),actorSubject:'synthetic-human-A',sellerId:'b0000000-0000-4000-8000-000000000001',canFulfil:true,canRefund:true,language:'en',order:{id:'a0000000-0000-4000-8000-000000000001',revision:1,paymentState:'paid',settlementState:'transferred',fulfilmentState:'pending',refundState:null}};
 let props=initial;window.__refreshes=0;
 window.__render=update=>{props={...props,...update,order:{...props.order,...update?.order}};flushSync(()=>root.render(React.createElement(PaymentBoundary,{actorSubject:props.actorSubject,language:'en'},React.createElement(OrderControls,props))));};
+let payment={actorKey:initial.actorKey,actorSubject:initial.actorSubject,language:'en',quote:{id:initial.order.id,totalMinor:1000,currency:'EUR',expiresAt:'2099-01-01T00:00:00.000Z',expired:false,attempt:null,orderId:null}};
+window.__checkout=update=>{payment={...payment,...update,quote:{...payment.quote,...update?.quote}};flushSync(()=>root.render(React.createElement(PaymentBoundary,{actorSubject:payment.actorSubject,language:'en'},React.createElement(PaymentCheckout,payment))));};
 window.__unmount=()=>flushSync(()=>root.unmount());window.__render({});
 `;
 const generated = await build({
@@ -70,9 +82,13 @@ const generated = await build({
           return "\0order:entry";
         if (id === "@clerk/nextjs") return "\0order:clerk";
         if (id === "next/navigation") return "\0order:navigation";
+        if (id === "next/link") return "\0order:link";
+        if (id === "@stripe/stripe-js") return "\0order:stripe";
         if (
           id === "./actions" &&
-          importer?.replaceAll("\\", "/").endsWith("/payments/controls.tsx")
+          /\/payments\/(controls|checkout)\.tsx$/.test(
+            importer?.replaceAll("\\", "/") ?? "",
+          )
         )
           return "\0order:actions";
       },
@@ -80,6 +96,9 @@ const generated = await build({
         if (id === "\0order:entry") return { code: entry, map: null };
         if (id === "\0order:clerk") return clerk;
         if (id === "\0order:actions") return actions;
+        if (id === "\0order:stripe") return stripe;
+        if (id === "\0order:link")
+          return "import {createElement} from 'react';export default function Link(props){return createElement('a',props)}";
         if (id === "\0order:navigation")
           return "const router={refresh(){window.__refreshes++}};export const useRouter=()=>router;";
       },
@@ -387,6 +406,247 @@ try {
   assert.deepEqual(JSON.parse(await saved()), unmounted);
   assert.equal(await page.evaluate(() => window.__refreshes), 0);
   outcomes.push("unmounted completion retains its exact saved request");
+
+  const pay = () => page.getByRole("button", { name: /^Pay / });
+  const continuePayment = () =>
+    page.getByRole("button", {
+      name: "Continue to secure payment",
+      exact: true,
+    });
+  const resetCheckout = async () => {
+    await reset();
+    await page.evaluate(() => window.__checkout({}));
+    await expect(continuePayment()).toBeEnabled();
+  };
+  const readyPayment = {
+    ok: true,
+    data: {
+      id: orderId,
+      status: "ready",
+      clientSecret: "SYNTHETIC_UNUSABLE_SECRET",
+      publishableKey: "SYNTHETIC_UNUSABLE_KEY",
+    },
+  };
+  const paymentResolve = (index) =>
+    page.evaluate(
+      ({ index, result }) => window.__paymentResolve(index, result),
+      { index, result: readyPayment },
+    );
+  const mountPayment = async () => {
+    await continuePayment().click();
+    await paymentResolve(0);
+    await expect(pay()).toBeEnabled();
+  };
+  for (const state of [
+    "processing",
+    "cancelling",
+    "cancelled",
+    "quarantined",
+    "paid",
+    "expired",
+    "order",
+  ]) {
+    await resetCheckout();
+    await mountPayment();
+    await page.evaluate(
+      (state) =>
+        window.__checkout({
+          quote:
+            state === "expired"
+              ? { expired: true }
+              : state === "order"
+                ? { orderId: "d0000000-0000-4000-8000-000000000001" }
+                : {
+                    attempt: {
+                      id: "d0000000-0000-4000-8000-000000000001",
+                      state,
+                    },
+                  },
+        }),
+      state,
+    );
+    await expect(pay()).toHaveCount(0);
+    await expect(continuePayment()).toHaveCount(0);
+    assert.equal(
+      await page.evaluate(() => window.__stripeElements[0].destroyed),
+      true,
+    );
+    await page.evaluate(() => {
+      window.__stripeElements[0].events.ready?.();
+      window.__stripeElements[0].events.loaderror?.();
+    });
+    await expect(pay()).toHaveCount(0);
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    assert.equal(await page.evaluate(() => window.__stripeConfirms.length), 0);
+    outcomes.push(
+      `authoritative checkout ${state} destroys Elements and suppresses confirmation`,
+    );
+  }
+
+  await resetCheckout();
+  await continuePayment().click();
+  await page.evaluate(() =>
+    window.__paymentResolve(0, {
+      ok: true,
+      data: {
+        id: "d0000000-0000-4000-8000-000000000001",
+        status: "processing",
+      },
+    }),
+  );
+  await expect(continuePayment()).toBeDisabled();
+  await page.evaluate(() =>
+    window.__checkout({
+      quote: {
+        attempt: {
+          id: "d0000000-0000-4000-8000-000000000001",
+          state: "processing",
+        },
+      },
+    }),
+  );
+  await expect(continuePayment()).toHaveCount(0);
+  await page.evaluate(() =>
+    window.__checkout({
+      quote: {
+        attempt: {
+          id: "d0000000-0000-4000-8000-000000000001",
+          state: "requires_payment_method",
+        },
+      },
+    }),
+  );
+  await expect(continuePayment()).toBeEnabled();
+  await continuePayment().click();
+  assert.deepEqual(
+    await page.evaluate(() => window.__paymentRequests[1].args),
+    await page.evaluate(() => window.__paymentRequests[0].args),
+  );
+  await paymentResolve(1);
+  await expect(pay()).toBeEnabled();
+  outcomes.push(
+    "processing authority retires reconciling state so a retryable attempt can resume the same request",
+  );
+
+  await resetCheckout();
+  await continuePayment().click();
+  const originalBegin = await page.evaluate(
+    () => window.__paymentRequests[0].args,
+  );
+  await page.evaluate(() =>
+    window.__checkout({
+      quote: {
+        attempt: {
+          id: "d0000000-0000-4000-8000-000000000001",
+          state: "processing",
+        },
+      },
+    }),
+  );
+  await paymentResolve(0);
+  await expect(pay()).toHaveCount(0);
+  assert.equal(await page.evaluate(() => window.__stripeLoads), 0);
+  await page.evaluate(() =>
+    window.__checkout({
+      quote: {
+        attempt: {
+          id: "d0000000-0000-4000-8000-000000000001",
+          state: "requires_payment_method",
+        },
+      },
+    }),
+  );
+  await expect(continuePayment()).toBeEnabled();
+  await continuePayment().click();
+  assert.deepEqual(
+    await page.evaluate(() => window.__paymentRequests[1].args),
+    originalBegin,
+  );
+  await paymentResolve(1);
+  await expect(pay()).toBeEnabled();
+  outcomes.push(
+    "late ready response cannot override blocked authority; fresh begin resumes the same quote request",
+  );
+
+  await resetCheckout();
+  await continuePayment().click();
+  await page.evaluate(() => {
+    window.__checkout({
+      quote: {
+        attempt: {
+          id: "d0000000-0000-4000-8000-000000000001",
+          state: "processing",
+        },
+      },
+    });
+    window.__checkout({
+      quote: {
+        attempt: {
+          id: "d0000000-0000-4000-8000-000000000001",
+          state: "requires_payment_method",
+        },
+      },
+    });
+  });
+  await paymentResolve(0);
+  await expect(continuePayment()).toBeEnabled();
+  await expect(pay()).toHaveCount(0);
+  assert.equal(await page.evaluate(() => window.__stripeLoads), 0);
+  await continuePayment().click();
+  await paymentResolve(1);
+  await expect(pay()).toBeEnabled();
+  outcomes.push(
+    "a blocked-to-available round trip cannot revive the preceding ready response",
+  );
+
+  await resetCheckout();
+  await mountPayment();
+  await pay().click();
+  await page.evaluate(() =>
+    window.__auth.set("synthetic-human-A", "session-B"),
+  );
+  await expect(pay()).toHaveCount(0);
+  assert.equal(
+    await page.evaluate(() => window.__stripeElements[0].destroyed),
+    true,
+  );
+  await expect(continuePayment()).toBeEnabled();
+  await continuePayment().click();
+  await page.evaluate(() =>
+    window.__stripeConfirms[0].resolve({
+      error: { message: "OBSOLETE SDK RESULT" },
+    }),
+  );
+  await expect(continuePayment()).toBeDisabled();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  assert.equal(await page.evaluate(() => window.__refreshes), 0);
+  await paymentResolve(1);
+  await expect(pay()).toBeEnabled();
+  outcomes.push(
+    "same-human session replacement destroys Elements and fences stale confirm/finalization",
+  );
+
+  await resetCheckout();
+  await continuePayment().click();
+  await page.evaluate(() =>
+    window.__checkout({
+      quote: { id: "c0000000-0000-4000-8000-000000000001" },
+    }),
+  );
+  await expect(continuePayment()).toBeEnabled();
+  await continuePayment().click();
+  await paymentResolve(0);
+  await expect(continuePayment()).toBeDisabled();
+  assert.equal(await page.evaluate(() => window.__stripeLoads), 0);
+  await paymentResolve(1);
+  await expect(pay()).toBeEnabled();
+  assert.equal(
+    await page.evaluate(() => window.__paymentRequests[1].args.id),
+    "c0000000-0000-4000-8000-000000000001",
+  );
+  outcomes.push(
+    "direct quote replacement conceals configuration and fences the old begin response",
+  );
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify(

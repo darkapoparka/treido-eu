@@ -2,7 +2,6 @@ import "server-only";
 import { requirePersistedDraftCategory } from "../../server/categories/catalogue.server";
 import { randomUUID } from "node:crypto";
 import { and, eq, desc, sql } from "drizzle-orm";
-import { getCategory } from "@treido/contracts/categories";
 import {
   inTransaction,
   type SellerDatabase,
@@ -43,11 +42,6 @@ const acknowledgement = (
   revision: row.revision,
   updatedAt: row.updatedAt.toISOString(),
 });
-const categoryVersion = (data: DraftPayload) => {
-  const category = data.categoryId ? getCategory(data.categoryId) : null;
-  return category?.kind === "leaf" ? category.policy.version : null;
-};
-
 export async function createDraftInTransaction(
   tx: SellerTransaction,
   identity: VerifiedIdentity,
@@ -61,7 +55,10 @@ export async function createDraftInTransaction(
     sellerId,
     "listing.write",
   );
-  await requirePersistedDraftCategory(tx, data.categoryId);
+  const categoryPolicyVersion = await requirePersistedDraftCategory(
+    tx,
+    data.categoryId,
+  );
   // Lock order: user -> seller -> ownership/membership -> usage -> listing.
   await tx.client.query(
     "SELECT seller_id FROM treido.seller_usage WHERE seller_id = $1 FOR UPDATE",
@@ -102,7 +99,8 @@ export async function createDraftInTransaction(
     return acknowledgement(previous);
   }
   // Version-one Free draft limits from billing.md; no browser plan selection.
-  const limit = (await readSellerEntitlements(tx, sellerId, seller.kind)).drafts;
+  const limit = (await readSellerEntitlements(tx, sellerId, seller.kind))
+    .drafts;
   if (usage.draftCount >= limit) throw new SellerError("QUOTA_EXCEEDED");
   const listingId = randomUUID();
   await tx.db.insert(listings).values({ id: listingId, sellerId });
@@ -112,7 +110,7 @@ export async function createDraftInTransaction(
       listingId,
       sellerId,
       payload: data,
-      categoryPolicyVersion: categoryVersion(data),
+      categoryPolicyVersion,
       createdBy: user.id,
       creationKey: requestId,
       creationHash: hash,
@@ -219,14 +217,17 @@ export async function saveListingDraft(
     }
     if (draft.revision !== input.expectedRevision)
       throw new SellerError("CONFLICT");
-    await requirePersistedDraftCategory(tx, data.categoryId);
+    const categoryPolicyVersion = await requirePersistedDraftCategory(
+      tx,
+      data.categoryId,
+    );
     const [saved] = await tx.db
       .update(drafts)
       .set({
         payload: data,
         revision: draft.revision + 1,
         updatedAt: sql`now()`,
-        categoryPolicyVersion: categoryVersion(data),
+        categoryPolicyVersion,
       })
       .where(
         and(

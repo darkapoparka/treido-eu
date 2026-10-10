@@ -1,6 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
@@ -14,17 +21,26 @@ import { beginPaymentAction, cancelPaymentAction } from "./actions";
 import { paymentError, paymentText, type PaymentLanguage } from "./messages";
 import s from "../purchase-reviews/reviews.module.css";
 
-export function PaymentCheckout({
-  quote,
-  actorKey,
-  actorSubject,
-  language,
-}: {
+type PaymentCheckoutProps = {
   quote: QuoteView;
   actorKey: string;
   actorSubject: string;
   language: PaymentLanguage;
-}) {
+};
+export function PaymentCheckout(props: PaymentCheckoutProps) {
+  return (
+    <PrivatePaymentCheckout
+      key={JSON.stringify([props.actorSubject, props.actorKey, props.quote.id])}
+      {...props}
+    />
+  );
+}
+function PrivatePaymentCheckout({
+  quote,
+  actorKey,
+  actorSubject,
+  language,
+}: PaymentCheckoutProps) {
   const clerk = useClerk(),
     router = useRouter(),
     t = paymentText(language),
@@ -40,9 +56,26 @@ export function PaymentCheckout({
     provider = useRef<{ stripe: Stripe; elements: StripeElements } | null>(
       null,
     ),
-    life = useRef({ mounted: true, busy: false }),
+    life = useRef({
+      mounted: false,
+      busy: false,
+      generation: 0,
+      signature: "",
+      blocked: false,
+    }),
     request = useRef(crypto.randomUUID());
-  useEffect(() => {
+  const blocked =
+    quote.expired ||
+    !!quote.orderId ||
+    ["paid", "cancelled", "quarantined", "cancelling", "processing"].includes(
+      quote.attempt?.state ?? "",
+    );
+  if ((configuration || working) && blocked) {
+    setConfiguration(null);
+    setMountedElement(false);
+    setWorking(false);
+  }
+  useLayoutEffect(() => {
     const current = life.current;
     current.mounted = true;
     return () => {
@@ -50,6 +83,27 @@ export function PaymentCheckout({
       provider.current = null;
     };
   }, []);
+  useLayoutEffect(() => {
+    if (life.current.blocked !== blocked) life.current.generation++;
+    life.current.blocked = blocked;
+    if (blocked) life.current.busy = false;
+  }, [blocked]);
+  useEffect(() => {
+    const signature = () =>
+      `${clerk.user?.id}:${clerk.session?.id}:${clerk.session?.status}`;
+    life.current.signature = signature();
+    return clerk.addListener(() => {
+      const next = signature();
+      if (life.current.signature === next) return;
+      life.current.signature = next;
+      life.current.generation++;
+      life.current.busy = false;
+      provider.current = null;
+      setConfiguration(null);
+      setMountedElement(false);
+      setWorking(false);
+    });
+  }, [clerk]);
   useEffect(() => {
     const url = new URL(window.location.href);
     for (const key of [
@@ -64,35 +118,50 @@ export function PaymentCheckout({
       url.pathname + url.search + url.hash,
     );
   }, []);
+  const owned = useCallback(
+    () =>
+      life.current.mounted &&
+      clerk.user?.id === actorSubject &&
+      !!clerk.session?.id &&
+      clerk.session?.status === "active",
+    [clerk, actorSubject],
+  );
+  const currentOperation = useCallback(
+    (requireAvailable = false) => {
+      const generation = life.current.generation,
+        sessionId = clerk.session?.id;
+      return () =>
+        owned() &&
+        (!requireAvailable || !life.current.blocked) &&
+        life.current.generation === generation &&
+        clerk.session?.id === sessionId;
+    },
+    [clerk, owned],
+  );
   useEffect(() => {
-    if (!configuration || !node.current) return;
+    if (!configuration || blocked || !node.current) return;
+    const current = currentOperation(true);
     let alive = true,
       element: StripePaymentElement | undefined;
     void (async () => {
       try {
         const stripe = await loadStripe(configuration.publishableKey);
-        if (
-          !stripe ||
-          !alive ||
-          clerk.user?.id !== actorSubject ||
-          !node.current
-        )
-          return;
+        if (!stripe || !alive || !current() || !node.current) return;
         const elements = stripe.elements({
           clientSecret: configuration.clientSecret,
           locale: language,
         });
         element = elements.create("payment", { layout: "tabs" });
         element.on("ready", () => {
-          if (alive) setMountedElement(true);
+          if (alive && current()) setMountedElement(true);
         });
         element.on("loaderror", () => {
-          if (alive) setError(t.failed);
+          if (alive && current()) setError(t.failed);
         });
         element.mount(node.current);
         provider.current = { stripe, elements };
       } catch {
-        if (alive) setError(t.failed);
+        if (alive && current()) setError(t.failed);
       }
     })();
     return () => {
@@ -100,12 +169,10 @@ export function PaymentCheckout({
       element?.destroy();
       provider.current = null;
     };
-  }, [configuration, actorSubject, clerk, language, t.failed]);
-  function owned() {
-    return life.current.mounted && clerk.user?.id === actorSubject;
-  }
+  }, [configuration, blocked, currentOperation, language, t.failed]);
   function begin() {
-    if (life.current.busy || !owned()) return;
+    if (life.current.busy || blocked || !owned()) return;
+    const current = currentOperation(true);
     life.current.busy = true;
     setError(null);
     start(async () => {
@@ -115,7 +182,7 @@ export function PaymentCheckout({
           id: quote.id,
           requestId: request.current,
         });
-        if (!owned()) return;
+        if (!current()) return;
         if (!result.ok) setError(paymentError(result.code, language));
         else if (
           result.data.status === "ready" &&
@@ -131,14 +198,15 @@ export function PaymentCheckout({
           router.refresh();
         }
       } catch {
-        if (owned()) setError(t.failed);
+        if (current()) setError(t.failed);
       } finally {
-        life.current.busy = false;
+        if (current()) life.current.busy = false;
       }
     });
   }
   function cancel() {
     if (life.current.busy || !owned()) return;
+    const current = currentOperation();
     life.current.busy = true;
     setConfiguration(null);
     setMountedElement(false);
@@ -150,27 +218,29 @@ export function PaymentCheckout({
           id: quote.id,
           requestId: request.current,
         });
-        if (!owned()) return;
+        if (!current()) return;
         if (!result.ok) setError(paymentError(result.code, language));
         else {
           setWorking(true);
           router.refresh();
         }
       } catch {
-        if (owned()) setError(t.failed);
+        if (current()) setError(t.failed);
       } finally {
-        life.current.busy = false;
+        if (current()) life.current.busy = false;
       }
     });
   }
   async function confirm() {
     if (
       life.current.busy ||
+      blocked ||
       !owned() ||
       !provider.current ||
       Date.now() >= new Date(quote.expiresAt).getTime()
     )
       return;
+    const current = currentOperation(true);
     life.current.busy = true;
     setError(null);
     setWorking(true);
@@ -184,7 +254,7 @@ export function PaymentCheckout({
         },
         redirect: "if_required",
       });
-      if (!owned()) return;
+      if (!current()) return;
       // A browser result can only request a status refresh. Server settlement
       // always retrieves Stripe and commits through the signed executor.
       if (result.error) {
@@ -196,13 +266,13 @@ export function PaymentCheckout({
         router.refresh();
       }
     } catch {
-      if (owned()) {
+      if (current()) {
         setConfiguration(null);
         setMountedElement(false);
         setError(t.reconciling);
       }
     } finally {
-      life.current.busy = false;
+      if (current()) life.current.busy = false;
     }
   }
   return (
@@ -226,24 +296,16 @@ export function PaymentCheckout({
             </p>
           )}
           {working && <p role="status">{t.reconciling}</p>}
-          {!quote.expired &&
-            !configuration &&
-            ![
-              "paid",
-              "cancelled",
-              "quarantined",
-              "cancelling",
-              "processing",
-            ].includes(quote.attempt?.state ?? "") && (
-              <button
-                className={s.primary}
-                disabled={pending || working}
-                onClick={begin}
-              >
-                {t.pay}
-              </button>
-            )}
-          {configuration && (
+          {!blocked && !configuration && (
+            <button
+              className={s.primary}
+              disabled={pending || working}
+              onClick={begin}
+            >
+              {t.pay}
+            </button>
+          )}
+          {configuration && !blocked && (
             <form
               onSubmit={(event) => {
                 event.preventDefault();

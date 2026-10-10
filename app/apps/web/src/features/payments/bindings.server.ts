@@ -63,7 +63,40 @@ export function requireWebhookBinding(binding = paymentBindings()) {
       (binding.livemode ? "live" : "test")
   )
     throw new SellerError("NOT_AVAILABLE");
-  return { signing, endpoint };
+  // Only local test-mode runtimes may declare a public callback separately
+  // from their loopback browser origin. Hosted callbacks stay canonical.
+  const override = process.env.TREIDO_STRIPE_WEBHOOK_ORIGIN;
+  let origin = binding.origin;
+  if (override !== undefined) {
+    if (
+      !["development", "test"].includes(binding.environment) ||
+      binding.livemode ||
+      ["preview", "production"].includes(process.env.VERCEL_ENV ?? "")
+    )
+      throw new SellerError("NOT_AVAILABLE");
+    try {
+      const callback = new URL(override);
+      if (
+        callback.protocol !== "https:" ||
+        callback.origin !== override ||
+        callback.username ||
+        callback.password ||
+        callback.port ||
+        callback.hostname.length > 253 ||
+        !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(
+          callback.hostname,
+        ) ||
+        /(?:^|\.)(?:localhost|local|internal|invalid|test|lan|home|home\.arpa|onion)$/.test(
+          callback.hostname,
+        )
+      )
+        throw new SellerError("NOT_AVAILABLE");
+      origin = override;
+    } catch {
+      throw new SellerError("NOT_AVAILABLE");
+    }
+  }
+  return { signing, endpoint, origin };
 }
 export function stripeClient() {
   paymentBindings();
@@ -109,7 +142,7 @@ export async function verifiedStripe(
     if (
       endpoint.livemode !== binding.livemode ||
       endpoint.status !== "enabled" ||
-      endpoint.url !== new URL("/api/stripe/webhook", binding.origin).href ||
+      endpoint.url !== new URL("/api/stripe/webhook", registered.origin).href ||
       endpoint.metadata.treido_application_id !== binding.applicationId ||
       endpoint.metadata.treido_environment !== binding.environment ||
       !expected.every(

@@ -20,13 +20,10 @@ function failure(error: unknown) {
 }
 export async function createQuoteAction(raw: unknown) {
   try {
+    const identity = await requireVerifiedIdentity();
     return {
       ok: true,
-      data: await createPayableQuote(
-        getDatabase(),
-        await requireVerifiedIdentity(),
-        raw,
-      ),
+      data: await createPayableQuote(getDatabase(), identity, raw),
     } as const;
   } catch (error) {
     return failure(error);
@@ -34,13 +31,10 @@ export async function createQuoteAction(raw: unknown) {
 }
 export async function beginPaymentAction(raw: unknown) {
   try {
+    const identity = await requireVerifiedIdentity();
     return {
       ok: true,
-      data: await beginPayment(
-        getDatabase(),
-        await requireVerifiedIdentity(),
-        raw,
-      ),
+      data: await beginPayment(getDatabase(), identity, raw),
     } as const;
   } catch (error) {
     return failure(error);
@@ -48,13 +42,10 @@ export async function beginPaymentAction(raw: unknown) {
 }
 export async function cancelPaymentAction(raw: unknown) {
   try {
+    const identity = await requireVerifiedIdentity();
     return {
       ok: true,
-      data: await requestPaymentCancellation(
-        getDatabase(),
-        await requireVerifiedIdentity(),
-        raw,
-      ),
+      data: await requestPaymentCancellation(getDatabase(), identity, raw),
     } as const;
   } catch (error) {
     return failure(error);

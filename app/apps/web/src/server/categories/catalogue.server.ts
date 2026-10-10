@@ -11,12 +11,19 @@ export async function requirePersistedDraftCategory(
   tx: SellerTransaction,
   id: CategoryLeafId | null,
 ) {
-  if (!id) return;
-  const result = await tx.client.query(
-    "SELECT id FROM treido.categories WHERE registry_version=$1 AND id=$2 AND kind='leaf'",
+  if (!id) return null;
+  const result = await tx.client.query<{ version: number | null }>(
+    `SELECT (SELECT max(version) FROM treido.category_policies p
+      WHERE p.registry_version=c.registry_version AND p.category_id=c.id AND p.country='BG') AS version
+     FROM treido.categories c WHERE c.registry_version=$1 AND c.id=$2 AND c.kind='leaf'`,
     [CATEGORY_REGISTRY_VERSION, id],
   );
-  if (result.rowCount !== 1) throw new SellerError("NOT_AVAILABLE");
+  const version = result.rows[0]?.version;
+  if (!Number.isSafeInteger(version) || !version || version < 1)
+    throw new SellerError("NOT_AVAILABLE");
+  // Binding the current persisted version does not approve its policy. Pending
+  // drafts remain editable; publication independently checks current review.
+  return version;
 }
 
 export async function readCategoryPublicationPolicy(

@@ -43,19 +43,21 @@ export async function InboxPage({
   )
     notFound();
   const actor = await requirePageIdentity(inboxHref(scope, language, threadId));
-  const database = getDatabase(),
-    query = {
-      ...scope,
-      q: input.q ?? "",
-      filter: input.filter ?? "all",
-      cursor: input.cursor ?? null,
+  const query = {
+    ...scope,
+    q: input.q ?? "",
+    filter: input.filter ?? "all",
+    cursor: input.cursor ?? null,
+  };
+  const result = await readPrivatePage(async () => {
+    const database = getDatabase();
+    return {
+      inbox: await readInbox(database, actor, query),
+      conversation: threadId
+        ? await readConversation(database, actor, { ...scope, threadId })
+        : null,
     };
-  const result = await readPrivatePage(async () => ({
-    inbox: await readInbox(database, actor, query),
-    conversation: threadId
-      ? await readConversation(database, actor, { ...scope, threadId })
-      : null,
-  }));
+  });
   return (
     <InboxWorkspace
       key={
