@@ -153,7 +153,8 @@ function BuyerLibraryContent({ following }: { following: boolean }) {
         </>
       ) : (
         <>
-          {!following && !collection && !adding && (
+          {!following && !collection && !adding &&
+            (library.view!.items.length > 0 || library.view!.collections.length > 0) && (
             <>
               <h2>{t("collections")}</h2>
               <div
@@ -240,6 +241,7 @@ function BuyerLibraryContent({ following }: { following: boolean }) {
                   <div key={item.id}>
                     {item.card ? (
                       <SavedCard
+                        publicMedia
                         product={{ ...item.card, storeId: item.card.seller.id }}
                         seller={item.card.seller.name}
                         selected={included}
@@ -327,7 +329,7 @@ function BuyerLibraryContent({ following }: { following: boolean }) {
           {(following
             ? !library.view!.follows.length
             : !library.view!.items.length) && (
-            <div className="empty-state">
+            <div className={collection || adding ? "empty-state" : "saved-empty-source"}>
               <Icon name={following ? "storefront" : "heart"} />
               <h2>
                 {t(

@@ -6,13 +6,20 @@ import type { ProductDetailProduct } from "../catalog/product-detail-model";
 import { IconButton, Sheet } from "./components";
 import { productPhotoSwipe } from "./product-gallery";
 import type { useProductGallery } from "./use-product-gallery";
+import { PublicListingImage } from "./public-image";
 
 type Props = {
   product: ProductDetailProduct;
   photos: readonly string[];
   controller: ReturnType<typeof useProductGallery>;
+  publicMedia?: boolean;
 };
-export function ProductGalleryRail({ product, photos, controller }: Props) {
+export function ProductGalleryRail({
+  product,
+  photos,
+  controller,
+  publicMedia = false,
+}: Props) {
   const ui = useTranslations("discoveryUI");
   const { galleryRail, queueCapturedGalleryLead, setGallery } = controller;
   return (
@@ -34,22 +41,32 @@ export function ProductGalleryRail({ product, photos, controller }: Props) {
                   : undefined
               }
             >
-              <img
-                src={src}
-                loading={
-                  product.detail?.colorGallery && i > 1 ? "lazy" : undefined
-                }
-                decoding={product.detail?.colorGallery ? "async" : undefined}
-                srcSet={
-                  product.referenceStyle === "android"
-                    ? `${src} 1x, ${src}-3x 3x`
-                    : undefined
-                }
-                alt={ui("value1ImageValue2", {
-                  value1: product.title ?? "",
-                  value2: i + 1,
-                })}
-              />
+              {publicMedia ? (
+                <PublicListingImage
+                  src={src}
+                  alt={ui("value1ImageValue2", {
+                    value1: product.title ?? "",
+                    value2: i + 1,
+                  })}
+                />
+              ) : (
+                <img
+                  src={src}
+                  loading={
+                    product.detail?.colorGallery && i > 1 ? "lazy" : undefined
+                  }
+                  decoding={product.detail?.colorGallery ? "async" : undefined}
+                  srcSet={
+                    product.referenceStyle === "android"
+                      ? `${src} 1x, ${src}-3x 3x`
+                      : undefined
+                  }
+                  alt={ui("value1ImageValue2", {
+                    value1: product.title ?? "",
+                    value2: i + 1,
+                  })}
+                />
+              )}
             </button>
           ))}
         </div>
@@ -57,7 +74,12 @@ export function ProductGalleryRail({ product, photos, controller }: Props) {
     </>
   );
 }
-export function ProductLightbox({ product, photos, controller }: Props) {
+export function ProductLightbox({
+  product,
+  photos,
+  controller,
+  publicMedia = false,
+}: Props) {
   const ui = useTranslations("discoveryUI");
   const android = product.referenceStyle === "android";
   const photoGestureRef = useRef<{
@@ -134,20 +156,32 @@ export function ProductLightbox({ product, photos, controller }: Props) {
             }}
             data-ui-label="productPhotosUseLeftAndRightArrowKeysToChange"
           >
-            <img
-              src={photos[gallery]}
-              srcSet={
-                android
-                  ? `${photos[gallery]} 1x, ${photos[gallery]}-3x 3x`
-                  : undefined
-              }
-              draggable={false}
-              onDragStart={(event) => event.preventDefault()}
-              alt={ui("value1ImageValue2", {
-                value1: product.title ?? "",
-                value2: gallery + 1,
-              })}
-            />
+            {publicMedia ? (
+              <PublicListingImage
+                src={photos[gallery]}
+                draggable={false}
+                onDragStart={(event) => event.preventDefault()}
+                alt={ui("value1ImageValue2", {
+                  value1: product.title ?? "",
+                  value2: gallery + 1,
+                })}
+              />
+            ) : (
+              <img
+                src={photos[gallery]}
+                srcSet={
+                  android
+                    ? `${photos[gallery]} 1x, ${photos[gallery]}-3x 3x`
+                    : undefined
+                }
+                draggable={false}
+                onDragStart={(event) => event.preventDefault()}
+                alt={ui("value1ImageValue2", {
+                  value1: product.title ?? "",
+                  value2: gallery + 1,
+                })}
+              />
+            )}
           </div>
           <div className="photo-dots">
             {photos.map((_, i) =>

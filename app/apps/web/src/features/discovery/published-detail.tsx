@@ -92,6 +92,7 @@ function PublishedProductContent({
           actions={<SellerFollowButton id={listing.seller.id} />}
         />
         <ProductGalleryRail
+          publicMedia
           product={product}
           photos={photos}
           controller={gallery}
@@ -258,7 +259,12 @@ function PublishedProductContent({
         </section>
       )}
       <PublicProductDock />
-      <ProductLightbox product={product} photos={photos} controller={gallery} />
+      <ProductLightbox
+        publicMedia
+        product={product}
+        photos={photos}
+        controller={gallery}
+      />
     </ProductSurface>
   );
 }

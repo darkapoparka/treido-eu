@@ -7,6 +7,7 @@ import { useState, type ReactNode } from "react";
 import { formatMoney, type SavedListing } from "../catalog/types";
 import { IconButton, Sheet } from "./components";
 import { useDiscovery } from "./state";
+import { PublicListingImage } from "./public-image";
 
 export function SavedCard({
   product,
@@ -15,6 +16,7 @@ export function SavedCard({
   onSelect,
   saveControl,
   pending = false,
+  publicMedia = false,
 }: {
   product: SavedListing;
   seller?: string;
@@ -22,6 +24,7 @@ export function SavedCard({
   onSelect?: () => void;
   saveControl?: ReactNode;
   pending?: boolean;
+  publicMedia?: boolean;
 }) {
   const intlLocale = useIntlLocale();
   const inventoryText = useTranslations("inventory");
@@ -43,7 +46,12 @@ export function SavedCard({
     product.id.startsWith("idea-") ||
     product.id === "rice-bundle" ||
     product.id === "argan-liquid-combo";
-  const photo = product.images[0] ? (
+  const photo = publicMedia ? (
+    <PublicListingImage
+      src={product.images[0]}
+      alt={onSelect ? "" : product.title}
+    />
+  ) : product.images[0] ? (
     <img
       src={image}
       srcSet={
