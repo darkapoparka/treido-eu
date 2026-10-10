@@ -32,11 +32,16 @@ export async function runPurchaseBrowserChecks({
     pathToFileURL(viteRequire.resolve("vite")).href
   );
   const actions = `const call=async(path,input)=>{const response=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(input)});if(!response.ok)throw Error('Unconfirmed response');return response.json()};export const createPurchaseReviewAction=input=>call('/__create',input);export const editPurchaseReviewAction=input=>call('/__edit',input);export const sendPurchaseReviewAction=(reviewId,actorKey)=>call('/__send',{reviewId,actorKey});export const cancelReservationAction=input=>call('/__cancel',input);`;
+  const typescript = require("typescript");
+  const clerk = "\nimport {useSyncExternalStore} from 'react';\nconst resources=new Set(),observers=new Set(),observed=new WeakSet();\nlet overrideActor=window.__purchaseActor;\nconst subject=()=>overrideActor??current.actor??null;\nconst sessionId=()=>subject()?'synthetic-purchase-session:'+subject():null;\nlet resourceActor,user=null,session=null;\nfunction currentResources(){const actor=subject();if(actor!==resourceActor){resourceActor=actor;user=actor?{id:actor}:null;session=actor?{id:sessionId(),status:'active'}:null}}\nconst clerk={get user(){currentResources();return user},get session(){currentResources();return session},addListener(listener){resources.add(listener);listener({user:clerk.user,session:clerk.session});return()=>resources.delete(listener)}};\nfunction notify(){[...resources].forEach(listener=>listener({user:clerk.user,session:clerk.session}));[...observers].forEach(listener=>listener())}\nfunction observe(value){if(observed.has(value))return value;const proxy=new Proxy(value,{set(target,key,value){const before=subject();Reflect.set(target,key,value);if(key==='actor'&&before!==subject())notify();return true}});observed.add(proxy);return proxy}\nlet current=observe(window.__purchaseInitial);\nObject.defineProperty(window,'__purchaseInitial',{configurable:true,get:()=>current,set(value){const before=subject();current=observe(value);if(before!==subject())notify()}});\nexport const useClerk=()=>clerk;\nexport function useAuth(){const actor=useSyncExternalStore(listener=>{observers.add(listener);return()=>observers.delete(listener)},subject);return {isLoaded:true,isSignedIn:!!actor,userId:actor,sessionId:actor?'synthetic-purchase-session:'+actor:null}}\nexport function useUser(){const auth=useAuth();return {isLoaded:auth.isLoaded,isSignedIn:auth.isSignedIn,user:clerk.user}}\nexport const ClerkProvider=({children})=>children;\n\nObject.defineProperty(window,'__purchaseActor',{configurable:true,get:()=>overrideActor,set(value){const before=subject();overrideActor=value;if(before!==subject())notify()}});\n";
   await build({
     configFile: false,
     root: app,
     logLevel: "error",
-    define: { "process.env.NODE_ENV": JSON.stringify("development") },
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("development"),
+      "process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": JSON.stringify("pk_test_isolated_purchase_only"),
+    },
     resolve: {
       alias: [
         { find: /^@\//, replacement: resolve(app, "apps/web/src") + "/" },
@@ -58,6 +63,16 @@ export async function runPurchaseBrowserChecks({
       {
         name: "isolated-purchase-transport",
         enforce: "pre",
+        // Keep Next's Server Action boundary: only the four finite transports
+        // below can reach the isolated SQL fixture. Unrelated actions are
+        // unavailable, never synthetic success or a client-bundled server SDK.
+        transform(code, id) {
+          if (!id.replaceAll("\\", "/").includes("/apps/web/src/") || !/^\s*["']use server["'];?/.test(code)) return;
+          const module = typescript.createSourceFile(id, code, typescript.ScriptTarget.Latest, true);
+          const names = module.statements.filter(statement => typescript.isFunctionDeclaration(statement) && statement.name && statement.modifiers?.some(modifier => modifier.kind === typescript.SyntaxKind.ExportKeyword)).map(statement => statement.name.text);
+          if (!names.length) throw new Error("Unconfigured Server Action module requires an explicit purchase transport: " + id);
+          return { code: names.map(name => "export const " + name + "=async()=>({ok:false,code:'NOT_AVAILABLE'});").join("\n"), map: null };
+        },
         resolveId(id, importer) {
           if (id === "./actions" && importer?.includes("purchase-reviews"))
             return "\0purchase:actions";
@@ -71,7 +86,7 @@ export async function runPurchaseBrowserChecks({
           if (id === "\0purchase:next/navigation")
             return `const router={refresh:()=>void window.__purchaseRefresh?.(),push:path=>location.assign(path),replace:path=>location.replace(path)};export const useRouter=()=>router;`;
           if (id === "\0purchase:@clerk/nextjs")
-            return `const user={get id(){return window.__purchaseActor??window.__purchaseInitial.actor}};const clerk={user};export const useClerk=()=>clerk;export const useUser=()=>({isLoaded:true,user});`;
+            return clerk;
         },
       },
     ],
