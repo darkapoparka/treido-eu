@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { startLaunchCluster } from "../../../../../tests/t72/native-fixture.mjs";

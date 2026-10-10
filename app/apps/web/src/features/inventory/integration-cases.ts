@@ -980,6 +980,107 @@ export function defineInventoryIntegrationCases(
         ),
       ).rejects.toMatchObject({ code: "42501" });
     });
+    it("recovers immutable original offer receipts after later transitions without reallocating or guessing network absence", async () => {
+      const ctx = get(),
+        f = await prepare("stocked", 3),
+        publication = await publish(f);
+      const thread = await openListingConversation(
+        ctx.database,
+        actors[2],
+        f.draft.id,
+      );
+      const command = {
+        sellerId: null,
+        threadId: thread.id,
+        expectedRevision: 0,
+        requestId: randomUUID(),
+        operation: {
+          kind: "propose",
+          parentId: null,
+          skuId: f.skuId,
+          publicationRevision: publication.revision,
+          quantity: 2,
+          unitPriceMinor: 11200,
+          expiresHours: 24,
+        },
+      };
+      const actorKey = libraryActorKey(actors[2]);
+      const proposal = await changeOffer(ctx.database, actors[2], command);
+      const accepted = await changeOffer(ctx.database, ctx.owner, {
+        sellerId: f.sellerId,
+        threadId: thread.id,
+        expectedRevision: proposal.revision,
+        requestId: randomUUID(),
+        operation: { kind: "accept", offerId: proposal.offerId },
+      });
+      const stock = await readInventory(ctx.database, ctx.owner, {
+        sellerId: f.sellerId,
+        listingId: f.draft.id,
+      });
+      const count = (
+        await ctx.admin.query(
+          "SELECT count(*)::int AS n FROM treido.inventory_allocations WHERE source_id=$1",
+          [proposal.offerId],
+        )
+      ).rows[0].n;
+      await expect(
+        changeOffer(ctx.database, actors[2], command),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+      for (let repeat = 0; repeat < 2; repeat++)
+        expect(
+          await recoverOfferRequest(ctx.database, actors[2], {
+            actorKey,
+            command,
+          }),
+        ).toMatchObject({
+          state: "recorded",
+          acceptedRevision: proposal.revision,
+          currentRevision: accepted.revision,
+          offerId: proposal.offerId,
+        });
+      expect(
+        await recoverOfferRequest(ctx.database, actors[2], {
+          actorKey,
+          command: { ...command, requestId: randomUUID() },
+        }),
+      ).toMatchObject({ state: "not_applied", offerId: null });
+      expect(
+        await recoverOfferRequest(ctx.database, actors[2], {
+          actorKey,
+          command: {
+            ...command,
+            requestId: randomUUID(),
+            expectedRevision: accepted.revision,
+          },
+        }),
+      ).toMatchObject({ state: "unrecorded", offerId: null });
+      await expect(
+        recoverOfferRequest(ctx.database, actors[1], { actorKey, command }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(
+        recoverOfferRequest(ctx.database, actors[2], {
+          actorKey,
+          command: {
+            ...command,
+            operation: { ...command.operation, unitPriceMinor: 1 },
+          },
+        }),
+      ).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(
+        await readInventory(ctx.database, ctx.owner, {
+          sellerId: f.sellerId,
+          listingId: f.draft.id,
+        }),
+      ).toEqual(stock);
+      expect(
+        (
+          await ctx.admin.query(
+            "SELECT count(*)::int AS n FROM treido.inventory_allocations WHERE source_id=$1",
+            [proposal.offerId],
+          )
+        ).rows[0].n,
+      ).toBe(count);
+    });
     it("offers and checkout compete through the same allocation lock instead of overselling", async () => {
       const ctx = get(),
         f = await prepare(),

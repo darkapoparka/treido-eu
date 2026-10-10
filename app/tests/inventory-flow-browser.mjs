@@ -197,7 +197,7 @@ export async function runInventoryBrowser({
         .click();
       await expect(modal()).toHaveCount(0);
       await expect(page.locator("[data-offer-id]").first()).toContainText(
-        "Accepted — not paid",
+        "Accepted terms",
       );
       await page.reload();
       await expect(page.locator("[data-offer-messages]")).toContainText(
@@ -208,11 +208,11 @@ export async function runInventoryBrowser({
           (sku) => sku.id === black.id,
         ).available,
       ).toBe(2);
-      for (const width of [320, 393, 1440]) {
+      for (const width of [319, 393, 1440]) {
         await page.setViewportSize({ width, height: 850 });
         await page.goto(origin + "/__stock/offers?lang=bg");
         await expect(page.locator("[data-offer-id]").first()).toContainText(
-          "Приета — неплатена",
+          "Приети условия",
         );
         expect(
           await page.evaluate(
@@ -279,7 +279,7 @@ export async function runInventoryBrowser({
       ).toBe(3);
       expect(errors).toEqual([]);
       console.log(
-        "Stock browser journey passed: setup/variant editing and reload; foreground form recovery; actual publish snapshots; product selection/cart add, quantity and reload; propose/counter/accept/cancel; durable offer messages; BG/EN 320/393/1440 layouts and Escape focus. Synthetic identity and isolated storage, not live Clerk/provider acceptance.",
+        "Stock browser journey passed: setup/variant editing and reload; foreground form recovery; actual publish snapshots; product selection/cart add, quantity and reload; propose/counter/accept/cancel; durable offer messages; BG/EN 319/393/1440 layouts and Escape focus. Synthetic identity and isolated storage, not live Clerk/provider acceptance.",
       );
     },
   });

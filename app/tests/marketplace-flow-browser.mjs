@@ -49,6 +49,19 @@ export function useUser(){const auth=useAuth();return {isLoaded:auth.isLoaded,is
 export const ClerkProvider=({children})=>children;
 `;
   const unusedActions = {
+    // Explicit Server Action boundaries: the isolated client bundle must not
+    // pull server-only Clerk/database modules through Studio's real shell.
+    "assistant-tools/actions": [
+      "readCompatibilityAction",
+      "changeCompatibilityAction",
+      "readAssistantListingAction",
+      "readHelperSellersAction",
+      "readHelperDraftsAction",
+      "readHelperDraftAction",
+      "readSellHelperAction",
+      "changeSellHelperAction",
+    ],
+    "sellers/studio-search-actions": ["searchStudioAction"],
     "purchase-reviews/actions": ["createPurchaseReviewAction"],
     "promotions/metric-actions": ["recordPromotionMetricAction"],
   };
@@ -116,7 +129,7 @@ export const ClerkProvider=({children})=>children;
           if (id === "\0market:next/link")
             return "import React from 'react';export default function Link({prefetch,onNavigate,onClick,href,...props}){return React.createElement('a',{...props,href,onClick:event=>{onClick?.(event);if(!event.defaultPrevented)onNavigate?.({preventDefault:()=>event.preventDefault()});}});}";
           if (id === "\0market:next/image")
-            return "import React from 'react';export default function Image({priority,fill,...props}){return React.createElement('img',props);}";
+            return "import React from 'react';export function getImageProps({priority,fill,quality,loader,unoptimized,placeholder,blurDataURL,onLoadingComplete,...props}){return {props};}export default function Image(input){return React.createElement('img',getImageProps(input).props);}";
           if (id === "\0market:@clerk/nextjs") return clerk;
         },
       },
