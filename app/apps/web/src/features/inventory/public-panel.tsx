@@ -13,17 +13,26 @@ import {
   type PublicInventory,
 } from "./model";
 import s from "./public.module.css";
-export function PublicInventoryPanel({
-  product,
-  revision,
-  initial,
-  allowCart = true,
-}: {
+type PublicInventoryPanelProps = {
   product: ProductDetailProduct;
   revision: number;
   initial: PublicInventory | null;
   allowCart?: boolean;
-}) {
+};
+
+export function PublicInventoryPanel(props: PublicInventoryPanelProps) {
+  // A publication is a new commercial snapshot. Discard old variants, quantity
+  // and in-flight callbacks before rendering it, not in a later effect/paint.
+  const initial = props.initial?.publicationRevision === props.revision ? props.initial : null;
+  return <PublicationInventoryPanel key={JSON.stringify([props.product.id, props.revision])} {...props} initial={initial} />;
+}
+
+function PublicationInventoryPanel({
+  product,
+  revision,
+  initial,
+  allowCart = true,
+}: PublicInventoryPanelProps) {
   const t = useTranslations("inventory"),
     cart = useTranslations("buyerCart"),
     locale = useLocale();

@@ -53,6 +53,7 @@ export function createInventoryBrowserTransport(configuration) {
       return true;
     }
     const { database, api, identityForRequest } = configuration;
+    let subject = null;
     try {
       if (request.method !== "POST")
         throw Object.assign(new Error(), { code: "INVALID_INPUT" });
@@ -67,6 +68,7 @@ export function createInventoryBrowserTransport(configuration) {
       const args = JSON.parse(Buffer.concat(buffers).toString("utf8")),
         actor = identityForRequest(request),
         action = url.pathname.split("/").at(-1);
+      subject = actor?.subject ?? null;
       let data;
       if (action === "readPublicInventoryAction") {
         data = await api.readPublicInventory(database, args[0], args[1]);
@@ -85,6 +87,8 @@ export function createInventoryBrowserTransport(configuration) {
         } else if (action === "readBuyerCartAction")
           data = await api.readBuyerCart(database, actor);
         else if (action === "changeBuyerCartAction") {
+          if (args[1] !== actor.subject)
+            throw Object.assign(new Error(), { code: "FORBIDDEN" });
           await api.changeBuyerCart(database, actor, args[0]);
           data = await api.readBuyerCart(database, actor);
         } else if (action === "readOffersAction")
@@ -107,10 +111,11 @@ export function createInventoryBrowserTransport(configuration) {
           }
         } else throw Object.assign(new Error(), { code: "INVALID_INPUT" });
       }
-      send({ ok: true, data });
+      send({ ok: true, subject, data });
     } catch (error) {
       send({
         ok: false,
+        subject,
         code: [
           "INVALID_INPUT",
           "NOT_FOUND",
