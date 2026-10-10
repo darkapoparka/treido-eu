@@ -9,6 +9,7 @@ import { AdminIcon } from "./admin-icons";
 import { AdminSearchContext, AdminHelperContext } from "./admin-search-context";
 import { MerchantNavigation } from "./merchant-navigation";
 import { StudioHelperPanel } from "./studio-helper-panel";
+import { StudioSearch } from "./studio-search";
 import styles from "./admin.module.css";
 import helperStyles from "./studio-helper-panel.module.css";
 
@@ -27,11 +28,11 @@ export function AdminShell({ sellers, children, unavailable = false, preview }: 
   const base = preview ? "/admin-preview" : seller ? `/app/sellers/${seller.sellerId}` : "/app";
   const products = preview ? "/admin-preview/products" : seller ? `${base}/listings` : "/app/products";
   const suffix = `?lang=${language}${preview ? `&store=${preview.storeId}` : ""}`;
-  const canSearch = !!preview || !seller || seller.capabilities.includes("listing.read");
+  const canSearch = !!preview || !seller || seller.capabilities.includes("listing.read") || seller.capabilities.includes("order.read");
   const canHelper = !preview && !!seller && seller.capabilities.includes("listing.read") && seller.capabilities.includes("listing.write");
   const editingDraft = !preview ? /^\/app\/sellers\/[^/]+\/listings\/([0-9a-f-]+)\/(?:edit|review)$/.exec(pathname)?.[1] : undefined;
   const helperHref = `${base}/sell-helper?lang=${language}${editingDraft ? `&draftId=${editingDraft}` : ""}`;
-  const searchLabel = preview ? bg ? "Търси" : "Search" : bg ? "Търси продукти" : "Search products";
+  const searchLabel = preview ? bg ? "Търси" : "Search" : seller ? bg ? "Търси в този акаунт" : "Search this seller account" : bg ? "Търси продукти" : "Search products";
   const [manualCollapsed, setCollapsed] = useState<boolean | null>(null), [compactNavigation, setCompactNavigation] = useState(false), [compactExpanded, setCompactExpanded] = useState(false);
   const collapsed = compactNavigation ? !compactExpanded : manualCollapsed ?? false, previewMode = Boolean(preview);
   const [searchOpen, setSearchOpen] = useState(false), [menuOpen, setMenuOpen] = useState(false), [helperOpen, setHelperOpen] = useState(false);
@@ -121,8 +122,8 @@ export function AdminShell({ sellers, children, unavailable = false, preview }: 
       <div className={styles.sidebarNote} data-studio-part="sidebar-note">
         <span>{preview ? bg ? "Готов ли си да продаваш?" : "Ready to start selling?" : unavailable ? bg ? "Продажбите не са достъпни" : "Selling currently unavailable" : seller?.kind === "personal" ? bg ? "Твоите вещи. Твоите продажби." : "Your items. Your selling space." : bg ? "Твоят бизнес. Твоето място." : "Your business. Your space."}</span>
         {preview && <strong>{bg ? "Разгледай плановете на Treido" : "Explore Treido plans"}</strong>}
-        <Link href={preview ? `${base}/settings/plan${suffix}` : unavailable ? `/sell?lang=${language}` : canSearch ? `${products}${suffix}` : `${base}${suffix}`} onClick={close}>
-          {preview ? bg ? "Избери план" : "Select a plan" : unavailable ? bg ? "Подготви артикул" : "Prepare an item" : canSearch ? bg ? "Към продуктите" : "Go to products" : bg ? "Към началото" : "Go to Home"}
+        <Link href={preview ? `${base}/settings/plan${suffix}` : unavailable ? `/sell?lang=${language}` : (!seller || seller.capabilities.includes("listing.read")) ? `${products}${suffix}` : `${base}${suffix}`} onClick={close}>
+          {preview ? bg ? "Избери план" : "Select a plan" : unavailable ? bg ? "Подготви артикул" : "Prepare an item" : (!seller || seller.capabilities.includes("listing.read")) ? bg ? "Към продуктите" : "Go to products" : bg ? "Към началото" : "Go to Home"}
         </Link>
       </div>
     </div>
@@ -136,9 +137,9 @@ export function AdminShell({ sellers, children, unavailable = false, preview }: 
         <button ref={menuButton} onClick={openMenu} aria-haspopup="dialog" aria-expanded={menuOpen} aria-label={bg ? "Меню" : "Menu"}><AdminIcon name={preview ? "hamburger" : "menu"} /></button>
         {preview?.AssistantButton ?? (canHelper ? <button onClick={openHelper} aria-label={bg ? "Помощник за продажби" : "Sell Helper"}><AdminIcon name="edit" /></button> : canSearch ? <button onClick={openSearch} aria-haspopup="dialog" aria-label={searchLabel}><AdminIcon name="search" /></button> : null)}
       </nav>
-      <dialog ref={drawer} className={styles.drawer} data-studio-part="drawer" aria-label={bg ? "Навигация" : "Navigation"} onClose={() => setMenuOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) close(); }}>{navigation}</dialog>
-      <dialog ref={search} data-studio-part={preview ? "search-dialog" : undefined} className={`${styles.searchDialog} ${SearchPanel ? styles.previewSearchDialog : ""}`} aria-label={preview ? bg ? "Търси в магазина" : "Search your store" : bg ? "Търси продукти" : "Search products"} onClose={() => setSearchOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) closeSearch(); }}>
-        {searchOpen && (SearchPanel ? <SearchPanel onClose={closeSearch} onNavigate={close} /> : <>
+      <dialog ref={drawer} className={styles.drawer} data-studio-part="drawer" aria-label={bg ? "Навигация" : "Navigation"} onClose={() => setMenuOpen(false)} onCancel={(event) => { event.preventDefault(); close(); restoreFocus(); }} onClick={(event) => { if (event.target === event.currentTarget) { close(); restoreFocus(); } }}>{navigation}</dialog>
+      <dialog ref={search} data-studio-part="search-dialog" className={`${styles.searchDialog} ${SearchPanel || seller ? styles.previewSearchDialog : ""}`} aria-label={searchLabel} onClose={() => setSearchOpen(false)} onCancel={(event) => { event.preventDefault(); closeSearch(); }} onClick={(event) => { if (event.target === event.currentTarget) closeSearch(); }}>
+        {searchOpen && (SearchPanel ? <SearchPanel onClose={closeSearch} onNavigate={close} /> : seller ? <StudioSearch key={`${seller.sellerId}:${language}`} sellerId={seller.sellerId} language={language} onClose={closeSearch} onNavigate={close} /> : <>
           <form action={products} className={styles.searchForm} data-studio-part="search-form"><AdminIcon name="search" />
             <input name="q" type="search" maxLength={160} placeholder={bg ? "Търси по заглавие на продукта" : "Search products by title"} aria-label={bg ? "Търси продукти" : "Search products"} autoFocus />
             <input type="hidden" name="lang" value={language} />
@@ -150,7 +151,7 @@ export function AdminShell({ sellers, children, unavailable = false, preview }: 
           <p className={styles.searchHint} data-studio-part="search-hint">{bg ? "Намери продукт в твоя каталог" : "Find a product in your catalog"}</p>
         </>)}
       </dialog>
-      {canHelper && seller && <dialog ref={helper} className={helperStyles.panel} aria-label={bg ? "Помощник за продажби" : "Sell Helper"} onClose={(event) => { if (event.target === event.currentTarget) setHelperOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) closeHelper(); }}>
+      {canHelper && seller && <dialog ref={helper} className={helperStyles.panel} aria-label={bg ? "Помощник за продажби" : "Sell Helper"} onClose={(event) => { if (event.target === event.currentTarget) setHelperOpen(false); }} onCancel={(event) => { event.preventDefault(); closeHelper(); }} onClick={(event) => { if (event.target === event.currentTarget) closeHelper(); }}>
         <header className={helperStyles.header}><h2>{bg ? "Помощник за продажби" : "Sell Helper"}</h2><Link href={helperHref} onClick={close}>{bg ? "Разгъни" : "Expand"}</Link><button type="button" onClick={closeHelper} aria-label={bg ? "Затвори" : "Close"}><AdminIcon name="close" /></button></header>
         <div className={helperStyles.body}>{helperOpen && <StudioHelperPanel sellerId={seller.sellerId} draftId={editingDraft} />}</div>
       </dialog>}
