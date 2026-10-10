@@ -126,7 +126,7 @@ export async function runImportBrowser({
       await expect(page.locator("[data-catalogue-import]")).toContainText(
         "Finished",
       );
-      for (const width of [320, 393, 1440]) {
+      for (const width of [319, 393, 1440]) {
         await page.setViewportSize({ width, height: 850 });
         await page.goto(origin + base + "/imports/" + importId + "?lang=bg");
         await expect(page.locator("[data-import-row] a")).toHaveCount(2);
@@ -192,7 +192,7 @@ export async function runImportBrowser({
         .getByLabel("Reason", { exact: true })
         .fill("Full warehouse recount");
       await page.screenshot({ path: join(out, "bulk-stock-en-393.png") });
-      await page.setViewportSize({ width: 320, height: 850 });
+      await page.setViewportSize({ width: 319, height: 850 });
       expect(
         await page
           .locator("dialog[open]")
@@ -225,7 +225,7 @@ export async function runImportBrowser({
       expect(exportedCsv).toContain("on_hand");
       expect(exportedCsv).toContain('"9"');
       expect(exportedCsv).toContain('"11"');
-      for (const width of [320, 1440]) {
+      for (const width of [319, 1440]) {
         await page.setViewportSize({ width, height: 850 });
         await page.goto(origin + base + "/inventory?lang=bg");
         await page.evaluate(() => globalThis.document.fonts.ready);
@@ -254,7 +254,7 @@ export async function runImportBrowser({
       await expect(page.locator("[data-catalogue-import]")).toBeHidden();
       expect(errors).toEqual([]);
       console.log(
-        "CSV and seller-stock browser passed: actual upload, validation, row correction, selection/reload, durable batch processing, created draft links and stock adjustment/reload; BG/EN 320/393/1440 layouts. Synthetic Clerk transport and native PostgreSQL, not provider acceptance.",
+        "CSV and seller-stock browser passed: actual upload, validation, row correction, selection/reload, durable batch processing, created draft links and stock adjustment/reload; BG/EN 319/393/1440 layouts. Synthetic Clerk transport and native PostgreSQL, not provider acceptance.",
       );
     },
   });
