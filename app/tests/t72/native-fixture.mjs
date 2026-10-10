@@ -7,6 +7,7 @@ import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
 import { trackPoolDisconnects } from "./pool-disconnects.mjs";
+import { currentMigrationFiles } from "./current-migrations.mjs";
 import {
   assertFixtureHeadroom,
   cleanupLaunchCluster,
@@ -48,8 +49,10 @@ export async function startLaunchCluster({
   messageImageDispatch = false,
   privacyEvidence = false,
   notificationDelivery = false,
+  currentPlatform = false,
   evidenceDirectory,
 } = {}) {
+  const currentSchema = notificationDelivery || currentPlatform;
   const evidence = selectFixtureEvidenceDirectory(
     evidenceDirectory,
     process.env.TREIDO_NATIVE_EVIDENCE_DIRECTORY,
@@ -167,55 +170,18 @@ export async function startLaunchCluster({
       database: "t72_isolated",
       max: 3,
     });
-    const migrationLimit = notificationDelivery
-      ? 55
-      : messageImageDispatch
-        ? 50
-        : messageLifecycle
-          ? 49
-          : 47;
-    const finalMigration = notificationDelivery
-      ? "0055_notification_delivery.sql"
-      : messageImageDispatch
-        ? "0050_message_image_dispatch_barrier.sql"
-        : messageLifecycle
-          ? "0049_message_image_executor_fence.sql"
-          : "0047_billing_change_recovery.sql";
-    const files = (await fs.readdir(path.join(root, "app/apps/web/migrations")))
-      .filter(
-        (f) =>
-          /^\d{4}_[a-z_]+\.sql$/.test(f) &&
-          Number(f.slice(0, 4)) <= migrationLimit,
-      )
-      .sort();
-    if (files.length !== migrationLimit || files.at(-1) !== finalMigration)
-      throw Error("Unexpected migration inventory");
-    if (notificationDelivery) {
-      if (files.some((file, index) => Number(file.slice(0, 4)) !== index + 1))
-        throw Error("Notification canonical schema is not contiguous");
-      const runner = await fs.readFile(
-        path.join(root, "app/apps/web/scripts/migrate.mjs"),
-        "utf8",
-      );
-      const literal = runner.match(
-        /for\s*\(const version of\s*(\[[\s\S]*?\])\s*\)/,
-      )?.[1];
-      if (
-        !literal ||
-        literal
-          .slice(1, -1)
-          .replace(/"\d{4}_[a-z_]+"/g, "")
-          .replace(/[\s,]/g, "") !== ""
-      )
-        throw Error("Canonical migration runner sequence is not literal");
-      const canonical = [...literal.matchAll(/"(\d{4}_[a-z_]+)"/g)].map(
-        (match) => match[1] + ".sql",
-      );
-      if (JSON.stringify(canonical) !== JSON.stringify(files))
-        throw Error(
-          "Notification schema differs from canonical migration runner",
-        );
-    }
+    const migrationLimit = messageImageDispatch ? 50 : messageLifecycle ? 49 : 47;
+    const finalMigration = messageImageDispatch
+      ? "0050_message_image_dispatch_barrier.sql"
+      : messageLifecycle
+        ? "0049_message_image_executor_fence.sql"
+        : "0047_billing_change_recovery.sql";
+    const names = await fs.readdir(path.join(root, "app/apps/web/migrations"));
+    const files = currentSchema
+      ? currentMigrationFiles(names, await fs.readFile(path.join(root, "app/apps/web/scripts/migrate.mjs"), "utf8"), currentPlatform ? 57 : 55)
+      : names.filter(file => /^\d{4}_[a-z_]+\.sql$/.test(file) && Number(file.slice(0, 4)) <= migrationLimit).sort();
+    if (!currentSchema && (files.length !== migrationLimit || files.at(-1) !== finalMigration))
+      throw Error("Unexpected historical migration inventory");
     const client = await admin.connect();
     try {
       for (const file of files) {
