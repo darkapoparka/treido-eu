@@ -6,8 +6,8 @@ import s from "./public-image.module.css";
 
 type Props = Pick<
   ComponentProps<"img">,
-  "src" | "alt" | "className" | "loading" | "decoding" | "draggable" | "onDragStart"
-> & { alt: string };
+  "alt" | "className" | "loading" | "decoding" | "draggable" | "onDragStart"
+> & { alt: string; src?: string };
 
 /** A changed publication image owns a new load. No captured-image fallback. */
 export function PublicListingImage(props: Props) {
