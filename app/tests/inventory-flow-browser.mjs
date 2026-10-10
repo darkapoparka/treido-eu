@@ -107,8 +107,8 @@ export async function runInventoryBrowser({
       await page.getByLabel("Option name", { exact: true }).fill("Color");
       await page.getByLabel("Option value", { exact: true }).fill("Black");
       // Recheck foreground access without throwing away a partly entered variant.
-      await page.evaluate(() => globalThis.dispatchEvent(new Event("blur")));
-      await page.evaluate(() => globalThis.dispatchEvent(new Event("focus")));
+      await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event("blur")));
+      await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event("focus")));
       await expect(
         page.getByLabel("Option value", { exact: true }),
       ).toHaveValue("Black");
