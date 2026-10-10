@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @next/next/no-img-element -- Actual published listing media. */
 import { useLocale, useTranslations } from "next-intl";
 import type { PublicDiscoveryPage } from "../catalog/public-discovery-model";
 import type { PromotionPlacement } from "../promotions/placement";
@@ -9,6 +8,8 @@ import { ListingSaveButton } from "../library/controls";
 import { SourceLink } from "./return-navigation";
 import { useSponsoredObservation } from "./use-sponsored-observation";
 import { BuyerAvailability } from "./buyer-availability";
+import { PublicListingImage } from "./public-image";
+import { PublicStockLabel } from "./public-stock";
 import styles from "./search-entry.module.css";
 
 /** Same horizontal Search result owner: media, title/price and seller link.
@@ -66,11 +67,7 @@ function PublicSearchRow({ placement }: { placement: PromotionPlacement }) {
     >
       <div className="product-media">
         <SourceLink href={`/products/${item.id}`}>
-          {item.images[0] ? (
-            <img src={item.images[0]} alt={item.title} />
-          ) : (
-            <span>{item.title}</span>
-          )}
+          <PublicListingImage src={item.images[0]} alt={item.title} />
         </SourceLink>
         <ListingSaveButton id={item.id} title={item.title} />
       </div>
@@ -83,6 +80,7 @@ function PublicSearchRow({ placement }: { placement: PromotionPlacement }) {
             ? inventoryText("from", { price: formatMoney(item.price, locale) })
             : formatMoney(item.price, locale)}
         </p>
+        <PublicStockLabel state={item.stockState} />
         <div className={styles.resultMerchant}>
           <SourceLink
             className="result-store"

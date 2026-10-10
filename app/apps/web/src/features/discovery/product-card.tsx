@@ -11,6 +11,7 @@ import { useDiscovery } from "./state";
 import { Icon } from "./icons";
 import { IconButton } from "./icon-button";
 import { ReviewStars } from "./rating-stars";
+import { PublicListingImage } from "./public-image";
 
 export function SaveButton({
   product,
@@ -47,6 +48,7 @@ export function ProductCard({
   nativeIcons = false,
   observation,
   mediaLabel,
+  publicMedia = false,
 }: {
   product: ProductCardData;
   compact?: boolean;
@@ -68,6 +70,7 @@ export function ProductCard({
     onClick?: MouseEventHandler<HTMLElement>;
   };
   mediaLabel?: ReactNode;
+  publicMedia?: boolean;
 }) {
   const intlLocale = useIntlLocale();
   const inventoryText = useTranslations("inventory");
@@ -105,7 +108,9 @@ export function ProductCard({
           startAtTop={product.referenceStyle === "android"}
           aria-label={product.images[0] ? undefined : product.title}
         >
-          {product.images[0] ? (
+          {publicMedia ? (
+            <PublicListingImage src={product.images[0]} alt={product.title} />
+          ) : product.images[0] ? (
             <img
               className={reported ? "product-reported-media" : ""}
               src={photo}

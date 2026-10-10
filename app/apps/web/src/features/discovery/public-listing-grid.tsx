@@ -8,6 +8,11 @@ import { ListingSaveButton } from "../library/controls";
 import { SourceLink } from "./return-navigation";
 import { optionLabel } from "../selling/copy";
 import { useLocale } from "next-intl";
+import {
+  PublicStockLabel,
+  unavailablePublicStock,
+  publicMediaLabelsClass,
+} from "./public-stock";
 import s from "./marketplace.module.css";
 export function PublicListingGrid({
   items,
@@ -70,6 +75,7 @@ function PublicShelfListing({
     : undefined;
   return (
     <ProductCard
+      publicMedia
       product={label && !compact ? { ...listing, promotion: label } : listing}
       compact={compact}
       showPromotion={!!label && !compact}
@@ -78,7 +84,14 @@ function PublicShelfListing({
       saveControl={<ListingSaveButton id={listing.id} title={listing.title} />}
       observation={observation}
       mediaLabel={
-        compact && label ? (
+        unavailablePublicStock(listing.stockState) ? (
+          <div className={publicMediaLabelsClass}>
+            <PublicStockLabel state={listing.stockState} media />
+            {compact && label && (
+              <span className="public-home-sponsored">{label}</span>
+            )}
+          </div>
+        ) : compact && label ? (
           <span className="public-home-sponsored">{label}</span>
         ) : undefined
       }
@@ -105,6 +118,7 @@ function PublicListing({
       onClick={onClick}
     >
       <ProductCard
+        publicMedia
         product={
           sponsored && !compact
             ? {
