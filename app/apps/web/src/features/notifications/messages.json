@@ -1,7 +1,7 @@
 {
   "en": {
     "title": "Notifications",
-    "inAppOnly": "Conversation updates inside Treido. This does not mean an email or push notification was delivered.",
+    "inAppOnly": "Updates inside Treido. An in-app update does not mean an email or push notification was delivered.",
     "filter": "Notification view",
     "all": "All updates",
     "unread": "Unread",
@@ -45,11 +45,12 @@
     "older": "Older updates",
     "latest": "Latest updates",
     "invalidRecovery": "The saved selection cannot be read safely. No replacement request has been sent. Keep this tab and review the conversation before clearing its recovery data.",
-    "storageFailed": "Recovery changes could not be saved to browser storage. Keep this tab open. New read requests require their retry record to be saved first."
+    "storageFailed": "Recovery changes could not be saved to browser storage. Keep this tab open. New read requests require their retry record to be saved first.",
+    "support": "Support updates"
   },
   "bg": {
     "title": "Известия",
-    "inAppOnly": "Промени по разговорите в Treido. Това не означава, че е доставен имейл или push известие.",
+    "inAppOnly": "Обновявания в Treido. Те не потвърждават доставката на имейл или push известие.",
     "filter": "Изглед на известията",
     "all": "Всички промени",
     "unread": "Непрочетено",
@@ -93,6 +94,7 @@
     "older": "По-стари промени",
     "latest": "Последни промени",
     "invalidRecovery": "Запазеният избор не може да бъде прочетен безопасно. Не е изпратена нова заявка. Запази този раздел и прегледай разговора, преди да изчистиш данните за възстановяване.",
-    "storageFailed": "Промените за възстановяване не могат да се запазят в браузъра. Остави този раздел отворен. Новите заявки за прочитане изискват първо да се запишат данните за повторен опит."
+    "storageFailed": "Промените за възстановяване не могат да се запазят в браузъра. Остави този раздел отворен. Новите заявки за прочитане изискват първо да се запишат данните за повторен опит.",
+    "support": "Обновявания от поддръжката"
   }
 }

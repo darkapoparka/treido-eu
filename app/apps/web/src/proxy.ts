@@ -75,7 +75,7 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
   const buyerEntry =
     !reference &&
     (request.nextUrl.pathname === "/" ||
-      /^\/(products|stores|search|saved|following|cart|notifications|minis)(\/|$)/.test(
+      /^\/(products|stores|search|explore|saved|following|cart|notifications|minis)(\/|$)/.test(
         request.nextUrl.pathname,
       ));
   const contactEntry =

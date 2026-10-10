@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   BuyerSessionBoundary,
   usePrivateScope,
@@ -23,6 +23,7 @@ import {
   type SupportView,
 } from "./model";
 import { supportCopy } from "./copy";
+import { createSupportRequestOwner } from "./request-owner";
 import s from "./support.module.css";
 
 type Props = {
@@ -84,10 +85,8 @@ function SupportContent({
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [pending, setPending] = useState<SupportCommand | null>(null);
+  const [journalError, setJournalError] = useState(false);
   const saved = useRef<string | null>(null);
-  const lease = useRef<{ active: boolean; busy: boolean; key: string } | null>(
-    null,
-  );
   const routeKey = JSON.stringify([
     ticketId,
     operator,
@@ -95,31 +94,28 @@ function SupportContent({
     beforeSequence,
     state,
   ]);
+  const requestOwner = useMemo(
+    () =>
+      createSupportRequestOwner(scope.key + ":" + routeKey + ":" + language),
+    [scope.key, routeKey, language],
+  );
   useLayoutEffect(() => {
-    const owner = { active: true, busy: false, key: scope.key + routeKey };
-    lease.current = owner;
-    return () => {
-      owner.active = false;
-    };
-  }, [scope.key, routeKey]);
-  const capture = () => {
-    const owner = lease.current;
-    return owner?.active &&
-      owner.key === scope.key + routeKey &&
-      scope.isCurrent()
-      ? owner
-      : null;
-  };
+    requestOwner.activate();
+    return () => requestOwner.retire();
+  }, [requestOwner]);
+  const capture = () => (scope.isCurrent() ? requestOwner.begin() : null);
   const current = loaded.key === scope.key + routeKey && scope.isCurrent();
   const view = current ? loaded.data : null;
   const read = operator ? readOperatorSupportAction : readOwnSupportAction;
   useEffect(() => {
     let active = true;
-    if (!scope.subject || !scope.isCurrent()) return;
+    const currentRead = requestOwner.capture();
+    if (!scope.subject || !currentRead || !scope.isCurrent()) return;
     void read({ ticketId, before, beforeSequence, state })
       .then((result) => {
-        if (!active || !acceptsPrivateResult(scope, result)) return;
-        setBusy(false);
+        if (!active || !currentRead() || !acceptsPrivateResult(scope, result))
+          return;
+        setBusy(requestOwner.busy());
         setLoaded({
           key: scope.key + routeKey,
           data: result.ok ? result.data : null,
@@ -136,6 +132,7 @@ function SupportContent({
           saved.current = key;
           try {
             const raw = sessionStorage.getItem(key);
+            setJournalError(false);
             if (raw) {
               const command = parseSupportCommand(JSON.parse(raw));
               if (
@@ -149,12 +146,13 @@ function SupportContent({
               setTopic(command.topic);
             }
           } catch {
-            setMessage(t.storage);
+            setJournalError(true);
+            setMessage(t.unreadableRecovery);
           }
         }
       })
       .catch(() => {
-        if (active && scope.isCurrent())
+        if (active && currentRead() && scope.isCurrent())
           setLoaded({
             key: scope.key + routeKey,
             data: null,
@@ -173,8 +171,9 @@ function SupportContent({
     state,
     refresh,
     operator,
-    t.storage,
+    t.unreadableRecovery,
     routeKey,
+    requestOwner,
   ]);
   const errorText = (code: string | null) =>
     code === "CONFLICT"
@@ -188,26 +187,29 @@ function SupportContent({
             : t.unavailable;
   async function transmit(command: SupportCommand, recovery = false) {
     const owner = capture();
-    if (!view || !owner || owner.busy) return;
+    if (!view || !owner) {
+      owner?.finish();
+      return;
+    }
     const recoveryKey = saved.current;
     if (!recovery) {
       try {
         if (!recoveryKey) throw new Error("No recovery key");
         sessionStorage.setItem(recoveryKey, JSON.stringify(command));
       } catch {
+        owner.finish();
         setMessage(t.storage);
         return;
       }
       setPending(command);
     }
-    owner.busy = true;
     setBusy(true);
     setMessage("");
     try {
       const result = await (
         operator ? operateSupportAction : createOrReplySupportAction
       )(command);
-      if (!owner.active || !acceptsPrivateResult(scope, result)) return;
+      if (!owner.isCurrent() || !acceptsPrivateResult(scope, result)) return;
       if (result.ok) {
         try {
           if (recoveryKey) sessionStorage.removeItem(recoveryKey);
@@ -226,14 +228,14 @@ function SupportContent({
           setRefresh((value) => value + 1);
       }
     } catch {
-      if (owner.active && scope.isCurrent()) setMessage(t.unavailable);
+      if (owner.isCurrent() && scope.isCurrent()) setMessage(t.unavailable);
     } finally {
-      owner.busy = false;
-      if (owner.active && scope.isCurrent()) setBusy(false);
+      owner.finish();
+      if (owner.isCurrent() && scope.isCurrent()) setBusy(false);
     }
   }
   function submit(kind: SupportKind) {
-    if (!view || pending || busy) return;
+    if (!view || pending || journalError || busy) return;
     try {
       void transmit(
         parseSupportCommand({
@@ -253,8 +255,10 @@ function SupportContent({
   }
   async function markRead() {
     const owner = capture();
-    if (!view?.ticket || !view.entries.length || !owner || owner.busy) return;
-    owner.busy = true;
+    if (!view?.ticket || !view.entries.length || !owner) {
+      owner?.finish();
+      return;
+    }
     const sequence = view.entries[view.entries.length - 1].sequence;
     setBusy(true);
     try {
@@ -263,14 +267,32 @@ function SupportContent({
         ticketId: view.ticket.id,
         sequence,
       });
-      if (!owner.active || !acceptsPrivateResult(scope, result)) return;
+      if (!owner.isCurrent() || !acceptsPrivateResult(scope, result)) return;
       setMessage(result.ok ? t.markedRead : errorText(result.code));
       if (result.ok) setRefresh((value) => value + 1);
     } catch {
-      if (owner.active && scope.isCurrent()) setMessage(t.unavailable);
+      if (owner.isCurrent() && scope.isCurrent()) setMessage(t.unavailable);
     } finally {
-      owner.busy = false;
-      if (owner.active && scope.isCurrent()) setBusy(false);
+      owner.finish();
+      if (owner.isCurrent() && scope.isCurrent()) setBusy(false);
+    }
+  }
+  function discardRetry() {
+    const owner = capture();
+    if (!view || !owner) {
+      owner?.finish();
+      return;
+    }
+    try {
+      if (!saved.current) throw new Error("No current retry key");
+      sessionStorage.removeItem(saved.current);
+      setPending(null);
+      setJournalError(false);
+      setRefresh((value) => value + 1);
+    } catch {
+      setMessage(t.unreadableRecovery);
+    } finally {
+      owner.finish();
     }
   }
   return (
@@ -449,31 +471,24 @@ function SupportContent({
               {message}
             </p>
           )}
-          {pending && (
+          {(pending || journalError) && (
             <div className={s.panel} role="status">
-              <p>{t.pending}</p>
+              <p>{journalError ? t.unreadableRecovery : t.pending}</p>
               <p className={s.meta}>{t.discardNote}</p>
               <div className={s.toolbar}>
-                <button
-                  className={s.primary}
-                  disabled={busy}
-                  onClick={() => void transmit(pending, true)}
-                >
-                  {busy ? t.submitting : t.retry}
-                </button>
+                {pending && (
+                  <button
+                    className={s.primary}
+                    disabled={busy}
+                    onClick={() => void transmit(pending, true)}
+                  >
+                    {busy ? t.submitting : t.retry}
+                  </button>
+                )}
                 <button
                   className={s.button}
                   disabled={busy}
-                  onClick={() => {
-                    try {
-                      if (saved.current)
-                        sessionStorage.removeItem(saved.current);
-                      setPending(null);
-                      setRefresh((value) => value + 1);
-                    } catch {
-                      setMessage(t.storage);
-                    }
-                  }}
+                  onClick={discardRetry}
                 >
                   {t.discard}
                 </button>
@@ -502,7 +517,7 @@ function SupportContent({
                     <select
                       className={s.field}
                       value={topic}
-                      disabled={busy || !!pending}
+                      disabled={busy || !!pending || journalError}
                       onChange={(event) =>
                         setTopic(event.target.value as SupportTopic)
                       }
@@ -523,7 +538,7 @@ function SupportContent({
                       minLength={3}
                       maxLength={120}
                       required
-                      disabled={busy || !!pending}
+                      disabled={busy || !!pending || journalError}
                     />
                   </label>
                 </>
@@ -536,7 +551,7 @@ function SupportContent({
                   onChange={(event) => setBody(event.target.value)}
                   maxLength={4000}
                   required
-                  disabled={busy || !!pending}
+                  disabled={busy || !!pending || journalError}
                   aria-describedby="support-privacy"
                 />
               </label>
@@ -545,7 +560,10 @@ function SupportContent({
               </p>
               {ticketId && <p className={s.meta}>{t.reason}</p>}
               <div className={s.toolbar}>
-                <button className={s.primary} disabled={busy || !!pending}>
+                <button
+                  className={s.primary}
+                  disabled={busy || !!pending || journalError}
+                >
                   {busy
                     ? t.submitting
                     : ticketId
@@ -558,7 +576,7 @@ function SupportContent({
                   <button
                     type="button"
                     className={s.button}
-                    disabled={busy || !!pending || !body.trim()}
+                    disabled={busy || !!pending || journalError || !body.trim()}
                     onClick={() => submit("resolve")}
                   >
                     {t.resolve}
@@ -568,7 +586,7 @@ function SupportContent({
                   <button
                     type="button"
                     className={s.button}
-                    disabled={busy || !!pending || !body.trim()}
+                    disabled={busy || !!pending || journalError || !body.trim()}
                     onClick={() => submit("note")}
                   >
                     {t.note}

@@ -18,7 +18,8 @@ import s from "../purchase-reviews/reviews.module.css";
 import n from "./notifications.module.css";
 import { SearchMatchFeedPanel } from "../saved-searches/updates";
 import { NotificationsEmpty } from "../discovery/notifications";
-import { buyerNotificationsEmpty } from "./buyer-empty";
+import { buyerNotificationsEmpty, showConversationEmpty } from "./buyer-empty";
+import { SupportUpdatesPanel } from "../support/updates";
 export function NotificationPanel({
   initial,
   actorSubject,
@@ -138,11 +139,13 @@ export function NotificationPanel({
             >
               {t("unread")}
             </Link>
-            {status === "ready" && (
-              <span className={s.badge}>
-                {t("unreadCount", { count: data.unreadCount })}
-              </span>
-            )}
+            {status === "ready" &&
+              (!data.matches || data.matches.available) &&
+              (!data.support || data.support.available) && (
+                <span className={s.badge}>
+                  {t("unreadCount", { count: data.unreadCount })}
+                </span>
+              )}
             <button
               className={s.secondary}
               disabled={selection.busy}
@@ -173,7 +176,10 @@ export function NotificationPanel({
                 <option value="message">{t("message")}</option>
                 <option value="offer">{t("offer")}</option>
                 {!sellerId && (
-                  <option value="search">{t("savedSearch")}</option>
+                  <>
+                    <option value="search">{t("savedSearch")}</option>
+                    <option value="support">{t("support")}</option>
+                  </>
                 )}
               </select>
             </label>
@@ -190,6 +196,15 @@ export function NotificationPanel({
               initial={data.matches}
               actorSubject={actorSubject}
               onRead={() => void refresh(true)}
+            />
+          )}
+          {!sellerId && data.support && (
+            <SupportUpdatesPanel
+              feed={data.support}
+              language={language}
+              shop={shop}
+              showEmpty={query.kind === "support"}
+              onRefresh={() => void refresh(true)}
             />
           )}
           {selection.invalid && (
@@ -264,7 +279,7 @@ export function NotificationPanel({
               </div>
             </section>
           )}
-          {!data.items.length && query.kind !== "search" && (
+          {showConversationEmpty(data) && (
             <section className={n.empty}>
               <h2>{t("empty")}</h2>
               <p>{t("emptyNote")}</p>
@@ -276,63 +291,68 @@ export function NotificationPanel({
               </Link>
             </section>
           )}
-          <ol
-            className={shop ? "account-panel buyer-notification-list" : s.list}
-          >
-            {data.items.map((item) => (
-              <li
-                key={item.id}
-                className={shop ? "buyer-notification-row" : s.card}
-                data-notification-id={item.id}
-              >
-                <div className={s.row}>
-                  <div>
-                    <h2>
-                      {item.title === null
-                        ? t("restrictedItem")
-                        : item.title || t("untitled")}
-                    </h2>
-                    <p className={s.muted}>{item.sellerName}</p>
+          {!!data.items.length && (
+            <ol
+              className={
+                shop ? "account-panel buyer-notification-list" : s.list
+              }
+            >
+              {data.items.map((item) => (
+                <li
+                  key={item.id}
+                  className={shop ? "buyer-notification-row" : s.card}
+                  data-notification-id={item.id}
+                >
+                  <div className={s.row}>
+                    <div>
+                      <h2>
+                        {item.title === null
+                          ? t("restrictedItem")
+                          : item.title || t("untitled")}
+                      </h2>
+                      <p className={s.muted}>{item.sellerName}</p>
+                    </div>
+                    <span className={s.badge}>
+                      {t(item.unread ? "unread" : "read")}
+                    </span>
                   </div>
-                  <span className={s.badge}>
-                    {t(item.unread ? "unread" : "read")}
-                  </span>
-                </div>
-                <p>
-                  <strong>{t(item.offerKind ? "offer" : "message")}</strong> ·{" "}
-                  <time dateTime={item.at}>
-                    {format.dateTime(new Date(item.at), {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </time>
-                </p>
-                {!!item.body && <p className={n.excerpt}>{item.body}</p>}
-                <div className={s.actions}>
-                  <Link
-                    className={s.secondary}
-                    href={inboxHref({ sellerId }, language, item.threadId)}
-                  >
-                    {t("openConversation")}
-                  </Link>
-                  <label className={n.select}>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(item.id)}
-                      disabled={
-                        !selection.enabled ||
-                        selection.draft.submitted ||
-                        (!selected.has(item.id) &&
-                          (!item.unread || selected.size >= NOTIFICATION_LIMIT))
-                      }
-                      onChange={() => selection.toggle(item)}
-                    />
-                    <span>{t("selectRead")}</span>
-                  </label>
-                </div>
-              </li>
-            ))}
-          </ol>
+                  <p>
+                    <strong>{t(item.offerKind ? "offer" : "message")}</strong> ·{" "}
+                    <time dateTime={item.at}>
+                      {format.dateTime(new Date(item.at), {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </time>
+                  </p>
+                  {!!item.body && <p className={n.excerpt}>{item.body}</p>}
+                  <div className={s.actions}>
+                    <Link
+                      className={s.secondary}
+                      href={inboxHref({ sellerId }, language, item.threadId)}
+                    >
+                      {t("openConversation")}
+                    </Link>
+                    <label className={n.select}>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(item.id)}
+                        disabled={
+                          !selection.enabled ||
+                          selection.draft.submitted ||
+                          (!selected.has(item.id) &&
+                            (!item.unread ||
+                              selected.size >= NOTIFICATION_LIMIT))
+                        }
+                        onChange={() => selection.toggle(item)}
+                      />
+                      <span>{t("selectRead")}</span>
+                    </label>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
           {data.nextBefore && (
             <Link
               className={s.secondary}

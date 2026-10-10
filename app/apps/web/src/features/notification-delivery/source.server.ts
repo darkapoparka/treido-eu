@@ -60,8 +60,9 @@ export async function notificationSourceLink(
     if (
       (
         await tx.client.query(
-          `SELECT m.id FROM treido.messages m WHERE m.id=$1 AND NOT (${messageHiddenSql(moderationReady, "m")})`,
-          [source.sourceId],
+          `SELECT m.id FROM treido.messages m WHERE m.id=$1 AND NOT (${messageHiddenSql(moderationReady, "m")})
+           AND NOT EXISTS(SELECT 1 FROM treido.conversation_read_cursors r WHERE r.thread_id=m.thread_id AND r.user_id=$2 AND r.last_sequence>=m.sequence)`,
+          [source.sourceId, source.userId],
         )
       ).rowCount !== 1
     )
@@ -73,7 +74,7 @@ export async function notificationSourceLink(
   const original = (
     await tx.client.query<{ listingId: string; criteria: unknown }>(
       `SELECT n.listing_id AS "listingId",v.criteria FROM treido.buyer_search_notifications n JOIN treido.buyer_saved_searches s ON s.id=n.search_id AND s.user_id=n.user_id JOIN treido.buyer_saved_search_versions v ON v.search_id=s.id AND v.user_id=s.user_id AND v.version=s.criteria_version
-    WHERE n.id=$1 AND n.user_id=$2 AND n.consent_generation=$3 AND n.consent_generation=s.consent_generation AND n.criteria_version=s.criteria_version AND s.status='enabled' AND s.consent_at IS NOT NULL AND n.kind<>'unavailable'
+    WHERE n.id=$1 AND n.user_id=$2 AND n.consent_generation=$3 AND n.consent_generation=s.consent_generation AND n.criteria_version=s.criteria_version AND s.status='enabled' AND s.consent_at IS NOT NULL AND n.read_at IS NULL AND n.kind<>'unavailable'
     AND NOT EXISTS(SELECT 1 FROM treido.listings l JOIN treido.contact_preferences cp ON cp.seller_id=l.seller_id AND cp.buyer_id=$2 WHERE l.id=n.listing_id AND (cp.buyer_blocked OR cp.seller_blocked)) FOR SHARE OF s`,
       [source.sourceId, source.userId, source.sourceRevision],
     )

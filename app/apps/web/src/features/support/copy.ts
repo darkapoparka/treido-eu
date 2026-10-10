@@ -1,5 +1,13 @@
 export const supportCopy = {
   en: {
+    updatesUnavailable:
+      "Support updates could not be loaded. Refresh to check the current account.",
+    noMatchingUpdates: "No support updates match this view.",
+    read: "Read",
+    openRequest: "Open request",
+    moreUpdates: "View all requests and earlier updates",
+    unreadableRecovery:
+      "This browser could not read an earlier retry. The request may already have been accepted. Review your requests before clearing only the local retry.",
     status: "Status",
     acknowledgedStorage:
       "Your request was accepted. The local retry could not be cleared; retrying that same request will recover the existing receipt.",
@@ -47,7 +55,7 @@ export const supportCopy = {
     markRead: "Mark displayed updates as read",
     markedRead: "Displayed updates marked as read.",
     conflict:
-      "This request changed. The latest version is loaded; review it before sending your retained message again.",
+      "This request changed. Refresh and review the latest version before deciding what to do with your retained message.",
     quota:
       "The request limit was reached. Keep your message and try again later.",
     invalid:
@@ -70,6 +78,14 @@ export const supportCopy = {
     noUpdates: "No unread support updates.",
   },
   bg: {
+    updatesUnavailable:
+      "Обновяванията от поддръжката не могат да се заредят. Обнови, за да провериш текущия акаунт.",
+    noMatchingUpdates: "Няма обновявания от поддръжката за този изглед.",
+    read: "Прочетено",
+    openRequest: "Отвори заявката",
+    moreUpdates: "Всички заявки и по-стари обновявания",
+    unreadableRecovery:
+      "Браузърът не успя да прочете предишен опит. Заявката може вече да е приета. Прегледай заявките си, преди да изчистиш само локалния опит.",
     status: "Състояние",
     acknowledgedStorage:
       "Заявката е приета. Локалният опит не може да бъде изчистен; повторението му ще върне същото потвърждение.",
@@ -117,7 +133,7 @@ export const supportCopy = {
     markRead: "Отбележи показаното като прочетено",
     markedRead: "Показаните обновявания са отбелязани като прочетени.",
     conflict:
-      "Заявката е променена. Заредена е последната версия; прегледай я, преди да изпратиш отново запазеното съобщение.",
+      "Заявката е променена. Обнови и прегледай последната версия, преди да решиш как да продължиш със запазеното съобщение.",
     quota:
       "Достигнат е лимитът за заявки. Запази съобщението и опитай по-късно.",
     invalid:

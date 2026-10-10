@@ -23,6 +23,7 @@ import {
   encodeNotificationCursor,
 } from "./cursor.server";
 import { readSearchMatchFeed } from "../saved-searches/feed.server";
+import { readSupportUpdates } from "../support/updates.server";
 import {
   searchActorKey,
   searchStorageReady,
@@ -73,6 +74,15 @@ export async function readNotificationFeed(
       nextBefore: null,
       unreadCount: 0,
     };
+    const support =
+      query.sellerId === null &&
+      (query.kind === "all" || query.kind === "support")
+        ? await readSupportUpdates(tx, user?.id ?? null, {
+            filter: query.filter,
+            q: query.q,
+          })
+        : undefined;
+    if (support) empty.support = support;
     if (!user) {
       if (
         query.sellerId === null &&
@@ -116,7 +126,7 @@ export async function readNotificationFeed(
        ${from} WHERE ${scope}
        AND ($3='all' OR m.sequence>coalesce(r.last_sequence,0))
        AND ($4='all' OR ($4='offer')=(m.offer_event_id IS NOT NULL))
-       AND $4<>'search'
+       AND $4 NOT IN('search','support')
        AND ($5='' OR strpos(lower(translate(CASE WHEN l.moderation_state='clear' THEN coalesce(p.payload->>'title','') ELSE '' END || ' ' || s.name,'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЬЮЯЍ','абвгдежзийклмнопрстуфхцчшщъьюяѝ')),lower(translate($5,'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЬЮЯЍ','абвгдежзийклмнопрстуфхцчшщъьюяѝ')))>0)
        AND m.created_at<=$6::timestamptz AND ($7::timestamptz IS NULL OR (m.created_at,m.id)<($7::timestamptz,$8::uuid))
        ORDER BY m.created_at DESC,m.id DESC LIMIT $9`,
@@ -135,8 +145,9 @@ export async function readNotificationFeed(
     ).rows;
     const count = (
       await tx.client.query<{ count: number }>(
-        `SELECT count(*)::int AS count ${from} WHERE ${scope} AND m.sequence>coalesce(r.last_sequence,0)`,
-        [user.id, query.sellerId],
+        `SELECT count(*)::int AS count ${from} WHERE ${scope} AND m.sequence>coalesce(r.last_sequence,0)
+         AND $3 NOT IN('search','support') AND ($3='all' OR ($3='offer')=(m.offer_event_id IS NOT NULL))`,
+        [user.id, query.sellerId, query.kind],
       )
     ).rows[0].count;
     const items = rows.slice(0, NOTIFICATION_LIMIT),
@@ -144,7 +155,8 @@ export async function readNotificationFeed(
     return {
       ...empty,
       items,
-      unreadCount: count,
+      unreadCount:
+        count + (matches?.unreadCount ?? 0) + (support?.unreadCount ?? 0),
       ...(matches ? { matches } : {}),
       nextBefore:
         rows.length > NOTIFICATION_LIMIT && last

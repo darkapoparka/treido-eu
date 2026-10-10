@@ -2,12 +2,13 @@ import { SellerError } from "../sellers/errors";
 import { validId } from "../selling/draft-model";
 import { object } from "../purchase-reviews/model";
 import type { MatchFeed } from "../saved-searches/model";
+import type { SupportUpdateFeed } from "../support/updates-model";
 
 export type NotificationScope = { actorKey: string; sellerId: string | null };
 export type NotificationQuery = {
   sellerId: string | null;
   filter: "all" | "unread";
-  kind: "all" | "message" | "offer" | "search";
+  kind: "all" | "message" | "offer" | "search" | "support";
   q: string;
   before: string | null;
 };
@@ -28,6 +29,7 @@ export type NotificationFeed = NotificationScope & {
   nextBefore: string | null;
   unreadCount: number;
   matches?: MatchFeed;
+  support?: SupportUpdateFeed;
 };
 export type ReadSelection = {
   messageId: string;
@@ -77,14 +79,14 @@ export function parseNotificationQuery(raw: unknown): NotificationQuery {
   if (
     (filter !== "all" && filter !== "unread") ||
     typeof kind !== "string" ||
-    !["all", "message", "offer", "search"].includes(kind) ||
+    !["all", "message", "offer", "search", "support"].includes(kind) ||
     typeof q !== "string" ||
     q.length > 80 ||
     /[\u0000-\u001f\u007f]/.test(q) ||
     (before !== null && (typeof before !== "string" || before.length > 1024))
   )
     throw new SellerError("INVALID_INPUT");
-  if (raw.sellerId !== null && kind === "search")
+  if (raw.sellerId !== null && ["search", "support"].includes(kind))
     throw new SellerError("INVALID_INPUT");
   return {
     sellerId: raw.sellerId as string | null,

@@ -23,6 +23,12 @@ export const SECTION_FIELDS: Record<ExportCategory, readonly string[]> = {
     "imageCount",
     "width",
     "height",
+    "supportTicketId",
+    "supportTitle",
+    "supportTopic",
+    "supportAuthorSide",
+    "supportEntryKind",
+    "supportBody",
   ],
   personalProfile: ["sellerId", "name", "description", "locality"],
   memberships: ["sellerId", "role", "status", "revision"],
@@ -85,7 +91,13 @@ export function snapshotSection(
         if (typeof value === "string") {
           if (
             value.length >
-            (key === "context" ? 16000 : key === "criteriaQuery" ? 6000 : 1500)
+            (key === "context"
+              ? 16000
+              : key === "criteriaQuery"
+                ? 6000
+                : key === "supportBody"
+                  ? 4000
+                  : 1500)
           )
             throw new PrivacyError("NOT_AVAILABLE");
           return [key, value];
