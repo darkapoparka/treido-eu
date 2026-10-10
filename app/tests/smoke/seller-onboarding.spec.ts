@@ -244,7 +244,7 @@ test("real support routes are bilingual and never simulate a sent support chat",
         expect(html).toContain(
           lang === "en"
             ? "No message has been sent"
-            : "Не е изпратено съобщение",
+            : "Все още не е изпратено съобщение",
         );
     }
 });
