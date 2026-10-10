@@ -193,9 +193,11 @@ export function BillingControls({
             ))}
           {view.subscription && (
             <>
-              {view.available && <button disabled={pending} onClick={() => command("portal")}>
-                {t.portal}
-              </button>}
+              {view.available && (
+                <button disabled={pending} onClick={() => command("portal")}>
+                  {t.portal}
+                </button>
+              )}
               {!view.subscription.cancelAtPeriodEnd && (
                 <button
                   disabled={pending}

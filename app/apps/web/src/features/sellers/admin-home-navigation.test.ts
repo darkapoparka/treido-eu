@@ -56,9 +56,14 @@ describe("workspace create navigation", () => {
         ? language === "bg"
           ? "Подготви артикул"
           : "Prepare an item"
-        : language === "bg"
-          ? "Добави продукт"
-          : "Add product";
+        : scenario.seller &&
+            !scenario.seller.capabilities.includes("listing.write")
+          ? language === "bg"
+            ? "Прегледай продуктите"
+            : "Review products"
+          : language === "bg"
+            ? "Добави продукт"
+            : "Add product";
       const href = links.find(([, , text]) => text === label)?.[1];
       expect(href).toBe(`${scenario.path}?lang=${language}`);
     });

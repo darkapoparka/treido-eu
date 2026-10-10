@@ -7,8 +7,15 @@ export async function searchStudioAction(raw: unknown) {
   try {
     const identity = await readVerifiedIdentity();
     if (!identity) return { ok: false as const, code: "FORBIDDEN" as const };
-    return { ok: true as const, data: await readStudioSearch(getDatabase(), identity, raw) };
+    return {
+      ok: true as const,
+      data: await readStudioSearch(getDatabase(), identity, raw),
+    };
   } catch (error) {
-    return { ok: false as const, code: error instanceof SellerError ? error.code : "NOT_AVAILABLE" as const };
+    return {
+      ok: false as const,
+      code:
+        error instanceof SellerError ? error.code : ("NOT_AVAILABLE" as const),
+    };
   }
 }

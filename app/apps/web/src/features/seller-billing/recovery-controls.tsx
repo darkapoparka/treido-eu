@@ -47,15 +47,36 @@ export function BillingRecoveryControls({
   function run(operation: BillingRecoveryCommand["operation"]) {
     if (busy.current || clerk.user?.id !== view.actorSubject) return;
     let stored: string | null = null;
-    try { stored = sessionStorage.getItem(scope + ":" + operation); } catch { /* Optional recovery storage. */ }
-    const command = restoreBillingRecovery({ sellerId: view.sellerId, actorKey: view.actorKey, intentId: intent.id, operation }, original.current, stored) ?? {
-      sellerId: view.sellerId, actorKey: view.actorKey, intentId: intent.id,
-      requestId: crypto.randomUUID(), expectedRevision: intent.revision, operation,
+    try {
+      stored = sessionStorage.getItem(scope + ":" + operation);
+    } catch {
+      /* Optional recovery storage. */
+    }
+    const command = restoreBillingRecovery(
+      {
+        sellerId: view.sellerId,
+        actorKey: view.actorKey,
+        intentId: intent.id,
+        operation,
+      },
+      original.current,
+      stored,
+    ) ?? {
+      sellerId: view.sellerId,
+      actorKey: view.actorKey,
+      intentId: intent.id,
+      requestId: crypto.randomUUID(),
+      expectedRevision: intent.revision,
+      operation,
     };
     // Save in memory before optional browser storage. Network retries keep the
     // original request/revision even when sessionStorage throws or is full.
     original.current = command;
-    try { sessionStorage.setItem(scope + ":" + operation, JSON.stringify(command)); } catch { /* The durable server receipt remains authoritative. */ }
+    try {
+      sessionStorage.setItem(scope + ":" + operation, JSON.stringify(command));
+    } catch {
+      /* The durable server receipt remains authoritative. */
+    }
     const accepted = command;
     busy.current = true;
     setError(false);
@@ -106,11 +127,25 @@ export function BillingRecoveryControls({
       </p>
       {intent.recovery === "legacy" && <p>{t.legacyRecovery}</p>}
       {intent.recovery === "observe" && <p>{t.unknownRecovery}</p>}
-      {intent.acceptedChange && <dl>
-        <dt>{language === "bg" ? "Приета промяна" : "Accepted change"}</dt>
-        <dd>{intent.acceptedChange.currency === "EUR" ? new Intl.NumberFormat(language, { style: "currency", currency: "EUR" }).format(intent.acceptedChange.amountMinor / 100) : intent.acceptedChange.currency}</dd>
-        {intent.acceptedChange.termsVersion && <><dt>{language === "bg" ? "Приети условия" : "Accepted terms"}</dt><dd>{intent.acceptedChange.termsVersion}</dd></>}
-      </dl>}
+      {intent.acceptedChange && (
+        <dl>
+          <dt>{language === "bg" ? "Приета промяна" : "Accepted change"}</dt>
+          <dd>
+            {intent.acceptedChange.currency === "EUR"
+              ? new Intl.NumberFormat(language, {
+                  style: "currency",
+                  currency: "EUR",
+                }).format(intent.acceptedChange.amountMinor / 100)
+              : intent.acceptedChange.currency}
+          </dd>
+          {intent.acceptedChange.termsVersion && (
+            <>
+              <dt>{language === "bg" ? "Приети условия" : "Accepted terms"}</dt>
+              <dd>{intent.acceptedChange.termsVersion}</dd>
+            </>
+          )}
+        </dl>
+      )}
       {intent.url && intent.recovery !== "legacy" && (
         <a href={intent.url} target="_blank" rel="noopener noreferrer">
           {t.open}

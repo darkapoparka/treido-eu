@@ -24,6 +24,9 @@ const mocks = vi.hoisted(() => ({
   updates: vi.fn(),
   reservations: vi.fn(),
   orders: vi.fn(),
+  orderIndex: vi.fn(),
+  customers: vi.fn(),
+  helper: vi.fn(),
   aftercare: vi.fn(),
   billing: vi.fn(),
   promotions: vi.fn(),
@@ -88,6 +91,13 @@ vi.mock("../purchase-reviews/reservations.server", () => ({
   readReservationQueue: mocks.reservations,
 }));
 vi.mock("../payments/orders.server", () => ({ readPaidOrders: mocks.orders }));
+vi.mock("../payments/order-index.server", () => ({
+  readSellerOrderIndex: mocks.orderIndex,
+}));
+vi.mock("./customers.server", () => ({ readSellerCustomers: mocks.customers }));
+vi.mock("../assistant-tools/sell-helper.server", () => ({
+  readSellHelper: mocks.helper,
+}));
 vi.mock("../order-aftercare/queries.server", () => ({
   readOrderAftercare: mocks.aftercare,
 }));
@@ -203,6 +213,49 @@ describe("current workspace route reader delegation (native owner authority is q
       route,
       sellers: [{ sellerId: seller, capabilities: ["seller.read"] }],
     });
+  });
+  it.each(["settings/payments", "settings/payments/refresh"])(
+    "denies generic membership on %s without querying Stripe",
+    async (page) => {
+      await expect(
+        readWorkspaceAccess(database, identity, base + "/" + page),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(mocks.list).not.toHaveBeenCalled();
+    },
+  );
+  it.each(["billing.manage", "payment.setup"])(
+    "keeps currently delegated %s status access",
+    async (capability) => {
+      mocks.context.mockResolvedValue({
+        sellerId: seller,
+        capabilities: ["seller.read", capability],
+      });
+      expect(
+        await readWorkspaceAccess(
+          database,
+          identity,
+          base + "/settings/payments?lang=bg",
+        ),
+      ).toMatchObject({ actorSubject: identity.subject });
+    },
+  );
+  it("delegates financial customer and order searches to their current authority owners", async () => {
+    mocks.orderIndex.mockRejectedValue(new SellerError("FORBIDDEN"));
+    await expect(
+      readWorkspaceAccess(
+        database,
+        identity,
+        base + "/orders?q=lamp&queue=attention",
+      ),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(mocks.orderIndex).toHaveBeenCalledWith(database, identity, seller, {
+      q: "lamp",
+      queue: "attention",
+    });
+    mocks.customers.mockRejectedValue(new SellerError("NOT_FOUND"));
+    await expect(
+      readWorkspaceAccess(database, identity, base + "/customers"),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
   it("does not read any authority or private resource for an unsupported route", async () => {
     await expect(

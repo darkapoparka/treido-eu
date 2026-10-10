@@ -33,7 +33,13 @@ import {
   settleAllocation,
 } from "./allocations.server";
 import { changeBuyerCart, readBuyerCart } from "../buyer-cart/cart.server";
-import { readOffers, changeOffer } from "../offers/offers.server";
+import {
+  readOffers,
+  changeOffer,
+  recoverOfferRequest,
+} from "../offers/offers.server";
+import { parseOfferMutation } from "../offers/recovery-model";
+import { libraryActorKey } from "../library/cursor.server";
 import { openListingConversation } from "../messaging/participants.server";
 import { readConversation, readInbox } from "../messaging/inbox.server";
 import { readPublicDiscovery } from "../catalog/public-discovery.server";
@@ -1272,6 +1278,9 @@ export function defineInventoryIntegrationCases(
             changeBuyerCart,
             readOffers,
             changeOffer,
+            recoverOfferRequest,
+            parseOfferMutation,
+            libraryActorKey,
             readDiscoveryInput,
             readPublicDiscovery,
             readPublicSeller,

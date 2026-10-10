@@ -396,7 +396,8 @@ export async function recoverBillingIntent(
 export function publicIntent(row: BillingIntent) {
   const directChange =
     row.operation === "change" && pendingChange(row.parameters);
-  const legacyChange = row.operation === "change" && !directChange && row.firstAttemptAt !== null;
+  const legacyChange =
+    row.operation === "change" && !directChange && row.firstAttemptAt !== null;
   const url =
     row.hostedUrl &&
     !legacyChange &&
@@ -419,12 +420,16 @@ export function publicIntent(row: BillingIntent) {
     expiresAt: row.expiresAt.toISOString(),
     url,
     preview: row.operation === "preview" ? row.result : null,
-    acceptedChange: directChange && row.result ? {
-      amountMinor: row.result.amountMinor, currency: row.result.currency,
-      monthlyAmountMinor: row.result.monthlyAmountMinor ?? null,
-      termsVersion: row.result.termsVersion ?? null,
-      prorationDate: row.result.prorationDate,
-    } : null,
+    acceptedChange:
+      directChange && row.result
+        ? {
+            amountMinor: row.result.amountMinor,
+            currency: row.result.currency,
+            monthlyAmountMinor: row.result.monthlyAmountMinor ?? null,
+            termsVersion: row.result.termsVersion ?? null,
+            prorationDate: row.result.prorationDate,
+          }
+        : null,
     revision: row.revision,
     recovery:
       row.operation === "change" &&

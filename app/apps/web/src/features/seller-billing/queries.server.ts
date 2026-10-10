@@ -21,7 +21,14 @@ import {
   type BillingIntent,
 } from "./commands.server";
 
-export type BillingRecoveryReceipt = { id: string; intentId: string; operation: "observe" | "abandon" | "escalate"; state: string; createdAt: string; updatedAt: string };
+export type BillingRecoveryReceipt = {
+  id: string;
+  intentId: string;
+  operation: "observe" | "abandon" | "escalate";
+  state: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export async function readSellerBilling(
   database: SellerDatabase,
@@ -82,9 +89,21 @@ export async function readSellerBilling(
         recoveryRequests: [] as BillingRecoveryReceipt[],
         financialHistoryAvailable: false,
       };
-    const recoveryRequests: BillingRecoveryReceipt[] = (await tx.client.query<Omit<BillingRecoveryReceipt, "createdAt" | "updatedAt"> & { createdAt: Date; updatedAt: Date }>(
-      'SELECT id,intent_id AS "intentId",operation,state,created_at AS "createdAt",updated_at AS "updatedAt" FROM treido.billing_recovery_requests WHERE seller_id=$1 ORDER BY created_at DESC,id DESC LIMIT 30', [sellerId],
-    )).rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() }));
+    const recoveryRequests: BillingRecoveryReceipt[] = (
+      await tx.client.query<
+        Omit<BillingRecoveryReceipt, "createdAt" | "updatedAt"> & {
+          createdAt: Date;
+          updatedAt: Date;
+        }
+      >(
+        'SELECT id,intent_id AS "intentId",operation,state,created_at AS "createdAt",updated_at AS "updatedAt" FROM treido.billing_recovery_requests WHERE seller_id=$1 ORDER BY created_at DESC,id DESC LIMIT 30',
+        [sellerId],
+      )
+    ).rows.map((row) => ({
+      ...row,
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+    }));
     const pendingHistory = (
       await tx.client.query<BillingIntent>(
         `SELECT ${intentColumns} FROM treido.billing_intents WHERE seller_id=$1

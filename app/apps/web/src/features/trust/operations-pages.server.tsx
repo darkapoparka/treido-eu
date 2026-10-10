@@ -1,5 +1,6 @@
 import { CaseDecisionForm } from "./case-form";
 import { ReportEvidenceImages } from "./image-evidence";
+import { readReportImageEvidence } from "./image-evidence.server";
 import "server-only";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -268,7 +269,13 @@ export async function OperatorReportPage({
               })}
             </p>
             <p className={s.notice}>{t("messageReportNote")}</p>
-            <ReportEvidenceImages reportId={reportId} language={language} />
+            <ReportEvidenceImages
+              reportId={reportId}
+              language={language}
+              images={await readPrivatePage(() =>
+                readReportImageEvidence(getDatabase(), actor, reportId),
+              )}
+            />
           </section>
         )}
         <ListingFacts language={language} listing={data.listing} />

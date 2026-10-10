@@ -1,19 +1,107 @@
-.body { max-width: 1056px; margin-inline: auto; display: grid; gap: 16px; min-width: 0; }
-.card { border: 1px solid #e3e3e3; border-radius: 12px; background: #fff; padding: 20px; min-width: 0; box-shadow: 0 1px 0 #0000000d; }
-.heading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
-.card h2 { font-size: 15px; font-weight: 650; line-height: 1.4; margin: 0 0 12px; overflow-wrap: anywhere; }
-.card h3 { font-size: 13px; font-weight: 650; margin: 12px 0 4px; }
-.card p, .card li, .facts { font-size: 13px; line-height: 1.55; }
-.eyebrow { color: #616161; margin: 0 0 4px; }
-.badge { background: #f1f1f1; border-radius: 8px; padding: 4px 8px; font-size: 12px; line-height: 1.4; max-width: 100%; overflow-wrap: anywhere; }
-.facts { margin: 12px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
-.facts div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid #ebebeb; }
-.facts dt { color: #616161; }
-.facts dd { margin: 0; font-weight: 550; }
-.muted { color: #616161; }
-.policyChecks { border-radius: 8px; padding: 4px 12px; background: #f7f7f7; }
-.requirements ul { padding-inline-start: 20px; }
-.requirements code { font-size: 12px; overflow-wrap: anywhere; }
-.links { display: flex; flex-wrap: wrap; gap: 8px; }
-.links a { max-width: 100%; text-align: center; white-space: normal; }
-@media (max-width: 600px) { .card { padding: 16px; } .facts { grid-template-columns: minmax(0, 1fr); } }
+.body {
+  max-width: 1056px;
+  margin-inline: auto;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.card {
+  border: 1px solid #e3e3e3;
+  border-radius: 12px;
+  background: #fff;
+  padding: 20px;
+  min-width: 0;
+  box-shadow: 0 1px 0 #0000000d;
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.card h2 {
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.4;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.card h3 {
+  font-size: 13px;
+  font-weight: 650;
+  margin: 12px 0 4px;
+}
+.card p,
+.card li,
+.facts {
+  font-size: 13px;
+  line-height: 1.55;
+}
+.eyebrow {
+  color: #616161;
+  margin: 0 0 4px;
+}
+.badge {
+  background: #f1f1f1;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.facts {
+  margin: 12px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+}
+.facts div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #ebebeb;
+}
+.facts dt {
+  color: #616161;
+}
+.facts dd {
+  margin: 0;
+  font-weight: 550;
+}
+.muted {
+  color: #616161;
+}
+.policyChecks {
+  border-radius: 8px;
+  padding: 4px 12px;
+  background: #f7f7f7;
+}
+.requirements ul {
+  padding-inline-start: 20px;
+}
+.requirements code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.links a {
+  max-width: 100%;
+  text-align: center;
+  white-space: normal;
+}
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

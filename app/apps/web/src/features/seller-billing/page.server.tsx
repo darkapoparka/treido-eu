@@ -90,7 +90,17 @@ export async function SellerBillingPage({
                     <th scope="row">{t.seats}</th>
                     <td>
                       {view.usage.seats} / {view.limits.seats}
-                      {view.kind === "business" && <small className={s.muted}> · {view.usage.occupiedSeats} {language === "bg" ? "заети" : "occupied"} + {view.usage.pendingSeats} {language === "bg" ? "резервирани покани" : "reserved invitations"}</small>}
+                      {view.kind === "business" && (
+                        <small className={s.muted}>
+                          {" "}
+                          · {view.usage.occupiedSeats}{" "}
+                          {language === "bg" ? "заети" : "occupied"} +{" "}
+                          {view.usage.pendingSeats}{" "}
+                          {language === "bg"
+                            ? "резервирани покани"
+                            : "reserved invitations"}
+                        </small>
+                      )}
                     </td>
                   </tr>
                   <tr>
@@ -174,10 +184,19 @@ export async function SellerBillingPage({
                   ))}
                 </ul>
               ) : (
-                <p>{view.financialHistoryAvailable ? t.empty : language === "bg" ? "Историята на фактурите не е достъпна чрез текущата платежна връзка. Това не означава, че няма финансови задължения." : "Invoice history is unavailable through the current payment binding. This does not mean there are no financial obligations."}</p>
+                <p>
+                  {view.financialHistoryAvailable
+                    ? t.empty
+                    : language === "bg"
+                      ? "Историята на фактурите не е достъпна чрез текущата платежна връзка. Това не означава, че няма финансови задължения."
+                      : "Invoice history is unavailable through the current payment binding. This does not mean there are no financial obligations."}
+                </p>
               )}
             </section>
-            <BillingRecoveryHistory receipts={view.recoveryRequests} language={language} />
+            <BillingRecoveryHistory
+              receipts={view.recoveryRequests}
+              language={language}
+            />
             <Link href={path}>{t.refresh}</Link>
           </div>
         </PaymentBoundary>

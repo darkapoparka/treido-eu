@@ -9,7 +9,7 @@ export function createInventoryBrowserTransport(configuration) {
       "readPublicInventoryAction",
     ],
     "buyer-cart": ["readBuyerCartAction", "changeBuyerCartAction"],
-    offers: ["readOffersAction", "changeOfferAction"],
+    offers: ["readOffersAction", "changeOfferAction", "recoverOfferAction"],
   };
   const plugin = {
     name: "isolated-inventory-actions",
@@ -89,12 +89,22 @@ export function createInventoryBrowserTransport(configuration) {
           data = await api.readBuyerCart(database, actor);
         } else if (action === "readOffersAction")
           data = await api.readOffers(database, actor, args[0]);
-        else if (action === "changeOfferAction") {
-          await api.changeOffer(database, actor, args[0]);
-          data = await api.readOffers(database, actor, {
-            threadId: args[0].threadId,
-            sellerId: args[0].sellerId,
-          });
+        else if (
+          action === "changeOfferAction" ||
+          action === "recoverOfferAction"
+        ) {
+          const mutation = api.parseOfferMutation(args[0]);
+          if (mutation.actorKey !== api.libraryActorKey(actor))
+            throw Object.assign(new Error(), { code: "FORBIDDEN" });
+          if (action === "recoverOfferAction")
+            data = await api.recoverOfferRequest(database, actor, mutation);
+          else {
+            await api.changeOffer(database, actor, mutation.command);
+            data = await api.readOffers(database, actor, {
+              threadId: mutation.command.threadId,
+              sellerId: mutation.command.sellerId,
+            });
+          }
         } else throw Object.assign(new Error(), { code: "INVALID_INPUT" });
       }
       send({ ok: true, data });

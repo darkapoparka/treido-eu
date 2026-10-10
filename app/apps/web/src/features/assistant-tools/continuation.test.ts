@@ -72,6 +72,7 @@ describe("Sell Helper draft navigation", () => {
             publication: "draft",
             payload,
           },
+          sellerKind: "personal",
           baseHash: "a".repeat(64),
           edit,
           issues: [],

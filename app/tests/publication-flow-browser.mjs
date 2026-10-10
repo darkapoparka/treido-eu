@@ -58,7 +58,11 @@ export const ClerkProvider=({children})=>children;
       "attachmentStatusAction",
       "removeAttachmentAction",
     ],
-    "offers/actions": ["readOffersAction", "changeOfferAction"],
+    "offers/actions": [
+      "readOffersAction",
+      "changeOfferAction",
+      "recoverOfferAction",
+    ],
     "purchase-reviews/actions": ["createPurchaseReviewAction"],
     "library/actions": ["readLibraryAction", "changeLibraryAction"],
     "promotions/metric-actions": ["recordPromotionMetricAction"],
