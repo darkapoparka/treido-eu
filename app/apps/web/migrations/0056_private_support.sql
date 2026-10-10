@@ -65,11 +65,16 @@ BEGIN
  END IF;
  RETURN NEW;
 END $$;
+CREATE FUNCTION treido.support_keep_evidence() RETURNS trigger
+LANGUAGE plpgsql SET search_path=pg_catalog,treido,pg_temp AS $$
+BEGIN
+ RAISE EXCEPTION 'Support evidence is immutable' USING ERRCODE='23514';
+END $$;
 CREATE TRIGGER support_ticket_identity BEFORE UPDATE ON treido.support_tickets FOR EACH ROW EXECUTE FUNCTION treido.guard_support_ticket_identity();
-CREATE TRIGGER support_entry_immutable BEFORE UPDATE OR DELETE ON treido.support_entries FOR EACH ROW EXECUTE FUNCTION treido.account_keep_receipt();
-CREATE TRIGGER support_receipt_immutable BEFORE UPDATE OR DELETE ON treido.support_command_receipts FOR EACH ROW EXECUTE FUNCTION treido.account_keep_receipt();
-CREATE TRIGGER support_notice_immutable BEFORE UPDATE OR DELETE ON treido.support_notifications FOR EACH ROW EXECUTE FUNCTION treido.account_keep_receipt();
+CREATE TRIGGER support_entry_immutable BEFORE UPDATE OR DELETE ON treido.support_entries FOR EACH ROW EXECUTE FUNCTION treido.support_keep_evidence();
+CREATE TRIGGER support_receipt_immutable BEFORE UPDATE OR DELETE ON treido.support_command_receipts FOR EACH ROW EXECUTE FUNCTION treido.support_keep_evidence();
+CREATE TRIGGER support_notice_immutable BEFORE UPDATE OR DELETE ON treido.support_notifications FOR EACH ROW EXECUTE FUNCTION treido.support_keep_evidence();
 REVOKE ALL ON treido.support_tickets,treido.support_entries,treido.support_command_receipts,treido.support_read_cursors,treido.support_notifications FROM PUBLIC;
-REVOKE ALL ON FUNCTION treido.guard_support_ticket_identity() FROM PUBLIC;
+REVOKE ALL ON FUNCTION treido.guard_support_ticket_identity(),treido.support_keep_evidence() FROM PUBLIC;
 -- These are retained support/case evidence, not optional library or profile data.
 -- Existing approved account-closure functions cannot delete them incidentally.

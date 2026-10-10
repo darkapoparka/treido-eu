@@ -6,4 +6,6 @@ export async function applySupportGrants(client, role) {
   await client.query(`REVOKE UPDATE,DELETE ON treido.support_tickets,treido.support_entries,treido.support_command_receipts,treido.support_read_cursors,treido.support_notifications FROM ${name};
     GRANT UPDATE(state,revision,last_sequence,public_sequence,updated_at) ON treido.support_tickets TO ${name};
     GRANT UPDATE(sequence) ON treido.support_read_cursors TO ${name}`);
+  const evidence = await client.query("SELECT to_regclass('treido.report_image_accesses') IS NOT NULL AS ready");
+  if (evidence.rows[0]?.ready) await client.query(`REVOKE UPDATE,DELETE ON treido.report_image_accesses FROM ${name}`);
 }

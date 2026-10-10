@@ -1,3 +1,4 @@
+import { applySupportGrants } from "../src/features/support/runtime-grants.mjs";
 import { applyBillingRecoveryGrants } from "../src/features/seller-billing/recovery-runtime-grants.mjs";
 import { applyInvitationMailGrants } from "../src/features/team/runtime-grants.mjs";
 import { applySellerDeclarationReviewGrants } from "../src/features/seller-declarations/runtime-grants.mjs";
@@ -72,6 +73,7 @@ export async function applyRuntimeGrants(client, role) {
     GRANT UPDATE(revision) ON treido.inventory_catalogues TO ${name};
     GRANT UPDATE(seller_sku,options,option_key,price_minor,on_hand,sold,active,revision) ON treido.inventory_skus TO ${name};
     GRANT UPDATE(state,revision,resolution_reference,updated_at) ON treido.inventory_allocations TO ${name};
+    GRANT UPDATE(state,revision,resolution_reference,updated_at) ON treido.inventory_allocations TO ${name};
     GRANT UPDATE(revision) ON treido.buyer_carts TO ${name};
     GRANT UPDATE(publication_revision,quantity,seen_price_minor,active,added_at) ON treido.buyer_cart_lines TO ${name};
     GRANT UPDATE(state,revision,allocation_id) ON treido.listing_offers TO ${name}`);
@@ -111,6 +113,7 @@ export async function applyRuntimeGrants(client, role) {
   await applyAssistantToolsGrants(client, role);
   await applyAccountPrivacyGrants(client, role);
   await applyNotificationDeliveryGrants(client, role);
+  await applySupportGrants(client, role);
   await applyGiftFinderGrants(client, role);
   await applySellerBillingGrants(client, role);
   await applyPromotionGrants(client, role);

@@ -1,3 +1,4 @@
+import { parseSupportContinuation } from "../support/navigation";
 import { parseInsightsContinuation } from "../insights/model";
 import { parseNotificationContinuation } from "../notifications/navigation-model";
 import { validId } from "../selling/draft-model";
@@ -5,6 +6,8 @@ import { parseMessagingContinuation } from "../messaging/navigation-model";
 
 /** Additional private entry paths, independently reauthorised by every destination. */
 export function parseWorkspaceContinuation(value: unknown): string | null {
+  const support = parseSupportContinuation(value);
+  if (support) return support;
   const insights = parseInsightsContinuation(value);
   if (insights) return insights;
   const notification = parseNotificationContinuation(value);

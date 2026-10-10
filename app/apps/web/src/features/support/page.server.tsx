@@ -9,7 +9,7 @@ const copy = {
     home: "Home",
     intro:
       "Choose the item, conversation or account setting you need help with. Private records require sign-in and current access.",
-    chat: "Live support chat is not available here. No message has been sent. Use the relevant order, report or account workflow below.",
+    chat: "Support is handled through private requests, not an automated live chat. No message has been sent yet. Open My support requests below.",
     selling: "Start selling",
     sellingNote:
       "Prepare your personal item or business catalogue, check a CSV and review photo, stock and delivery requirements.",
@@ -45,7 +45,7 @@ const copy = {
     home: "Начало",
     intro:
       "Избери артикула, разговора или настройката, за която ти трябва помощ. Личните записи изискват вход и актуални права за достъп.",
-    chat: "Тук няма активен чат с поддръжката. Не е изпратено съобщение. Използвай съответната поръчка, сигнал или настройка на акаунта по-долу.",
+    chat: "Помощта се предоставя чрез лични заявки, а не автоматичен чат на живо. Все още не е изпратено съобщение. Отвори Моите заявки за помощ по-долу.",
     selling: "Започни да продаваш",
     sellingNote:
       "Подготви личен артикул или бизнес каталог, провери CSV файл и прегледай изискванията за снимки, наличности и доставка.",
@@ -104,6 +104,11 @@ export async function SupportHubPage({
       <p className={s.intro}>{t.intro}</p>
       {chatUnavailable && <p role="status">{t.chat}</p>}
       <section className="account-panel">
+        <h2>{language === "bg" ? "Свържи се с поддръжката" : "Contact support"}</h2>
+        <p>{language === "bg" ? "Изпрати лична заявка и проследи отговорите на упълномощения екип. За поръчки използвай помощта към съответната поръчка." : "Send a private request and follow replies from the authorized team. For orders, use support on the relevant order."}</p>
+        <Link className={s.textButton} href={href("/support/requests")}>{language === "bg" ? "Моите заявки за помощ" : "My support requests"}</Link>
+      </section>
+      <section className="account-panel">
         <h2>{t.selling}</h2>
         <p>{t.sellingNote}</p>
         <div className={s.actions}>
@@ -145,10 +150,7 @@ export async function SupportHubPage({
         <h2>{t.account}</h2>
         <p>{t.accountNote}</p>
         <div className={s.actions}>
-          <Link
-            className={s.textButton}
-            href={href("/account/privacy/security")}
-          >
+          <Link className={s.textButton} href={href("/account/privacy/security")}>
             {t.security}
           </Link>
           <Link className={s.textButton} href={href("/account/privacy")}>
