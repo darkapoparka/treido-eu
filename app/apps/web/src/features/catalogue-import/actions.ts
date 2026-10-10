@@ -4,6 +4,7 @@ import { requireVerifiedIdentity } from "../../server/identity/clerk.server";
 import { SellerError, type SellerErrorCode } from "../sellers/errors";
 import { validateJobBindings } from "../../server/jobs/bindings";
 import { CsvError } from "./csv";
+import { importUploadCommand } from "./upload-recovery";
 import {
   createImportUpload,
   appendImportChunk,
@@ -29,9 +30,10 @@ function failure(error: unknown): {
 export async function createImportUploadAction(input: unknown) {
   try {
     const actor = await requireVerifiedIdentity();
+    const command = importUploadCommand(input, actor.subject);
     return {
       ok: true as const,
-      data: await createImportUpload(getDatabase(), actor, input),
+      data: await createImportUpload(getDatabase(), actor, command),
     };
   } catch (error) {
     return failure(error);
@@ -40,9 +42,10 @@ export async function createImportUploadAction(input: unknown) {
 export async function appendImportChunkAction(input: unknown) {
   try {
     const actor = await requireVerifiedIdentity();
+    const command = importUploadCommand(input, actor.subject);
     return {
       ok: true as const,
-      data: await appendImportChunk(getDatabase(), actor, input),
+      data: await appendImportChunk(getDatabase(), actor, command),
     };
   } catch (error) {
     return failure(error);
@@ -51,9 +54,10 @@ export async function appendImportChunkAction(input: unknown) {
 export async function finishImportUploadAction(input: unknown) {
   try {
     const actor = await requireVerifiedIdentity();
+    const command = importUploadCommand(input, actor.subject);
     return {
       ok: true as const,
-      data: await finishImportUpload(getDatabase(), actor, input),
+      data: await finishImportUpload(getDatabase(), actor, command),
     };
   } catch (error) {
     return failure(error);
