@@ -158,15 +158,10 @@ export async function runInventoryBrowser({
       ).toBeVisible();
       await page.goto(origin + "/cart?lang=en");
       await expect(page.locator("[data-cart-sku]")).toHaveCount(1);
-      await page.getByLabel("Quantity", { exact: true }).fill("1");
-      await button("Update quantity").click();
-      await expect(page.getByLabel("Quantity", { exact: true })).toHaveValue(
-        "1",
-      );
+      await page.getByRole("button", { name: /^Decrease quantity / }).click();
+      await expect(page.getByLabel("Quantity", { exact: true })).toHaveText("1");
       await page.reload();
-      await expect(page.getByLabel("Quantity", { exact: true })).toHaveValue(
-        "1",
-      );
+      await expect(page.getByLabel("Quantity", { exact: true })).toHaveText("1");
       expect(
         (await api.readPublicInventory(database, fixture.draft.id)).skus.find(
           (sku) => sku.id === black.id,
