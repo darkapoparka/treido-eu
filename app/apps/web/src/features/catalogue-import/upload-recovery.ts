@@ -79,3 +79,31 @@ export function importUploadCommand(
   if (raw.actorSubject !== currentSubject) throw new SellerError("FORBIDDEN");
   return raw.command;
 }
+
+/** Starting a separate import is allowed only after a fresh authorized read
+ * confirms this exact previous file/import was cancelled, never on a timeout. */
+export function restartCancelledUpload(
+  journal: ImportUploadJournal,
+  snapshot: {
+    id: string;
+    sellerId: string;
+    sourceHash: string;
+    sourceBytes: number;
+    state: string;
+  },
+  requestId: string,
+): ImportUploadJournal | null {
+  if (
+    !restoreImportUpload(journal, journal) ||
+    !validId(requestId) ||
+    requestId === journal.requestId ||
+    !journal.importId ||
+    snapshot.state !== "cancelled" ||
+    snapshot.id !== journal.importId ||
+    snapshot.sellerId !== journal.sellerId ||
+    snapshot.sourceHash !== journal.checksum ||
+    snapshot.sourceBytes !== journal.bytes
+  )
+    return null;
+  return { ...journal, requestId, importId: null };
+}

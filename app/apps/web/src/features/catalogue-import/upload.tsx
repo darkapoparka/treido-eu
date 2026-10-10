@@ -14,6 +14,7 @@ import {
 import {
   importUploadJournalKey,
   restoreImportUpload,
+  restartCancelledUpload,
   type ImportUploadJournal,
 } from "./upload-recovery";
 import type { ImportView } from "./model";
@@ -64,6 +65,8 @@ function Upload({ sellerId, actorSubject, resume }: Props) {
     error: string | null;
     paused: boolean;
     recovering: boolean;
+    cancelled?: { key: string; journal: ImportUploadJournal };
+    newUploadReady?: boolean;
   } | null>(null);
   const life = useRef<{ frame: typeof frame | null; active: symbol | null }>({
     frame: null,
@@ -161,6 +164,69 @@ function Upload({ sellerId, actorSubject, resume }: Props) {
       paused: true,
       recovering: currentUi?.recovering ?? false,
     });
+  }
+  async function prepareNewImport() {
+    const cancelled = currentUi?.cancelled;
+    if (!cancelled || life.current.active || !current()) return;
+    const ticket = Symbol("cancelled import review");
+    life.current.active = ticket;
+    const valid = () => current() && life.current.active === ticket;
+    setUi((value) =>
+      value?.frame === frame ? { ...value, busy: true, error: null } : value,
+    );
+    try {
+      const snapshot = await readCatalogueImportAction({
+        sellerId,
+        importId: cancelled.journal.importId,
+      });
+      if (!valid()) return;
+      if (!snapshot.ok) throw new Error(snapshot.detail ?? snapshot.code);
+      const replacement = restartCancelledUpload(
+        cancelled.journal,
+        snapshot.data,
+        crypto.randomUUID(),
+      );
+      if (!replacement) throw new Error("CONFLICT");
+      const original = memory.current.get(cancelled.key);
+      if (
+        original?.requestId !== cancelled.journal.requestId ||
+        original.importId !== cancelled.journal.importId
+      )
+        throw new Error("CONFLICT");
+      save(cancelled.key, replacement);
+      setUi({
+        frame,
+        busy: false,
+        progress: 0,
+        error: null,
+        paused: false,
+        recovering: false,
+        newUploadReady: true,
+      });
+      if (resume)
+        router.push("/app/sellers/" + sellerId + "/imports?lang=" + locale);
+    } catch (cause) {
+      if (valid())
+        setUi((value) =>
+          value?.frame === frame
+            ? {
+                ...value,
+                busy: false,
+                error: importMessageKey(
+                  cause instanceof Error ? cause.message : null,
+                ),
+              }
+            : value,
+        );
+    } finally {
+      if (life.current.active === ticket) {
+        life.current.active = null;
+        if (current())
+          setUi((value) =>
+            value?.frame === frame ? { ...value, busy: false } : value,
+          );
+      }
+    }
   }
   async function upload() {
     if (!file || life.current.active || !current()) return;
@@ -264,7 +330,18 @@ function Upload({ sellerId, actorSubject, resume }: Props) {
         snapshot.data.sourceBytes !== file.size
       )
         throw new Error("fileMismatch");
-      if (snapshot.data.state === "cancelled") throw new Error("CONFLICT");
+      if (snapshot.data.state === "cancelled") {
+        setUi({
+          frame,
+          busy: false,
+          progress: 0,
+          error: null,
+          paused: false,
+          recovering: true,
+          cancelled: { key, journal },
+        });
+        return;
+      }
       if (snapshot.data.state === "uploading") {
         const completed = new Set(snapshot.data.uploaded),
           total = Math.ceil(bytes.length / CSV_LIMITS.chunkBytes);
@@ -369,6 +446,22 @@ function Upload({ sellerId, actorSubject, resume }: Props) {
         <p className={f.help}>{t("noStock")}</p>
         <p className={f.help}>{t("reloadUploadNote")}</p>
         {!qualified && <p role="status">{t("denied")}</p>}
+        {currentUi?.cancelled && (
+          <section className={s.notice} aria-label={t("cancelledOriginal")}>
+            <p>{t("cancelledOriginal")}</p>
+            <button
+              type="button"
+              className={a.secondary}
+              disabled={busy || !qualified}
+              onClick={() => void prepareNewImport()}
+            >
+              {t("prepareNewImport")}
+            </button>
+          </section>
+        )}
+        {currentUi?.newUploadReady && (
+          <p role="status">{t("newUploadReady")}</p>
+        )}
         {currentUi?.recovering && (
           <p role="status">{t("originalUploadRecovered")}</p>
         )}

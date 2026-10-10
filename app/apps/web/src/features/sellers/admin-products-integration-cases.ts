@@ -259,6 +259,12 @@ export function defineAdminProductIntegrationCases(
       expect(
         (await readAdminProducts(database, other, sellerId)).items,
       ).toHaveLength(30);
+      // The manager baseline includes catalog editing. Exercise a genuinely
+      // read-only current member before asserting review-only destinations.
+      await admin.query(
+        "UPDATE treido.seller_memberships SET role='member',grants='[\"seller.read\",\"listing.read\"]'::jsonb WHERE seller_id=$1 AND user_id=$2",
+        [sellerId, memberId],
+      );
       const scoped = {
         sellerId,
         actorSubject: other.subject,

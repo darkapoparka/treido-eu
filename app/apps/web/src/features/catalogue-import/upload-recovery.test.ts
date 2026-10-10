@@ -3,6 +3,7 @@ import {
   importUploadCommand,
   importUploadJournalKey,
   restoreImportUpload,
+  restartCancelledUpload,
 } from "./upload-recovery";
 const scope = {
   actorSubject: "user_synthetic",
@@ -73,4 +74,54 @@ describe("recoverable current-human CSV uploads", () => {
     ).toThrowError(expect.objectContaining({ code: "FORBIDDEN" }));
     expect(() => importUploadCommand(command, scope.actorSubject)).toThrow();
   });
+});
+
+it("starts a distinct request only from the exact verified cancelled file and retains immutable old metadata", () => {
+  const original = {
+    ...journal,
+    version: 1 as const,
+    importId: "00000000-0000-4000-8000-000000000003",
+  };
+  const snapshot = {
+    id: original.importId,
+    sellerId: scope.sellerId,
+    sourceHash: scope.checksum,
+    sourceBytes: scope.bytes,
+    state: "cancelled",
+  };
+  const requestId = "00000000-0000-4000-8000-000000000004";
+  expect(restartCancelledUpload(original, snapshot, requestId)).toEqual({
+    ...original,
+    requestId,
+    importId: null,
+  });
+  expect(original.importId).toEqual(snapshot.id);
+  for (const state of [
+    "uploading",
+    "validating",
+    "review",
+    "queued",
+    "running",
+    "complete",
+    "unknown",
+  ])
+    expect(
+      restartCancelledUpload(original, { ...snapshot, state }, requestId),
+    ).toBeNull();
+  for (const difference of [
+    { id: requestId },
+    { sellerId: requestId },
+    { sourceHash: "b".repeat(64) },
+    { sourceBytes: 1 },
+  ])
+    expect(
+      restartCancelledUpload(
+        original,
+        { ...snapshot, ...difference },
+        requestId,
+      ),
+    ).toBeNull();
+  expect(
+    restartCancelledUpload(original, snapshot, original.requestId),
+  ).toBeNull();
 });

@@ -114,7 +114,10 @@
     "reloadUploadNote": "After an interruption or reload, select the same CSV again. The original request and saved chunks are reused; CSV content is not stored in your browser.",
     "originalUploadRecovered": "Continuing the original import request and checking its saved progress.",
     "pauseUpload": "Pause upload",
-    "uploadPaused": "Upload paused at {percent}%. A chunk already sent may finish. Continue with the same file to check the saved chunks and resume."
+    "uploadPaused": "Upload paused at {percent}%. A chunk already sent may finish. Continue with the same file to check the saved chunks and resume.",
+    "cancelledOriginal": "The original import was cancelled. Its history and any drafts already created are preserved. A separate import requires a new explicit request.",
+    "prepareNewImport": "Prepare a separate import",
+    "newUploadReady": "A separate import request is ready. Select Upload and review to start it; existing external IDs remain protected against duplicate drafts."
   },
   "bg": {
     "title": "Импорт на каталог",
@@ -231,6 +234,9 @@
     "reloadUploadNote": "След прекъсване или презареждане избери отново същия CSV файл. Използват се първоначалната заявка и запазените части; CSV съдържанието не се записва в браузъра.",
     "originalUploadRecovered": "Продължаване на първоначалния импорт и проверка на запазения напредък.",
     "pauseUpload": "Пауза на качването",
-    "uploadPaused": "Качването е на пауза при {percent}%. Вече изпратена част може да завърши. Продължи със същия файл за проверка на запазените части и възобновяване."
+    "uploadPaused": "Качването е на пауза при {percent}%. Вече изпратена част може да завърши. Продължи със същия файл за проверка на запазените части и възобновяване.",
+    "cancelledOriginal": "Първоначалният импорт е отказан. Историята и вече създадените чернови се запазват. Отделен импорт изисква нова изрична заявка.",
+    "prepareNewImport": "Подготви отделен импорт",
+    "newUploadReady": "Заявката за отделен импорт е готова. Избери „Качи и прегледай“, за да започнеш; съществуващите външни номера остават защитени от дублирани чернови."
   }
 }
