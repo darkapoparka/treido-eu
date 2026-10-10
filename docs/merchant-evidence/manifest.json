@@ -1,0 +1,51 @@
+{
+  "recordedOn": "2026-10-11",
+  "sourceCommit": "adc4b1168653247e3eec4c8844bbf97130f0b684",
+  "root": "L:/PLATFORMS/treido-eu-global",
+  "scope": "Inspected original browser screenshots of actual merchant components backed by isolated native PostgreSQL and synthetic identities. Not admin-preview, genuine Clerk, live supply, provider acceptance or pixel-perfect Shopify parity.",
+  "originalsRemainLocal": true,
+  "screenshots": [
+    {
+      "name": "Current literal SKU search and keyboard result focus",
+      "language": "en",
+      "path": "app/.qa/t42-stock-browser/studio-search-sku-en-319.png",
+      "width": 319,
+      "height": 850,
+      "bytes": 17156,
+      "sha256": "853f3d5ad14be77d1d011f8799d3bd15f9081af006d39e95928a9b5efa2e1302",
+      "recordedAt": "2026-10-10T22:00:36.5170940Z",
+      "presentationCopy": {
+        "path": ".qa/pro-b-20261010/rendered/studio-search-sku-en-319.webp",
+        "bytes": 5788,
+        "sha256": "4d1687c6920216729a3907ee6ebf51741aaf8f8ce4a7848e2fd9d82111b91572",
+        "note": "Same dimensions; quality-78 WebP for compact conversation delivery. Original PNG remains authoritative."
+      }
+    },
+    {
+      "name": "Persisted inventory and reserved stock",
+      "language": "bg",
+      "path": "app/.qa/t42-stock-browser/inventory-bg-1440.png",
+      "width": 1440,
+      "height": 850,
+      "bytes": 98046,
+      "sha256": "ffa2271f54f6b163f89a73e1b132ca9f405096111c50151ad5b513762612a5ed",
+      "recordedAt": "2026-10-10T22:00:40.9794533Z"
+    },
+    {
+      "name": "Corrected CSV import completed as persisted drafts",
+      "language": "bg",
+      "path": "app/.qa/t42-import-browser/import-bg-393.png",
+      "width": 393,
+      "height": 850,
+      "bytes": 51127,
+      "sha256": "ec07d48b499fd720c04c95a416aa764522a30120fa60deb2784717835728c6ef",
+      "recordedAt": "2026-10-10T22:00:47.2977332Z"
+    }
+  ],
+  "referenceObservations": {
+    "provider": "Existing signed-in Shopify admin, read-only owner browser",
+    "inspected": ["Home", "Settled empty Products"],
+    "capturesRemainLocal": true,
+    "notClaimed": ["Populated order/editor matrix", "Every mobile reference state", "Native Shop parity", "Live provider qualification"]
+  }
+}
