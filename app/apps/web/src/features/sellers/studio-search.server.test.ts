@@ -99,6 +99,12 @@ describe("Studio search uses current seller authority", () => {
     );
     expect(resource?.[1]).toEqual([sellerId, query]);
     expect(resource?.[0]).not.toContain(query);
+    expect(resource?.[0]).toContain("sku.seller_id=l.seller_id");
+    expect(resource?.[0]).toContain("sku.listing_id=l.id");
+    expect(resource?.[0]).toContain("sku.active");
+    expect(resource?.[0]).toContain(
+      "position(lower($2) in lower(sku.seller_sku))",
+    );
     expect(view.items[0].href).toBe(
       `/app/sellers/${sellerId}/listings/${sellerId}/review?lang=en`,
     );

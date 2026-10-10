@@ -100,6 +100,7 @@ export async function runInventoryBrowser({
       await expect(modal()).toHaveCount(0);
       await expect(page.locator("[data-sku-id]")).toHaveCount(1);
       await button("Edit variant").click();
+      await page.getByLabel("Seller SKU", { exact: true }).fill("TR-BLACK-%_");
       await page
         .getByLabel("Variant price · EUR", { exact: true })
         .fill("129.00");
@@ -107,8 +108,12 @@ export async function runInventoryBrowser({
       await page.getByLabel("Option name", { exact: true }).fill("Color");
       await page.getByLabel("Option value", { exact: true }).fill("Black");
       // Recheck foreground access without throwing away a partly entered variant.
-      await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event("blur")));
-      await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event("focus")));
+      await page.evaluate(() =>
+        globalThis.dispatchEvent(new globalThis.Event("blur")),
+      );
+      await page.evaluate(() =>
+        globalThis.dispatchEvent(new globalThis.Event("focus")),
+      );
       await expect(
         page.getByLabel("Option value", { exact: true }),
       ).toHaveValue("Black");
@@ -135,6 +140,57 @@ export async function runInventoryBrowser({
       expect(
         saved.skus.find((sku) => sku.options.Color === "White").onHand,
       ).toBe(2);
+      // Studio search is the actual component plus current native SQL, not
+      // /admin-preview data. The literal SKU lives in the saved variant above.
+      await page.setViewportSize({ width: 1440, height: 850 });
+      const searchTrigger = page
+        .locator('button[aria-label="Search this seller account"]:visible')
+        .first();
+      await searchTrigger.click();
+      const searchDialog = page.locator(
+        'dialog[data-studio-part="search-dialog"][open]',
+      );
+      const searchInput = searchDialog.getByRole("searchbox");
+      await searchInput.fill("TR-BLACK-%_");
+      await expect(searchDialog.locator("ul a")).toHaveCount(1);
+      await expect(searchDialog.locator("ul a")).toHaveAttribute(
+        "href",
+        new RegExp(fixture.draft.id),
+      );
+      await searchInput.press("ArrowDown");
+      await expect(searchDialog.locator("ul a")).toBeFocused();
+      for (const width of [1440, 393, 319]) {
+        await page.setViewportSize({ width, height: 850 });
+        const bounds = await searchDialog.boundingBox();
+        expect(bounds.x).toBeGreaterThanOrEqual(0);
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+        await page.screenshot({
+          path: join(out, "studio-search-sku-en-" + width + ".png"),
+        });
+      }
+      await page.setViewportSize({ width: 1440, height: 850 });
+      await page.keyboard.press("Escape");
+      await expect(searchDialog).toHaveCount(0);
+      await expect(searchTrigger).toBeFocused();
+      await searchTrigger.click();
+      await searchDialog.getByRole("searchbox").fill("TR-BLACK-%_");
+      await expect(searchDialog.locator("ul a")).toHaveCount(1);
+      // Switch only this isolated browser's transport actor. The old seller
+      // result must disappear on revalidation, and the server denies the buyer.
+      await context.addCookies([
+        { name: "stock-actor", value: "buyer", url: origin },
+      ]);
+      await page.evaluate(() =>
+        globalThis.dispatchEvent(new globalThis.Event("focus")),
+      );
+      await expect(searchDialog.getByRole("alert")).toContainText(
+        "Access has changed",
+      );
+      await expect(searchDialog.locator("ul a")).toHaveCount(0);
+      await page.keyboard.press("Escape");
+      await context.addCookies([
+        { name: "stock-actor", value: "owner", url: origin },
+      ]);
       const publication = await api.publishListing(database, owner, {
         ...fixture.input,
         expectedRevision: saved.listingRevision,

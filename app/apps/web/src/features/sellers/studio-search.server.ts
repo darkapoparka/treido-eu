@@ -67,7 +67,9 @@ export async function readStudioSearch(
         }>(
           `SELECT l.id,coalesce(d.payload->>'title','') AS title,CASE WHEN l.moderation_state<>'clear' THEN 'restricted' ELSE l.publication END AS status
          FROM treido.listings l JOIN treido.listing_drafts d ON d.seller_id=l.seller_id AND d.listing_id=l.id
-         WHERE l.seller_id=$1 AND ($2='' OR position(lower($2) in lower(coalesce(d.payload->>'title','')))>0)
+         WHERE l.seller_id=$1 AND ($2='' OR position(lower($2) in lower(coalesce(d.payload->>'title','')))>0 OR EXISTS(
+           SELECT 1 FROM treido.inventory_skus sku WHERE sku.seller_id=l.seller_id AND sku.listing_id=l.id
+           AND sku.active AND position(lower($2) in lower(sku.seller_sku))>0))
          ORDER BY d.updated_at DESC,l.id DESC LIMIT 8`,
           [input.sellerId, input.q],
         )

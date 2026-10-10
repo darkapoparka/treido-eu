@@ -159,18 +159,7 @@ export function StudioSearch({
     }
   };
   return (
-    <div
-      className={s.panel}
-      data-studio-part="search-panel"
-      onKeyDownCapture={(event) => {
-        if (event.key === "Escape" && q) {
-          event.preventDefault();
-          event.stopPropagation();
-          setQuery("");
-          input.current?.focus();
-        }
-      }}
-    >
+    <div className={s.panel} data-studio-part="search-panel">
       <div className={s.header}>
         <AdminIcon name="search" />
         <input

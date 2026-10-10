@@ -9,6 +9,7 @@ import {
 } from "./persistence.server";
 import { createListingDraft } from "../selling/drafts.server";
 import { emptyDraft } from "../selling/draft-model";
+import { changeInventory } from "../inventory/commands.server";
 import { readAdminProducts } from "./admin-products.server";
 import { readStudioSearch } from "./studio-search.server";
 import { readSellerOperations } from "./operations.server";
@@ -164,6 +165,81 @@ export function defineAdminProductIntegrationCases(
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" });
     });
+    it("finds literal current SKUs without leaking another business or archived variants", async () => {
+      const { database, admin, owner } = get();
+      const product = (
+        await readAdminProducts(database, owner, sellerId, { q: "%_" })
+      ).items[0];
+      const stock = await changeInventory(database, owner, {
+        sellerId,
+        listingId: product.id,
+        expectedRevision: 0,
+        requestId: randomUUID(),
+        operation: {
+          kind: "setup",
+          mode: "stocked",
+          onHand: 0,
+          sellerSku: "TREIDO-SKU-%_",
+        },
+      });
+      const foreignSeller = await createBusinessSeller(database, owner, {
+        name: "Separate SKU business",
+        requestId: randomUUID(),
+      });
+      const foreign = await createListingDraft(database, owner, {
+        sellerId: foreignSeller,
+        requestId: randomUUID(),
+        payload: { ...emptyDraft, title: "Different business private product" },
+      });
+      await changeInventory(database, owner, {
+        sellerId: foreignSeller,
+        listingId: foreign.id,
+        expectedRevision: 0,
+        requestId: randomUUID(),
+        operation: {
+          kind: "setup",
+          mode: "stocked",
+          onHand: 0,
+          sellerSku: "TREIDO-SKU-%_",
+        },
+      });
+      const input = {
+        sellerId,
+        actorSubject: owner.subject,
+        q: "treido-sku-%_",
+        group: "products",
+        language: "en",
+      };
+      const result = await readStudioSearch(database, owner, input);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe("product:" + product.id);
+      expect(JSON.stringify(result)).not.toContain(foreign.id);
+      expect(
+        (
+          await readStudioSearch(database, owner, {
+            ...input,
+            q: "treido-sku-X",
+          })
+        ).items,
+      ).toHaveLength(0);
+      expect(
+        (
+          await readStudioSearch(database, owner, {
+            ...input,
+            sellerId: emptySeller,
+          })
+        ).items,
+      ).toHaveLength(0);
+      // The fixture administrator changes only this isolated zero-stock SKU.
+      // This is an observation test, not an alternate production archive command.
+      await admin.query(
+        "UPDATE treido.inventory_skus SET active=false WHERE id=$1 AND seller_id=$2",
+        [stock.skuId, sellerId],
+      );
+      expect(
+        (await readStudioSearch(database, owner, input)).items,
+      ).toHaveLength(0);
+    });
     it("derives merchant operating work and billing seat reservations from current persisted facts only", async () => {
       const { database, admin, owner } = get();
       const operations = await readSellerOperations(database, owner, sellerId);
@@ -171,14 +247,29 @@ export function defineAdminProductIntegrationCases(
       expect(
         operations.counts.find((item) => item.kind === "drafts")?.count,
       ).toBe(31);
-      expect(operations.counts.find((item) => item.kind === "withdrawn")?.count).toBe(1);
-      expect(operations.counts.find((item) => item.kind === "restricted")?.count).toBe(1);
-      expect(operations.counts.find((item) => item.kind === "fulfilment")?.count).toBe(0);
-      expect(operations.counts.find((item) => item.kind === "payments")?.count).toBe(0);
-      const productCounts = (await readAdminProducts(database, owner, sellerId)).counts;
-      expect(operations.counts.find((item) => item.kind === "drafts")?.count).toBe(productCounts.draft);
-      expect(operations.counts.find((item) => item.kind === "withdrawn")?.count).toBe(productCounts.withdrawn);
-      expect(operations.counts.find((item) => item.kind === "restricted")?.count).toBe(productCounts.restricted);
+      expect(
+        operations.counts.find((item) => item.kind === "withdrawn")?.count,
+      ).toBe(1);
+      expect(
+        operations.counts.find((item) => item.kind === "restricted")?.count,
+      ).toBe(1);
+      expect(
+        operations.counts.find((item) => item.kind === "fulfilment")?.count,
+      ).toBe(0);
+      expect(
+        operations.counts.find((item) => item.kind === "payments")?.count,
+      ).toBe(0);
+      const productCounts = (await readAdminProducts(database, owner, sellerId))
+        .counts;
+      expect(
+        operations.counts.find((item) => item.kind === "drafts")?.count,
+      ).toBe(productCounts.draft);
+      expect(
+        operations.counts.find((item) => item.kind === "withdrawn")?.count,
+      ).toBe(productCounts.withdrawn);
+      expect(
+        operations.counts.find((item) => item.kind === "restricted")?.count,
+      ).toBe(productCounts.restricted);
       expect(
         operations.counts.find((item) => item.kind === "orders")?.count,
       ).toBe(0);

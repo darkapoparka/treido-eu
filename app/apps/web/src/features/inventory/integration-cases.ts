@@ -9,6 +9,7 @@ import {
 } from "../catalog/published.server";
 import { readPublicSeller } from "../catalog/public-discovery.server";
 import { readSellerContext } from "../sellers/persistence.server";
+import { readStudioSearch } from "../sellers/studio-search.server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomBytes, randomUUID } from "node:crypto";
 import { setTimeout as pause } from "node:timers/promises";
@@ -1366,39 +1367,46 @@ export function defineInventoryIntegrationCases(
         );
         const { runInventoryBrowser } =
           await import("../../../../../tests/inventory-flow-browser.mjs");
-        const { withNativePaymentEntry } = await import("../payments/public-entry-native");
-        await withNativePaymentEntry(ctx.database, ctx.admin, fixture, async (entry) => {
-        await runInventoryBrowser({
-          database: ctx.database,
+        const { withNativePaymentEntry } =
+          await import("../payments/public-entry-native");
+        await withNativePaymentEntry(
+          ctx.database,
+          ctx.admin,
           fixture,
-          owner: ctx.owner,
-          buyer,
-          api: {
-            readInventory,
-            changeInventory,
-            readPublicInventory,
-            readBuyerCart,
-            changeBuyerCart,
-            readOffers,
-            changeOffer,
-            recoverOfferRequest,
-            readPaymentEntry: entry.read,
-            approvePaymentEntry: entry.approve,
-            revokePaymentEntry: entry.revoke,
-            parseOfferMutation,
-            libraryActorKey,
-            readDiscoveryInput,
-            readPublicDiscovery,
-            readPublicSeller,
-            readPublishedListing,
-            readPublishedPhoto,
-            readSellerContext,
-            publishListing,
-            openListingConversation,
-            readConversation,
+          async (entry) => {
+            await runInventoryBrowser({
+              database: ctx.database,
+              fixture,
+              owner: ctx.owner,
+              buyer,
+              api: {
+                readInventory,
+                changeInventory,
+                readPublicInventory,
+                readBuyerCart,
+                changeBuyerCart,
+                readOffers,
+                changeOffer,
+                recoverOfferRequest,
+                readPaymentEntry: entry.read,
+                approvePaymentEntry: entry.approve,
+                revokePaymentEntry: entry.revoke,
+                parseOfferMutation,
+                libraryActorKey,
+                readDiscoveryInput,
+                readPublicDiscovery,
+                readPublicSeller,
+                readPublishedListing,
+                readPublishedPhoto,
+                readSellerContext,
+                readStudioSearch,
+                publishListing,
+                openListingConversation,
+                readConversation,
+              },
+            });
           },
-        });
-        });
+        );
       },
       180000,
     );

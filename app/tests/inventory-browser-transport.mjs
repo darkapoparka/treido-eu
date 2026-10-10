@@ -10,6 +10,7 @@ export function createInventoryBrowserTransport(configuration) {
     ],
     "buyer-cart": ["readBuyerCartAction", "changeBuyerCartAction"],
     offers: ["readOffersAction", "changeOfferAction", "recoverOfferAction"],
+    studio: ["searchStudioAction"],
   };
   const plugin = {
     name: "isolated-inventory-actions",
@@ -18,6 +19,11 @@ export function createInventoryBrowserTransport(configuration) {
       const path = (
         id.startsWith(".") && importer ? resolve(dirname(importer), id) : id
       ).replaceAll("\\", "/");
+      if (
+        path.endsWith("/features/sellers/studio-search-actions") ||
+        path.endsWith("/features/sellers/studio-search-actions.ts")
+      )
+        return "\0stock:studio";
       for (const group of Object.keys(names))
         if (
           path.endsWith("/features/" + group + "/actions") ||
@@ -76,7 +82,9 @@ export function createInventoryBrowserTransport(configuration) {
       } else {
         if (!actor)
           throw Object.assign(new Error(), { code: "UNAUTHENTICATED" });
-        if (action === "readInventoryAction")
+        if (action === "searchStudioAction")
+          data = await api.readStudioSearch(database, actor, args[0]);
+        else if (action === "readInventoryAction")
           data = await api.readInventory(database, actor, args[0]);
         else if (action === "changeInventoryAction") {
           await api.changeInventory(database, actor, args[0]);
