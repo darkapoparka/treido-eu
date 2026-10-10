@@ -1,0 +1,2 @@
+# Keep the maintained CI workflow byte-identical on Windows and Linux.
+.github/workflows/*.yml text eol=lf

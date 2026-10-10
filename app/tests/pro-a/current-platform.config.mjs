@@ -3,9 +3,17 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "../..");
 export default defineConfig({
   root,
-  resolve: { alias: { "@": path.join(root, "apps/web/src"), "server-only": path.join(root, "tests/t61/server-only.mjs") } },
+  resolve: {
+    alias: {
+      "@": path.join(root, "apps/web/src"),
+      "server-only": path.join(root, "tests/t61/server-only.mjs"),
+    },
+  },
   test: {
-    include: ["tests/pro-a/current-platform.integration.ts", "tests/t72/current-migrations.test.mjs"],
+    include: [
+      "tests/pro-a/current-platform.integration.ts",
+      "tests/t72/current-migrations.test.mjs",
+    ],
     maxWorkers: 1,
     fileParallelism: false,
     hookTimeout: 90000,

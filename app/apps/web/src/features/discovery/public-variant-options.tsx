@@ -30,7 +30,7 @@ export function PublicVariantOptions({
     t("selectVariant"),
     t("defaultVariant"),
   );
-  const shown = visibleNativeOptions(skus, 6, (sku) => sku.id === selectedId);
+  const shown = visibleNativeOptions(skus, 8, (sku) => sku.id === selectedId);
   const label = (sku: PublicSku) => labels.values[skus.indexOf(sku)];
   const price = (sku: PublicSku) =>
     formatMoney({ amount: sku.priceMinor, currency: "EUR" }, locale);
@@ -81,7 +81,9 @@ export function PublicVariantOptions({
         headerless
         dragHandle
         initialFocus='button[aria-pressed="true"]'
-        className={"native-color-sheet native-option-sheet " + styles.optionsSheet}
+        className={
+          "native-color-sheet native-option-sheet " + styles.optionsSheet
+        }
       >
         <h2 aria-hidden="true">{labels.legend}</h2>
         <div className="native-color-list">
@@ -96,7 +98,9 @@ export function PublicVariantOptions({
               onClick={() => choose(sku.id)}
             >
               <span>{label(sku)}</span>
-              <small>{sku.available === 0 ? t("out_of_stock") : price(sku)}</small>
+              <small>
+                {sku.available === 0 ? t("out_of_stock") : price(sku)}
+              </small>
               {selectedId === sku.id && <Icon name="check" />}
             </button>
           ))}
