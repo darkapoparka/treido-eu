@@ -23,7 +23,8 @@ window.__auth={set(subject='synthetic-human-A',id='session-A',status='active'){s
 export const useClerk=()=>clerk;
 export function useAuth(){const current=useSyncExternalStore(listener=>{listeners.add(listener);return()=>listeners.delete(listener);},()=>state);return {isLoaded:current.loaded,userId:current.user?.id??null,sessionId:current.session?.id??null,isSignedIn:!!current.user&&current.session?.status==='active'};}
 let visibility='visible';Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>visibility});
-window.__visibility=(value,emit=true)=>{visibility=value;if(emit)document.dispatchEvent(new Event('visibilitychange'));};
+// Commit the simulated lifecycle event just like the simulated Clerk resource event.
+window.__visibility=(value,emit=true)=>{visibility=value;if(emit)flushSync(()=>document.dispatchEvent(new Event('visibilitychange')));};
 `;
 const transport = `
 window.__requests=[];let sequence=0;
