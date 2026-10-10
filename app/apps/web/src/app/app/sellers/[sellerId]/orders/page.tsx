@@ -1,1 +1,1 @@
-export { PaidOrdersPage as default } from "@/features/payments/pages.server";
+export { SellerOrderIndexPage as default } from "@/features/sellers/merchant-data-pages.server";
