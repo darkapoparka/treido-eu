@@ -1,1 +1,1 @@
-export { SellerPaymentSettingsPage as default } from "@/features/payments/pages.server";
+export { SellerConnectPage as default } from "@/features/payments/seller-connect-page.server";
