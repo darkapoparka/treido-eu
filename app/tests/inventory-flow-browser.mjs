@@ -64,6 +64,7 @@ export async function runInventoryBrowser({
         return {
           actorSubject: identity?.subject,
           listing,
+          paymentEntryAvailable: await api.readPaymentEntry(listing),
           inventory: await api.readPublicInventory(
             database,
             fixture.draft.id,
@@ -134,11 +135,17 @@ export async function runInventoryBrowser({
       expect(
         saved.skus.find((sku) => sku.options.Color === "White").onHand,
       ).toBe(2);
-      await api.publishListing(database, owner, {
+      const publication = await api.publishListing(database, owner, {
         ...fixture.input,
         expectedRevision: saved.listingRevision,
       });
       await actor("buyer", "/products/" + fixture.draft.id + "?lang=en");
+      // Publication alone is contact-only. Enable only through the same native
+      // registry read as production, never a hardcoded browser success flag.
+      await expect(button("Add to cart")).toHaveCount(0);
+      await expect(page.getByText("Arrange payment and handover directly with the seller.", { exact: false })).toBeVisible();
+      await api.approvePaymentEntry(publication.revision);
+      await page.reload();
       await page
         .getByLabel("Choose a variant", { exact: true })
         .selectOption(black.id);
@@ -165,6 +172,9 @@ export async function runInventoryBrowser({
           (sku) => sku.id === black.id,
         ).available,
       ).toBe(3);
+      await api.revokePaymentEntry();
+      await page.goto(origin + "/products/" + fixture.draft.id + "?lang=en");
+      await expect(button("Add to cart")).toHaveCount(0);
       threadId = (
         await api.openListingConversation(database, buyer, fixture.draft.id)
       ).id;

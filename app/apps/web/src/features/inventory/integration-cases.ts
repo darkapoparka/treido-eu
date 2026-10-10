@@ -1366,6 +1366,8 @@ export function defineInventoryIntegrationCases(
         );
         const { runInventoryBrowser } =
           await import("../../../../../tests/inventory-flow-browser.mjs");
+        const { withNativePaymentEntry } = await import("../payments/public-entry-native");
+        await withNativePaymentEntry(ctx.database, ctx.admin, fixture, async (entry) => {
         await runInventoryBrowser({
           database: ctx.database,
           fixture,
@@ -1380,6 +1382,9 @@ export function defineInventoryIntegrationCases(
             readOffers,
             changeOffer,
             recoverOfferRequest,
+            readPaymentEntry: entry.read,
+            approvePaymentEntry: entry.approve,
+            revokePaymentEntry: entry.revoke,
             parseOfferMutation,
             libraryActorKey,
             readDiscoveryInput,
@@ -1392,6 +1397,7 @@ export function defineInventoryIntegrationCases(
             openListingConversation,
             readConversation,
           },
+        });
         });
       },
       180000,

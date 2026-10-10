@@ -51,6 +51,7 @@ declare global {
       library?: boolean;
       actorSubject?: string;
       inventory?: PublicInventory | null;
+      paymentEntryAvailable?: boolean;
       inventoryEditor?: InventoryView;
       importIndex?: ImportIndex;
       importDetail?: ImportView;
@@ -127,6 +128,7 @@ createRoot(document.getElementById("root")!).render(
         <PublishedProductDetail
           listing={data.listing}
           inventory={data.inventory}
+          paymentEntryAvailable={data.paymentEntryAvailable === true}
         />
       ) : (
         <Marketplace
