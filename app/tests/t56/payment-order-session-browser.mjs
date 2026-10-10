@@ -178,7 +178,8 @@ try {
   await expect(retry()).toBeDisabled();
   assert.deepEqual(JSON.parse(await saved()), rejected);
   await page.evaluate(() => window.__render({ order: { revision: 1 } }));
-  await expect(ready()).toBeDisabled();
+  // Studio conceals fresh actions while the original request is unresolved.
+  await expect(ready()).toHaveCount(0);
   await expect(retry()).toBeDisabled();
   await page.evaluate(() => window.__render({ order: { revision: 2 } }));
   await expect(ready()).toBeEnabled();
@@ -296,7 +297,8 @@ try {
   await ready().click();
   const current = await command(1);
   await resolve(0, { ok: false, code: "CONFLICT" });
-  await expect(ready()).toBeDisabled();
+  // Studio conceals fresh actions while the original request is unresolved.
+  await expect(ready()).toHaveCount(0);
   assert.deepEqual(JSON.parse(await saved()), obsolete);
   assert.deepEqual(
     JSON.parse(
@@ -362,10 +364,17 @@ try {
       await page.evaluate(() =>
         window.__render({ sellerId: "b0000000-0000-4000-8000-000000000001" }),
       );
-      await expect(page.getByRole("textbox")).toHaveValue(old.reason);
-      await expect(page.getByRole("checkbox")).toHaveCount(2);
-      await expect(page.getByRole("checkbox").first()).not.toBeChecked();
-      await expect(page.getByRole("checkbox").last()).not.toBeChecked();
+      // Saved refund terms are immutable text, with one deliberate confirmation.
+      await expect(page.getByRole("textbox")).toHaveCount(0);
+      await expect(
+        page.locator("p").filter({ hasText: old.reason }),
+      ).toHaveCount(1);
+      await expect(page.getByRole("checkbox")).toHaveCount(1);
+      await expect(page.getByRole("checkbox")).not.toBeChecked();
+      await expect(retry()).toBeDisabled();
+      await expect(
+        page.getByRole("button", { name: "Request full refund", exact: true }),
+      ).toHaveCount(0);
       assert.deepEqual(JSON.parse(await saved()), old);
     }
     outcomes.push(
