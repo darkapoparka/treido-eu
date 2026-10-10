@@ -25,6 +25,7 @@ import {
   type OfferEventKind,
 } from "./model";
 import type { InboxScope } from "../messaging/inbox-model";
+import { offerRecoveryState, parseOfferMutation, type OfferRecoveryView } from "./recovery-model";
 async function offerAccess(
   tx: SellerTransaction,
   identity: VerifiedIdentity,
@@ -415,4 +416,26 @@ export async function cancelReservedOfferInTransaction(
     ],
   );
   return receipt(result.revision);
+}
+
+/** Read the immutable original actor receipt even after a later counteroffer,
+ * expiry or cancellation. Recovery does not repeat a financial command. */
+export async function recoverOfferRequest(database: SellerDatabase, identity: VerifiedIdentity, raw: unknown): Promise<OfferRecoveryView> {
+  const mutation = parseOfferMutation(raw), command = mutation.command;
+  if (mutation.actorKey !== libraryActorKey(identity)) throw new SellerError("FORBIDDEN");
+  return inTransaction(database, async (tx) => {
+    const access = await offerAccess(tx, identity, command.threadId, { sellerId: command.sellerId });
+    // Same order as offer commands. Wait for an in-flight committed revision
+    // before deciding whether an unrecorded old command can still be applied.
+    const current = (await tx.client.query<{ revision: number }>("SELECT offer_revision AS revision FROM treido.conversation_threads WHERE id=$1 FOR SHARE", [command.threadId])).rows[0];
+    if (!current) throw new SellerError("NOT_FOUND");
+    const receipt = (await tx.client.query<{ hash: string; revision: number; offerId: string }>(
+      'SELECT input_hash AS hash,accepted_revision AS revision,offer_id AS "offerId" FROM treido.offer_command_receipts WHERE thread_id=$1 AND actor_id=$2 AND request_id=$3',
+      [command.threadId, access.user.id, command.requestId],
+    )).rows[0];
+    if (receipt && receipt.hash !== inputHash(command)) throw new SellerError("CONFLICT");
+    return { actorKey: mutation.actorKey, sellerId: command.sellerId, threadId: command.threadId, requestId: command.requestId,
+      state: offerRecoveryState(command.expectedRevision, current.revision, !!receipt), acceptedRevision: receipt?.revision ?? null,
+      currentRevision: current.revision, offerId: receipt?.offerId ?? null };
+  });
 }

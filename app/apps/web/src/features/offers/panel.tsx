@@ -1,17 +1,18 @@
 "use client";
 import { CreateReviewButton } from "../purchase-reviews/controls";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { useClerk } from "@clerk/nextjs";
-import { useFormatter, useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
+import Link from "next/link";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { ConversationDialog } from "../messaging/dialog";
 import { useInboxRefresh } from "../messaging/use-inbox-refresh";
 import type { InboxScope } from "../messaging/inbox-model";
 import { parseEuroPrice } from "../selling/draft-model";
 import { variantCaption } from "../inventory/model";
-import { readOffersAction, changeOfferAction } from "./actions";
+import { readOffersAction } from "./actions";
+import { useOfferRequest } from "./use-offer-request";
+import { OfferRecoveryControls } from "./recovery-controls";
 import {
   OFFER_LIMITS,
-  type OfferCommand,
   type OfferItem,
   type OfferMessage,
   type OfferOperation,
@@ -52,169 +53,55 @@ type DialogState =
       offer: OfferItem;
       revision: number;
     };
-export function OfferPanel({
-  threadId,
-  scope,
-  actorSubject,
-  onChanged,
-}: {
-  threadId: string;
-  scope: InboxScope;
-  actorSubject: string;
-  onChanged: () => void;
-}) {
-  const t = useTranslations("offers"),
-    format = useFormatter(),
-    clerk = useClerk(),
-    sellerId = scope.sellerId;
+type OfferPanelProps = { threadId: string; scope: InboxScope; actorSubject: string; onChanged: () => void };
+export function OfferPanel(props: OfferPanelProps) {
+  return <OfferPanelContent key={props.actorSubject + ":" + (props.scope.sellerId ?? "buyer") + ":" + props.threadId} {...props} />;
+}
+function OfferPanelContent({ threadId, scope, actorSubject, onChanged }: OfferPanelProps) {
+  const t = useTranslations("offers"), format = useFormatter(), language = useLocale() === "bg" ? "bg" : "en", sellerId = scope.sellerId;
   const [before, setBefore] = useState<number | null>(null);
-  const load = useCallback(
-    () => readOffersAction({ threadId, sellerId, before }),
-    [threadId, sellerId, before],
-  );
-  const { data, status, refresh } = useInboxRefresh<OfferView | null>(
-    null,
-    actorSubject,
-    load,
-  );
-  const [dialog, setDialog] = useState<DialogState | null>(null),
-    [skuId, setSkuId] = useState(""),
-    [quantity, setQuantity] = useState("1"),
-    [amount, setAmount] = useState(""),
-    [hours, setHours] = useState(24);
-  const [pending, start] = useTransition(),
-    [error, setError] = useState<string | null>(null),
-    [saved, setSaved] = useState(false);
-  const lifecycle = useRef({ mounted: true, busy: false }),
-    attempt = useRef<{ key: string; command: OfferCommand } | null>(null);
-  useEffect(() => {
-    const life = lifecycle.current;
-    life.mounted = true;
-    return () => {
-      life.mounted = false;
-    };
-  }, []);
+  const load = useCallback(() => readOffersAction({ threadId, sellerId, before }), [threadId, sellerId, before]);
+  const { data, status, refresh } = useInboxRefresh<OfferView | null>(null, actorSubject, load);
+  const [dialog, setDialog] = useState<DialogState | null>(null), [skuId, setSkuId] = useState(""), [quantity, setQuantity] = useState("1"), [amount, setAmount] = useState(""), [hours, setHours] = useState(24), [validationError, setValidationError] = useState<string | null>(null);
+  const request = useOfferRequest({ actorSubject, sellerId, threadId, data, status, onSettled: () => {
+    setDialog(null); setBefore(null); setValidationError(null); void refresh(true); onChanged();
+  } });
+  const pending = request.pending, error = validationError ?? request.error, saved = request.notice === "applied" || request.notice === "recorded";
+  const actionDenied = ["FORBIDDEN", "UNAUTHENTICATED", "NOT_FOUND"].includes(request.error ?? "");
   function propose(parent: OfferItem | null = null) {
-    if (!data) return;
-    setError(null);
-    setSaved(false);
-    attempt.current = null;
-    const sku = parent
-      ? data.inventory?.skus.find((item) => item.id === parent.skuId)
-      : data.inventory?.skus.length === 1
-        ? data.inventory.skus[0]
-        : undefined;
-    setSkuId(parent?.skuId ?? sku?.id ?? "");
-    setQuantity(String(parent?.quantity ?? 1));
-    setAmount(parent ? (parent.unitPriceMinor / 100).toFixed(2) : "");
-    setHours(24);
+    if (!data || status !== "ready" || request.blocked) return;
+    setValidationError(null); request.clearNotice();
+    const sku = parent ? data.inventory?.skus.find((item) => item.id === parent.skuId) : data.inventory?.skus.length === 1 ? data.inventory.skus[0] : undefined;
+    setSkuId(parent?.skuId ?? sku?.id ?? ""); setQuantity(String(parent?.quantity ?? 1)); setAmount(parent ? (parent.unitPriceMinor / 100).toFixed(2) : ""); setHours(24);
     setDialog({ kind: "propose", parent, revision: data.revision });
   }
-  function decide(
-    kind: "accept" | "reject" | "withdraw" | "cancel",
-    offer: OfferItem,
-  ) {
-    if (data) {
-      setError(null);
-      setSaved(false);
-      attempt.current = null;
-      setDialog({ kind, offer, revision: data.revision });
-    }
+  function decide(kind: "accept" | "reject" | "withdraw" | "cancel", offer: OfferItem) {
+    if (!data || status !== "ready" || request.blocked) return;
+    setValidationError(null); request.clearNotice(); setDialog({ kind, offer, revision: data.revision });
   }
   function submit() {
-    if (
-      !data ||
-      !dialog ||
-      lifecycle.current.busy ||
-      status !== "ready" ||
-      clerk.user?.id !== actorSubject
-    )
-      return;
+    if (!data || !dialog || status !== "ready" || request.blocked) return;
     let operation: OfferOperation;
     if (dialog.kind === "propose") {
-      const price = parseEuroPrice(amount),
-        count = /^\d+$/.test(quantity) ? Number(quantity) : NaN;
-      if (
-        typeof price !== "number" ||
-        price < 1 ||
-        !Number.isSafeInteger(count) ||
-        count < 1 ||
-        count > 99 ||
-        !skuId ||
-        !data.inventory
-      ) {
-        setError("INVALID_INPUT");
-        return;
-      }
-      operation = {
-        kind: "propose",
-        parentId: dialog.parent?.id ?? null,
-        skuId,
-        publicationRevision:
-          dialog.parent?.publicationRevision ??
-          data.inventory.publicationRevision,
-        quantity: count,
-        unitPriceMinor: price,
-        expiresHours: hours,
-      };
+      const price = parseEuroPrice(amount), count = /^\d+$/.test(quantity) ? Number(quantity) : NaN;
+      if (typeof price !== "number" || price < 1 || !Number.isSafeInteger(count) || count < 1 || count > 99 || !skuId || !data.inventory) { setValidationError("INVALID_INPUT"); return; }
+      operation = { kind: "propose", parentId: dialog.parent?.id ?? null, skuId, publicationRevision: dialog.parent?.publicationRevision ?? data.inventory.publicationRevision, quantity: count, unitPriceMinor: price, expiresHours: hours };
     } else operation = { kind: dialog.kind, offerId: dialog.offer.id };
-    const key = JSON.stringify({ operation, revision: dialog.revision });
-    if (attempt.current?.key !== key)
-      attempt.current = {
-        key,
-        command: {
-          threadId,
-          sellerId,
-          expectedRevision: dialog.revision,
-          requestId: crypto.randomUUID(),
-          operation,
-        },
-      };
-    const command = attempt.current.command,
-      currentDialog = dialog;
-    lifecycle.current.busy = true;
-    setError(null);
-    setSaved(false);
-    start(async () => {
-      try {
-        const result = await changeOfferAction(command);
-        if (!lifecycle.current.mounted || clerk.user?.id !== actorSubject)
-          return;
-        if (!result.ok) {
-          setError(result.code);
-          if (result.code !== "NOT_AVAILABLE") attempt.current = null;
-          if (
-            ["FORBIDDEN", "UNAUTHENTICATED", "NOT_FOUND"].includes(result.code)
-          )
-            void refresh(true);
-          return;
-        }
-        attempt.current = null;
-        setSaved(true);
-        setDialog((previous) => (previous === currentDialog ? null : previous));
-        setBefore(null);
-        await refresh();
-        onChanged();
-      } catch {
-        if (lifecycle.current.mounted) setError("NOT_AVAILABLE");
-      } finally {
-        lifecycle.current.busy = false;
-      }
-    });
+    setValidationError(null); request.submit(operation, dialog.revision);
   }
-  if (status !== "ready" || !data)
+  if (status !== "ready" || !data || actionDenied)
     return (
       <section className={s.root} role="status">
         <p>
           {t(
-            status === "denied"
+            status === "denied" || actionDenied
               ? "denied"
               : status === "unavailable"
                 ? "unavailable"
                 : "checking",
           )}
         </p>
-        {status === "unavailable" && (
+        {(status === "unavailable" || actionDenied) && (
           <button className={m.button} onClick={() => void refresh(true)}>
             {t("retry")}
           </button>
@@ -260,6 +147,7 @@ export function OfferPanel({
             <button
               className={m.button + " " + m.primary}
               onClick={() => propose()}
+              disabled={request.blocked}
             >
               {t("make")}
             </button>
@@ -277,6 +165,8 @@ export function OfferPanel({
       )}
       {!data.items.length && <p className={m.muted}>{t("empty")}</p>}
       {saved && <p role="status">{t("saved")}</p>}
+      {request.notice === "not_applied" && <p role="status">{t("originalNotApplied")}</p>}
+      {!dialog && request.original && <OfferRecoveryControls original={request.original} items={data.items} pending={pending} error={request.error} unrecorded={request.notice === "unrecorded"} onCheck={request.checkOriginal} onRetry={request.retryOriginal} />}
       <ol className={s.list}>
         {data.items.map((item) => (
           <li key={item.id} className={s.card} data-offer-id={item.id}>
@@ -319,12 +209,13 @@ export function OfferPanel({
             )}
             {data.side === "buyer" &&
               item.state === "accepted" &&
-              item.holdState === "active" && (
+              item.holdState === "active" && !request.original && (
                 <CreateReviewButton
                   actorKey={data.actorKey}
                   source={{ kind: "offer", threadId, offerId: item.id }}
                 />
               )}
+            {data.side === "buyer" && item.state === "accepted" && !request.original && <Link className={m.button} href={"/checkout/payments?lang=" + language}>{t("purchaseOptions")}</Link>}
             <div className={s.actions}>
               {item.state === "pending" &&
                 (item.proposerSide === data.side
@@ -332,6 +223,7 @@ export function OfferPanel({
                       <button
                         className={m.button}
                         onClick={() => decide("withdraw", item)}
+                        disabled={request.blocked}
                       >
                         {t("withdraw")}
                       </button>
@@ -341,18 +233,21 @@ export function OfferPanel({
                         <button
                           className={m.button + " " + m.primary}
                           onClick={() => decide("accept", item)}
+                        disabled={request.blocked}
                         >
                           {t("accept")}
                         </button>
                         <button
                           className={m.button}
                           onClick={() => propose(item)}
+                          disabled={request.blocked}
                         >
                           {t("counter")}
                         </button>
                         <button
                           className={m.button}
                           onClick={() => decide("reject", item)}
+                        disabled={request.blocked}
                         >
                           {t("reject")}
                         </button>
@@ -364,6 +259,7 @@ export function OfferPanel({
                   <button
                     className={m.button}
                     onClick={() => decide("cancel", item)}
+                        disabled={request.blocked}
                   >
                     {t("cancelHold")}
                   </button>
@@ -404,7 +300,7 @@ export function OfferPanel({
                     aria-label={t("variant")}
                     required
                     value={skuId}
-                    disabled={pending || !!dialog.parent}
+                    disabled={request.blocked || !!dialog.parent}
                     onChange={(event) => setSkuId(event.target.value)}
                   >
                     <option value="">{t("variant")}</option>
@@ -423,7 +319,7 @@ export function OfferPanel({
                     min={1}
                     max={data.inventory?.mode === "unique" ? 1 : 99}
                     value={quantity}
-                    disabled={pending || !!dialog.parent}
+                    disabled={request.blocked || !!dialog.parent}
                     onChange={(event) => setQuantity(event.target.value)}
                   />
                 </label>
@@ -434,7 +330,7 @@ export function OfferPanel({
                     inputMode="decimal"
                     maxLength={12}
                     value={amount}
-                    disabled={pending}
+                    disabled={request.blocked}
                     onChange={(event) => setAmount(event.target.value)}
                   />
                 </label>
@@ -442,7 +338,7 @@ export function OfferPanel({
                   {t("expires")}
                   <select
                     aria-label={t("expires")}
-                    disabled={pending}
+                    disabled={request.blocked}
                     value={hours}
                     onChange={(event) => setHours(Number(event.target.value))}
                   >
@@ -483,6 +379,7 @@ export function OfferPanel({
                 )}
               </p>
             )}
+            {request.original && <OfferRecoveryControls original={request.original} items={data.items} pending={pending} error={request.error} unrecorded={request.notice === "unrecorded"} onCheck={request.checkOriginal} onRetry={request.retryOriginal} />}
             <footer>
               <button
                 type="button"
@@ -491,7 +388,7 @@ export function OfferPanel({
               >
                 {t("cancel")}
               </button>
-              <button className={m.button + " " + m.primary} disabled={pending}>
+              <button className={m.button + " " + m.primary} disabled={request.blocked}>
                 {t(pending ? "saving" : "confirm")}
               </button>
             </footer>
