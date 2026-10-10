@@ -30,6 +30,7 @@ export async function runMarketplaceBrowser({
   const req = createRequire(join(app, "package.json")),
     web = createRequire(join(app, "apps/web/package.json"));
   const vite = createRequire(req.resolve("vitest/config"));
+  const typescript = req("typescript");
   const { build } = await import(pathToFileURL(vite.resolve("vite")).href);
   const clerk = `
 import {useSyncExternalStore} from 'react';
@@ -95,6 +96,18 @@ export const ClerkProvider=({children})=>children;
       {
         name: "isolated-marketplace-navigation",
         enforce: "pre",
+        // Next compiles every top-level "use server" module to RPC references.
+        // Plain Vite does not. Keep that boundary for unrelated actions instead
+        // of bundling private database/configuration modules into the browser.
+        // The configured SQL-backed inventory/import/library plugins above take
+        // precedence. An unconfigured action always fails visibly, never succeeds.
+        transform(code, id) {
+          if (!id.replaceAll("\\", "/").includes("/apps/web/src/") || !/^\s*["']use server["'];?/.test(code)) return;
+          const module = typescript.createSourceFile(id, code, typescript.ScriptTarget.Latest, true);
+          const names = module.statements.filter(statement => typescript.isFunctionDeclaration(statement) && statement.name && statement.modifiers?.some(modifier => modifier.kind === typescript.SyntaxKind.ExportKeyword)).map(statement => statement.name.text);
+          if (!names.length) throw new Error("Unconfigured Server Action module requires an explicit browser transport: " + id);
+          return { code: names.map(name => "export const " + name + "=async()=>({ok:false,code:'NOT_AVAILABLE'});").join("\n"), map: null };
+        },
         resolveId(id, importer) {
           if (
             [
