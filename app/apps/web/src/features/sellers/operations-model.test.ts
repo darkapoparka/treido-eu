@@ -6,14 +6,21 @@ describe("current seller operational projection", () => {
     expect(permittedOperations({ kind: "business", capabilities: ["seller.read"] })).toEqual([]);
   });
   it("keeps personal operations independent of business setup", () => {
-    expect(permittedOperations({ kind: "personal", capabilities: ["listing.read", "order.read", "import.run"] })).toEqual(["drafts", "published", "photos", "stock", "orders", "payments"]);
+    expect(permittedOperations({ kind: "personal", capabilities: ["listing.read", "order.read", "import.run"] })).toEqual(["drafts", "withdrawn", "restricted", "published", "photos", "stock", "orders", "fulfilment", "payments"]);
   });
   it("does not expose order or finance counts to listing-only staff", () => {
-    expect(permittedOperations({ kind: "business", capabilities: ["listing.read", "inbox.read"] })).toEqual(["drafts", "published", "photos", "stock", "offers"]);
+    expect(permittedOperations({ kind: "business", capabilities: ["listing.read", "inbox.read"] })).toEqual(["drafts", "withdrawn", "restricted", "published", "photos", "stock", "offers"]);
   });
   it("requires both import and listing read for a business import count", () => {
     expect(permittedOperations({ kind: "business", capabilities: ["import.run"] })).toEqual([]);
     expect(permittedOperations({ kind: "business", capabilities: ["listing.read", "import.run"] })).toContain("imports");
+  });
+  it("opens the exact unfinished-work queue rather than hiding counted products", () => {
+    expect(operationDestination("seller-a", "drafts")).toBe("/app/sellers/seller-a/listings?status=draft");
+    expect(operationDestination("seller-a", "withdrawn")).toBe("/app/sellers/seller-a/listings?status=withdrawn");
+    expect(operationDestination("seller-a", "restricted")).toBe("/app/sellers/seller-a/listings?status=restricted");
+    expect(operationDestination("seller-a", "fulfilment")).toBe("/app/sellers/seller-a/orders?queue=fulfilment");
+    expect(operationDestination("seller-a", "payments")).toBe("/app/sellers/seller-a/orders?queue=financial");
   });
   it("distinguishes an exact zero from a bounded lower count", () => {
     expect(operationCount("drafts", 0)).toEqual({ kind: "drafts", count: 0, hasMore: false });

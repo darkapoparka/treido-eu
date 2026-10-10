@@ -170,7 +170,15 @@ export function defineAdminProductIntegrationCases(
       expect(operations.sellerId).toBe(sellerId);
       expect(
         operations.counts.find((item) => item.kind === "drafts")?.count,
-      ).toBe(33);
+      ).toBe(31);
+      expect(operations.counts.find((item) => item.kind === "withdrawn")?.count).toBe(1);
+      expect(operations.counts.find((item) => item.kind === "restricted")?.count).toBe(1);
+      expect(operations.counts.find((item) => item.kind === "fulfilment")?.count).toBe(0);
+      expect(operations.counts.find((item) => item.kind === "payments")?.count).toBe(0);
+      const productCounts = (await readAdminProducts(database, owner, sellerId)).counts;
+      expect(operations.counts.find((item) => item.kind === "drafts")?.count).toBe(productCounts.draft);
+      expect(operations.counts.find((item) => item.kind === "withdrawn")?.count).toBe(productCounts.withdrawn);
+      expect(operations.counts.find((item) => item.kind === "restricted")?.count).toBe(productCounts.restricted);
       expect(
         operations.counts.find((item) => item.kind === "orders")?.count,
       ).toBe(0);

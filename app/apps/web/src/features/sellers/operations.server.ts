@@ -4,6 +4,7 @@ import type { VerifiedIdentity } from "../../server/identity/clerk.server";
 import { publishedEligibility, publishedJoins } from "../catalog/publication-eligibility.server";
 import { reservedSql } from "../inventory/queries.server";
 import { authorizeSeller } from "./persistence.server";
+import { orderQueuePredicates } from "../payments/order-index.server";
 import {
   OPERATION_COUNT_LIMIT,
   operationCount,
@@ -15,14 +16,18 @@ import {
 /** Fixed, seller-scoped sources. Counts are bounded and never stand for revenue,
  * delivery evidence, actual emails, or externally approved trading readiness. */
 export const operationSources: Readonly<Record<OperationKind, string>> = {
-  drafts: "SELECT l.id FROM treido.listings l WHERE l.seller_id=$1 AND l.publication IN ('draft','withdrawn')",
+  // Use the same moderation projection as the destination product index.
+  drafts: "SELECT l.id FROM treido.listings l WHERE l.seller_id=$1 AND l.publication='draft' AND l.moderation_state='clear'",
+  withdrawn: "SELECT l.id FROM treido.listings l WHERE l.seller_id=$1 AND l.publication='withdrawn' AND l.moderation_state='clear'",
+  restricted: "SELECT l.id FROM treido.listings l WHERE l.seller_id=$1 AND l.moderation_state<>'clear'",
   published: `SELECT l.id ${publishedJoins} WHERE l.seller_id=$1 AND ${publishedEligibility}`,
   photos: "SELECT DISTINCT m.listing_id AS id FROM treido.media_assets m JOIN treido.listings l ON l.seller_id=m.seller_id AND l.id=m.listing_id WHERE m.seller_id=$1 AND m.state='failed' AND l.publication IN ('draft','withdrawn')",
   stock: `SELECT i.id FROM treido.inventory_skus i WHERE i.seller_id=$1 AND i.active AND i.on_hand-${reservedSql("i.id")}<=0`,
   offers: "SELECT o.id FROM treido.listing_offers o WHERE o.seller_id=$1 AND o.state='pending' AND o.proposer_side='buyer' AND o.expires_at>transaction_timestamp()",
   imports: "SELECT i.id FROM treido.catalogue_imports i LEFT JOIN treido.outbox_jobs j ON j.id=i.job_id AND j.seller_id=i.seller_id WHERE i.seller_id=$1 AND (i.state IN ('uploading','review','paused') OR (i.state IN ('queued','processing') AND j.state IN ('dead','cancelled')))",
   orders: "SELECT o.id FROM treido.paid_orders o WHERE o.seller_id=$1",
-  payments: "SELECT o.id FROM treido.paid_orders o WHERE o.seller_id=$1 AND o.payment_state IN ('refund_pending','reconciliation','disputed')",
+  fulfilment: `SELECT o.id FROM treido.paid_orders o JOIN treido.payable_quotes q ON q.id=o.quote_id AND q.seller_id=o.seller_id WHERE o.seller_id=$1 AND (${orderQueuePredicates.fulfilment})`,
+  payments: `SELECT o.id FROM treido.paid_orders o WHERE o.seller_id=$1 AND (${orderQueuePredicates.financial})`,
 };
 
 export async function readSellerOperations(
