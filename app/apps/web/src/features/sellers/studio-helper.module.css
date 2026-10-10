@@ -1,0 +1,15 @@
+.workspace { min-width: 0; --surface: #fff; --surface-secondary: #f7f7f7; --text-primary: #303030; --text-secondary: #616161; --border: #e3e3e3; }
+.intro { max-width: 76ch; margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #616161; }
+.workspace :is(h2, h3) { font-size: 15px; font-weight: 600; line-height: 1.4; }
+.workspace :is(p, label, li, dt, dd) { font-size: 13px; line-height: 1.5; }
+.workspace fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.workspace :is(input:not([type="checkbox"]), select, textarea) { min-width: 0; font-size: 13px; border-radius: 8px; padding: 6px 10px; }
+.workspace :is(input:not([type="checkbox"]), select) { min-height: 32px; }
+.workspace :is(button, nav a) { border-radius: 8px; min-height: 32px; padding: 6px 12px; font-size: 12px; }
+.workspace :is(button, a, input, select, textarea):focus-visible, .dialog :is(button, input):focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #e3e3e3; border-radius: 12px; background: #fff; color: #303030; box-shadow: 0 12px 60px #0003; }
+.dialog::backdrop { background: #0005; }
+.dialogHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 1; background: #fff; padding: 12px 16px; border-bottom: 1px solid #e3e3e3; }
+.dialogHeader h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.dialogHeader button { border: 0; background: transparent; color: inherit; min-width: 44px; min-height: 44px; font-size: 24px; cursor: pointer; }
+@media (max-width: 767px) { .workspace :is(button, nav a, input:not([type="checkbox"]), select) { min-height: 44px; } .dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); } }
