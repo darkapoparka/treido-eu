@@ -138,13 +138,14 @@ it("reports reach the authorized queue and exact private image bytes remain repo
   expect(await createResourceReport(db(), f.buyer.identity, input)).toEqual(report);
   expect((await readOperatorReports(db(), ops.identity)).some(row => row.id === report.id)).toBe(true);
   expect(await readReportImageEvidence(db(), ops.identity, report.id)).toMatchObject([{ id: image.id, state: "available", width: 12, height: 8 }]);
-  const buyerBytes = await deliverAttachment(db(), f.buyer.identity, { ...image.scope, id: image.id }, f.storage);
-  const recipientBytes = await deliverAttachment(db(), f.counterpart.identity, { ...image.scope, sellerId: f.sellerId, id: image.id }, f.storage);
+  const access = { ...image.scope, id: image.id, revision: 1 };
+  const buyerBytes = await deliverAttachment(db(), f.buyer.identity, access, f.storage);
+  const recipientBytes = await deliverAttachment(db(), f.counterpart.identity, { ...access, sellerId: f.sellerId }, f.storage);
   const bytes = await deliverReportImage(db(), ops.identity, report.id, image.id, f.storage);
   expect(checksumOf(bytes)).toBe(checksumOf(buyerBytes));
   expect(checksumOf(recipientBytes)).toBe(checksumOf(buyerBytes));
   await expect(deliverReportImage(db(), foreign.identity, report.id, image.id, f.storage)).rejects.toMatchObject({ code: "FORBIDDEN" });
-  await expect(deliverAttachment(db(), foreign.identity, { ...image.scope, id: image.id }, f.storage)).rejects.toBeDefined();
+  await expect(deliverAttachment(db(), foreign.identity, access, f.storage)).rejects.toBeDefined();
   const unrelated = await f.image();
   await expect(deliverReportImage(db(), ops.identity, report.id, unrelated.id, f.storage)).rejects.toMatchObject({ code: "NOT_FOUND" });
   expect((await native.admin.query("SELECT id FROM treido.report_image_accesses WHERE report_id=$1 AND attachment_id=$2", [report.id, image.id])).rowCount).toBe(1);
