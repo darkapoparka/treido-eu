@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminIcon } from "./admin-icons";
 import { BulkDuplicateProducts } from "./bulk-duplicate-products";
 import { productStatusLabel, type AdminProduct } from "./admin-products-model";
@@ -53,6 +53,39 @@ const errors: Record<SellerErrorCode, readonly [string, string]> = {
     "Резултатът не може да бъде потвърден. Повтори същата заявка; тя няма да се изпълни два пъти.",
   ],
 };
+
+function ProductThumbnail({
+  src,
+  language,
+}: {
+  src?: string;
+  language: "bg" | "en";
+}) {
+  const [failed, setFailed] = useState(false);
+  const imageRef = useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete && node.naturalWidth === 0) setFailed(true);
+  }, []);
+  const label = src
+    ? language === "bg"
+      ? "Снимката не е налична"
+      : "Image unavailable"
+    : language === "bg"
+      ? "Няма снимка"
+      : "No photo";
+  return (
+    <span className={styles.productThumb}>
+      {src && !failed ? (
+        // Private media reauthorizes every request; do not put it through an image cache.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img ref={imageRef} src={src} alt="" onError={() => setFailed(true)} />
+      ) : (
+        <span role="img" aria-label={label} title={label}>
+          <AdminIcon name="product" />
+        </span>
+      )}
+    </span>
+  );
+}
 
 /** Private product controls. The owning page keys this island by seller/query. */
 export function AdminProductTable({
@@ -374,19 +407,19 @@ export function AdminProductTable({
                         }}
                       />
                     )}
-                    <Link href={`${base}/${product.id}/edit?lang=${language}`}>
-                      <span className={styles.productThumb}>
-                        {product.mediaId ? (
-                          // Private media reauthorizes every request; do not put it through an image cache.
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={`/api/seller-media/${product.mediaId}?sellerId=${sellerId}`}
-                            alt=""
-                          />
-                        ) : (
-                          <AdminIcon name="product" />
-                        )}
-                      </span>
+                    <Link
+                      href={`${base}/${product.id}/edit?lang=${language}`}
+                      aria-label={title}
+                    >
+                      <ProductThumbnail
+                        key={`${sellerId}/${product.mediaId ?? "missing"}`}
+                        src={
+                          product.mediaId
+                            ? `/api/seller-media/${product.mediaId}?sellerId=${sellerId}`
+                            : undefined
+                        }
+                        language={language}
+                      />
                       <span>{title}</span>
                     </Link>
                   </div>

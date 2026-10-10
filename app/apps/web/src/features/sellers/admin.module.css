@@ -757,6 +757,10 @@
   background: #fff0cb;
   color: #694900;
 }
+.productTable .badge {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
 .pagination {
   display: flex;
   justify-content: space-between;
@@ -1167,6 +1171,9 @@
   }
   .productTable th:first-child {
     width: 56%;
+  }
+  .productTable th:nth-child(2) {
+    width: 100px;
   }
   .productTable th:last-child,
   .productTable td:last-child {
