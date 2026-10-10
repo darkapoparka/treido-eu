@@ -29,6 +29,98 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe("localized real authentication entry", () => {
+  it.each(
+    (["sign-in", "sign-up"] as const).flatMap((mode) =>
+      ["/profile?lang=en", "/account?lang=bg"].flatMap((target) =>
+        ["returnTo", "callback"].map((source) => ({ mode, target, source })),
+      ),
+    ),
+  )(
+    "preserves $target through the $mode widget and links from $source",
+    async ({ mode, target, source }) => {
+      mock.configured.mockReturnValue(true);
+      const language = new URL(
+        target,
+        "https://treido.invalid",
+      ).searchParams.get("lang");
+      const page = await AuthenticationPage({
+        mode,
+        searchParams: Promise.resolve(
+          source === "returnTo"
+            ? { returnTo: target }
+            : {
+                [`${mode.replace("-", "_")}_force_redirect_url`]: `http://127.0.0.1:6419${target}`,
+              },
+        ),
+      });
+      expect(page.props.signInForceRedirectUrl).toBe(target);
+      expect(page.props.signUpForceRedirectUrl).toBe(target);
+      expect(page.props.children.props.children.props.forceRedirectUrl).toBe(
+        target,
+      );
+      expect(page.props.children.props.back).toBe(target);
+      expect(page.props.children.props.language).toBe(language);
+      expect(mock.locale).toHaveBeenCalledWith(language);
+      for (const href of [
+        page.props.signInUrl,
+        page.props.signUpUrl,
+        mode === "sign-in"
+          ? page.props.children.props.children.props.signUpUrl
+          : page.props.children.props.children.props.signInUrl,
+      ]) {
+        const link = new URL(href, "https://treido.invalid");
+        expect(link.searchParams.get("lang")).toBe(language);
+        expect(link.searchParams.get("returnTo")).toBe(target);
+      }
+    },
+  );
+  it.each(["/profile", "/account"])(
+    "retains explicit language precedence for %s",
+    async (path) => {
+      mock.configured.mockReturnValue(true);
+      const page = await AuthenticationPage({
+        mode: "sign-in",
+        searchParams: Promise.resolve({
+          returnTo: `${path}?lang=bg`,
+          lang: "en",
+          sign_in_force_redirect_url:
+            "http://127.0.0.1:6419/app/intent?lang=bg",
+        }),
+      });
+      expect(page.props.signInForceRedirectUrl).toBe(`${path}?lang=en`);
+      expect(page.props.children.props.back).toBe(`${path}?lang=en`);
+    },
+  );
+  it.each(["/profile", "/account"])(
+    "keeps untrusted account continuations on the safe fallback for %s",
+    async (path) => {
+      mock.configured.mockReturnValue(true);
+      for (const target of [
+        `${path}?lang=bg&role=owner`,
+        `/untrusted/..${path}?lang=bg`,
+        `${path}?lang=bg&lang=en`,
+        `${path}#save`,
+      ]) {
+        for (const params of [
+          { returnTo: target },
+          { sign_in_force_redirect_url: `http://127.0.0.1:6419${target}` },
+        ]) {
+          const page = await AuthenticationPage({
+            mode: "sign-in",
+            searchParams: Promise.resolve(params),
+          });
+          expect(page.props.signInForceRedirectUrl).toBe("/app?lang=en");
+        }
+      }
+      const foreign = await AuthenticationPage({
+        mode: "sign-in",
+        searchParams: Promise.resolve({
+          sign_in_force_redirect_url: `https://outside.invalid${path}?lang=bg`,
+        }),
+      });
+      expect(foreign.props.signInForceRedirectUrl).toBe("/app?lang=en");
+    },
+  );
   it("renders the unavailable state in the explicit language", async () => {
     const page = await AuthenticationPage({
       mode: "sign-in",

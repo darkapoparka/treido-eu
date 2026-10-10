@@ -1,6 +1,49 @@
 import { expect, it } from "vitest";
 import { parseBuyerContinuation } from "./buyer-continuation";
 
+it.each([
+  "/profile",
+  "/profile?lang=bg",
+  "/profile?lang=en",
+  "/account",
+  "/account?lang=bg",
+  "/account?lang=en",
+])("preserves the exact read-only account entry %s", (path) => {
+  expect(parseBuyerContinuation(path)).toBe(path);
+});
+
+it.each(["/profile", "/account"])(
+  "rejects actions, encoding and normalization for account entry %s",
+  (path) => {
+    for (const suffix of [
+      "/",
+      "/settings",
+      "?",
+      "?lang=bg&lang=en",
+      "?lang=fr",
+      "?lang=%65n",
+      "?consent=true",
+      "?role=owner",
+      "?requestId=00000000-0000-4000-8000-000000000001",
+      "?lang=en&returnTo=https://outside.invalid",
+      "#save",
+      "\\",
+      "\n",
+      "\u0000",
+    ])
+      expect(parseBuyerContinuation(path + suffix)).toBeNull();
+    for (const value of [
+      `/untrusted/..${path}?lang=en`,
+      `/%${path.charCodeAt(1).toString(16)}${path.slice(2)}?lang=en`,
+      `//outside.invalid${path}`,
+      `https://outside.invalid${path}`,
+      [path],
+      null,
+    ])
+      expect(parseBuyerContinuation(value)).toBeNull();
+  },
+);
+
 it.each(["", "?lang=bg", "?lang=en"])(
   "returns only to read-only notification settings %s",
   (suffix) => {
