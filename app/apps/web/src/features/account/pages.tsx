@@ -118,16 +118,16 @@ export function ProfilePage({
         sourceKey="profile-identity"
       >
         <ProfileAvatar src={profile.avatar} name={profile.firstName} />
-        <span>
+        <span className="profile-identity-copy">
           {starterProfile ? (
             <strong>{profile.email}</strong>
           ) : (
             <>
               <strong>
                 {publicProfile
-                  ? profile.firstName ||
-                    profile.email ||
-                    (bg ? "Профил" : "Profile")
+                  ? [profile.firstName, profile.lastName]
+                      .filter(Boolean)
+                      .join(" ") || (bg ? "Вашият профил" : "Your account")
                   : profile.firstName}
               </strong>
               <small>{profile.email}</small>
@@ -156,18 +156,7 @@ export function ProfilePage({
             {ui("addPhone")}
           </Link>
         </div>
-      ) : publicProfile ? (
-        <button
-          className="account-panel passkey-row"
-          onClick={publicProfile.onUnavailable}
-        >
-          <span className="profile-passkey-mark" aria-hidden="true">
-            <AccountIcon name="passkey" />
-          </span>
-          <strong>{ui("addAPasskeyForFastAndSecureSignInOn")}</strong>
-          <b>›</b>
-        </button>
-      ) : (
+      ) : publicProfile ? null : (
         <SourceLink
           className="account-panel passkey-row"
           href="/account/security"
@@ -234,12 +223,7 @@ export function ProfilePage({
       </div>
       <h2 className="profile-order-heading">
         {publicProfile ? (
-          <SourceLink href="/orders" aria-label={ui("orderHistory")}>
-            {t("orderHistory")}
-            <span aria-hidden="true">
-              <Icon name="back" />
-            </span>
-          </SourceLink>
+          t("orderHistory")
         ) : !hasOrders ? (
           ui("orderHistory_928f4f")
         ) : (

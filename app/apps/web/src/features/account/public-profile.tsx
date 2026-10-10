@@ -14,8 +14,8 @@ import { ProfileRecent } from "./profile-recent";
 import { Row } from "./forms";
 import { ProfilePage, AccountDetails } from "./pages";
 import { ProfileAvatar } from "./profile-media";
-import { AccountIcon } from "./icons";
 import { SourceLink } from "../discovery/return-navigation";
+import { NativeIcon } from "../discovery/native-icons";
 import { Sheet } from "../discovery/components";
 import "../discovery/buyer-surface.css";
 import "./public-profile.css";
@@ -55,6 +55,8 @@ function CurrentProfile(props: Props) {
     scope.isCurrent();
   // Server and current client identity must both agree before contact or saved
   // preference data becomes visible, including a tab restored after sign-out.
+  if (!isLoaded && props.view.state !== "unavailable")
+    return <ProfileBody {...props} view={{ state: "guest" }} pending />;
   if ((member && !matching) || (!member && isLoaded && user))
     return <ProfileBody {...props} view={{ state: "unavailable" }} />;
   return (
@@ -87,6 +89,7 @@ function ProfileBody({
   details = false,
   contact,
   signOut,
+  pending = false,
 }: Props & {
   contact?: {
     firstName: string;
@@ -95,6 +98,7 @@ function ProfileBody({
     phone: string;
   };
   signOut?: () => Promise<void>;
+  pending?: boolean;
 }) {
   const t = useTranslations("account"),
     locale = useLocale(),
@@ -157,17 +161,7 @@ function ProfileBody({
         label="Notifications"
         href="/account/notifications"
       />
-      {member && (
-        <Row label="Connections" onClick={() => setUnavailable(true)} />
-      )}
       <Row native={!member} label="Data & privacy" href="/account/privacy" />
-      {!member && (
-        <Row
-          native
-          label="Development mode"
-          onClick={() => setUnavailable(true)}
-        />
-      )}
       <Row native={!member} label="Support" href={"/support?lang=" + locale} />
       {view.state === "member" && view.preferencesUnavailable && (
         <p className="form-note" role="status">
@@ -185,44 +179,59 @@ function ProfileBody({
       )}
     </div>
   );
-  const orders = (
-    <div className="guest-no-orders">
-      <AccountIcon name="clipboard" />
-      <span>
-        <strong>{t("orderHistory")}</strong>
-        <p>
-          {member
+  const orderEntry = (
+    <SourceLink className="public-profile-orders-entry" href="/orders">
+      <span className="public-profile-orders-icon" aria-hidden="true">
+        <NativeIcon name="orders" />
+      </span>
+      <span className="public-profile-orders-copy">
+        <strong>{bg ? "Вижте поръчките си" : "View your orders"}</strong>
+        <small>
+          {member || pending
             ? bg
-              ? "Вижте поръчките, потвърдени от Treido."
-              : "View orders confirmed by Treido."
+              ? "Покупките ви през Treido са тук."
+              : "Purchases made through Treido appear here."
             : bg
               ? "Влезте, за да видите поръчките си."
               : "Sign in to view your orders."}
-        </p>
-        <SourceLink href="/orders">{t("orderHistory")}</SourceLink>
+        </small>
       </span>
-    </div>
+      <span className="public-profile-orders-chevron" aria-hidden="true">
+        ›
+      </span>
+    </SourceLink>
+  );
+  const orders = (
+    <div className="account-panel public-profile-orders-card">{orderEntry}</div>
   );
   const identity = (
-    <section className="guest-sign-in">
+    <section className="guest-sign-in" aria-busy={pending || undefined}>
       <ProfileAvatar large />
       <h1>
-        {view.state === "unavailable"
+        {pending
           ? bg
-            ? "Профилът временно не е достъпен"
-            : "Account temporarily unavailable"
-          : t("signInOrCreateAnAccount")}
+            ? "Вашият профил"
+            : "Your account"
+          : view.state === "unavailable"
+            ? bg
+              ? "Профилът временно не е достъпен"
+              : "Account temporarily unavailable"
+            : t("signInOrCreateAnAccount")}
       </h1>
-      <p>
-        {view.state === "unavailable"
+      <p role={pending ? "status" : undefined}>
+        {pending
           ? bg
-            ? "Не успяхме да потвърдим текущия профил. Опитайте отново."
-            : "We could not confirm your current account. Please try again."
-          : bg
-            ? "Влезте, за да запазвате продукти, да следвате продавачи и да видите поръчките си."
-            : "Sign in to save products, follow sellers and view your orders."}
+            ? "Зареждане на профила…"
+            : "Loading your account…"
+          : view.state === "unavailable"
+            ? bg
+              ? "Не успяхме да потвърдим текущия профил. Опитайте отново."
+              : "We could not confirm your current account. Please try again."
+            : bg
+              ? "Влезте, за да запазвате продукти, да следвате продавачи и да видите поръчките си."
+              : "Sign in to save products, follow sellers and view your orders."}
       </p>
-      {view.state === "unavailable" ? (
+      {pending ? null : view.state === "unavailable" ? (
         <button className="primary" onClick={() => router.refresh()}>
           {bg ? "Опитайте отново" : "Try again"}
         </button>
@@ -267,32 +276,27 @@ function ProfileBody({
         onUnavailable,
         settings,
         recent,
-        savedMedia: saved.map((product) => (
-          <img key={product.id} src={product.images[0]} alt="" />
-        )),
-        followingMedia: followed.map((store) => (
-          <span key={store.id} className="store-logo-fallback">
-            {store.name.charAt(0)}
+        savedMedia: saved.length ? (
+          saved.map((product) => (
+            <img key={product.id} src={product.images[0]} alt="" />
+          ))
+        ) : (
+          <span className="public-profile-tile-icon" aria-hidden="true">
+            <NativeIcon name="heart" />
           </span>
-        )),
-        orderContent: (
-          <div className="profile-empty-orders">
-            <span className="profile-empty-package" aria-hidden="true">
-              <AccountIcon name="clipboard" />
-            </span>
-            <span>
-              <strong>{t("orderHistory")}</strong>
-              <small>
-                {bg
-                  ? "Вижте поръчките, потвърдени от Treido."
-                  : "View orders confirmed by Treido."}
-              </small>
-            </span>
-            <SourceLink className="pill" href="/orders">
-              {t("orderHistory")}
-            </SourceLink>
-          </div>
         ),
+        followingMedia: followed.length ? (
+          followed.map((store) => (
+            <span key={store.id} className="store-logo-fallback">
+              {store.name.charAt(0)}
+            </span>
+          ))
+        ) : (
+          <span className="public-profile-tile-icon" aria-hidden="true">
+            <NativeIcon name="storefront" />
+          </span>
+        ),
+        orderContent: orderEntry,
         signOut: async () => {
           if (signOut) await signOut();
         },

@@ -95,6 +95,12 @@ Reuse sheet anchoring, backdrop, dismissal, safe areas and return semantics; do 
 
 The current reference cart/checkout is not stock, quote or payment authority. Real checkout retains its visual family while binding seller/currency orders, authoritative amounts and allocation. Payment redirects, optimistic UI and browser storage never establish a paid order. Preserve buyer account and guest-language flows when adding seller entry links.
 
+### Buyer Profile: real identity and compact account entries
+
+Owners: [public-profile.tsx](../app/apps/web/src/features/account/public-profile.tsx), the existing [ProfilePage](../app/apps/web/src/features/account/pages.tsx) presenter and [public-profile.css](../app/apps/web/src/features/account/public-profile.css). Keep the existing buyer font, rounded panels, two library tiles and dock. Show the real first/last name, or localized Your account when absent; show the email once beneath it with single-line ellipsis inside the available identity width. Preserve its full accessible text. Empty Saved and Following tiles reuse the native heart/storefront geometry in 48px pale circles; eligible library media remains real data, without invented counts or brands.
+
+Order history has one heading and one compact link to the authoritative Orders page, with a 40px icon circle. Profile does not read order history and must not assert No orders yet. The public presenter omits the unconnected passkey promotion, Connections and Development mode controls. Pending Clerk hydration shows localized account loading and conceals private contact/preferences until server and current client identity agree; a confirmed failure retains the existing unavailable/retry state. Reference-only account compositions remain separate.
+
 ### Buyer Minis: catalogue and readable tool canvas
 
 The catalogue reuses `MiniCatalogSurface`, the existing featured carousel and row presentation, original Treido artwork and four-destination dock. Keep 72px recent thumbnails and 44px row icons. Inline `native-mini-searchbar` / `native-mini-search-results` preserves the catalogue query through a tool excursion; Cancel/Escape returns focus to Search. Mini-only `miniSearch` / `miniQuery` presentation state stays separate from public `q` and filters. Show actual visits and the seven real tools; Voice is an input mode within Find.

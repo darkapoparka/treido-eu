@@ -22,3 +22,69 @@
   height: 64px;
   flex: 0 0 64px;
 }
+
+.account-page.buyer-public.profile-overview .profile-identity-copy {
+  min-width: 0;
+}
+.account-page.buyer-public.profile-overview .profile-identity-copy > strong,
+.account-page.buyer-public.profile-overview .profile-identity-copy > small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-page.buyer-public .public-profile-tile-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #eef0f1;
+  color: #111;
+}
+.account-page.buyer-public .public-profile-tile-icon > svg {
+  width: 24px;
+  height: 24px;
+}
+.account-page.buyer-public .public-profile-orders-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+.account-page.buyer-public .public-profile-orders-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #eef0f1;
+}
+.account-page.buyer-public .public-profile-orders-icon > svg {
+  width: 24px;
+  height: 24px;
+}
+.account-page.buyer-public .public-profile-orders-copy {
+  flex: 1;
+  min-width: 0;
+}
+.account-page.buyer-public .public-profile-orders-copy > strong,
+.account-page.buyer-public .public-profile-orders-copy > small {
+  display: block;
+}
+.account-page.buyer-public .public-profile-orders-copy > strong {
+  font-size: 14px;
+  line-height: 20px;
+}
+.account-page.buyer-public .public-profile-orders-copy > small {
+  margin-top: 2px;
+  color: #777;
+  font-size: 13px;
+  line-height: 18px;
+}
+.account-page.buyer-public .public-profile-orders-chevron {
+  flex: none;
+  color: #777;
+  font-size: 24px;
+}
