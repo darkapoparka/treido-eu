@@ -49,10 +49,12 @@ function PublishedProductContent({
   listing,
   moreFromSeller = [],
   inventory,
+  paymentEntryAvailable = false,
 }: {
   listing: PublishedListing;
   moreFromSeller?: PublicListingCard[];
   inventory?: PublicInventory | null;
+  paymentEntryAvailable?: boolean;
 }) {
   const locale = useLocale(),
     t = useTranslations("publication");
@@ -138,7 +140,7 @@ function PublishedProductContent({
               product={product}
               revision={listing.revision}
               initial={inventory}
-              allowCart={false}
+              allowCart={paymentEntryAvailable}
             />
           ) : (
             <ProductPriceSummary
@@ -178,7 +180,11 @@ function PublishedProductContent({
             >
               {t("message")}
             </Link>
-            <p className={s.muted}>{t("buyerContactNote")}</p>
+            <p className={s.muted}>
+              {t(
+                paymentEntryAvailable ? "buyerPaymentNote" : "buyerContactNote",
+              )}
+            </p>
           </div>
           <ProductDisclosure
             title={t("description")}

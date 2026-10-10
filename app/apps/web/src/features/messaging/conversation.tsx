@@ -250,18 +250,20 @@ function ConversationBody({
     <section className={s.conversation} aria-label={view.title || t("removed")}>
       <div className={s.conversationHeader}>
         <div>
-          <Link
-            className={s.button + " " + s.mobileBack}
-            href={inboxHref(scope, language)}
-          >
-            {t("backInbox")}
-          </Link>
-          <Link
-            className={s.button}
-            href={notificationsHref(sellerId, language)}
-          >
-            {t("notificationUpdates")}
-          </Link>
+          <div className={s.actions}>
+            <Link
+              className={s.button + " " + s.mobileBack}
+              href={inboxHref(scope, language)}
+            >
+              {t("backInbox")}
+            </Link>
+            <Link
+              className={s.button}
+              href={notificationsHref(sellerId, language)}
+            >
+              {t("notificationUpdates")}
+            </Link>
+          </div>
           <h2>
             {view.title === null ? t("removed") : view.title || t("untitled")}
           </h2>
@@ -295,23 +297,25 @@ function ConversationBody({
           {t(view.blockedByYou ? "blockedByYou" : "blockedByOther")}
         </p>
       )}
-      <div className={s.pagination}>
-        {view.olderBefore && (
-          <button
-            className={s.button}
-            onClick={() => {
-              setBefore(view.olderBefore);
-            }}
-          >
-            {t("older")}
-          </button>
-        )}
-        {before && (
-          <button className={s.button} onClick={() => setBefore(null)}>
-            {t("latest")}
-          </button>
-        )}
-      </div>
+      {(!!view.olderBefore || !!before) && (
+        <div className={s.pagination}>
+          {view.olderBefore && (
+            <button
+              className={s.button}
+              onClick={() => {
+                setBefore(view.olderBefore);
+              }}
+            >
+              {t("older")}
+            </button>
+          )}
+          {before && (
+            <button className={s.button} onClick={() => setBefore(null)}>
+              {t("latest")}
+            </button>
+          )}
+        </div>
+      )}
       {!view.messages.length && <p className={s.empty}>{t("noMessages")}</p>}
       <ol className={s.messages} aria-label={t("title")}>
         {view.messages.map((message) => (

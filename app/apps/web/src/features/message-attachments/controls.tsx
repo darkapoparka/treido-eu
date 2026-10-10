@@ -52,6 +52,7 @@ export function AttachmentPicker({
         ref={input}
         className={s.file}
         type="file"
+        hidden
         accept="image/jpeg,image/png,image/webp"
         multiple
         disabled={disabled || controller.items.length >= 4}

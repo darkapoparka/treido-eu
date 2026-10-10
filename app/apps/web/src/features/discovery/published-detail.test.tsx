@@ -315,6 +315,26 @@ describe("public product presentation boundaries", () => {
     expect(html).toContain("inventory.quantity");
   });
 
+  it.each(["bg", "en"] as const)(
+    "%s qualified entry uses the real cart control and retains seller contact without promising payment",
+    (locale) => {
+      navigation.locale = locale;
+      const html = renderToStaticMarkup(
+        <PublishedProductDetail
+          listing={listing}
+          inventory={stocked}
+          paymentEntryAvailable
+        />,
+      );
+      expect(html).toContain("data-cart-mutation");
+      expect(html).toContain(`/cart?lang=${locale}`);
+      expect(html).toContain(`/messages/new?listing=${listing.id}`);
+      expect(html).toContain("publication.buyerPaymentNote");
+      expect(html).not.toContain("publication.buyerContactNote");
+      expect(html).not.toContain("/checkout/payments/");
+    },
+  );
+
   it("uses the actual save command and known saved state; unavailable state stays disabled", async () => {
     const control = ListingSaveButton({
       id: listing.id,

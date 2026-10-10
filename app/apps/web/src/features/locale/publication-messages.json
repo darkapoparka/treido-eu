@@ -41,7 +41,8 @@
     "requirements": "Publication requirements",
     "none": "Not specified",
     "retry": "Try again",
-    "buyerContactNote": "Arrange payment and handover directly with the seller. Treido does not collect payment for this listing."
+    "buyerContactNote": "Arrange payment and handover directly with the seller. Treido does not collect payment for this listing.",
+    "buyerPaymentNote": "Review current payment options from your cart. Payment and collection remain subject to checkout checks."
   },
   "bg": {
     "title": "Публикувай обявата",
@@ -85,6 +86,7 @@
     "requirements": "Изисквания за публикуване",
     "none": "Не е посочено",
     "retry": "Опитай отново",
-    "buyerContactNote": "Уговори плащането и предаването с продавача. Treido не приема плащане за тази обява."
+    "buyerContactNote": "Уговори плащането и предаването с продавача. Treido не приема плащане за тази обява.",
+    "buyerPaymentNote": "Прегледай текущите начини за плащане от количката. Плащането и получаването се проверяват при поръчка."
   }
 }

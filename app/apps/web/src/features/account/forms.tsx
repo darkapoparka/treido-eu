@@ -73,12 +73,14 @@ export function Row({
   href,
   onClick,
   native = false,
+  icon,
 }: {
   label: string;
   value?: string;
   href?: string;
   onClick?: () => void;
   native?: boolean;
+  icon?: ReactNode;
 }) {
   const t = useTranslations("account");
   const captionKey =
@@ -96,7 +98,13 @@ export function Row({
   )[label as "Addresses"];
   const content = (
     <>
-      {glyph && <AccountIcon name={glyph} filled />}
+      {icon ? (
+        <span className="account-icon" aria-hidden="true">
+          {icon}
+        </span>
+      ) : (
+        glyph && <AccountIcon name={glyph} filled />
+      )}
       <span>
         {captionKey ? t(captionKey) : label}
         {value && <small>{value}</small>}

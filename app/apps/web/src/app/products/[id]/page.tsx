@@ -8,6 +8,7 @@ import { readBuyerReferenceMode } from "@/features/catalog/buyer-data-mode.serve
 import { ProductDetail } from "@/features/discovery/product";
 import { readPublishedListing } from "@/features/catalog/published.server";
 import { PublishedProductDetail } from "@/features/discovery/published-detail";
+import { readPublicPaymentEntry } from "@/features/payments/public-entry.server";
 import { validId } from "@/features/selling/draft-model";
 import { getDatabase } from "@/server/db/database";
 import {
@@ -44,6 +45,9 @@ export default async function Page({
   } catch {
     console.error("Listing inventory unavailable.");
   }
+  const paymentEntryAvailable =
+    inventory !== null &&
+    (await readPublicPaymentEntry(getDatabase(), listing));
   let moreFromSeller: PublicListingCard[] = [];
   try {
     moreFromSeller = (
@@ -66,6 +70,7 @@ export default async function Page({
       key={listing.id + "/" + listing.revision}
       listing={listing}
       inventory={inventory}
+      paymentEntryAvailable={paymentEntryAvailable}
       moreFromSeller={moreFromSeller}
     />
   );

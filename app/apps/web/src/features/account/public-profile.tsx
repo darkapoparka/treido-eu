@@ -16,6 +16,7 @@ import { ProfilePage, AccountDetails } from "./pages";
 import { ProfileAvatar } from "./profile-media";
 import { SourceLink } from "../discovery/return-navigation";
 import { NativeIcon } from "../discovery/native-icons";
+import { Icon } from "../discovery/icons";
 import { Sheet } from "../discovery/components";
 import "../discovery/buyer-surface.css";
 import "./public-profile.css";
@@ -126,6 +127,7 @@ function ProfileBody({
       <Row
         native={!member}
         label={bg ? "Език" : "Language"}
+        icon={<Icon name="globe" />}
         value={
           preferences?.locale === "bg"
             ? "Български"
@@ -138,6 +140,7 @@ function ProfileBody({
       <Row
         native={!member}
         label={bg ? "Вид продавач" : "Seller scope"}
+        icon={<NativeIcon name="storefront" />}
         value={
           preferences?.browseScope
             ? {
@@ -152,9 +155,15 @@ function ProfileBody({
       <Row
         native={!member}
         label={bg ? "Съобщения" : "Messages"}
+        icon={<Icon name="chat-round" />}
         href="/messages"
       />
-      <Row native={!member} label="Sell an item" href="/sell" />
+      <Row
+        native={!member}
+        label="Sell an item"
+        icon={<Icon name="price-tag" />}
+        href="/sell"
+      />
       {member && <Row label="Sign in & security" href="/account/security" />}
       <Row
         native={!member}
