@@ -18,6 +18,7 @@ import {
 } from "./actions";
 import type { AftercareChoice } from "../order-aftercare/model";
 import type { OrderCommand, OrderView } from "./model";
+import { SellerOrderActions } from "./seller-order-actions";
 import { paymentText, paymentError, type PaymentLanguage } from "./messages";
 import s from "../purchase-reviews/reviews.module.css";
 
@@ -62,11 +63,15 @@ function requestId(scope: string) {
   try {
     const prior = sessionStorage.getItem(scope);
     if (prior && validId(prior)) return prior;
-  } catch {}
+  } catch {
+    // Browser storage is optional; server receipts remain authoritative.
+  }
   const id = crypto.randomUUID();
   try {
     sessionStorage.setItem(scope, id);
-  } catch {}
+  } catch {
+    // Browser storage is optional; server receipts remain authoritative.
+  }
   return id;
 }
 function usePaymentLifetime() {
@@ -299,7 +304,9 @@ function PrivateOrderControls({
         // An uncertain request keeps its exact ID and terms for receipt replay.
         try {
           sessionStorage.removeItem(scope);
-        } catch {}
+        } catch {
+          // Browser storage is optional; server receipts remain authoritative.
+        }
         if (recovery.action === "refund") setReason(recovery.reason);
         setRecovery(null);
         setRejectedView(null);
@@ -330,7 +337,9 @@ function PrivateOrderControls({
           )
             setRecovery(value);
         }
-      } catch {}
+      } catch {
+        // Browser storage is optional; server receipts remain authoritative.
+      }
     }
     const timer = window.setTimeout(restore, 0);
     window.addEventListener("pageshow", restore);
@@ -362,7 +371,9 @@ function PrivateOrderControls({
     setRecovery(command);
     try {
       sessionStorage.setItem(scope, JSON.stringify(command));
-    } catch {}
+    } catch {
+      // Browser storage is optional; server receipts remain authoritative.
+    }
     busy.current = true;
     setError(null);
     const generation = sessionFence.current.generation,
@@ -380,7 +391,9 @@ function PrivateOrderControls({
         if (result.ok) {
           try {
             sessionStorage.removeItem(scope);
-          } catch {}
+          } catch {
+            // Browser storage is optional; server receipts remain authoritative.
+          }
           setRecovery(null);
           setReason("");
           setConfirmed(false);
@@ -401,6 +414,25 @@ function PrivateOrderControls({
       }
     });
   }
+  if (sellerId)
+    return (
+      <SellerOrderActions
+        order={order}
+        canFulfil={canFulfil}
+        canRefund={canRefund}
+        language={language}
+        pending={pending}
+        blocked={!!rejectedView}
+        recovery={recovery}
+        reason={reason}
+        confirmed={confirmed}
+        error={error}
+        onReason={setReason}
+        onConfirmed={setConfirmed}
+        onSubmit={submit}
+        onRefresh={() => router.refresh()}
+      />
+    );
   const paid =
     order.paymentState === "paid" && order.settlementState === "transferred";
   return (

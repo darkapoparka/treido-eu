@@ -43,6 +43,7 @@ import {
 } from "../order-shipping/bridge.server";
 import type { ShippingBridge } from "../order-shipping/view";
 import { validId } from "../selling/draft-model";
+import { terminalFullRefundSql } from "./terminal-refund.server";
 
 async function priorQuote(
   tx: SellerTransaction,
@@ -137,7 +138,7 @@ export async function createPayableQuote(
     )
       throw new SellerError("CONFLICT");
     const pending = await tx.client.query(
-      `SELECT a.id FROM treido.payment_attempts a JOIN treido.payable_quotes q ON q.id=a.quote_id WHERE q.buyer_id=$1 AND q.seller_id=$2 AND a.state NOT IN ('paid','cancelled') LIMIT 1`,
+      `SELECT a.id FROM treido.payment_attempts a JOIN treido.payable_quotes q ON q.id=a.quote_id WHERE q.buyer_id=$1 AND q.seller_id=$2 AND a.state NOT IN ('paid','cancelled') AND NOT ${terminalFullRefundSql} LIMIT 1`,
       [user.id, mapping.sellerId],
     );
     if (pending.rowCount) throw new SellerError("CONFLICT");

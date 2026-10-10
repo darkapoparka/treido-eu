@@ -85,6 +85,8 @@ Connected-account readiness consumes the current approved payment policy when cr
 
 Keep payment, order, fulfillment and settlement status separate. Provider-collected card details/tokens replace simulated cards; never store full card numbers or security codes. Refund totals are bounded atomically; simultaneous partial refunds cannot exceed the refundable balance. Settlement postings are append-only with reversals and reconcile per currency/provider identity.
 
+A completed full refund may end an earlier payment's reservation gate and periodic payment repair without rewriting its historical attempt state. This requires the original order, succeeded refund, full refund and transfer-reversal facts, any applicable application-fee refund, and consumed allocation to agree on their immutable identities, namespace, currency and amounts. Pending, uncertain, partial, disputed or incomplete evidence remains blocking and eligible for repair. The refunded allocation stays consumed; only an explicit authorized stock adjustment can replenish inventory.
+
 ### Initial TEST payment registry setup
 
 The [payment maintenance command](app/apps/web/scripts/payment-registry-maintenance.mjs) provides the initial registry setup for one current public pickup listing, its active seller and an existing BG/EUR Express account. Run its `--help` from `app/` for the exact review format and plan/apply commands. This scope accepts Development, test and Preview with Stripe TEST credentials; Production and live mode are rejected. It creates no provider account, account link, payment or transfer.

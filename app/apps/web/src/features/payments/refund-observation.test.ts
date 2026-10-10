@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   query: vi.fn(),
   stripe: null as unknown,
   append: vi.fn(),
+  authorizeSeller: vi.fn(),
 }));
 vi.mock("../../server/db/database", () => ({
   inTransaction: (_database: unknown, work: (tx: unknown) => unknown) =>
@@ -39,6 +40,10 @@ vi.mock("./settlement.server", () => ({
   applyPaymentObservation: vi.fn(),
   paymentFacts: vi.fn(),
 }));
+vi.mock("../sellers/persistence.server", async (load) => ({
+  ...(await load<typeof import("../sellers/persistence.server")>()),
+  authorizeSeller: (...args: unknown[]) => state.authorizeSeller(...args),
+}));
 
 import { inputHash } from "../sellers/persistence.server";
 import { processPaymentRefund } from "./jobs.server";
@@ -46,11 +51,15 @@ import { processPaymentRefund } from "./jobs.server";
 beforeEach(() => {
   state.query.mockReset();
   state.append.mockReset();
+  state.authorizeSeller.mockReset().mockResolvedValue({});
 });
 
 // Actual processor/callback with synthetic persistence and provider responses.
 // These cases prove callback replay behavior, not native races or Stripe readiness.
-function fixture(status: "pending" | "succeeded" | "failed" | null) {
+function fixture(
+  status: "pending" | "succeeded" | "failed" | null,
+  options: { prepared?: boolean; feeMinor?: number } = {},
+) {
   const id = randomUUID(),
     attemptId = randomUUID(),
     sellerId = randomUUID(),
@@ -59,7 +68,7 @@ function fixture(status: "pending" | "succeeded" | "failed" | null) {
     payment_intent: "pi_Synthetic",
     amount: 1000,
     reverse_transfer: true,
-    refund_application_fee: false,
+    refund_application_fee: (options.feeMinor ?? 0) > 0,
     metadata: {
       refund_id: id,
       attempt_id: attemptId,
@@ -74,8 +83,9 @@ function fixture(status: "pending" | "succeeded" | "failed" | null) {
     orderId,
     actorId: randomUUID(),
     operationKey: "synthetic-original-refund-key",
-    state: "reconciling",
-    providerId: status ? "re_Synthetic" : (null as string | null),
+    state: options.prepared ? "prepared" : "reconciling",
+    providerId:
+      status && !options.prepared ? "re_Synthetic" : (null as string | null),
     parameters,
     parameterHash: inputHash(parameters),
   };
@@ -84,7 +94,7 @@ function fixture(status: "pending" | "succeeded" | "failed" | null) {
     allocationId: randomUUID(),
     providerId: "pi_Synthetic",
     totalMinor: 1000,
-    applicationFeeMinor: 0,
+    applicationFeeMinor: options.feeMinor ?? 0,
   };
   const order = {
     paymentState: "refund_pending",
@@ -99,12 +109,26 @@ function fixture(status: "pending" | "succeeded" | "failed" | null) {
         return result(exists ? [{ ...refund }] : []);
       if (sql.includes("FROM treido.payment_attempts"))
         return result([{ ...attempt }]);
+      if (sql.includes("FROM treido.users"))
+        return result([{ subject: "synthetic-current-refund-human" }]);
       if (sql.includes("FROM treido.payment_facts"))
         return result(
-          sql.includes("kind='transfer'") ? [{ id: "tr_Synthetic" }] : [],
+          sql.includes("kind='transfer'")
+            ? [{ id: "tr_Synthetic" }]
+            : attempt.applicationFeeMinor > 0
+              ? [{ id: "fee_Synthetic" }]
+              : [],
         );
       if (sql.startsWith("UPDATE treido.payment_refunds")) {
         writes.push({ sql, values });
+        if (sql.includes("state='creating'")) {
+          refund.state = "creating";
+          return result([]);
+        }
+        if (sql.includes("state='reconciling'")) {
+          refund.state = "reconciling";
+          return result([]);
+        }
         refund.providerId ??= values[1] as string | null;
         refund.state = values[2] as string;
         return result([]);
@@ -127,21 +151,41 @@ function fixture(status: "pending" | "succeeded" | "failed" | null) {
     metadata: parameters.metadata,
     transfer_reversal: "trr_Synthetic",
   };
-  const create = vi.fn(async () => {
+  const create = vi.fn(async (): Promise<typeof observed> => {
     throw Error("Observation must not emit another refund");
   });
+  const reversal = {
+    id: "trr_Synthetic",
+    amount: 1000,
+    currency: "eur",
+    source_refund: "re_Synthetic",
+  };
+  const list = vi.fn((): AsyncGenerator<typeof observed> =>
+    (async function* () {})(),
+  );
   state.stripe = {
     refunds: {
       create,
       retrieve: vi.fn(async () => ({ ...observed })),
-      list: () => (async function* () {})(),
+      list,
     },
     transfers: {
-      retrieveReversal: vi.fn(async () => ({
-        id: "trr_Synthetic",
-        amount: 1000,
-        currency: "eur",
-        source_refund: "re_Synthetic",
+      retrieveReversal: vi.fn(async () => ({ ...reversal })),
+    },
+    applicationFees: {
+      retrieve: vi.fn(async () => ({
+        id: "fee_Synthetic",
+        amount_refunded: attempt.applicationFeeMinor,
+      })),
+      listRefunds: vi.fn(async () => ({
+        has_more: false,
+        data: [
+          {
+            id: "fr_Synthetic",
+            amount: attempt.applicationFeeMinor,
+            currency: "eur",
+          },
+        ],
       })),
     },
   };
@@ -161,6 +205,10 @@ function fixture(status: "pending" | "succeeded" | "failed" | null) {
     order,
     writes,
     create,
+    list,
+    observed,
+    reversal,
+    attempt,
     tx,
     hideRefund: () => {
       exists = false;
@@ -170,6 +218,111 @@ function fixture(status: "pending" | "succeeded" | "failed" | null) {
 }
 
 describe("full refund observations retain newer authoritative results", () => {
+  it("emits the original full refund once, then only observes it on replay", async () => {
+    const f = fixture("pending", { prepared: true });
+    f.create.mockResolvedValueOnce({ ...f.observed });
+    const first = await f.observe();
+    await first.apply!(f.tx);
+    expect(state.authorizeSeller).toHaveBeenCalledWith(
+      expect.anything(),
+      { subject: "synthetic-current-refund-human" },
+      f.refund.sellerId,
+      "refund.request",
+    );
+    expect(f.create).toHaveBeenCalledExactlyOnceWith(f.refund.parameters, {
+      idempotencyKey: f.refund.operationKey,
+    });
+    await (
+      await f.observe()
+    ).apply!(f.tx);
+    expect(f.create).toHaveBeenCalledOnce();
+    expect(f.refund).toMatchObject({
+      state: "pending",
+      providerId: "re_Synthetic",
+    });
+  });
+
+  it("lost provider acknowledgement is reconciled by the original metadata without another POST", async () => {
+    const f = fixture("succeeded", { prepared: true });
+    f.create.mockRejectedValueOnce(Error("synthetic accepted response lost"));
+    await (
+      await f.observe()
+    ).apply!(f.tx);
+    expect(f.refund).toMatchObject({ state: "reconciling", providerId: null });
+    f.list.mockImplementationOnce(() =>
+      (async function* () {
+        yield { ...f.observed };
+      })(),
+    );
+    await (
+      await f.observe()
+    ).apply!(f.tx);
+    expect(f.create).toHaveBeenCalledOnce();
+    expect(f.list).toHaveBeenCalledWith({
+      payment_intent: "pi_Synthetic",
+      limit: 100,
+    });
+    expect(f.refund).toMatchObject({
+      state: "succeeded",
+      providerId: "re_Synthetic",
+    });
+    expect(f.order).toEqual({
+      paymentState: "refunded",
+      settlementState: "reversed",
+    });
+  });
+
+  it("revoked current membership prevents the prepared provider emission", async () => {
+    const f = fixture("succeeded", { prepared: true });
+    state.authorizeSeller.mockRejectedValueOnce(
+      Object.assign(Error("FORBIDDEN"), { code: "FORBIDDEN" }),
+    );
+    await expect(f.observe()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(f.create).not.toHaveBeenCalled();
+    expect(f.writes).toEqual([]);
+    expect(state.append).not.toHaveBeenCalled();
+  });
+
+  it.each(["amount", "source_refund"] as const)(
+    "an unverified reversal %s cannot complete a provider-successful refund",
+    async (field) => {
+      const f = fixture("succeeded");
+      if (field === "amount") f.reversal.amount--;
+      else f.reversal.source_refund = "re_Foreign";
+      await (
+        await f.observe()
+      ).apply!(f.tx);
+      expect(f.refund.state).toBe("reconciling");
+      expect(f.order).toEqual({
+        paymentState: "refund_pending",
+        settlementState: "reconciliation",
+      });
+      expect(state.append.mock.calls[0][2]).toEqual([
+        {
+          kind: "refund",
+          objectId: "re_Synthetic",
+          amountMinor: 1000,
+          currency: "eur",
+        },
+      ]);
+    },
+  );
+
+  it("records the applicable full fee refund separately from gross refund and transfer reversal", async () => {
+    const f = fixture("succeeded", { feeMinor: 20 });
+    await (
+      await f.observe()
+    ).apply!(f.tx);
+    expect(f.refund.state).toBe("succeeded");
+    expect(state.append.mock.calls[0][2]).toContainEqual({
+      kind: "fee_refund",
+      objectId: "fr_Synthetic",
+      amountMinor: 20,
+      currency: "eur",
+    });
+    expect(f.create).not.toHaveBeenCalled();
+  });
+
   it.each([null, "pending"] as const)(
     "does not replace a newer success with an older %s observation",
     async (status) => {

@@ -1,0 +1,96 @@
+.list {
+  min-width: 0;
+}
+.orderId {
+  display: block;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.badge {
+  white-space: normal;
+  text-align: right;
+}
+.lines {
+  display: grid;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.lines li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+}
+.lines strong {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.lines li > span {
+  white-space: nowrap;
+}
+.facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.facts > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.facts dt {
+  min-width: 0;
+}
+.facts dd {
+  margin: 0;
+  text-align: right;
+}
+.total {
+  border-top: 1px solid #ebebeb;
+  padding-top: 12px;
+  font-weight: 500;
+}
+.refundForm {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.refundForm .reason {
+  min-height: 90px;
+}
+.confirm {
+  min-height: 44px;
+  align-items: flex-start;
+  padding-block: 8px;
+}
+.savedReason {
+  overflow-wrap: anywhere;
+}
+.error {
+  color: #b42318;
+  overflow-wrap: anywhere;
+}
+.touchAction {
+  position: relative;
+  white-space: normal;
+  text-align: center;
+}
+.touchAction::after {
+  content: "";
+  position: absolute;
+  inset: -8px 0;
+  min-height: 44px;
+}

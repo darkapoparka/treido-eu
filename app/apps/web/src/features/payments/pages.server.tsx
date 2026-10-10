@@ -15,6 +15,8 @@ import { pageLocale } from "../locale/page-locale.server";
 import { ShopSurface } from "../discovery/hydration-boundary";
 import { FloatingNav } from "../discovery/components";
 import { BuyerOrders } from "../commerce/orders";
+import { BuyerPaidOrderDetail } from "../commerce/paid-order-detail";
+import { SellerOrders } from "./seller-orders";
 import { variantCaption } from "../inventory/model";
 import {
   orderAftercareHref,
@@ -473,92 +475,81 @@ export async function PaidOrdersPage(props: PaymentPageProps) {
         />
       </PaymentBoundary>
     );
-  return shell(
-    <PaymentBoundary actorSubject={identity.subject} language={language}>
-      <div className={s.stack}>
-        {!orders.length && <p>{t.empty}</p>}
+  if (!merchant && id)
+    return shell(
+      <PaymentBoundary actorSubject={identity.subject} language={language}>
         {orders.map((order) => (
-          <section className={s.card} key={order.id}>
-            <h2>{order.sellerName}</h2>
-            <p>
-              <strong>{money(order.totalMinor, language)}</strong>
-            </p>
-            <p>
-              {t.payment}: {t.statuses[order.paymentState]}
-            </p>
-            <p>
-              {order.handover === "shipping"
-                ? `${shippingCopy[language].fulfilment}: ${order.shippingFulfilmentState ? shippingCopy[language].statuses[order.shippingFulfilmentState] : shippingCopy[language].stateUnavailable}`
-                : `${t.fulfilment}: ${t.statuses[order.fulfilmentState]}`}
-            </p>
-            <p>
-              {t.settlement}: {t.statuses[order.settlementState]}
-            </p>
-            <p className={s.muted}>{t.settlementNotice}</p>
-            {id ? (
-              <>
-                <Lines lines={order.lines} language={language} />
-                {order.handover === "shipping" &&
-                  (order.shipping ? (
-                    <ShippingSummary
-                      shipping={order.shipping}
-                      amounts={order}
-                      language={language}
-                    />
-                  ) : (
-                    <p>{t.unavailable}</p>
-                  ))}
-                <nav className={s.actions} aria-label={t.orders}>
-                  <Link
-                    className={s.secondary}
-                    href={orderAftercareHref(
-                      order.id,
-                      sellerId ?? null,
-                      language,
-                    )}
-                  >
-                    {language === "bg"
-                      ? "Поддръжка за поръчката"
-                      : "Order support"}
-                  </Link>
-                  {!merchant && (
-                    <Link
-                      className={s.secondary}
-                      href={orderFeedbackHref(order.id, language)}
-                    >
-                      {language === "bg"
-                        ? "Прегледай възможността за отзив"
-                        : "Review feedback eligibility"}
-                    </Link>
-                  )}
-                </nav>
-                {order.handover === "pickup" && (
-                  <OrderControls
-                    order={order}
-                    actorKey={libraryActorKey(identity)}
-                    actorSubject={identity.subject}
-                    sellerId={sellerId ?? null}
-                    canFulfil={
-                      context?.capabilities.includes("order.fulfil") ?? false
-                    }
-                    canRefund={
-                      context?.capabilities.includes("refund.request") ?? false
-                    }
-                    language={language}
-                  />
-                )}
-              </>
-            ) : (
+          <BuyerPaidOrderDetail
+            key={order.id}
+            order={order}
+            language={language}
+          >
+            {order.handover === "shipping" &&
+              (order.shipping ? (
+                <ShippingSummary
+                  shipping={order.shipping}
+                  amounts={order}
+                  language={language}
+                />
+              ) : (
+                <p>{t.unavailable}</p>
+              ))}
+            <nav className={s.actions} aria-label={t.orders}>
               <Link
                 className={s.secondary}
-                href={`${path}/${order.id}?lang=${language}`}
+                href={orderAftercareHref(order.id, null, language)}
               >
-                {t.orders}
+                {language === "bg" ? "Поддръжка за поръчката" : "Order support"}
               </Link>
+              <Link
+                className={s.secondary}
+                href={orderFeedbackHref(order.id, language)}
+              >
+                {language === "bg"
+                  ? "Прегледай възможността за отзив"
+                  : "Review feedback eligibility"}
+              </Link>
+            </nav>
+            {order.handover === "pickup" && (
+              <OrderControls
+                order={order}
+                actorKey={libraryActorKey(identity)}
+                actorSubject={identity.subject}
+                sellerId={null}
+                canFulfil={false}
+                canRefund={false}
+                language={language}
+              />
             )}
-          </section>
+          </BuyerPaidOrderDetail>
         ))}
-      </div>
+      </PaymentBoundary>,
+    );
+  return shell(
+    <PaymentBoundary actorSubject={identity.subject} language={language}>
+      <SellerOrders
+        orders={orders}
+        sellerId={sellerId!}
+        language={language}
+        detail={!!id}
+        controls={
+          id && orders[0]?.handover === "pickup" ? (
+            <OrderControls
+              order={orders[0]}
+              actorKey={libraryActorKey(identity)}
+              actorSubject={identity.subject}
+              sellerId={sellerId!}
+              canFulfil={
+                context?.capabilities.includes("order.fulfil") ?? false
+              }
+              canRefund={
+                context?.capabilities.includes("refund.request") ?? false
+              }
+              language={language}
+            />
+          ) : undefined
+        }
+      />
     </PaymentBoundary>,
   );
 }

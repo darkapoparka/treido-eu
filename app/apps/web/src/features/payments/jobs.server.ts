@@ -11,6 +11,7 @@ import { authorizeSeller, inputHash } from "../sellers/persistence.server";
 import { SellerError } from "../sellers/errors";
 import { lockAllocation } from "../inventory/allocations.server";
 import { paymentBindings, verifiedStripe } from "./bindings.server";
+import { terminalFullRefundSql } from "./terminal-refund.server";
 import {
   attemptColumns,
   assertAttemptScope,
@@ -354,8 +355,8 @@ export async function schedulePaymentRepair(database: SellerDatabase) {
       await tx.client.query<{
         id: string;
         sellerId: string;
-      }>(`SELECT a.id,a.seller_id AS "sellerId" FROM treido.payment_attempts a
-      WHERE a.state<>'cancelled' AND a.reconcile_at<=clock_timestamp() AND NOT EXISTS(SELECT 1 FROM treido.outbox_jobs j WHERE j.kind='payment.reconcile' AND j.resource_id=a.id AND j.state IN ('pending','accepted','dead'))
+      }>(`SELECT a.id,a.seller_id AS "sellerId" FROM treido.payment_attempts a JOIN treido.payable_quotes q ON q.id=a.quote_id
+      WHERE a.state<>'cancelled' AND NOT ${terminalFullRefundSql} AND a.reconcile_at<=clock_timestamp() AND NOT EXISTS(SELECT 1 FROM treido.outbox_jobs j WHERE j.kind='payment.reconcile' AND j.resource_id=a.id AND j.state IN ('pending','accepted','dead'))
       ORDER BY a.reconcile_at,a.id LIMIT 20 FOR UPDATE OF a SKIP LOCKED`)
     ).rows;
     for (const row of rows) {

@@ -1,6 +1,9 @@
 .page {
   padding-bottom: calc(var(--dock-bottom) + 112px);
 }
+.page:global(.saved-library.saved-collection) > :global(.saved-heading) {
+  height: auto;
+}
 .tabs,
 .actions,
 .pagination {
