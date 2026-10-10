@@ -71,7 +71,12 @@ export const ClerkProvider=({children})=>children;
     configFile: false,
     root: app,
     logLevel: "error",
-    define: { "process.env.NODE_ENV": JSON.stringify("development") },
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("development"),
+      // Next inlines this public constant. The isolated Clerk transport above
+      // supplies the synthetic session; no live provider key or API is used.
+      "process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": JSON.stringify("pk_test_isolated_browser_only"),
+    },
     resolve: {
       alias: [
         { find: /^@\//, replacement: resolve(app, "apps/web/src") + "/" },
