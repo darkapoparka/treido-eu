@@ -6,6 +6,7 @@ import type { ProductDetailProduct } from "../catalog/product-detail-model";
 import { formatMoney } from "../catalog/types";
 import { ProductPriceSummary } from "../discovery/product-price-summary";
 import { CartMutationButton } from "../buyer-cart/mutation-button";
+import { PublicVariantOptions } from "../discovery/public-variant-options";
 import { readPublicInventoryAction } from "./actions";
 import {
   INVENTORY_LIMITS,
@@ -23,8 +24,17 @@ type PublicInventoryPanelProps = {
 export function PublicInventoryPanel(props: PublicInventoryPanelProps) {
   // A publication is a new commercial snapshot. Discard old variants, quantity
   // and in-flight callbacks before rendering it, not in a later effect/paint.
-  const initial = props.initial?.publicationRevision === props.revision ? props.initial : null;
-  return <PublicationInventoryPanel key={JSON.stringify([props.product.id, props.revision])} {...props} initial={initial} />;
+  const initial =
+    props.initial?.publicationRevision === props.revision
+      ? props.initial
+      : null;
+  return (
+    <PublicationInventoryPanel
+      key={JSON.stringify([props.product.id, props.revision])}
+      {...props}
+      initial={initial}
+    />
+  );
 }
 
 function PublicationInventoryPanel({
@@ -133,29 +143,14 @@ function PublicationInventoryPanel({
       {!!inventory?.skus.length && (
         <>
           {inventory.skus.length > 1 && (
-            <label className="form-field">
-              {t("selectVariant")}
-              <select
-                aria-label={t("selectVariant")}
-                value={selectedId}
-                onChange={(event) => {
-                  setSelectedId(event.target.value);
-                  setQuantity("1");
-                }}
-              >
-                <option value="">{t("selectVariant")}</option>
-                {inventory.skus.map((sku) => (
-                  <option key={sku.id} value={sku.id}>
-                    {variantCaption(sku.options) || t("defaultVariant")} ·{" "}
-                    {formatMoney(
-                      { amount: sku.priceMinor, currency: "EUR" },
-                      locale,
-                    )}
-                    {sku.available === 0 ? " · " + t("out_of_stock") : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <PublicVariantOptions
+              skus={inventory.skus}
+              selectedId={selectedId}
+              onChange={(id) => {
+                setSelectedId(id);
+                setQuantity("1");
+              }}
+            />
           )}
           {selected && (
             <p>{t("unitsAvailable", { count: selected.available })}</p>

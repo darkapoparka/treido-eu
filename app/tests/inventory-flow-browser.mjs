@@ -143,12 +143,17 @@ export async function runInventoryBrowser({
       // Publication alone is contact-only. Enable only through the same native
       // registry read as production, never a hardcoded browser success flag.
       await expect(button("Add to cart")).toHaveCount(0);
-      await expect(page.getByText("Arrange payment and handover directly with the seller.", { exact: false })).toBeVisible();
+      await expect(
+        page.getByText(
+          "Contact the seller with questions about this item or handover.",
+          { exact: false },
+        ),
+      ).toBeVisible();
       await api.approvePaymentEntry(publication.revision);
       await page.reload();
       await page
-        .getByLabel("Choose a variant", { exact: true })
-        .selectOption(black.id);
+        .locator('.native-options-pills [data-public-sku="' + black.id + '"]')
+        .click();
       await page.getByLabel("Quantity", { exact: true }).fill("2");
       await button("Add to cart").click();
       await expect(
@@ -159,9 +164,13 @@ export async function runInventoryBrowser({
       await page.goto(origin + "/cart?lang=en");
       await expect(page.locator("[data-cart-sku]")).toHaveCount(1);
       await page.getByRole("button", { name: /^Decrease quantity / }).click();
-      await expect(page.getByLabel("Quantity", { exact: true })).toHaveText("1");
+      await expect(page.getByLabel("Quantity", { exact: true })).toHaveText(
+        "1",
+      );
       await page.reload();
-      await expect(page.getByLabel("Quantity", { exact: true })).toHaveText("1");
+      await expect(page.getByLabel("Quantity", { exact: true })).toHaveText(
+        "1",
+      );
       expect(
         (await api.readPublicInventory(database, fixture.draft.id)).skus.find(
           (sku) => sku.id === black.id,

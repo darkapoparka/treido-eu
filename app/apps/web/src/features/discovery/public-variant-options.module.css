@@ -1,0 +1,34 @@
+/* Reuse the observed Shop native pill geometry; keep the genuine buyer font.
+   Four extra hit-area pixels are the existing Treido accessibility adaptation. */
+.selector {
+  margin: 16px 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.choices > button {
+  min-height: 44px;
+  max-width: 100%;
+  font-family: inherit;
+}
+.choices > button > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  text-align: center;
+  padding-block: 8px;
+}
+.choices > button[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 0.5px currentColor;
+}
+.optionsSheet.optionsSheet {
+  font-family: TreidoProductRoboto, Roboto, Arial, sans-serif;
+}
+.optionsSheet :global(.native-color-list) > button {
+  font-family: inherit;
+}
+.optionsSheet :global(.native-color-list) > button > span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}

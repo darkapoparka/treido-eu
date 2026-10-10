@@ -41,7 +41,7 @@
     "requirements": "Publication requirements",
     "none": "Not specified",
     "retry": "Try again",
-    "buyerContactNote": "Arrange payment and handover directly with the seller. Treido does not collect payment for this listing.",
+    "buyerContactNote": "Contact the seller with questions about this item or handover. Checkout is offered only after current stock and seller readiness are confirmed.",
     "buyerPaymentNote": "Review current payment options from your cart. Payment and collection remain subject to checkout checks."
   },
   "bg": {
@@ -86,7 +86,7 @@
     "requirements": "Изисквания за публикуване",
     "none": "Не е посочено",
     "retry": "Опитай отново",
-    "buyerContactNote": "Уговори плащането и предаването с продавача. Treido не приема плащане за тази обява.",
+    "buyerContactNote": "Свържи се с продавача с въпроси за артикула или предаването. Плащане през Treido е достъпно само след потвърждение на текущата наличност и готовността на продавача.",
     "buyerPaymentNote": "Прегледай текущите начини за плащане от количката. Плащането и получаването се проверяват при поръчка."
   }
 }
