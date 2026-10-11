@@ -6,11 +6,14 @@
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .picker { display: grid; gap: 8px; min-width: 0; }
 .choices { display: grid; gap: 4px; max-height: 240px; overflow: auto; }
-.choice { display: flex; align-items: center; gap: 10px; min-height: 40px; overflow-wrap: anywhere; }
+.choice { display: flex; align-items: center; gap: 10px; min-height: 44px; overflow-wrap: anywhere; }
 .choice input { flex: 0 0 auto; width: 16px; height: 16px; }
+.selectionControl { display: grid; place-items: center; flex: 0 0 40px; min-height: 44px; cursor: pointer; }
+.selectionControl input { width: 16px; height: 16px; margin: 0; }
 .table { width: 100%; table-layout: fixed; }
 .table th:first-child { width: 72%; }
 .table td { overflow-wrap: anywhere; vertical-align: middle; }
+.table td > small { display: block; margin-top: 4px; }
 .product { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .product > input { flex: 0 0 auto; width: 16px; height: 16px; }
 .product > div { min-width: 0; }

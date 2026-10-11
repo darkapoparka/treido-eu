@@ -1,10 +1,13 @@
 import { validId } from "../selling/draft-model";
 import { parseOrderIndexQuery, orderIndexHref } from "../payments/order-index-model";
 import { parseCustomerQuery } from "./customers-model";
+import { parseCatalogContinuation } from "./catalog-navigation";
 
 /** Merchant additions to private continuation allowlists. No external destination,
  * raw buyer identity, mutation or arbitrary query key can be supplied here. */
 export function parseMerchantContinuation(raw: unknown): string | null {
+  const catalog = parseCatalogContinuation(raw);
+  if (catalog) return catalog;
   if (typeof raw !== "string" || raw.length > 2048 || !raw.startsWith("/app/sellers/") || /[\\#\u0000-\u0020\u007f]/.test(raw)) return null;
   const url = new URL(raw, "https://merchant.invalid");
   if (url.origin !== "https://merchant.invalid" || url.pathname !== raw.split("?")[0]) return null;

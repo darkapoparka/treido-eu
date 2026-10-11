@@ -11,6 +11,7 @@ import {
 import { readSellerContext } from "@/features/sellers/persistence.server";
 import { readListingDraft } from "@/features/selling/drafts.server";
 import { DraftEditor } from "@/features/selling/draft-editor";
+import { ProductOrganizationPanel } from "@/features/sellers/product-organization-panel.server";
 import { getDatabase } from "@/server/db/database";
 import { mediaConfigured } from "@/server/media/status.server";
 
@@ -62,6 +63,7 @@ export default async function EditListingPage({
         canWrite={seller.capabilities.includes("listing.write")}
         mediaAvailable={mediaConfigured()}
       />
+      <ProductOrganizationPanel identity={identity} sellerId={sellerId} listingId={draftId} language={language} canWrite={seller.capabilities.includes("listing.write")} />
     </Workspace>
   );
 }

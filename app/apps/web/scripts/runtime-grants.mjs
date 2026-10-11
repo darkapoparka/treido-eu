@@ -1,3 +1,4 @@
+import { applyCatalogGrants } from "../src/features/sellers/catalog-runtime-grants.mjs";
 import { applySupportGrants } from "../src/features/support/runtime-grants.mjs";
 import { applyBillingRecoveryGrants } from "../src/features/seller-billing/recovery-runtime-grants.mjs";
 import { applyInvitationMailGrants } from "../src/features/team/runtime-grants.mjs";
@@ -127,6 +128,7 @@ export async function applyRuntimeGrants(client, role) {
   await applyOrderShippingGrants(client, role);
   await applyShippingRetentionGrants(client, role);
   await applyShippingIntegrationGrants(client, role);
+  await applyCatalogGrants(client, role);
   // Historical isolated suites retain their declared migration baselines.
   // Current installs always apply these restrictions after the broad data grants.
   const mail = await client.query(

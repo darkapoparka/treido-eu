@@ -2,7 +2,7 @@ import { getDatabase } from "../../../../server/db/database";
 import { requireVerifiedIdentity } from "../../../../server/identity/clerk.server";
 import { requireMediaStorage } from "../../../../server/media/storage.server";
 import { assertMediaStorageScope } from "../../../../server/media/retention.server";
-import { readOwnedMedia } from "../../../../features/selling/media.server";
+import { readOwnedProductMedia as readOwnedMedia } from "../../../../features/selling/product-media-read.server";
 import { SellerError } from "../../../../features/sellers/errors";
 import { MEDIA_LIMITS } from "../../../../features/selling/media-model";
 import { createHash } from "node:crypto";
