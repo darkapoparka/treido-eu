@@ -122,3 +122,28 @@
     min-height: 270px;
   }
 }
+
+/* The operational composition must win over the onboarding Home shell. */
+.operational.operational {
+  width: calc(100% - 64px);
+  max-width: 1120px;
+  padding: 40px 0 100px;
+}
+@media (max-width: 767px) {
+  .operational.operational {
+    width: 100%;
+    padding: 28px 16px calc(104px + env(safe-area-inset-bottom));
+  }
+}
+
+:global([data-admin-shell][data-studio-part="shell"]) .operational {
+  width: calc(100% - 64px);
+  max-width: 1120px;
+  padding: 40px 0 100px;
+}
+@media (max-width: 767px) {
+  :global([data-admin-shell][data-studio-part="shell"]) .operational {
+    width: 100%;
+    padding: 28px 16px calc(104px + env(safe-area-inset-bottom));
+  }
+}

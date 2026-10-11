@@ -1542,3 +1542,21 @@
     padding-inline: 12px;
   }
 }
+
+@media (max-width: 767px) {
+  .shell:not([data-admin-preview-collapsed]) .statusTabs {
+    scrollbar-width: none;
+  }
+  .shell:not([data-admin-preview-collapsed]) .statusTabs::-webkit-scrollbar {
+    display: none;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable a {
+    display: flex;
+  }
+  .shell:not([data-admin-preview-collapsed])
+    .productTable
+    tbody
+    td:nth-child(2) {
+    margin-left: 82px;
+  }
+}

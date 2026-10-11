@@ -354,3 +354,15 @@
     min-height: 168px;
   }
 }
+
+:global([data-admin-shell]) .form .media > section {
+  margin: 0;
+}
+:global([data-admin-shell]) .form .field textarea {
+  height: 188px;
+}
+@media (max-width: 767px) {
+  :global([data-admin-shell]) .form .field textarea {
+    height: 168px;
+  }
+}

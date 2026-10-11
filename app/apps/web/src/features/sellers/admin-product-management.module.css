@@ -124,3 +124,29 @@
     border-radius: 20px;
   }
 }
+
+/* Enter selection mode only when the feature presenter supplies real actions. */
+.toolbar:not(:has(button, a[href])) {
+  display: none;
+}
+
+:global([data-admin-shell]) .toolbar:not(:has(> button)) {
+  display: none;
+}
+@media (max-width: 767px) {
+  :global([data-admin-shell]) .name > a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  :global([data-admin-shell][data-studio-part="shell"]) .name > a[href] {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+}
