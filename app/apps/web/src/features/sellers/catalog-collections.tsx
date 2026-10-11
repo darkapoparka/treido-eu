@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
@@ -11,36 +10,24 @@ import { useUnsavedChanges } from "./use-unsaved-changes";
 import admin from "./admin.module.css";
 import editor from "./admin-editor.module.css";
 import styles from "./catalog-workspace.module.css";
-
 export function CatalogCollections({ sellerId, actorSubject, bufferKey, language, canWrite, initial, q = "", after }: {
-  sellerId: string;
-  actorSubject: string;
-  bufferKey: string;
-  language: "bg" | "en";
-  canWrite: boolean;
-  initial: CollectionOptions;
-  q?: string;
-  after?: string;
+  sellerId: string; actorSubject: string; bufferKey: string; language: "bg" | "en"; canWrite: boolean; initial: CollectionOptions; q?: string; after?: string;
 }) {
-  const bg = language === "bg";
-  const router = useRouter();
-  const base = `/app/sellers/${sellerId}`;
-  const task = useCatalogMutation(actorSubject, sellerId, bufferKey);
-  const dialog = useRef<HTMLDialogElement>(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [visible, setVisible] = useState(false);
+  const bg = language === "bg", router = useRouter(), base = `/app/sellers/${sellerId}`;
+  const task = useCatalogMutation(actorSubject, sellerId, bufferKey), dialog = useRef<HTMLDialogElement>(null);
+  const [title, setTitle] = useState(""), [description, setDescription] = useState("");
+  const [visible, setVisible] = useState(false), [open, setOpen] = useState(false);
   useUnsavedChanges(!!(title || description || visible) && !task.denied, language);
+  function show() { setOpen(true); dialog.current?.showModal(); }
+  function close() { if (!task.pending) { dialog.current?.close(); setOpen(false); } }
   function completed(result: CatalogAcknowledgement) {
     if (result.collectionId) {
-      setTitle(""); setDescription(""); setVisible(false);
-      dialog.current?.close();
+      setTitle(""); setDescription(""); setVisible(false); setOpen(false); dialog.current?.close();
       router.push(`${base}/collections/${result.collectionId}?lang=${language}`);
     }
   }
   async function create(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!canWrite) return;
+    event.preventDefault(); if (!canWrite) return;
     const result = await task.run({ kind: "createCollection", title, description, visible });
     if (result) completed(result);
   }
@@ -52,43 +39,36 @@ export function CatalogCollections({ sellerId, actorSubject, bufferKey, language
       <h1><AdminIcon name="product" />{bg ? "Колекции" : "Collections"}</h1>
       <div className={styles.actions}>
         <Link className={admin.secondary} href={`${base}/catalog?lang=${language}`}>{bg ? "Организирай продукти" : "Organize products"}</Link>
-        {canWrite && <button type="button" className={admin.primary} onClick={() => dialog.current?.showModal()}>{bg ? "Създай колекция" : "Create collection"}</button>}
+        {canWrite && <button type="button" className={admin.primary} onClick={show}>{bg ? "Създай колекция" : "Create collection"}</button>}
       </div>
     </header>
-    <div className={admin.pageBody}>
-      <div className={styles.stack}>
-        <div className={styles.actions}>
-          <Link className={admin.secondary} href={`${base}/listings?lang=${language}`}>{bg ? "Всички продукти" : "All products"}</Link>
-          <Link className={admin.secondary} href={`${base}/settings/store/preview?lang=${language}`}>{bg ? "Преглед на магазина" : "Preview store"}</Link>
+    <div className={admin.pageBody}><div className={styles.stack}>
+      <div className={styles.actions}><Link className={admin.secondary} href={`${base}/listings?lang=${language}`}>{bg ? "Всички продукти" : "All products"}</Link></div>
+      {!open && <CatalogFeedback task={task} language={language} onRecovered={completed} />}
+      <section className={admin.productPanel} aria-label={bg ? "Колекции на продавача" : "Seller collections"}>
+        <div className={admin.productToolbar}><form action={`${base}/collections`} className={admin.filterForm}>
+          <input type="hidden" name="lang" value={language} />
+          <input key={q} type="search" name="q" maxLength={160} defaultValue={q} aria-label={bg ? "Търси колекции" : "Search collections"} placeholder={bg ? "Търси колекции" : "Search collections"} />
+          <button className={admin.secondary}>{bg ? "Търси" : "Search"}</button>
+        </form></div>
+        {initial.items.length ? <table className={`${admin.productTable} ${styles.table}`}>
+          <thead><tr><th scope="col">{bg ? "Колекция" : "Collection"}</th><th scope="col">{bg ? "Продукти" : "Products"}</th></tr></thead>
+          <tbody>{initial.items.map((collection) => <tr key={collection.id}>
+            <td><Link href={`${base}/collections/${collection.id}?lang=${language}`}>{collection.title}</Link><small>{collection.visible ? (bg ? "Публична колекция" : "Public collection") : (bg ? "Само за управление" : "Catalog only")}</small></td>
+            <td>{collection.productCount}</td>
+          </tr>)}</tbody>
+        </table> : <div className={admin.empty}><div>
+          <h2>{q ? (bg ? "Няма съвпадащи колекции" : "No matching collections") : (bg ? "Подреди продуктите си" : "Organize your products")}</h2>
+          <p>{bg ? "Създай колекция, добави свои продукти и я използвай в каталога или магазина си." : "Create a collection, add your products, and use it in your catalog or storefront."}</p>
+          {canWrite && !q && <button type="button" className={admin.primary} onClick={show}>{bg ? "Създай колекция" : "Create collection"}</button>}
+        </div></div>}
+        <div className={admin.pagination}>
+          {after && <Link className={admin.secondary} href={`${base}/collections?${new URLSearchParams({ lang: language, q })}`}>{bg ? "Първа страница" : "First page"}</Link>}
+          {initial.nextCursor && <Link className={admin.secondary} href={`${base}/collections?${next}`}>{bg ? "Следваща страница" : "Next page"}</Link>}
         </div>
-        <CatalogFeedback task={task} language={language} onRecovered={completed} />
-        <section className={admin.productPanel} aria-label={bg ? "Колекции на продавача" : "Seller collections"}>
-          <div className={admin.productToolbar}>
-            <form action={`${base}/collections`} className={admin.filterForm}>
-              <input type="hidden" name="lang" value={language} />
-              <input key={q} type="search" name="q" maxLength={160} defaultValue={q} aria-label={bg ? "Търси колекции" : "Search collections"} placeholder={bg ? "Търси колекции" : "Search collections"} />
-              <button className={admin.secondary}>{bg ? "Търси" : "Search"}</button>
-            </form>
-          </div>
-          {initial.items.length ? <table className={`${admin.productTable} ${styles.table}`}>
-            <thead><tr><th scope="col">{bg ? "Колекция" : "Collection"}</th><th scope="col">{bg ? "Продукти" : "Products"}</th></tr></thead>
-            <tbody>{initial.items.map((collection) => <tr key={collection.id}>
-              <td><Link href={`${base}/collections/${collection.id}?lang=${language}`}>{collection.title}</Link><small>{collection.visible ? (bg ? "Показва се в магазина" : "Shown in store") : (bg ? "Само за управление" : "Catalog only")}</small></td>
-              <td>{collection.productCount}</td>
-            </tr>)}</tbody>
-          </table> : <div className={admin.empty}><div>
-            <h2>{q ? (bg ? "Няма съвпадащи колекции" : "No matching collections") : (bg ? "Подреди продуктите си" : "Organize your products")}</h2>
-            <p>{bg ? "Създай колекция, добави свои продукти и я използвай в каталога или магазина си." : "Create a collection, add your products, and use it in your catalog or storefront."}</p>
-            {canWrite && !q && <button type="button" className={admin.primary} onClick={() => dialog.current?.showModal()}>{bg ? "Създай колекция" : "Create collection"}</button>}
-          </div></div>}
-          <div className={admin.pagination}>
-            {after && <Link className={admin.secondary} href={`${base}/collections?${new URLSearchParams({ lang: language, q })}`}>{bg ? "Първа страница" : "First page"}</Link>}
-            {initial.nextCursor && <Link className={admin.secondary} href={`${base}/collections?${next}`}>{bg ? "Следваща страница" : "Next page"}</Link>}
-          </div>
-        </section>
-      </div>
-    </div>
-    {canWrite && <dialog ref={dialog} className={`${admin.productPanel} ${styles.dialog}`} aria-labelledby="create-collection-heading" onCancel={(event) => { if (task.pending) event.preventDefault(); }}>
+      </section>
+    </div></div>
+    {canWrite && <dialog ref={dialog} className={`${admin.productPanel} ${styles.dialog}`} aria-labelledby="create-collection-heading" onCancel={(event) => { event.preventDefault(); close(); }} onClose={() => setOpen(false)}>
       <section className={editor.panel}>
         <h2 id="create-collection-heading">{bg ? "Създай колекция" : "Create collection"}</h2>
         <form className={styles.form} onSubmit={create}>
@@ -101,7 +81,7 @@ export function CatalogCollections({ sellerId, actorSubject, bufferKey, language
           <CatalogFeedback task={task} language={language} onRecovered={completed} />
           <div className={styles.actions}>
             <button className={admin.primary} disabled={!task.ready || task.pending || !!task.recovered}>{task.pending ? (bg ? "Запазване…" : "Saving…") : (bg ? "Създай колекция" : "Create collection")}</button>
-            <button type="button" className={admin.secondary} disabled={task.pending} onClick={() => dialog.current?.close()}>{bg ? "Затвори" : "Close"}</button>
+            <button type="button" className={admin.secondary} disabled={task.pending} onClick={close}>{bg ? "Затвори" : "Close"}</button>
           </div>
         </form>
       </section>

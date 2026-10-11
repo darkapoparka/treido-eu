@@ -12,7 +12,7 @@ function browse(input: CatalogBrowse) {
   if (input.q !== undefined && (typeof input.q !== "string" || input.q.length > 160)) throw new SellerError("INVALID_INPUT");
   for (const id of [input.after, input.collectionId]) if (id !== undefined && id !== "" && (typeof id !== "string" || !validId(id))) throw new SellerError("INVALID_INPUT");
   if (input.membersOnly !== undefined && typeof input.membersOnly !== "boolean") throw new SellerError("INVALID_INPUT");
-  return { q: input.q?.trim() ?? "", after: input.after || null, collectionId: input.collectionId || null, membersOnly: input.membersOnly ?? false };
+  return { q: input.q?.trim() ?? "", after: input.after?.toLowerCase() || null, collectionId: input.collectionId?.toLowerCase() || null, membersOnly: input.membersOnly ?? false };
 }
 const collectionColumns = `c.id,c.title,c.description,c.visible,c.archived,c.revision,
   c.updated_at::text AS "updatedAt",
@@ -29,8 +29,10 @@ export async function readCatalogCollections(database: SellerDatabase, identity:
   const query = browse(input);
   return inTransaction(database, async (tx) => {
     await authorizeSeller(tx, identity, sellerId, "listing.read");
-    const anchor = query.after ? (await tx.client.query<{ at: Date }>(
-      "SELECT updated_at AS at FROM treido.seller_catalog_collections WHERE seller_id=$1 AND id=$2 AND NOT archived", [sellerId, query.after],
+    // Keep PostgreSQL microseconds; a JavaScript Date would truncate the anchor
+    // and skip same-millisecond collections on the next page.
+    const anchor = query.after ? (await tx.client.query<{ at: string }>(
+      "SELECT updated_at::text AS at FROM treido.seller_catalog_collections WHERE seller_id=$1 AND id=$2 AND NOT archived", [sellerId, query.after],
     )).rows[0] : null;
     if (query.after && !anchor) throw new SellerError("INVALID_INPUT");
     const items = (await tx.client.query<CatalogCollection>(
