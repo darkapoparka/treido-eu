@@ -1,0 +1,27 @@
+.stack { display: grid; gap: 16px; min-width: 0; }
+.form { display: grid; gap: 12px; min-width: 0; }
+.form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.fields { display: grid; gap: 12px; }
+.columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.picker { display: grid; gap: 8px; min-width: 0; }
+.choices { display: grid; gap: 4px; max-height: 240px; overflow: auto; }
+.choice { display: flex; align-items: center; gap: 10px; min-height: 40px; overflow-wrap: anywhere; }
+.choice input { flex: 0 0 auto; width: 16px; height: 16px; }
+.table { width: 100%; table-layout: fixed; }
+.table th:first-child { width: 72%; }
+.table td { overflow-wrap: anywhere; vertical-align: middle; }
+.product { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.product > input { flex: 0 0 auto; width: 16px; height: 16px; }
+.product > div { min-width: 0; }
+.product small { display: block; margin-top: 4px; }
+.photo { display: block; flex: 0 0 40px; width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.dialog { width: min(720px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); overflow: auto; }
+.heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+@media (max-width: 640px) {
+  .columns { grid-template-columns: minmax(0, 1fr); }
+  .table th:first-child { width: 68%; }
+  .photo { flex-basis: 32px; width: 32px; height: 32px; }
+  .actions > input { min-width: 0; max-width: 100%; }
+}
