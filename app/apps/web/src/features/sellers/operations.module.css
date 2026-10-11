@@ -1,16 +1,46 @@
-.section { margin-block: 24px; min-width: 0; }
-.header { margin-bottom: 12px; }
-.header h2 { font-size: 16px; font-weight: 650; margin: 0 0 4px; }
-.header p, .metric p, .progress p { font-size: 12px; line-height: 1.5; color: #616161; margin: 0; }
+.section { margin: 24px 0; min-width: 0; }
+.header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.header h2 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 550; }
+.header p { margin: 0; font-size: 12px; line-height: 18px; color: #707070; }
+.overviewGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); border: 1px solid #e7e7e7; border-radius: 20px; background: white; box-shadow: 0 2px 8px #00000005; overflow: hidden; }
+.overviewMetric { display: grid; align-content: start; gap: 8px; padding: 20px; min-height: 132px; color: inherit; text-decoration: none; border-right: 1px solid #ededed; }
+.overviewMetric:last-child { border-right: 0; }
+.overviewMetric:hover { background: #fafafa; }
+.overviewMetric > span { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; line-height: 20px; font-weight: 500; }
+.overviewMetric svg { width: 14px; height: 14px; flex: none; color: #858585; }
+.overviewMetric > strong { font-size: 28px; line-height: 34px; font-weight: 550; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+.overviewMetric small { font-size: 11px; line-height: 16px; color: #707070; }
+.queuePanel { margin-top: 16px; padding: 16px; border: 1px solid #e7e7e7; border-radius: 20px; background: #fff; }
+.queuePanel h3 { margin: 0 0 8px; padding-inline: 4px; font-size: 14px; font-weight: 550; line-height: 22px; }
+.queueGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+.queue { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 10px 4px; border-bottom: 1px solid #ededed; color: inherit; text-decoration: none; border-radius: 6px; }
+.queue:hover { background: #fafafa; }
+.queue > span:first-child { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.queue strong { font-size: 13px; font-weight: 450; line-height: 20px; overflow-wrap: anywhere; }
+.queue small { color: #707070; font-size: 11px; line-height: 16px; }
+.queue > svg { flex: none; width: 14px; height: 14px; color: #707070; }
+.queueCount { min-width: 25px; padding: 2px 7px; border-radius: 7px; background: #f1f1f1; color: #616161; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+.queueCount[data-attention="true"] { color: #5e4200; background: #fff0c2; }
+.overviewMetric:focus-visible, .queue:focus-visible { outline: 2px solid #005bd3; outline-offset: -3px; }
+/* Retained contracts for the feature-owned operations presenter. */
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
-.metric { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 16px; border: 1px solid #e3e3e3; border-radius: 12px; background: #fff; }
-.metric h3 { margin: 0; font-size: 13px; line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
-.metric strong { font-size: 24px; line-height: 1.2; font-weight: 650; font-variant-numeric: tabular-nums; }
-.metric a { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin-block: auto -8px; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
-.metric a:focus-visible, .progress summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-.progress { margin-top: 12px; padding: 12px 16px; border: 1px solid #e3e3e3; border-radius: 12px; background: #fff; }
-.progress summary { min-height: 32px; padding-block: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.progress ul { list-style: none; padding: 0; margin: 8px 0; }
-.progress li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding-block: 8px; border-top: 1px solid #eee; font-size: 12px; }
-.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-@media (max-width: 479px) { .metric { padding: 12px; } .progress { padding: 8px 12px; } .progress summary { min-height: 44px; } }
+.metric { display: grid; align-content: start; gap: 8px; padding: 16px; border: 1px solid #e7e7e7; border-radius: 16px; background: #fff; }
+.metric h3 { font-size: 13px; line-height: 20px; font-weight: 550; margin: 0; }
+.metric > strong { font-size: 26px; line-height: 32px; font-weight: 550; font-variant-numeric: tabular-nums; }
+.metric p { margin: 0; font-size: 12px; line-height: 18px; color: #707070; }
+.metric a { display: flex; align-items: center; min-height: 32px; color: #303030; font-size: 13px; }
+.progress { padding: 14px 16px; margin-top: 16px; border: 1px solid #e7e7e7; border-radius: 16px; }
+.progress summary { min-height: 32px; cursor: pointer; font-weight: 550; }
+.progress ul { margin: 8px 0; padding: 0; list-style: none; }
+.progress li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #ededed; }
+.progress p { color: #707070; font-size: 12px; line-height: 18px; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 767px) {
+  .overviewGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overviewMetric { padding: 16px; min-height: 130px; border-bottom: 1px solid #ededed; }
+  .overviewMetric:nth-child(2n) { border-right: 0; }
+  .overviewMetric > span { align-items: flex-start; }
+  .queueGrid { grid-template-columns: minmax(0, 1fr); }
+  .metric a, .progress summary { min-height: 44px; }
+}
+@media (max-width: 359px) { .overviewMetric { padding: 12px; } .overviewMetric > span { font-size: 12px; } .overviewMetric small { font-size: 11px; } }

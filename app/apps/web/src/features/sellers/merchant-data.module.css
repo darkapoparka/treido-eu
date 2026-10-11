@@ -1,21 +1,37 @@
 .page { min-width: 0; }
-.intro { margin: 0 0 16px; max-width: 76ch; color: #616161; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
-.toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 13px; }
+.intro { max-width: 76ch; margin: 0 0 20px; color: #707070; font-size: 13px; line-height: 20px; }
+.toolbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 13px; line-height: 20px; }
 .field:first-child { flex: 1 1 220px; }
-.field input, .field select { box-sizing: border-box; min-height: 32px; width: 100%; min-width: 0; padding: 6px 10px; background: white; color: #303030; border: 1px solid #8a8a8a; border-radius: 8px; font: inherit; }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.actions a, .actions button { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; border: 1px solid #ccc; border-radius: 8px; padding: 6px 12px; background: #fff; color: #303030; font-size: 12px; font-weight: 600; line-height: 1.4; text-decoration: none; cursor: pointer; }
-.actions button { box-shadow: 0 1px 0 #0000000d; }
-.actions :focus-visible, .field :focus-visible, .table a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-.tablePanel { min-width: 0; border: 1px solid #e3e3e3; border-radius: 12px; overflow: hidden; background: #fff; }
-.tableScroll { overflow-x: auto; }
-.table { width: 100%; border-collapse: collapse; text-align: start; font-size: 13px; }
-.table th { padding: 10px 16px; background: #f7f7f7; font-weight: 600; font-size: 12px; white-space: nowrap; }
-.table td { padding: 12px 16px; border-top: 1px solid #e3e3e3; vertical-align: top; font-variant-numeric: tabular-nums; }
-.table a { display: inline-block; padding-block: 4px; color: inherit; font-weight: 600; text-underline-offset: 3px; }
+.field :is(input:not([type="checkbox"]):not([type="radio"]), select) { width: 100%; min-width: 0; min-height: 32px; padding: 5px 12px; border: 1px solid #d5d5d5; border-radius: 12px; box-shadow: 0 1px 2px #00000005; color: #202020; background: white; font: inherit; }
+.field :is(input, select):focus-visible { outline: 2px solid #005bd3; outline-offset: 1px; border-color: #005bd3; }
+.field :is(input, select):disabled { background: #f8f8f8; color: #858585; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.actions :is(a, button) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 5px 12px; border: 1px solid #e4e4e4; border-radius: 999px; box-shadow: 0 1px 2px #00000004; color: #252525; background: #f4f4f4; font: inherit; font-size: 12px; line-height: 20px; font-weight: 500; text-decoration: none; }
+.actions :is(a, button):hover { background: #eaeaea; }
+.actions :is(a, button):focus-visible { outline: 2px solid #005bd3; outline-offset: 2px; }
+.actions button:disabled { cursor: not-allowed; opacity: .5; }
+.tablePanel { min-width: 0; border: 1px solid #e7e7e7; border-radius: 20px; background: #fff; box-shadow: 0 2px 6px #00000004; overflow: hidden; }
+.tableScroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 20px; text-align: left; font-variant-numeric: tabular-nums; }
+.table th { padding: 10px 16px; border-bottom: 1px solid #e7e7e7; color: #616161; background: #f8f8f8; font-size: 12px; font-weight: 550; white-space: nowrap; }
+.table td { padding: 12px 16px; border-bottom: 1px solid #ededed; vertical-align: middle; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: #fafafa; }
+.table tbody tr:has(input[type="checkbox"]:checked) { background: #f1f1f1; }
+.table a { display: inline-flex; align-items: center; min-height: 28px; padding-block: 4px; color: #202020; font-weight: 550; text-decoration: none; }
+.table a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.table a:focus-visible { outline: 2px solid #005bd3; outline-offset: 2px; border-radius: 3px; }
+.table small { display: block; color: #707070; font-size: 12px; line-height: 18px; font-weight: 400; }
 .reference { white-space: nowrap; }
-.meta { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-.meta p, .note { color: #616161; font-size: 12px; line-height: 1.5; }
-.notice { border: 1px solid #e3e3e3; background: #f7f7f7; padding: 12px 16px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
-@media (max-width: 767px) { .toolbar { align-items: stretch; } .field { flex: 1 1 100%; } .field input, .field select, .actions a, .actions button { min-height: 44px; } .table th, .table td { padding: 10px 12px; } .table a { padding-block: 10px; } }
+.meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 16px; font-size: 12px; line-height: 20px; color: #707070; }
+.note { margin: 8px 0 0; color: #707070; font-size: 12px; line-height: 18px; }
+.notice { margin: 12px 0; padding: 14px 16px; border: 1px solid #e7e7e7; border-radius: 14px; background: #f7f7f7; font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
+.notice[role="alert"] { border-color: #f0c9c5; background: #fff4f2; color: #8e1f15; }
+@media (max-width: 767px) {
+  .field { flex: 1 1 100%; }
+  .field :is(input:not([type="checkbox"]):not([type="radio"]), select), .actions :is(a, button) { min-height: 44px; }
+  .table th, .table td { padding: 12px; }
+  .table a { min-height: 44px; }
+  .meta { align-items: flex-start; }
+}
