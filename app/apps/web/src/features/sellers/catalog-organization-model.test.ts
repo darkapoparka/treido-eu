@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { applyCatalogTags, parseCatalogCommand, normalizeCatalogTags } from "./catalog-organization-model";
 import { parseCatalogContinuation, parseCatalogSelection } from "./catalog-navigation";
 import { parseBulkProductEdits } from "./bulk-product-edit-model";
