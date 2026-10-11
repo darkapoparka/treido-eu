@@ -1,37 +1,208 @@
-.page { min-width: 0; }
-.intro { max-width: 76ch; margin: 0 0 20px; color: #707070; font-size: 13px; line-height: 20px; }
-.toolbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 13px; line-height: 20px; }
-.field:first-child { flex: 1 1 220px; }
-.field :is(input:not([type="checkbox"]):not([type="radio"]), select) { width: 100%; min-width: 0; min-height: 32px; padding: 5px 12px; border: 1px solid #d5d5d5; border-radius: 12px; box-shadow: 0 1px 2px #00000005; color: #202020; background: white; font: inherit; }
-.field :is(input, select):focus-visible { outline: 2px solid #005bd3; outline-offset: 1px; border-color: #005bd3; }
-.field :is(input, select):disabled { background: #f8f8f8; color: #858585; }
-.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.actions :is(a, button) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 5px 12px; border: 1px solid #e4e4e4; border-radius: 999px; box-shadow: 0 1px 2px #00000004; color: #252525; background: #f4f4f4; font: inherit; font-size: 12px; line-height: 20px; font-weight: 500; text-decoration: none; }
-.actions :is(a, button):hover { background: #eaeaea; }
-.actions :is(a, button):focus-visible { outline: 2px solid #005bd3; outline-offset: 2px; }
-.actions button:disabled { cursor: not-allowed; opacity: .5; }
-.tablePanel { min-width: 0; border: 1px solid #e7e7e7; border-radius: 20px; background: #fff; box-shadow: 0 2px 6px #00000004; overflow: hidden; }
-.tableScroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
-.table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 20px; text-align: left; font-variant-numeric: tabular-nums; }
-.table th { padding: 10px 16px; border-bottom: 1px solid #e7e7e7; color: #616161; background: #f8f8f8; font-size: 12px; font-weight: 550; white-space: nowrap; }
-.table td { padding: 12px 16px; border-bottom: 1px solid #ededed; vertical-align: middle; }
-.table tbody tr:last-child td { border-bottom: 0; }
-.table tbody tr:hover { background: #fafafa; }
-.table tbody tr:has(input[type="checkbox"]:checked) { background: #f1f1f1; }
-.table a { display: inline-flex; align-items: center; min-height: 28px; padding-block: 4px; color: #202020; font-weight: 550; text-decoration: none; }
-.table a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.table a:focus-visible { outline: 2px solid #005bd3; outline-offset: 2px; border-radius: 3px; }
-.table small { display: block; color: #707070; font-size: 12px; line-height: 18px; font-weight: 400; }
-.reference { white-space: nowrap; }
-.meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 16px; font-size: 12px; line-height: 20px; color: #707070; }
-.note { margin: 8px 0 0; color: #707070; font-size: 12px; line-height: 18px; }
-.notice { margin: 12px 0; padding: 14px 16px; border: 1px solid #e7e7e7; border-radius: 14px; background: #f7f7f7; font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
-.notice[role="alert"] { border-color: #f0c9c5; background: #fff4f2; color: #8e1f15; }
+.page {
+  min-width: 0;
+}
+.intro {
+  max-width: 76ch;
+  margin: 0 0 20px;
+  color: #707070;
+  font-size: 13px;
+  line-height: 20px;
+}
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 20px;
+}
+.field:first-child {
+  flex: 1 1 220px;
+}
+.field :is(input:not([type="checkbox"]):not([type="radio"]), select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 12px;
+  border: 1px solid #d5d5d5;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px #00000005;
+  color: #202020;
+  background: white;
+  font: inherit;
+}
+.field :is(input, select):focus-visible {
+  outline: 2px solid #005bd3;
+  outline-offset: 1px;
+  border-color: #005bd3;
+}
+.field :is(input, select):disabled {
+  background: #f8f8f8;
+  color: #858585;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.actions :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 12px;
+  border: 1px solid #e4e4e4;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px #00000004;
+  color: #252525;
+  background: #f4f4f4;
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.actions :is(a, button):hover {
+  background: #eaeaea;
+}
+.actions :is(a, button):focus-visible {
+  outline: 2px solid #005bd3;
+  outline-offset: 2px;
+}
+.actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.tablePanel {
+  min-width: 0;
+  border: 1px solid #e7e7e7;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 2px 6px #00000004;
+  overflow: hidden;
+}
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+.table th {
+  padding: 10px 16px;
+  border-bottom: 1px solid #e7e7e7;
+  color: #616161;
+  background: #f8f8f8;
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #ededed;
+  vertical-align: middle;
+}
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.table tbody tr:hover {
+  background: #fafafa;
+}
+.table tbody tr:has(input[type="checkbox"]:checked) {
+  background: #f1f1f1;
+}
+.table a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding-block: 4px;
+  color: #202020;
+  font-weight: 550;
+  text-decoration: none;
+}
+.table a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.table a:focus-visible {
+  outline: 2px solid #005bd3;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.table small {
+  display: block;
+  color: #707070;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+}
+.reference {
+  white-space: nowrap;
+}
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #707070;
+}
+.note {
+  margin: 8px 0 0;
+  color: #707070;
+  font-size: 12px;
+  line-height: 18px;
+}
+.notice {
+  margin: 12px 0;
+  padding: 14px 16px;
+  border: 1px solid #e7e7e7;
+  border-radius: 14px;
+  background: #f7f7f7;
+  font-size: 13px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.notice[role="alert"] {
+  border-color: #f0c9c5;
+  background: #fff4f2;
+  color: #8e1f15;
+}
 @media (max-width: 767px) {
-  .field { flex: 1 1 100%; }
-  .field :is(input:not([type="checkbox"]):not([type="radio"]), select), .actions :is(a, button) { min-height: 44px; }
-  .table th, .table td { padding: 12px; }
-  .table a { min-height: 44px; }
-  .meta { align-items: flex-start; }
+  .field {
+    flex: 1 1 100%;
+  }
+  .field :is(input:not([type="checkbox"]):not([type="radio"]), select),
+  .actions :is(a, button) {
+    min-height: 44px;
+  }
+  .table th,
+  .table td {
+    padding: 12px;
+  }
+  .table a {
+    min-height: 44px;
+  }
+  .meta {
+    align-items: flex-start;
+  }
 }

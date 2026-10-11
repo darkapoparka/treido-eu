@@ -384,3 +384,49 @@
     gap: 4px;
   }
 }
+
+/* Studio-only rhythm; public seller/auth work is intentionally untouched. */
+:global([data-admin-shell]) .page {
+  min-width: 0;
+}
+:global([data-admin-shell]) .header > a:first-child {
+  min-width: 32px;
+  min-height: 32px;
+}
+:global([data-admin-shell])
+  .form
+  :is(input:not([type="checkbox"]):not([type="radio"]), select) {
+  min-height: 32px;
+}
+@media (max-width: 767px) {
+  :global([data-admin-shell]) .page {
+    padding: 12px 16px calc(104px + env(safe-area-inset-bottom));
+  }
+  :global([data-admin-shell]) .header {
+    margin-left: 0;
+  }
+  :global([data-admin-shell]) .header > a:first-child {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  :global([data-admin-shell]) .header > a:first-child::before {
+    width: 32px;
+    height: 32px;
+  }
+  :global([data-admin-shell]) .page h1 {
+    margin: 12px 0 16px;
+    font-size: 24px;
+    line-height: 30px;
+  }
+  :global([data-admin-shell]) .button,
+  :global([data-admin-shell])
+    .form
+    :is(input:not([type="checkbox"]):not([type="radio"]), select) {
+    min-height: 44px;
+  }
+  :global([data-admin-shell]) .link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

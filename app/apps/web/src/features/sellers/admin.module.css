@@ -1286,3 +1286,259 @@
       box-shadow 0.15s;
   }
 }
+
+/* Private Studio presentation. Keep reference-preview and public Sell independent. */
+.shell:not([data-admin-preview-collapsed]) .pageBody {
+  width: 100%;
+  min-width: 0;
+  padding: 0 16px 96px;
+}
+.shell:not([data-admin-preview-collapsed]) .pageBar {
+  min-height: 56px;
+  padding: 12px 20px;
+}
+.shell:not([data-admin-preview-collapsed]) .productPanel {
+  border: 1px solid #e7e7e7;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px #00000004;
+}
+.shell:not([data-admin-preview-collapsed]) .productToolbar {
+  padding: 8px 12px;
+  gap: 8px 16px;
+}
+.shell:not([data-admin-preview-collapsed]) .statusTabs {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+.shell:not([data-admin-preview-collapsed]) .statusTabs a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-height: 30px;
+  white-space: nowrap;
+}
+.shell:not([data-admin-preview-collapsed]) .filterForm :is(input, select) {
+  min-height: 32px;
+  font: inherit;
+  line-height: 20px;
+}
+.shell:not([data-admin-preview-collapsed]) .filterForm input {
+  min-width: 0;
+}
+.shell:not([data-admin-preview-collapsed])
+  .filterForm
+  :is(input, select):focus-visible {
+  outline: 2px solid #005bd3;
+  outline-offset: 1px;
+}
+.shell:not([data-admin-preview-collapsed]) .productTable th {
+  padding-block: 10px;
+  font-weight: 550;
+}
+.shell:not([data-admin-preview-collapsed]) .productTable td {
+  padding-block: 12px;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+.shell:not([data-admin-preview-collapsed]) .productTable a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.shell:not([data-admin-preview-collapsed]) .badge {
+  font-size: 11px;
+  line-height: 18px;
+  padding: 2px 8px;
+  border-radius: 7px;
+}
+.shell:not([data-admin-preview-collapsed]) .pagination {
+  min-height: 48px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #616161;
+}
+.shell:not([data-admin-preview-collapsed]) .empty {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 28%);
+  gap: 24px;
+  padding: 40px;
+}
+.shell:not([data-admin-preview-collapsed]) .empty:has(> h2) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.shell:not([data-admin-preview-collapsed]) .emptyFooter {
+  padding: 24px 40px;
+}
+.shell:not([data-admin-preview-collapsed]) .pageActions summary {
+  width: 32px;
+  height: 32px;
+}
+@media (max-width: 767px) {
+  .shell:not([data-admin-preview-collapsed]) .canvas {
+    scrollbar-gutter: auto;
+  }
+  .shell:not([data-admin-preview-collapsed]) .pageBar {
+    padding-inline: 16px;
+    gap: 8px;
+    min-height: 64px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .pageBody {
+    width: 100%;
+    padding: 0 12px calc(100px + env(safe-area-inset-bottom));
+  }
+  .shell:not([data-admin-preview-collapsed])
+    :is(.primary, .secondary, .toolbarIcon),
+  .shell:not([data-admin-preview-collapsed]) .pageActions summary {
+    min-height: 44px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .pageActions summary {
+    width: 44px;
+    height: 44px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productToolbar {
+    padding: 8px;
+    gap: 8px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .statusTabs {
+    width: 100%;
+  }
+  .shell:not([data-admin-preview-collapsed]) .statusTabs a {
+    min-height: 44px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .filterForm {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    width: 100%;
+    gap: 6px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .filterForm :is(input, select) {
+    width: 100%;
+    min-height: 44px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable {
+    display: block;
+    table-layout: auto;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable thead {
+    display: block;
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    overflow: visible;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable thead tr {
+    display: block;
+  }
+  .shell:not([data-admin-preview-collapsed])
+    .productTable
+    thead
+    th:first-child {
+    display: block;
+    width: 100%;
+    padding: 0 12px;
+  }
+  .shell:not([data-admin-preview-collapsed])
+    .productTable
+    thead
+    th:not(:first-child) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable tbody {
+    display: block;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 12px;
+    border-bottom: 1px solid #ededed;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable tbody td {
+    min-width: 0;
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+  .shell:not([data-admin-preview-collapsed])
+    .productTable
+    tbody
+    td:first-child {
+    grid-column: 1 / -1;
+  }
+  .shell:not([data-admin-preview-collapsed])
+    .productTable
+    tbody
+    td:nth-child(2) {
+    margin-left: 30px;
+  }
+  .shell:not([data-admin-preview-collapsed])
+    .productTable
+    tbody
+    td:nth-child(3) {
+    text-align: right;
+    align-self: center;
+  }
+  .shell:not([data-admin-preview-collapsed])
+    .productTable
+    tbody
+    td:nth-child(4) {
+    display: none;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable a {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productThumb {
+    width: 40px;
+    height: 40px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .productTable .badge {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+  .shell:not([data-admin-preview-collapsed]) .empty {
+    display: flex;
+    flex-direction: column-reverse;
+    padding: 24px;
+    text-align: center;
+  }
+  .shell:not([data-admin-preview-collapsed]) .emptyArt {
+    width: 144px;
+    height: 144px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .emptyFooter {
+    padding: 20px 24px;
+  }
+}
+@media (max-width: 359px) {
+  .shell:not([data-admin-preview-collapsed]) .filterForm {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .shell:not([data-admin-preview-collapsed]) .filterForm input {
+    grid-column: 1 / -1;
+  }
+  .shell:not([data-admin-preview-collapsed]) .pageBar h1 {
+    font-size: 12px;
+    gap: 4px;
+  }
+  .shell:not([data-admin-preview-collapsed]) .pageBar {
+    padding-inline: 12px;
+  }
+}

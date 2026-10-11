@@ -1,46 +1,266 @@
 /* Only the private merchant shell opts in. Buyer and reference-preview CSS stays separate. */
-.shell { --studio-border: #e7e7e7; --studio-muted: #707070; --studio-focus: #005bd3; --studio-radius: 20px; --studio-control: 32px; }
-.shell :global([data-studio-part="sidebar"]) { overflow: visible; padding-bottom: 12px; }
-.shell :global([data-studio-part="brand-row"]), .shell :global([data-studio-part="sidebar-search"]) { flex-shrink: 0; }
-.shell :global([data-studio-part="main-nav"]) { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #414141 transparent; padding-bottom: 16px; }
-.shell :global([data-studio-part="sidebar-bottom"]) { position: relative; flex-shrink: 0; margin-top: 8px; padding-top: 8px; border-top: 1px solid #292929; }
-.shell :global([data-studio-part="settings"]) { padding-right: 38px; }
-.shell :global([data-studio-part="settings"][aria-current="page"]) { background: linear-gradient(#343434, #242424); color: #fff; }
-.shell :global([data-studio-part="notifications"]) { display: grid; place-items: center; position: absolute; top: 8px; right: 0; width: 32px; height: 30px; border-radius: 10px; }
-.shell :global([data-studio-part="notifications"]):hover { background: #292929; }
-.shell :global([data-studio-part="canvas"]) { overscroll-behavior: contain; scroll-padding-block: 24px 100px; }
-.shell[data-studio-overlay="true"] :global([data-studio-part="canvas"]) { overflow: hidden; }
-.shell :where(input, select, textarea, button) { font-family: inherit; }
-.shell :where(input[type="checkbox"], input[type="radio"]) { accent-color: #303030; }
-.shell :where(a, button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--studio-focus); outline-offset: 2px; }
-.shell :global([data-studio-part="sidebar"]) :focus-visible, .shell :global([data-studio-part="drawer"]) :focus-visible { outline-color: #91b5ff; outline-offset: -2px; }
-.shell :where(button:disabled, input:disabled, select:disabled, textarea:disabled) { cursor: not-allowed; }
-.shell :where(input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"]) { border-color: #b42318; }
-.shell table { font-variant-numeric: tabular-nums; }
-.shell table th { color: #616161; font-weight: 550; font-size: 12px; background: #f8f8f8; }
-.shell table tbody tr:hover { background: #fafafa; }
-.shell table tbody tr:has(input[type="checkbox"]:checked) { background: #f1f1f1; }
-.shell table :where(td, th) { vertical-align: middle; }
-.shell :where(dialog:not([data-studio-part="drawer"])) { color: #202020; border-color: var(--studio-border); box-shadow: 0 18px 64px #0003, 0 2px 8px #0001; }
-.shell dialog::backdrop { background: #0005; }
-.shell :global([data-studio-part="search-dialog"]) { padding: 0; border-radius: 24px; overflow: hidden; }
-.unavailable { padding: 8px; margin: 0; font-size: 12px; color: #d4d4d4; }
+.shell {
+  --studio-border: #e7e7e7;
+  --studio-muted: #707070;
+  --studio-focus: #005bd3;
+  --studio-radius: 20px;
+  --studio-control: 32px;
+}
+.shell :global([data-studio-part="sidebar"]) {
+  overflow: visible;
+  padding-bottom: 12px;
+}
+.shell :global([data-studio-part="brand-row"]),
+.shell :global([data-studio-part="sidebar-search"]) {
+  flex-shrink: 0;
+}
+.shell :global([data-studio-part="main-nav"]) {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #414141 transparent;
+  padding-bottom: 16px;
+}
+.shell :global([data-studio-part="sidebar-bottom"]) {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #292929;
+}
+.shell :global([data-studio-part="settings"]) {
+  padding-right: 38px;
+}
+.shell :global([data-studio-part="settings"][aria-current="page"]) {
+  background: linear-gradient(#343434, #242424);
+  color: #fff;
+}
+.shell :global([data-studio-part="notifications"]) {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  top: 8px;
+  right: 0;
+  width: 32px;
+  height: 30px;
+  border-radius: 10px;
+}
+.shell :global([data-studio-part="notifications"]):hover {
+  background: #292929;
+}
+.shell :global([data-studio-part="canvas"]) {
+  overscroll-behavior: contain;
+  scroll-padding-block: 24px 100px;
+}
+.shell[data-studio-overlay="true"] :global([data-studio-part="canvas"]) {
+  overflow: hidden;
+}
+.shell :where(input, select, textarea, button) {
+  font-family: inherit;
+}
+.shell :where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: #303030;
+}
+.shell :where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--studio-focus);
+  outline-offset: 2px;
+}
+.shell :global([data-studio-part="sidebar"]) :focus-visible,
+.shell :global([data-studio-part="drawer"]) :focus-visible {
+  outline-color: #91b5ff;
+  outline-offset: -2px;
+}
+.shell
+  :where(button:disabled, input:disabled, select:disabled, textarea:disabled) {
+  cursor: not-allowed;
+}
+.shell
+  :where(
+    input[aria-invalid="true"],
+    textarea[aria-invalid="true"],
+    select[aria-invalid="true"]
+  ) {
+  border-color: #b42318;
+}
+.shell table {
+  font-variant-numeric: tabular-nums;
+}
+.shell table th {
+  color: #616161;
+  font-weight: 550;
+  font-size: 12px;
+  background: #f8f8f8;
+}
+.shell table tbody tr:hover {
+  background: #fafafa;
+}
+.shell table tbody tr:has(input[type="checkbox"]:checked) {
+  background: #f1f1f1;
+}
+.shell table :where(td, th) {
+  vertical-align: middle;
+}
+.shell :where(dialog:not([data-studio-part="drawer"])) {
+  color: #202020;
+  border-color: var(--studio-border);
+  box-shadow:
+    0 18px 64px #0003,
+    0 2px 8px #0001;
+}
+.shell dialog::backdrop {
+  background: #0005;
+}
+.shell :global([data-studio-part="search-dialog"]) {
+  padding: 0;
+  border-radius: 24px;
+  overflow: hidden;
+}
+.unavailable {
+  padding: 8px;
+  margin: 0;
+  font-size: 12px;
+  color: #d4d4d4;
+}
 @media (max-width: 767px) {
-  .shell { --studio-control: 44px; }
-  .shell :global([data-studio-part="canvas"]) { scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
-  .shell :global([data-studio-part="drawer"])[open] { display: flex; flex-direction: column; overflow: visible; padding: max(12px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="brand-row"]) { margin-bottom: 12px; padding-right: 0; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="collapse"]) { display: grid; place-items: center; width: 44px; height: 44px; margin-left: auto; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="sidebar-search"]) { min-height: 44px; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="main-nav"]) { min-height: 0; padding-bottom: 8px; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="main-nav"]) a { min-height: 44px; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="sidebar-bottom"]) { position: relative; padding-top: 8px; margin-top: 8px; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="settings"]) { position: static; width: auto; min-height: 44px; padding-right: 52px; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="settings"]) span { display: inline; }
-  .shell :global([data-studio-part="drawer"]) :global([data-studio-part="notifications"]) { top: 8px; right: 0; width: 44px; height: 44px; }
-  .shell :global([data-studio-part="search-dialog"]) { width: calc(100vw - 24px); max-width: none; height: min(620px, calc(100dvh - 32px)); max-height: calc(100dvh - 32px); margin: 16px auto; border-radius: 20px; }
-  .shell :where(button, select) { touch-action: manipulation; }
+  .shell {
+    --studio-control: 44px;
+  }
+  .shell :global([data-studio-part="canvas"]) {
+    scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+  .shell :global([data-studio-part="drawer"])[open] {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    padding: max(12px, env(safe-area-inset-top)) 12px
+      max(16px, env(safe-area-inset-bottom));
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="brand-row"]) {
+    margin-bottom: 12px;
+    padding-right: 0;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="collapse"]) {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="sidebar-search"]) {
+    min-height: 44px;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="main-nav"]) {
+    min-height: 0;
+    padding-bottom: 8px;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="main-nav"])
+    a {
+    min-height: 44px;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="sidebar-bottom"]) {
+    position: relative;
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="settings"]) {
+    position: static;
+    width: auto;
+    min-height: 44px;
+    padding-right: 52px;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="settings"])
+    span {
+    display: inline;
+  }
+  .shell
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="notifications"]) {
+    top: 8px;
+    right: 0;
+    width: 44px;
+    height: 44px;
+  }
+  .shell :global([data-studio-part="search-dialog"]) {
+    width: calc(100vw - 24px);
+    max-width: none;
+    height: min(620px, calc(100dvh - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: 16px auto;
+    border-radius: 20px;
+  }
+  .shell :where(button, select) {
+    touch-action: manipulation;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .shell :global([data-studio-part="canvas"]), .shell dialog { transition: none; scroll-behavior: auto; }
+  .shell :global([data-studio-part="canvas"]),
+  .shell dialog {
+    transition: none;
+    scroll-behavior: auto;
+  }
+}
+
+.shell :global([data-studio-part="main-nav"]) {
+  align-content: start;
+}
+@media (min-width: 768px) {
+  .shell[data-studio-collapsed="true"] :global([data-studio-part="settings"]) {
+    padding-inline: 0;
+    width: 44px;
+    justify-content: center;
+  }
+  .shell[data-studio-collapsed="true"]
+    :global([data-studio-part="notifications"]) {
+    position: static;
+    width: 44px;
+    height: 36px;
+  }
+}
+@media (max-width: 767px) {
+  .shell[data-studio-collapsed="true"]
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="sidebar-search"])
+    span,
+  .shell[data-studio-collapsed="true"]
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="main-nav"])
+    a
+    span,
+  .shell[data-studio-collapsed="true"]
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="main-nav"])
+    button
+    span {
+    display: inline;
+  }
+  .shell[data-studio-collapsed="true"]
+    :global([data-studio-part="drawer"])
+    :global([data-studio-part="main-nav"])
+    :is(a, button) {
+    justify-content: flex-start;
+  }
+}
+
+.shell :global([data-studio-part="notifications"]) svg {
+  width: 18px;
+  height: 18px;
 }
