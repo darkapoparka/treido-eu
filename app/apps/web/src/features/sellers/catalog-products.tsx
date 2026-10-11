@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -10,32 +9,22 @@ import type { CollectionOptions } from "./catalog-collection-picker";
 import { CATALOG_BATCH_SIZE, type CatalogProduct } from "./catalog-organization-model";
 import admin from "./admin.module.css";
 import styles from "./catalog-workspace.module.css";
-
 export function CatalogProducts({ sellerId, actorSubject, bufferKey, language, canWrite, canImport, initial, collections, q = "", after }: {
-  sellerId: string; actorSubject: string; bufferKey: string; language: "bg" | "en";
-  canWrite: boolean; canImport: boolean; initial: CatalogProductPage; collections: CollectionOptions; q?: string; after?: string;
+  sellerId: string; actorSubject: string; bufferKey: string; language: "bg" | "en"; canWrite: boolean; canImport: boolean; initial: CatalogProductPage; collections: CollectionOptions; q?: string; after?: string;
 }) {
-  const bg = language === "bg";
-  const router = useRouter();
-  const [loading, navigate] = useTransition();
-  const [selection, setSelection] = useState<Record<string, CatalogProduct>>({});
-  const [limit, setLimit] = useState(false);
-  const selected = Object.values(selection);
-  const base = `/app/sellers/${sellerId}`;
+  const bg = language === "bg", router = useRouter(), [loading, navigate] = useTransition();
+  const [selection, setSelection] = useState<Record<string, CatalogProduct>>({}), [limit, setLimit] = useState(false);
+  const selected = Object.values(selection), base = `/app/sellers/${sellerId}`;
+  const selectionQuery = new URLSearchParams({ lang: language, ids: selected.map((item) => item.id).join(",") });
   function select(products: CatalogProduct[], included: boolean) {
-    const eligible = products.filter((product) => product.publication !== "restricted");
-    const next = { ...selection };
-    for (const product of eligible) {
-      if (included) next[product.id] = product;
-      else delete next[product.id];
-    }
+    const eligible = products.filter((product) => product.publication !== "restricted"), next = { ...selection };
+    for (const product of eligible) { if (included) next[product.id] = product; else delete next[product.id]; }
     if (Object.keys(next).length > CATALOG_BATCH_SIZE) { setLimit(true); return; }
     setLimit(false); setSelection(next);
   }
   function go(query: string, cursor?: string) {
     const search = new URLSearchParams({ lang: language });
-    if (query) search.set("q", query);
-    if (cursor) search.set("after", cursor);
+    if (query) search.set("q", query); if (cursor) search.set("after", cursor);
     navigate(() => router.push(`${base}/catalog?${search}`));
   }
   return <main>
@@ -56,12 +45,13 @@ export function CatalogProducts({ sellerId, actorSubject, bufferKey, language, c
         <span role="status">{bg ? `Избрани: ${selected.length}` : `${selected.length} selected`}</span>
         <CatalogBulkOrganization sellerId={sellerId} actorSubject={actorSubject} bufferKey={bufferKey} selected={selected} collections={collections} language={language} canWrite={canWrite} onComplete={() => { setSelection({}); router.refresh(); }} />
         {selected.length > 0 && <>
-          <Link className={admin.secondary} href={`${base}/catalog/edit?${new URLSearchParams({ lang: language, ids: selected.map((item) => item.id).join(",") })}`}>{bg ? "Редактирай избраните" : "Edit selected"}</Link>
+          <Link className={admin.secondary} href={`${base}/catalog/edit?${selectionQuery}`}>{bg ? "Редактирай избраните" : "Edit selected"}</Link>
+          <Link className={admin.secondary} href={`${base}/catalog/review?${selectionQuery}`}>{bg ? "Преглед и публикуване" : "Review and publish"}</Link>
           <button type="button" className={admin.secondary} disabled={loading} onClick={() => { setSelection({}); setLimit(false); }}>{bg ? "Изчисти избора" : "Clear selection"}</button>
         </>}
       </div>
       {limit && <p role="alert">{bg ? `Запази текущата група преди да избереш още продукти. Едно групово действие обработва до ${CATALOG_BATCH_SIZE} продукта.` : `Save this batch before selecting more products. A bulk action processes up to ${CATALOG_BATCH_SIZE} products.`}</p>}
-      <CatalogProductSelector sellerId={sellerId} language={language} data={initial} query={q} loading={loading} canWrite={canWrite} checked={(product) => !!selection[product.id]} onToggle={(product, included) => select([product], included)} onPageSelection={(included) => select(initial.items, included)} onSearch={(query) => go(query)} onNext={() => go(q, initial.nextCursor ?? undefined)} />
+      <CatalogProductSelector key={q} sellerId={sellerId} language={language} data={initial} query={q} loading={loading} canWrite={canWrite} checked={(product) => !!selection[product.id]} onToggle={(product, included) => select([product], included)} onPageSelection={(included) => select(initial.items, included)} onSearch={(query) => go(query)} onNext={() => go(q, initial.nextCursor ?? undefined)} />
       {after && <div className={styles.actions}><button type="button" className={admin.secondary} disabled={loading} onClick={() => go(q)}>{bg ? "Първа страница" : "First page"}</button></div>}
     </div></div>
   </main>;

@@ -1,0 +1,44 @@
+import { afterAll, beforeAll, expect, it, vi } from "vitest";
+import { randomUUID } from "node:crypto";
+vi.mock("server-only", () => ({}));
+import { createCatalogNativeFixture } from "./catalog-native-fixture";
+import { seedAftercareFixture } from "../../../../../tests/t61/aftercare-fixture";
+import { readCustomerHistory } from "./customer-history.server";
+import { readOrderOperationalContext } from "./order-operations.server";
+import { readOrderAftercare } from "../order-aftercare/queries.server";
+import { executeCatalogCommand } from "./catalog-organization-commands.server";
+import { readPublicCatalogCollection } from "./catalog-public.server";
+let databaseFixture: Awaited<ReturnType<typeof createCatalogNativeFixture>>;
+let commerce: Awaited<ReturnType<typeof seedAftercareFixture>>;
+beforeAll(async () => {
+  databaseFixture = await createCatalogNativeFixture();
+  commerce = await seedAftercareFixture(databaseFixture.admin);
+});
+afterAll(async () => { await databaseFixture?.close(); }, 45000);
+it("customer detail and order timeline read the same seller's accepted order and recorded activity", async () => {
+  const { database, admin } = databaseFixture;
+  await admin.query("INSERT INTO treido.paid_order_receipts(order_id,actor_id,request_id,command) VALUES($1,$2,$3,'ready')", [commerce.orderId, commerce.ownerId, randomUUID()]);
+  const history = await readCustomerHistory(database, commerce.merchant, commerce.sellerId, commerce.orderId, { lang: "en" });
+  expect(history.orderCount).toBe(1);
+  expect(history.orders[0]).toMatchObject({ id: commerce.orderId, totalMinor: 1000, currency: "EUR", paymentState: "paid" });
+  expect(history.orders[0].lines[0]).toMatchObject({ title: "Snapshot bike", unitPriceMinor: 1000, quantity: 1 });
+  const context = await readOrderOperationalContext(database, commerce.merchant, commerce.sellerId, commerce.orderId);
+  expect(context.reference).toBe(history.reference);
+  expect(context.buyerTerms).toBe("Immutable accepted details for this test order.");
+  expect(context.events).toHaveLength(1);
+  expect(context.events[0].kind).toBe("ready");
+  expect((await readOrderAftercare(database, commerce.merchant, commerce.sellerId, commerce.orderId, "en")).orderId).toBe(commerce.orderId);
+  expect(history.nextBefore).toBeNull();
+});
+it("a visible seller collection projects the current accepted publication, not later draft text", async () => {
+  const { database, admin } = databaseFixture;
+  const group = await executeCatalogCommand(database, commerce.merchant, { kind: "createCollection", sellerId: commerce.sellerId, requestId: randomUUID(), title: "Accepted bikes", description: "Actual seller grouping", visible: true });
+  await executeCatalogCommand(database, commerce.merchant, { kind: "collectionProducts", sellerId: commerce.sellerId, requestId: randomUUID(), collectionId: group.collectionId, expectedRevision: 1, add: [commerce.listingId], remove: [] });
+  const view = await readPublicCatalogCollection(database, commerce.sellerId, group.collectionId!);
+  expect(view?.collection.title).toBe("Accepted bikes");
+  expect(view?.items.map((item) => item.id)).toContain(commerce.listingId);
+  expect(view?.items[0].name.en).toBe("Aftercare fixture bicycle");
+  const accepted = JSON.stringify(view?.items);
+  await admin.query("UPDATE treido.listing_drafts SET payload=jsonb_set(payload,'{title}','\"New unpublished title\"'::jsonb),revision=revision+1 WHERE seller_id=$1 AND listing_id=$2", [commerce.sellerId, commerce.listingId]);
+  expect(JSON.stringify((await readPublicCatalogCollection(database, commerce.sellerId, group.collectionId!))?.items)).toBe(accepted);
+});
