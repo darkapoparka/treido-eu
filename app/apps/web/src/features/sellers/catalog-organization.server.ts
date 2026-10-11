@@ -4,15 +4,15 @@ import type { VerifiedIdentity } from "../../server/identity/clerk.server";
 import { authorizeSeller } from "./persistence.server";
 import { SellerError } from "./errors";
 import { validId } from "../selling/draft-model";
+import { catalogSearchText as fold } from "./catalog-search.server";
 import { CATALOG_BATCH_SIZE, type CatalogCollection, type CatalogProduct, type ProductOrganization } from "./catalog-organization-model";
-
 export type CatalogBrowse = { q?: string; after?: string; collectionId?: string; membersOnly?: boolean };
 function browse(input: CatalogBrowse) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new SellerError("INVALID_INPUT");
   if (input.q !== undefined && (typeof input.q !== "string" || input.q.length > 160)) throw new SellerError("INVALID_INPUT");
   for (const id of [input.after, input.collectionId]) if (id !== undefined && id !== "" && (typeof id !== "string" || !validId(id))) throw new SellerError("INVALID_INPUT");
   if (input.membersOnly !== undefined && typeof input.membersOnly !== "boolean") throw new SellerError("INVALID_INPUT");
-  return { q: input.q?.trim() ?? "", after: input.after?.toLowerCase() || null, collectionId: input.collectionId?.toLowerCase() || null, membersOnly: input.membersOnly ?? false };
+  return { q: input.q?.normalize("NFC").trim() ?? "", after: input.after?.toLowerCase() || null, collectionId: input.collectionId?.toLowerCase() || null, membersOnly: input.membersOnly ?? false };
 }
 const collectionColumns = `c.id,c.title,c.description,c.visible,c.archived,c.revision,
   c.updated_at::text AS "updatedAt",
@@ -29,15 +29,14 @@ export async function readCatalogCollections(database: SellerDatabase, identity:
   const query = browse(input);
   return inTransaction(database, async (tx) => {
     await authorizeSeller(tx, identity, sellerId, "listing.read");
-    // Keep PostgreSQL microseconds; a JavaScript Date would truncate the anchor
-    // and skip same-millisecond collections on the next page.
+    // Preserve PostgreSQL microseconds; a Date would skip same-millisecond rows.
     const anchor = query.after ? (await tx.client.query<{ at: string }>(
       "SELECT updated_at::text AS at FROM treido.seller_catalog_collections WHERE seller_id=$1 AND id=$2 AND NOT archived", [sellerId, query.after],
     )).rows[0] : null;
     if (query.after && !anchor) throw new SellerError("INVALID_INPUT");
     const items = (await tx.client.query<CatalogCollection>(
       `SELECT ${collectionColumns} FROM treido.seller_catalog_collections c
-       WHERE c.seller_id=$1 AND NOT c.archived AND ($2='' OR strpos(lower(c.title),lower($2))>0)
+       WHERE c.seller_id=$1 AND NOT c.archived AND ($2='' OR strpos(${fold("c.title")},${fold("$2")})>0)
        AND ($3::timestamptz IS NULL OR (c.updated_at,c.id)<($3::timestamptz,$4::uuid))
        ORDER BY c.updated_at DESC,c.id DESC LIMIT 31`, [sellerId, query.q, anchor?.at ?? null, query.after],
     )).rows;
@@ -65,9 +64,9 @@ export async function readCatalogProducts(database: SellerDatabase, identity: Ve
           EXISTS(SELECT 1 FROM treido.seller_catalog_collection_items ci WHERE ci.seller_id=l.seller_id AND ci.listing_id=l.id AND ci.collection_id=$4::uuid) AS member
         FROM treido.listings l JOIN treido.listing_drafts d ON d.seller_id=l.seller_id AND d.listing_id=l.id
         LEFT JOIN treido.seller_catalog_product_organization o ON o.seller_id=l.seller_id AND o.listing_id=l.id
-        WHERE l.seller_id=$1 AND ($2='' OR strpos(lower(coalesce(d.payload->>'title','')),lower($2))>0
-          OR EXISTS(SELECT 1 FROM treido.inventory_skus sku WHERE sku.seller_id=l.seller_id AND sku.listing_id=l.id AND sku.active AND strpos(lower(coalesce(sku.seller_sku,'')),lower($2))>0)
-          OR EXISTS(SELECT 1 FROM unnest(coalesce(o.tags,'{}'::text[])) tag WHERE strpos(lower(tag),lower($2))>0))
+        WHERE l.seller_id=$1 AND ($2='' OR strpos(${fold("d.payload->>'title'")},${fold("$2")})>0
+          OR EXISTS(SELECT 1 FROM treido.inventory_skus sku WHERE sku.seller_id=l.seller_id AND sku.listing_id=l.id AND sku.active AND strpos(${fold("sku.seller_sku")},${fold("$2")})>0)
+          OR EXISTS(SELECT 1 FROM unnest(coalesce(o.tags,'{}'::text[])) tag WHERE strpos(${fold("tag")},${fold("$2")})>0))
       ), filtered AS MATERIALIZED (SELECT * FROM matched WHERE NOT $5::boolean OR member),
       page AS (SELECT * FROM filtered WHERE $3::uuid IS NULL OR id>$3::uuid ORDER BY id LIMIT 31)
       SELECT (SELECT count(*)::integer FROM filtered) AS total,

@@ -4,8 +4,8 @@ import type { VerifiedIdentity } from "../../server/identity/clerk.server";
 import { authorizeSeller } from "./persistence.server";
 import { SellerError } from "./errors";
 import { validId } from "../selling/draft-model";
+import { catalogSearchText as fold } from "./catalog-search.server";
 import { parseProductQuery, type AdminProduct, type AdminProducts } from "./admin-products-model";
-
 // A cursor supplies a position, never authority. Bind it to this seller/filter/sort.
 function cursorPosition(cursor: string | null, scope: string) {
   if (!cursor) return null;
@@ -28,8 +28,7 @@ export async function readAdminProducts(database: SellerDatabase, identity: Veri
     const counts = await tx.client.query<{ status: AdminProduct["status"]; count: number }>(
       `SELECT CASE WHEN moderation_state <> 'clear' THEN 'restricted' ELSE publication END AS status, count(*)::int AS count FROM treido.listings WHERE seller_id=$1 GROUP BY 1`, [sellerId],
     );
-    const direction = query.sort === "oldest" ? "ASC" : "DESC";
-    const operator = query.sort === "oldest" ? ">" : "<";
+    const direction = query.sort === "oldest" ? "ASC" : "DESC", operator = query.sort === "oldest" ? ">" : "<";
     const rows = await tx.client.query<AdminProduct>(
       `SELECT l.id, coalesce(d.payload->>'title','') AS title,
         (d.payload->>'priceMinor')::int AS "priceMinor", 'EUR' AS currency,
@@ -37,9 +36,9 @@ export async function readAdminProducts(database: SellerDatabase, identity: Veri
         d.revision, to_char(d.updated_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "updatedAt",
         (SELECT m.id FROM treido.media_assets m WHERE m.seller_id=l.seller_id AND m.listing_id=l.id AND m.state='ready' ORDER BY m.position, m.id LIMIT 1) AS "mediaId"
       FROM treido.listing_drafts d JOIN treido.listings l ON l.seller_id=d.seller_id AND l.id=d.listing_id
-      WHERE d.seller_id=$1 AND ($2='' OR position(lower($2) in lower(coalesce(d.payload->>'title',''))) > 0
-        OR EXISTS(SELECT 1 FROM treido.inventory_skus sku WHERE sku.seller_id=l.seller_id AND sku.listing_id=l.id AND sku.active AND position(lower($2) in lower(coalesce(sku.seller_sku,'')))>0)
-        OR EXISTS(SELECT 1 FROM treido.seller_catalog_product_organization organization,unnest(organization.tags) tag WHERE organization.seller_id=l.seller_id AND organization.listing_id=l.id AND position(lower($2) in lower(tag))>0))
+      WHERE d.seller_id=$1 AND ($2='' OR strpos(${fold("d.payload->>'title'")},${fold("$2")})>0
+        OR EXISTS(SELECT 1 FROM treido.inventory_skus sku WHERE sku.seller_id=l.seller_id AND sku.listing_id=l.id AND sku.active AND strpos(${fold("sku.seller_sku")},${fold("$2")})>0)
+        OR EXISTS(SELECT 1 FROM treido.seller_catalog_product_organization organization,unnest(organization.tags) tag WHERE organization.seller_id=l.seller_id AND organization.listing_id=l.id AND strpos(${fold("tag")},${fold("$2")})>0))
         AND ($3='all' OR CASE WHEN l.moderation_state <> 'clear' THEN 'restricted' ELSE l.publication END=$3)
         AND ($4::timestamptz IS NULL OR (d.updated_at,d.listing_id) ${operator} ($4::timestamptz,$5::uuid))
       ORDER BY d.updated_at ${direction}, d.listing_id ${direction} LIMIT 31`,
